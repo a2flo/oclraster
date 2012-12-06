@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE config PUBLIC "-//OCLRASTER//DTD config 1.0//EN" "config.dtd">
+<config>
+	<!-- screen resolution and fullscreen/vsync/dpi-overwrite settings (stereo serves no purpose right now) -->
+	<screen width="1280" height="720" fullscreen="0" vsync="0" stereo="0" dpi="0"/>
+	<!--<screen width="1920" height="1080" fullscreen="1" vsync="1" stereo="0" dpi="0"/>-->
+
+	<!-- you might want to change the field of view, but near/far should remain at 1/1000 -->
+	<projection fov="45.0" near="0.1" far="1000.0"/>
+
+	<!-- there should be no need to change these -->
+	<input key_repeat="0" ldouble_click="10" mdouble_click="10" rdouble_click="10"/>
+
+	<!-- unless you know what you're doing, don't change the following settings
+	 opencl platform options: either the opencl platform index (starting by 0) or "cuda" on supported platforms (OS X and Linux only)
+	 opencl restrict options: if this is set to any of (or a list of) "CPU", "GPU" or "ACCELERATOR", only those kind/type of devices are used
+	-->
+	<opencl platform="0" clear_cache="1" restrict=""/>
+	
+	<!-- application specific settings -->
+	<!-- none so far -->
+</config>
