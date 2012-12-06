@@ -7,14 +7,14 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 
 *Software Requirements and Important Information:*
 * on Windows:
-** if you have an ATI/AMD GPU/CPU or an Intel CPU: please install the Intel OpenCL SDK for Windows (64-bit): http://software.intel.com/en-us/vcsource/tools/opencl-sdk
+** if you have an ATI/AMD GPU/CPU or an Intel CPU: please install the "Intel OpenCL SDK for Windows (64-bit)":http://software.intel.com/en-us/vcsource/tools/opencl-sdk
 ** make sure to select the correct opencl platform in config.xml
 * on OS X:
-** please install the latest XQuartz: http://xquartz.macosforge.org
+** please install the "latest XQuartz":http://xquartz.macosforge.org
 ** OpenCL on 10.7.5 and 10.8.2 on non-CPU devices is broken, please use a CPU device for now or use an earlier version of OS X (or 10.8.3+)
 ** -if you have a Nvidia GPU, you can also use CUDA: https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda")- currently defunct
 
-Requirements:
+*Requirements:*
 * Windows: NT 6.0+ x64 (Vista/7/8/2008/2008R2/2012)
 * OS X: 10.7+
 * OpenGL 3.2+ and OpenCL 1.1+ capable GPU/CPU and platform (GeForce 400+, Radeon HD5+, Core2+, Athlon64+?)
@@ -27,10 +27,10 @@ Requirements:
 * 1 GB RAM minimum, 2 GB RAM are recommended
 * 256 MB VRAM minimum, 1 GB VRAM are recommended
 
-Build Instructions:
+*Build Instructions:*
 * TODO
 
-Credits:
+*Credits:*
 * https://github.com/a2flo/a2elight / a2elight
 * http://www.libsdl.org / SDL2 and SDL2_image
 * http://www.libpng.org / libpng, http://zlib.net / zlib
@@ -43,6 +43,11 @@ Credits:
 * Khronos (http://www.khronos.org) / Nvidia / AMD / Apple / Intel (OpenGL/OpenCL)
 * CUDA (http://www.nvidia.com)
 
+*Papers:*
 TODO: all papers
 * "3D Rasterization: A Bridge between Rasterization and Ray Casting":http://cg.ibds.kit.edu/publications/p2012/3dr/gi2012.pdf
 * "High-Performance Software Rasterization on GPUs":http://research.nvidia.com/sites/default/files/publications/laine2011hpg_paper.pdf
+
+*Screenshots:*
+current progress, running on the CPU (2012/12/06):
+!https://dl.dropbox.com/u/1004620/Screen%20Shot%202012-12-06%20at%2010.40.05%20AM.png(a bunny of course)!
