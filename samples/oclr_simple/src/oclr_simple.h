@@ -23,8 +23,10 @@
 #include <oclraster/pipeline/pipeline.h>
 #include <oclraster/pipeline/transform_stage.h>
 #include <oclraster/core/a2m.h>
+#include <oclraster/core/camera.h>
+#include <oclraster/program/oclraster_program.h>
 
-#define APPLICATION_NAME "oclraster simple"
+#define APPLICATION_NAME "oclraster simple sample"
 
 // prototypes
 bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj);

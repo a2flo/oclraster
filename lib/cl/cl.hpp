@@ -803,7 +803,7 @@ struct GetInfoHelper<Func, CPP_TYPE> \
     F(cl_device_info, CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, cl_uint) \
     F(cl_device_info, CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE, cl_uint) \
     F(cl_device_info, CL_DEVICE_MAX_CLOCK_FREQUENCY, cl_uint) \
-    F(cl_device_info, CL_DEVICE_ADDRESS_BITS, cl_bitfield) \
+    F(cl_device_info, CL_DEVICE_ADDRESS_BITS, cl_uint) \
     F(cl_device_info, CL_DEVICE_MAX_READ_IMAGE_ARGS, cl_uint) \
     F(cl_device_info, CL_DEVICE_MAX_WRITE_IMAGE_ARGS, cl_uint) \
     F(cl_device_info, CL_DEVICE_MAX_MEM_ALLOC_SIZE, cl_ulong) \
@@ -3183,11 +3183,13 @@ private:
     Kernel kernel_;
     CommandQueue queue_;
     NDRange offset_;
+    cl_int err_;
+	
+public:
+	// need to change these at a later point ...
     NDRange global_;
     NDRange local_;
-
-    cl_int err_;
-public:
+	
     KernelFunctor() { }
 
     KernelFunctor(

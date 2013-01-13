@@ -67,10 +67,10 @@ struct OCLRASTER_API cudacl_kernel_info {
 };
 
 extern void OCLRASTER_API cudacl_translate(const string& tmp_name,
-									 const string& cl_source,
-									 const string& preprocess_options,
-									 string& cuda_source,
-									 vector<cudacl_kernel_info>& kernels);
+										   const string& cl_source,
+										   const string& preprocess_options,
+										   string& cuda_source,
+										   vector<cudacl_kernel_info>& kernels);
 
 #endif
 #endif

@@ -110,7 +110,7 @@ F(CUDA_ERROR_UNKNOWN)
 
 #define __DECLARE_ERROR_CODE_TO_STRING(code) case code: return #code;
 
-const char* cudacl::error_code_to_string(cl_int error_code) {
+const char* cudacl::error_code_to_string(cl_int error_code) const {
 	switch(error_code) {
 		__ERROR_CODE_INFO(__DECLARE_ERROR_CODE_TO_STRING);
 		default:
@@ -518,7 +518,8 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 			make_tuple("TRANSFORM", "transform.cl", "transform", ""),
 			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "bin_rasterize", ""),
 			make_tuple("RASTERIZE", "rasterize.cl", "rasterize", ""),
-			make_tuple("CLEAR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
+			make_tuple("CLEAR_COLOR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
+			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DDEPTH_FRAMEBUFFER=1"),
 		};
 		
 		load_internal_kernels();
@@ -545,10 +546,8 @@ opencl_base::kernel_object* cudacl::add_kernel_src(const string& identifier, con
 		// add kernel
 		opencl_base::kernel_object* kernel = new opencl_base::kernel_object();
 		kernels[identifier] = kernel;
-		kernel->kernel_name = identifier;
+		kernel->name = identifier;
 		kernel->kernel = nullptr;
-		kernel->global = new cl::NDRange(1);
-		kernel->local = new cl::NDRange(1);
 		const cudacl_kernel_info* kernel_info = nullptr;
 		vector<cudacl_kernel_info> kernels_info;
 		
@@ -672,6 +671,33 @@ opencl_base::kernel_object* cudacl::add_kernel_src(const string& identifier, con
 	}*/
 	
 	return kernels[identifier];
+}
+
+void cudacl::delete_kernel(kernel_object* obj) {
+	if(cur_kernel == obj) {
+		// if the currently active kernel is being deleted, flush+finish the queue
+		flush();
+		finish();
+		cur_kernel = nullptr;
+	}
+	
+	const auto iter = cuda_kernels.find(obj);
+	if(iter == cuda_kernels.end()) {
+		oclr_error("couldn't find cuda kernel object!");
+		return;
+	}
+	delete iter->second;
+	cuda_kernels.erase(iter);
+	
+	for(const auto& kernel : kernels) {
+		if(kernel.second == obj) {
+			kernels.erase(kernel.first);
+			delete obj;
+			return;
+		}
+	}
+	
+	oclr_error("couldn't find kernel object!");
 }
 
 void cudacl::log_program_binary(const kernel_object* kernel) {
@@ -1128,12 +1154,12 @@ void cudacl::run_kernel(kernel_object* kernel_obj) {
 			kernel_arguments[i] = kernel->arguments[i].ptr;
 		}
 		
-		uint3 global_dim((unsigned int)(*cur_kernel->global)[0],
-						 (unsigned int)(*cur_kernel->global)[1],
-						 (unsigned int)(*cur_kernel->global)[2]);
-		uint3 local_dim((unsigned int)(*cur_kernel->local)[0],
-						(unsigned int)(*cur_kernel->local)[1],
-						(unsigned int)(*cur_kernel->local)[2]);
+		uint3 global_dim((unsigned int)cur_kernel->global[0],
+						 (unsigned int)cur_kernel->global[1],
+						 (unsigned int)cur_kernel->global[2]);
+		uint3 local_dim((unsigned int)cur_kernel->local[0],
+						(unsigned int)cur_kernel->local[1],
+						(unsigned int)cur_kernel->local[2]);
 		global_dim.max(uint3(1)); // dimensions must at least be 1 in cuda (== 0 in opencl)
 		local_dim.max(uint3(1));
 		
@@ -1168,7 +1194,7 @@ void cudacl::run_kernel(kernel_object* kernel_obj) {
 			}
 		}
 	}
-	__HANDLE_CL_EXCEPTION_EXT("run_kernel", (" - in kernel: "+kernel_obj->kernel_name).c_str())
+	__HANDLE_CL_EXCEPTION_EXT("run_kernel", (" - in kernel: "+kernel_obj->name).c_str())
 }
 
 void cudacl::finish() {
@@ -1178,6 +1204,11 @@ void cudacl::finish() {
 
 void cudacl::flush() {
 	return; // nothing?
+}
+
+void cudacl::barrier() {
+	if(active_device == nullptr) return;
+	CU(cuStreamSynchronize(*cuda_queues[device_map[active_device]]));
 }
 
 void cudacl::activate_context() {
@@ -1313,11 +1344,11 @@ void cudacl::unmap_buffer(opencl_base::buffer_object* buffer_obj oclr_unused, vo
 	__HANDLE_CL_EXCEPTION("unmap_buffer")*/
 }
 
-size_t cudacl::get_kernel_work_group_size() {
+size_t cudacl::get_kernel_work_group_size() const {
 	if(cur_kernel == nullptr || active_device == nullptr) return 0;
 	
 	try {
-		CUfunction* cuda_function = cuda_kernels[cur_kernel]->function;
+		CUfunction* cuda_function = cuda_kernels.at(cur_kernel)->function;
 		int ret = 0;
 		CU(cuFuncGetAttribute(&ret, CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK, *cuda_function));
 		return ret;

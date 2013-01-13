@@ -49,5 +49,22 @@
 		   mat.m[3].x, mat.m[3].y, mat.m[3].z, mat.m[3].w); \
 }
 
+// well, this is awkward
+#if !defined(NULL)
+#define NULL 0
+#endif
+#if !defined(nullptr)
+#define nullptr 0
+#endif
+
+// TODO: create an extra header for this
+#define oclraster_in typedef struct __attribute__((packed, aligned(16)))
+#define oclraster_out typedef struct __attribute__((packed, aligned(16)))
+#define oclraster_uniforms typedef struct __attribute__((packed, aligned(16)))
+
+// ignore all "no previous prototype" warnings
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#endif
 
 #endif

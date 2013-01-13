@@ -22,6 +22,13 @@ OCLRASTER_FUNC float det4(const float4 v0, const float4 v1, const float4 v2, con
 	return d;
 }
 
+OCLRASTER_FUNC float3 reflect(const float3 I, const float3 N) {
+	return I - 2.0f * dot(N, I) * N;
+}
+
+//
+#define interpolate(v0, v1, v2, gad) ((v0 * gad.x) + (v1 * gad.y) + (v2 * gad.z))
+
 //
 #if defined(__clang__)
 #pragma clang diagnostic pop

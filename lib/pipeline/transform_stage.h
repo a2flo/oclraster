@@ -21,6 +21,7 @@
 
 #include "cl/opencl.h"
 
+struct draw_state;
 class transform_stage {
 public:
 	transform_stage();
@@ -49,8 +50,19 @@ public:
 		vector<pair<string, unsigned int>> elements;
 		opencl_base::buffer_object* buffer;
 	};
+	
+	//
+	void transform(draw_state& state,
+				   const transform_stage::vertex_buffer& vb,
+				   const transform_stage::index_buffer& ib,
+				   const unsigned int& num_elements);
 
 protected:
+	opencl_base::buffer_object* const_buffer_tp = nullptr;
+	
+	static constexpr size_t _debug_buffer_size = 1024;
+	array<int, _debug_buffer_size / sizeof(int)> _debug_buffer;
+	opencl_base::buffer_object* _debug_buffer_tp = nullptr;
 
 };
 

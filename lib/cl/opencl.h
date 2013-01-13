@@ -50,9 +50,6 @@
 
 #define CLINFO_STR_SIZE 65536*2
 
-#define OCLRASTER_IR_TILE_SIZE_X (8)
-#define OCLRASTER_IR_TILE_SIZE_Y (16)
-
 //
 #if defined(OCLRASTER_CUDA_CL)
 #if defined(__APPLE__)
@@ -110,6 +107,7 @@ public:
 	};
 	device_object* get_device(const DEVICE_TYPE& device);
 	device_object* get_active_device();
+	const vector<device_object*>& get_devices() const;
 	
 	enum class PLATFORM_VENDOR {
 		NVIDIA,
@@ -155,16 +153,19 @@ public:
 	
 	void use_kernel(const string& identifier);
 	void run_kernel();
-	void run_kernel(const char* kernel_identifier);
+	void run_kernel(const string& identifier);
 	virtual void run_kernel(kernel_object* kernel_obj) = 0;
 	kernel_object* get_cur_kernel() { return cur_kernel; }
 	virtual void finish() = 0;
 	virtual void flush() = 0;
+	virtual void barrier() = 0;
 	virtual void activate_context() = 0;
 	virtual void deactivate_context() = 0;
 	
 	kernel_object* add_kernel_file(const string& identifier, const string& file_name, const string& func_name, const string additional_options = "");
 	virtual kernel_object* add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "") = 0;
+	void delete_kernel(const string& identifier);
+	virtual void delete_kernel(kernel_object* kernel_obj) = 0;
 	
 	virtual buffer_object* create_buffer(BUFFER_FLAG type, size_t size, void* data = nullptr) = 0;
 	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data = nullptr) = 0;
@@ -186,9 +187,12 @@ public:
 	virtual bool set_kernel_argument(const unsigned int& index, const buffer_object* arg) = 0;
 	virtual bool set_kernel_argument(const unsigned int& index, size_t size, void* arg) = 0;
 	template<typename T> bool set_kernel_argument(const unsigned int& index, T&& arg);
-	void set_kernel_range(const cl::NDRange& global, const cl::NDRange& local);
-	virtual size_t get_kernel_work_group_size() = 0;
-	cl::NDRange compute_local_kernel_range(const unsigned int dimensions);
+	void set_kernel_range(const pair<cl::NDRange, cl::NDRange> range);
+	virtual size_t get_kernel_work_group_size() const = 0;
+	
+	pair<cl::NDRange, cl::NDRange> compute_kernel_ranges(const size_t& work_items) const;
+	pair<cl::NDRange, cl::NDRange> compute_kernel_ranges(const size_t& work_items_x, const size_t& work_items_y) const;
+	pair<cl::NDRange, cl::NDRange> compute_kernel_ranges(const size_t& work_items_x, const size_t& work_items_y, const size_t& work_items_z) const;
 	
 	//! this is for manual handling only
 	virtual void acquire_gl_object(buffer_object* gl_buffer_obj) = 0;
@@ -197,23 +201,22 @@ public:
 	struct kernel_object {
 		cl::Kernel* kernel = nullptr;
 		cl::Program* program = nullptr;
-		cl::NDRange* global = nullptr;
-		cl::NDRange* local = nullptr;
+		cl::NDRange global { 1 };
+		cl::NDRange local { 1 };
 		unsigned int arg_count = 0;
 		bool has_ogl_buffers = false;
 		vector<bool> args_passed;
 		unordered_map<unsigned int, buffer_object*> buffer_args;
-		string kernel_name = "";
+		string name = "";
+		unordered_map<cl::CommandQueue*, cl::KernelFunctor> functors;
 		
 		kernel_object() : args_passed(), buffer_args() {}
 		~kernel_object() {
-			if(global != nullptr) delete global;
-			if(local != nullptr) delete local;
 			for(const auto& ba : buffer_args) {
 				ba.second->associated_kernels.erase(this);
 			}
-			delete kernel;
-			delete program;
+			if(program != nullptr) delete program;
+			if(kernel != nullptr) delete kernel;
 		}
 	};
 	
@@ -251,8 +254,9 @@ public:
 		
 		cl_ulong max_alloc = 0;
 		size_t max_wg_size = 0;
-		size2 max_img_2d = size2(size_t(0));
-		size3 max_img_3d = size3(size_t(0));
+		size3 max_wi_sizes { 1, 1, 1 };
+		size2 max_img_2d { 0, 0 };
+		size3 max_img_3d { 0, 0, 0 };
 		bool img_support = false;
 		
 		device_object() {}
@@ -279,7 +283,7 @@ protected:
 	
 	bool has_vendor_device(VENDOR vendor_type);
 	
-	virtual const char* error_code_to_string(cl_int error_code) = 0;
+	virtual const char* error_code_to_string(cl_int error_code) const = 0;
 	
 	cl::Context* context;
 	cl::Platform* platform;
@@ -346,10 +350,12 @@ public:
 	
 	virtual void finish();
 	virtual void flush();
+	virtual void barrier();
 	virtual void activate_context();
 	virtual void deactivate_context();
 	
 	virtual kernel_object* add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "");
+	virtual void delete_kernel(kernel_object* kernel_obj);
 	
 	virtual buffer_object* create_buffer(BUFFER_FLAG type, size_t size, void* data = nullptr);
 	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data = nullptr);
@@ -369,7 +375,7 @@ public:
 	virtual bool set_kernel_argument(const unsigned int& index, buffer_object* arg);
 	virtual bool set_kernel_argument(const unsigned int& index, const buffer_object* arg);
 	virtual bool set_kernel_argument(const unsigned int& index, size_t size, void* arg);
-	virtual size_t get_kernel_work_group_size();
+	virtual size_t get_kernel_work_group_size() const;
 	
 	virtual void acquire_gl_object(buffer_object* gl_buffer_obj);
 	virtual void release_gl_object(buffer_object* gl_buffer_obj);
@@ -377,7 +383,7 @@ public:
 protected:
 	virtual buffer_object* create_buffer_object(BUFFER_FLAG type, void* data = nullptr);
 	virtual void log_program_binary(const kernel_object* kernel);
-	virtual const char* error_code_to_string(cl_int error_code);
+	virtual const char* error_code_to_string(cl_int error_code) const;
 	
 };
 
@@ -399,10 +405,12 @@ public:
 	
 	virtual void finish();
 	virtual void flush();
+	virtual void barrier();
 	virtual void activate_context();
 	virtual void deactivate_context();
 	
 	virtual kernel_object* add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "");
+	virtual void delete_kernel(kernel_object* kernel_obj);
 	
 	virtual buffer_object* create_buffer(BUFFER_FLAG type, size_t size, void* data = nullptr);
 	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data = nullptr);
@@ -422,7 +430,7 @@ public:
 	virtual bool set_kernel_argument(const unsigned int& index, buffer_object* arg);
 	virtual bool set_kernel_argument(const unsigned int& index, const buffer_object* arg);
 	virtual bool set_kernel_argument(const unsigned int& index, size_t size, void* arg);
-	virtual size_t get_kernel_work_group_size();
+	virtual size_t get_kernel_work_group_size() const;
 	
 	virtual void acquire_gl_object(buffer_object* gl_buffer_obj);
 	virtual void release_gl_object(buffer_object* gl_buffer_obj);
@@ -445,7 +453,7 @@ protected:
 	//
 	virtual buffer_object* create_buffer_object(BUFFER_FLAG type, void* data = nullptr);
 	virtual void log_program_binary(const kernel_object* kernel);
-	virtual const char* error_code_to_string(cl_int error_code);
+	virtual const char* error_code_to_string(cl_int error_code) const;
 	
 };
 #endif

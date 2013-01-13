@@ -12,7 +12,7 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * on OS X:
 ** please install the "latest XQuartz":http://xquartz.macosforge.org
 ** OpenCL on 10.7.5 and 10.8.2 on non-CPU devices is broken, please use a CPU device for now or use an earlier version of OS X (or 10.8.3+)
-** -if you have a Nvidia GPU, you can also use CUDA: https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda")- currently defunct
+** -if you have a Nvidia GPU, you can also use "CUDA":https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda")- currently defunct
 
 *Requirements:*
 * Windows: NT 6.0+ x64 (Vista/7/8/2008/2008R2/2012)

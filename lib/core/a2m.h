@@ -30,12 +30,12 @@ public:
 	a2m(const string& filename);
 	~a2m();
 	
-	struct __attribute__((packed)) vertex_data {
+	struct __attribute__((packed, aligned(16))) vertex_data {
 		float4 vertex;
 		float4 normal;
-		float4 binormal;
-		float4 tangent;
-		//float2 tex_coord;
+		//float4 binormal;
+		//float4 tangent;
+		float2 tex_coord;
 	};
 	
 	const transform_stage::vertex_buffer& get_vertex_buffer() const;

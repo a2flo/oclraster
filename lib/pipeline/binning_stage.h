@@ -21,10 +21,14 @@
 
 #include "oclraster/global.h"
 
+struct draw_state;
 class binning_stage {
 public:
 	binning_stage();
 	~binning_stage();
+	
+	void bin(draw_state& state,
+			 const unsigned int& triangle_count);
 
 protected:
 

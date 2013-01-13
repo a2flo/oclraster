@@ -21,7 +21,7 @@
 #include "core.h"
 #include "oclraster.h"
 
-#define A2M_VERSION 2
+static constexpr unsigned int A2M_VERSION = 2u;
 
 a2m::a2m(const string& filename) {
 	load(filename);
@@ -29,11 +29,11 @@ a2m::a2m(const string& filename) {
 
 a2m::~a2m() {
 	if(cl_vertex_buffer.buffer != nullptr) {
-		oclraster::get_opencl()->delete_buffer(cl_vertex_buffer.buffer);
+		ocl->delete_buffer(cl_vertex_buffer.buffer);
 	}
 	for(const auto& ib : cl_index_buffers) {
 		if(ib.buffer != nullptr) {
-			oclraster::get_opencl()->delete_buffer(ib.buffer);
+			ocl->delete_buffer(ib.buffer);
 		}
 	}
 	if(vertices != nullptr) delete [] vertices;
@@ -138,34 +138,36 @@ void a2m::load(const string& filename) {
 	// create opencl buffers
 	cl_vertex_buffer.elements.emplace_back("vertex", sizeof(float4));
 	cl_vertex_buffer.elements.emplace_back("normal", sizeof(float4));
-	cl_vertex_buffer.elements.emplace_back("binormal", sizeof(float4));
-	cl_vertex_buffer.elements.emplace_back("tangent", sizeof(float4));
-	//cl_vertex_buffer.elements.emplace_back("tex_coord", sizeof(float2));
+	//cl_vertex_buffer.elements.emplace_back("binormal", sizeof(float4));
+	//cl_vertex_buffer.elements.emplace_back("tangent", sizeof(float4));
+	cl_vertex_buffer.elements.emplace_back("tex_coord", sizeof(float2));
 	vertex_data* vdata = new vertex_data[vertex_count];
 	for(unsigned int i = 0; i < vertex_count; i++) {
 		vdata[i].vertex = vertices[i];
 		vdata[i].normal = normals[i];
-		vdata[i].binormal = binormals[i];
-		vdata[i].tangent = tangents[i];
+		//vdata[i].binormal = binormals[i];
+		//vdata[i].tangent = tangents[i];
 		vdata[i].vertex.w = 1.0f;
 		vdata[i].normal.w = 1.0f;
-		vdata[i].binormal.w = 1.0f;
-		vdata[i].tangent.w = 1.0f;
-		//vdata[i].tex_coord = tex_coords[i];
+		//vdata[i].binormal.w = 1.0f;
+		//vdata[i].tangent.w = 1.0f;
+		vdata[i].tex_coord = tex_coords[i];
 	}
-	cl_vertex_buffer.buffer = oclraster::get_opencl()->create_buffer(opencl::BUFFER_FLAG::READ |
-																	 opencl::BUFFER_FLAG::INITIAL_COPY,
-																	 sizeof(vertex_data) * vertex_count,
-																	 vdata);
+	cl_vertex_buffer.buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
+												 opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
+												 opencl::BUFFER_FLAG::INITIAL_COPY,
+												 sizeof(vertex_data) * vertex_count,
+												 vdata);
 	delete [] vdata;
 	
 	for(unsigned int i = 0; i < object_count; i++) {
 		transform_stage::index_buffer ib;
 		ib.index_count = index_count[i] * 3; // 3 vertices/indices per triangle
-		ib.buffer = oclraster::get_opencl()->create_buffer(opencl::BUFFER_FLAG::READ |
-														   opencl::BUFFER_FLAG::INITIAL_COPY,
-														   sizeof(unsigned int) * ib.index_count,
-														   indices[i]);
+		ib.buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
+									   opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
+									   opencl::BUFFER_FLAG::INITIAL_COPY,
+									   sizeof(unsigned int) * ib.index_count,
+									   indices[i]);
 		cl_index_buffers.emplace_back(ib);
 	}
 }

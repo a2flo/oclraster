@@ -68,9 +68,6 @@ enum class EVENT_TYPE : unsigned int {
 	
 	__USER_EVENT_START = __USER_EVENT + 1,
 	OCLRASTER_USER_EVENT_TYPES
-	
-	// TODO: add code for these:
-	// TOUCH, GESTURE, ...
 };
 OCLRASTER_API EVENT_TYPE operator&(const EVENT_TYPE& e0, const EVENT_TYPE& e1);
 namespace std {
@@ -82,7 +79,6 @@ namespace std {
 }
 
 //
-// TODO: prevent invalid types
 struct event_object {
 	const unsigned int time;
 	event_object(const unsigned int& time_) : time(time_) {}

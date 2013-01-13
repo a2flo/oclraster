@@ -104,7 +104,7 @@ opencl_base::kernel_object* opencl_base::add_kernel_file(const string& identifie
 	}
 	string kernel_data(buffer.str());
 	
-	// work around caching bug and modify source on each load, TODO: check if this still exists (still present in 10.6.2)
+	// work around caching bug and modify source on each load, TODO: check if this still exists (still present in 10.8.3 ...)
 	kernel_data = "#define __" + core::str_to_upper(func_name) +  "_BUILD_TIME__ " + uint2string((unsigned int)time(nullptr)) + "\n" + kernel_data;
 	
 	// check if this is an external kernel (and hasn't been added before)
@@ -143,7 +143,7 @@ void opencl_base::reload_kernels() {
 	
 	if(successful_internal_compilation) oclr_debug("internal kernels loaded successfully!");
 	else {
-		// one or more kernels didn't compile, TODO: use fallback?
+		// one or more kernels didn't compile
 		oclr_error("there were problems loading/compiling the internal kernels!");
 	}
 	
@@ -177,11 +177,20 @@ void opencl_base::run_kernel() {
 	run_kernel(cur_kernel);
 }
 
-void opencl_base::run_kernel(const char* kernel_identifier) {
-	if(kernels.count(kernel_identifier) > 0) {
-		run_kernel(kernels[kernel_identifier]);
+void opencl_base::run_kernel(const string& identifier) {
+	const auto iter = kernels.find(identifier);
+	if(iter != kernels.end()) {
+		run_kernel(iter->second);
 	}
-	oclr_error("kernel \"%s\" doesn't exist!", kernel_identifier);
+	oclr_error("kernel \"%s\" doesn't exist!", identifier);
+}
+
+void opencl_base::delete_kernel(const string& identifier) {
+	const auto iter = kernels.find(identifier);
+	if(iter != kernels.end()) {
+		delete_kernel(iter->second);
+	}
+	oclr_error("kernel \"%s\" doesn't exist!", identifier);
 }
 
 opencl_base::device_object* opencl_base::get_device(const opencl_base::DEVICE_TYPE& device) {
@@ -204,6 +213,10 @@ opencl_base::device_object* opencl_base::get_active_device() {
 	return active_device;
 }
 
+const vector<opencl_base::device_object*>& opencl_base::get_devices() const {
+	return devices;
+}
+
 bool opencl_base::has_vendor_device(opencl_base::VENDOR vendor_type) {
 	for(const auto& device : devices) {
 		if(device->vendor_type == vendor_type) return true;
@@ -211,74 +224,77 @@ bool opencl_base::has_vendor_device(opencl_base::VENDOR vendor_type) {
 	return false;
 }
 
-void opencl_base::set_kernel_range(const cl::NDRange& global, const cl::NDRange& local) {
+void opencl_base::set_kernel_range(const pair<cl::NDRange, cl::NDRange> range) {
 	if(cur_kernel == nullptr) return;
-	
-	memcpy(cur_kernel->global, global, sizeof(cl::NDRange));
-	memcpy(cur_kernel->local, local, sizeof(cl::NDRange));
+	cur_kernel->global = range.first;
+	cur_kernel->local = range.second;
 }
 
-cl::NDRange opencl_base::compute_local_kernel_range(const unsigned int dimensions) {
-	cl::NDRange local;
-	if(dimensions < 1 || dimensions > 3) {
-		oclr_error("invalid dimensions number %d!", dimensions);
-		return local;
-	}
+static size_t next_divisible_number(const size_t& num, const size_t& div) {
+	if((num % div) == 0) return num;
+	return (num / div) * div + div;
+}
+
+pair<cl::NDRange, cl::NDRange> opencl_base::compute_kernel_ranges(const size_t& work_items) const {
 	if(cur_kernel == nullptr || active_device == nullptr) {
-		dimensions == 1 ? local.set(1) : (dimensions == 2 ? local.set(1, 1) : local.set(1, 1, 1));
-		return local;
+		return { cl::NDRange(work_items), cl::NDRange(1) };
 	}
 	
-	// compute local work group size/dimensions
-	size_t wgs = get_kernel_work_group_size();
-	
-	if(dimensions == 1) {
-		local.set(wgs);
+	// NOTE: local range will use the kernels max local work group size
+	// and the global range will be made divisible by this local range
+	// -> #actual work items >= work_items
+	const size_t wg_size = get_kernel_work_group_size();
+	const size_t local_range = (wg_size > active_device->max_wi_sizes.x ?
+								active_device->max_wi_sizes.x : wg_size);
+	const size_t global_range = next_divisible_number(work_items, local_range);
+	/*oclr_msg("%s (%v -> %v; %v) overlap: %f%%",
+			 cur_kernel->name, work_items, global_range, local_range,
+			 ((float(global_range) / float(work_items)) - 1.0f) * 100.0f);*/
+	return { cl::NDRange(global_range), cl::NDRange(local_range) };
+}
+
+pair<cl::NDRange, cl::NDRange> opencl_base::compute_kernel_ranges(const size_t& work_items_x, const size_t& work_items_y) const {
+	if(cur_kernel == nullptr || active_device == nullptr) {
+		return { cl::NDRange(work_items_x, work_items_y), cl::NDRange(1, 1) };
 	}
-	else if(dimensions == 2) {
-		size_t local_x_size = 1, local_y_size = 1;
-		size_t size = sizeof(size_t)*8;
-		// get highest bit
-		size_t hb, mask = 0;
-		size_t one = 1; // ... -.-"
-		for(hb = size-1; hb > 0; hb--) {
-			mask |= (one << hb);
-			if((wgs & mask) != 0) break;
+	
+	// NOTE: TODO
+	const size_t wg_size = get_kernel_work_group_size();
+	const size_t max_wg_size = (wg_size > active_device->max_wi_sizes.x ?
+								active_device->max_wi_sizes.x : wg_size);
+	// try to make this as even as possible and divisible by 2
+	size_t local_x_size = max_wg_size;
+	size_t local_y_size = 1;
+	for(; local_x_size > 1;) {
+		if(((local_x_size >> 1) * (local_y_size << 1)) != max_wg_size ||
+		   (local_y_size << 1) > active_device->max_wi_sizes.y ||
+		   local_x_size == local_y_size) {
+			break;
 		}
-		size_t pot = (hb+1) >> 1;
-		size_t rpot = hb-pot;
-		local_x_size = one << pot;
-		local_y_size = one << rpot;
-		
-		size_t rem = wgs ^ (one << hb);
-		if(rem > 0) local_y_size += rem/local_x_size;
-		
-		local.set(local_x_size, local_y_size);
+		local_x_size >>= 1;
+		local_y_size <<= 1;
 	}
-	else if(dimensions == 3) {
-		// TODO: code this! (same as dim 2 for the moment)
-		
-		size_t local_x_size = 1, local_y_size = 1;
-		size_t size = sizeof(size_t)*8;
-		// get highest bit
-		size_t hb, mask = 0;
-		size_t one = 1; // ... -.-"
-		for(hb = size-1; hb > 0; hb--) {
-			mask |= (one << hb);
-			if((wgs & mask) != 0) break;
-		}
-		size_t pot = (hb+1) >> 1;
-		size_t rpot = hb-pot;
-		local_x_size = one << pot;
-		local_y_size = one << rpot;
-		
-		size_t rem = wgs ^ (one << hb);
-		if(rem > 0) local_y_size += rem/local_x_size;
-		
-		local.set(local_x_size, local_y_size, 1);
+	const size2 global_range {
+		next_divisible_number(work_items_x, local_x_size),
+		next_divisible_number(work_items_y, local_y_size)
+	};
+	/*oclr_msg("%s (%v -> %v; %v) overlap: %f%% %f%%, #%f%%",
+			 cur_kernel->name, size2(work_items_x, work_items_y), global_range, size2(local_x_size, local_y_size),
+			 ((float(global_range.x) / float(work_items_x)) - 1.0f) * 100.0f,
+			 ((float(global_range.y) / float(work_items_y)) - 1.0f) * 100.0f,
+			 ((float(global_range.x * global_range.y) / float(work_items_x * work_items_y)) - 1.0f) * 100.0f
+			 );*/
+	return { cl::NDRange(global_range.x, global_range.y), cl::NDRange(local_x_size, local_y_size) };
+}
+
+pair<cl::NDRange, cl::NDRange> opencl_base::compute_kernel_ranges(const size_t& work_items_x, const size_t& work_items_y, const size_t& work_items_z) const {
+	if(cur_kernel == nullptr || active_device == nullptr) {
+		return { cl::NDRange(work_items_x, work_items_y, work_items_z), cl::NDRange(1, 1, 1) };
 	}
 	
-	return local;
+	// NOTE: same as 1D
+	// TODO: write this
+	return { cl::NDRange(work_items_x, work_items_y, work_items_z), cl::NDRange(1, 1, 1) };
 }
 
 void opencl_base::set_manual_gl_sharing(buffer_object* gl_buffer_obj, const bool state) {
@@ -363,7 +379,7 @@ F(CL_INVALID_DEVICE_PARTITION_COUNT)
 
 #define __DECLARE_ERROR_CODE_TO_STRING(code) case code: return #code;
 
-const char* opencl::error_code_to_string(cl_int error_code) {
+const char* opencl::error_code_to_string(cl_int error_code) const {
 	switch(error_code) {
 		__ERROR_CODE_INFO(__DECLARE_ERROR_CODE_TO_STRING);
 		default:
@@ -591,15 +607,24 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 			oclr_msg("printf buffer size: %u", internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>());
 			oclr_msg("max sub-devices: %u", internal_device.getInfo<CL_DEVICE_PARTITION_MAX_SUB_DEVICES>());
 			oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
+			oclr_msg("address space size: %u", internal_device.getInfo<CL_DEVICE_ADDRESS_BITS>());
+			oclr_msg("max mem alloc: %u", internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>());
+			oclr_msg("mem base address alignment: %u", internal_device.getInfo<CL_DEVICE_MEM_BASE_ADDR_ALIGN>());
+			oclr_msg("min data type alignment size: %u", internal_device.getInfo<CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE>());
+			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());
 			
 			device->max_alloc = internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
 			device->max_wg_size = internal_device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
+			const auto max_wi_sizes = internal_device.getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>();
+			device->max_wi_sizes.set(max_wi_sizes[0], max_wi_sizes[1], max_wi_sizes[2]);
 			device->img_support = internal_device.getInfo<CL_DEVICE_IMAGE_SUPPORT>() == 1;
 			device->max_img_2d.set(internal_device.getInfo<CL_DEVICE_IMAGE2D_MAX_WIDTH>(),
 								   internal_device.getInfo<CL_DEVICE_IMAGE2D_MAX_HEIGHT>());
 			device->max_img_3d.set(internal_device.getInfo<CL_DEVICE_IMAGE3D_MAX_WIDTH>(),
 								   internal_device.getInfo<CL_DEVICE_IMAGE3D_MAX_HEIGHT>(),
 								   internal_device.getInfo<CL_DEVICE_IMAGE3D_MAX_DEPTH>());
+			
+			oclr_msg("max_wi_sizes: %v", device->max_wi_sizes);
 
 			device->vendor_type = VENDOR::UNKNOWN;
 			string vendor_str = core::str_to_lower(device->vendor);
@@ -709,9 +734,12 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 		
 		internal_kernels = { // first time init:
 			make_tuple("TRANSFORM", "transform.cl", "transform", ""),
+			make_tuple("TEMPLATE_TRANSFORM", "template_transform.cl", "_transform_kernel", ""),
 			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "bin_rasterize", ""),
 			make_tuple("RASTERIZE", "rasterize.cl", "rasterize", ""),
-			make_tuple("CLEAR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
+			make_tuple("TEMPLATE_RASTERIZE", "template_rasterize.cl", "_template_rasterize", ""),
+			make_tuple("CLEAR_COLOR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
+			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DDEPTH_FRAMEBUFFER=1"),
 		};
 		
 		load_internal_kernels();
@@ -772,6 +800,20 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 					case CL_Rx: cout << "CL_Rx"; break;
 					case CL_RGx: cout << "CL_RGx"; break;
 					case CL_RGBx: cout << "CL_RGBx"; break;
+					case CL_DEPTH: cout << "CL_DEPTH"; break;
+					case CL_DEPTH_STENCIL: cout << "CL_DEPTH_STENCIL"; break;
+#if defined(CL_1RGB_APPLE)
+					case CL_1RGB_APPLE: cout << "CL_1RGB_APPLE"; break;
+#endif
+#if defined(CL_BGR1_APPLE)
+					case CL_BGR1_APPLE: cout << "CL_BGR1_APPLE"; break;
+#endif
+#if defined(CL_YCbYCr_APPLE)
+					case CL_YCbYCr_APPLE: cout << "CL_YCbYCr_APPLE"; break;
+#endif
+#if defined(CL_CbYCrY_APPLE)
+					case CL_CbYCrY_APPLE: cout << "CL_CbYCrY_APPLE"; break;
+#endif
 					default:
 						cout << format.image_channel_order;
 						break;
@@ -793,6 +835,12 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 					case CL_UNSIGNED_INT32: cout << "CL_UNSIGNED_INT32"; break;
 					case CL_HALF_FLOAT: cout << "CL_HALF_FLOAT"; break;
 					case CL_FLOAT: cout << "CL_FLOAT"; break;
+#if defined(CL_SFIXED14_APPLE)
+					case CL_SFIXED14_APPLE: cout << "CL_SFIXED14_APPLE"; break;
+#endif
+#if defined(CL_BIASED_HALF_APPLE)
+					case CL_BIASED_HALF_APPLE: cout << "CL_BIASED_HALF_APPLE"; break;
+#endif
 					default:
 						cout << format.image_channel_data_type;
 						break;
@@ -822,12 +870,12 @@ opencl::kernel_object* opencl::add_kernel_src(const string& identifier, const st
 		options += " -DUNDEF__APPLE__";
 #endif
 #if defined(__WINDOWS__)
-		options += " -D__WINDOWS__"; // TODO: still necessary?
+		options += " -D__WINDOWS__";
 #endif
 		
 		// add kernel
 		kernels[identifier] = new opencl::kernel_object();
-		kernels[identifier]->kernel_name = identifier;
+		kernels[identifier]->name = identifier;
 		cl::Program::Sources source(1, make_pair(src.c_str(), src.length()));
 		kernels[identifier]->program = new cl::Program(*context, source);
 		
@@ -868,8 +916,6 @@ opencl::kernel_object* opencl::add_kernel_src(const string& identifier, const st
 		}
 		
 		kernels[identifier]->kernel = new cl::Kernel(*kernels[identifier]->program, func_name.c_str(), &ierr);
-		kernels[identifier]->global = new cl::NDRange(1);
-		kernels[identifier]->local = new cl::NDRange(1);
 		
 		kernels[identifier]->arg_count = kernels[identifier]->kernel->getInfo<CL_KERNEL_NUM_ARGS>();
 		kernels[identifier]->args_passed.insert(kernels[identifier]->args_passed.begin(), kernels[identifier]->arg_count, false);
@@ -910,6 +956,25 @@ opencl::kernel_object* opencl::add_kernel_src(const string& identifier, const st
 	__HANDLE_CL_EXCEPTION_END
 	//log_program_binary(kernels[identifier], options);
 	return kernels[identifier];
+}
+
+void opencl::delete_kernel(kernel_object* obj) {
+	if(cur_kernel == obj) {
+		// if the currently active kernel is being deleted, flush+finish the queue
+		flush();
+		finish();
+		cur_kernel = nullptr;
+	}
+	
+	for(const auto& kernel : kernels) {
+		if(kernel.second == obj) {
+			kernels.erase(kernel.first);
+			delete obj;
+			return;
+		}
+	}
+	
+	oclr_error("couldn't find kernel object!");
 }
 
 void opencl::log_program_binary(const kernel_object* kernel) {
@@ -1296,6 +1361,8 @@ void opencl::run_kernel(kernel_object* kernel_obj) {
 		}
 		if(!all_set) return;
 		
+		cl::CommandQueue* cmd_queue = queues[active_device->device];
+		
 		vector<cl::Memory> gl_objects;
 		for(const auto& buffer_arg : kernel_obj->buffer_args) {
 			if((buffer_arg.second->type & BUFFER_FLAG::COPY_ON_USE) != BUFFER_FLAG::NONE) {
@@ -1310,12 +1377,26 @@ void opencl::run_kernel(kernel_object* kernel_obj) {
 			}
 		}
 		if(!gl_objects.empty()) {
-			queues[active_device->device]->enqueueAcquireGLObjects(&gl_objects);
+			cmd_queue->enqueueAcquireGLObjects(&gl_objects);
 		}
 		
-		cl::KernelFunctor func = kernel_obj->kernel->bind(*queues[active_device->device], *kernel_obj->global, *kernel_obj->local);
-		//func().wait();
-		func();
+		// TODO: write my own opencl kernel functor (this is rather ugly right now ...)
+		auto functor = kernel_obj->functors.find(cmd_queue);
+		if(functor == kernel_obj->functors.end()) {
+			functor = kernel_obj->functors.insert({
+				cmd_queue,
+				kernel_obj->kernel->bind(*cmd_queue,
+										 kernel_obj->global,
+										 kernel_obj->local)
+			}).first;
+		}
+		else {
+			functor->second.global_ = kernel_obj->global;
+			functor->second.local_ = kernel_obj->local;
+		}
+		
+		functor->second();
+		//functor->second().wait();
 		
 		for(const auto& buffer_arg : kernel_obj->buffer_args) {
 			if((buffer_arg.second->type & BUFFER_FLAG::READ_BACK_RESULT) != BUFFER_FLAG::NONE) {
@@ -1331,10 +1412,10 @@ void opencl::run_kernel(kernel_object* kernel_obj) {
 				 });
 		
 		if(kernel_obj->has_ogl_buffers && !gl_objects.empty()) {
-			queues[active_device->device]->enqueueReleaseGLObjects(&gl_objects);
+			cmd_queue->enqueueReleaseGLObjects(&gl_objects);
 		}
 	}
-	__HANDLE_CL_EXCEPTION_EXT("run_kernel", (" - in kernel: "+kernel_obj->kernel_name).c_str())
+	__HANDLE_CL_EXCEPTION_EXT("run_kernel", (" - in kernel: "+kernel_obj->name).c_str())
 }
 
 void opencl::finish() {
@@ -1345,6 +1426,11 @@ void opencl::finish() {
 void opencl::flush() {
 	if(active_device == nullptr) return;
 	queues[active_device->device]->flush();
+}
+
+void opencl::barrier() {
+	if(active_device == nullptr) return;
+	queues[active_device->device]->enqueueBarrier();
 }
 
 void opencl::activate_context() {
@@ -1424,7 +1510,7 @@ void opencl::unmap_buffer(opencl::buffer_object* buffer_obj, void* map_ptr) {
 	__HANDLE_CL_EXCEPTION("unmap_buffer")
 }
 
-size_t opencl::get_kernel_work_group_size() {
+size_t opencl::get_kernel_work_group_size() const {
 	if(cur_kernel == nullptr || active_device == nullptr) return 0;
 	
 	try {
@@ -1492,7 +1578,14 @@ void opencl::set_active_device(const opencl_base::DEVICE_TYPE& dev) {
 		oclr_error("can't use device %u - keeping current one (%u)!", dev, active_device->type);
 	}
 	else {
-		// TODO: use _any_ device if there is at least one available ...
-		oclr_error("can't use device %u and no other device is currently active!", dev);
+		// try to use _any_ device if there is at least one available ...
+		if(!devices.empty()) {
+			active_device = devices[0];
+			oclr_error("can't use device %u (doesn't exist or isn't available) - using %s (%u) instead!",
+					   dev, active_device->name, active_device->type);
+		}
+		else {
+			oclr_error("can't use device %u and no other device is currently available!", dev);
+		}
 	}
 }

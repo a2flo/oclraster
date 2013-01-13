@@ -13,6 +13,7 @@
 	fov CDATA #REQUIRED
 	near CDATA #REQUIRED
 	far CDATA #REQUIRED
+	upscaling CDATA #REQUIRED
 >
 <!ELEMENT input (#PCDATA)*>
 <!ATTLIST input

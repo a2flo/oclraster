@@ -19,8 +19,6 @@
 #ifndef __OCLRASTER_TRANSFORM_PROGRAM_H__
 #define __OCLRASTER_TRANSFORM_PROGRAM_H__
 
-#include "transform_program.h"
-
 class transform_program {
 public:
 	transform_program();

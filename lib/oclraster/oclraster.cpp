@@ -9,7 +9,7 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details
- *  
+ *
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
@@ -19,15 +19,17 @@
 #include "oclraster/oclraster_version.h"
 #include "cl/opencl.h"
 #include "core/rtt.h"
+#include "core/camera.h"
 
 #if defined(__APPLE__)
 #include "osx/osx_helper.h"
 #endif
 
 // init statics
-event* oclraster::e = nullptr;
+event* oclraster::evt = nullptr;
 xml* oclraster::x = nullptr;
-opencl_base* oclraster::ocl = nullptr;
+opencl_base* ocl = nullptr;
+camera* oclraster::cam = nullptr;
 
 struct oclraster::oclraster_config oclraster::config;
 xml::xml_doc oclraster::config_doc;
@@ -37,7 +39,7 @@ string oclraster::rel_datapath = "";
 string oclraster::callpath = "";
 string oclraster::kernelpath = "";
 
-struct oclraster::camera_setup oclraster::camera;
+struct oclraster::camera_setup oclraster::cam_setup;
 float3 oclraster::position;
 float3 oclraster::rotation;
 matrix4f oclraster::projection_matrix;
@@ -173,10 +175,10 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 	new_fps_count = false;
 	
 	x = new xml();
-	e = new event();
+	evt = new event();
 	
 	window_handler = new event::handler(&oclraster::window_event_handler);
-	e->add_internal_event_handler(*window_handler, EVENT_TYPE::WINDOW_RESIZE);
+	evt->add_internal_event_handler(*window_handler, EVENT_TYPE::WINDOW_RESIZE);
 	
 	// print out oclraster info
 	oclr_debug("%s", (OCLRASTER_VERSION_STRING).c_str());
@@ -195,6 +197,7 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 		config.fov = config_doc.get<float>("config.projection.fov", 72.0f);
 		config.near_far_plane.x = config_doc.get<float>("config.projection.near", 1.0f);
 		config.near_far_plane.y = config_doc.get<float>("config.projection.far", 1000.0f);
+		config.upscaling = config_doc.get<float>("config.projection.upscaling", 1.0f);
 		
 		config.key_repeat = config_doc.get<size_t>("config.input.key_repeat", 200);
 		config.ldouble_click_time = config_doc.get<size_t>("config.input.ldouble_click_time", 200);
@@ -219,7 +222,7 @@ void oclraster::destroy() {
 	
 	acquire_context();
 	
-	e->remove_event_handler(*window_handler);
+	evt->remove_event_handler(*window_handler);
 	delete window_handler;
 	
 	rtt::destroy();
@@ -230,7 +233,7 @@ void oclraster::destroy() {
 	}
 	
 	// delete this at the end, b/c other classes will remove event handlers
-	if(e != nullptr) delete e;
+	if(evt != nullptr) delete evt;
 	
 	release_context();
 
@@ -386,7 +389,7 @@ void oclraster::init_internal() {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	swap();
-	e->handle_events(); // this will effectively create/open the window on some platforms
+	evt->handle_events(); // this will effectively create/open the window on some platforms
 	
 	//
 	int tmp = 0;
@@ -403,9 +406,9 @@ void oclraster::init_internal() {
 	}
 	else oclr_debug("video driver: %s", SDL_GetCurrentVideoDriver());
 	
-	e->set_ldouble_click_time((unsigned int)config.ldouble_click_time);
-	e->set_rdouble_click_time((unsigned int)config.rdouble_click_time);
-	e->set_mdouble_click_time((unsigned int)config.mdouble_click_time);
+	evt->set_ldouble_click_time((unsigned int)config.ldouble_click_time);
+	evt->set_rdouble_click_time((unsigned int)config.rdouble_click_time);
+	evt->set_mdouble_click_time((unsigned int)config.mdouble_click_time);
 	
 	// initialize ogl
 	init_gl();
@@ -528,9 +531,9 @@ void oclraster::set_fullscreen(const bool& state) {
 		oclr_error("failed to %s fullscreen: %s!",
 				  (state ? "enable" : "disable"), SDL_GetError());
 	}
-	e->add_event(EVENT_TYPE::WINDOW_RESIZE,
-				 make_shared<window_resize_event>(SDL_GetTicks(),
-												  size2(config.width, config.height)));
+	evt->add_event(EVENT_TYPE::WINDOW_RESIZE,
+				   make_shared<window_resize_event>(SDL_GetTicks(),
+													size2(config.width, config.height)));
 	// TODO: border?
 }
 
@@ -559,6 +562,9 @@ void oclraster::start_draw() {
 	translation_matrix.identity();
 	rotation_matrix.identity();
 	mvp_matrix = projection_matrix;
+	
+	// run/step camera
+	run_camera();
 }
 
 /*! stops drawing the window
@@ -756,22 +762,16 @@ bool oclraster::get_cursor_visible() {
 	return oclraster::cursor_visible;
 }
 
-/*! returns a pointer to the file_io class
+/*! returns a pointer to the event class
  */
 event* oclraster::get_event() {
-	return oclraster::e;
+	return oclraster::evt;
 }
 
 /*! returns the xml class
  */
 xml* oclraster::get_xml() {
 	return oclraster::x;
-}
-
-/*! returns the opencl class
- */
-opencl_base* oclraster::get_opencl() {
-	return oclraster::ocl;
 }
 
 /*! sets the data path
@@ -942,9 +942,9 @@ const float& oclraster::get_fov() {
 void oclraster::set_fov(const float& fov) {
 	if(config.fov == fov) return;
 	config.fov = fov;
-	e->add_event(EVENT_TYPE::WINDOW_RESIZE,
-				 make_shared<window_resize_event>(SDL_GetTicks(),
-												  size2(config.width, config.height)));
+	evt->add_event(EVENT_TYPE::WINDOW_RESIZE,
+				   make_shared<window_resize_event>(SDL_GetTicks(),
+													size2(config.width, config.height)));
 }
 
 const float2& oclraster::get_near_far_plane() {
@@ -998,39 +998,64 @@ void oclraster::release_context() {
 
 bool oclraster::window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	if(type == EVENT_TYPE::WINDOW_RESIZE) {
-		const window_resize_event& evt = (const window_resize_event&)*obj;
-		config.width = evt.size.x;
-		config.height = evt.size.y;
+		const window_resize_event& wnd_evt = (const window_resize_event&)*obj;
+		config.width = wnd_evt.size.x;
+		config.height = wnd_evt.size.y;
 		resize_window();
 	}
 	return true;
 }
 
-void oclraster::setup_camera(const float3& position_, const float3& forward_, const float3& up_) {
+void oclraster::run_camera() {
+	if(cam == nullptr) return;
+	cam->run();
+	
 	const float aspect_ratio = float(config.width) / float(config.height);
 	const float angle_ratio = tanf(DEG2RAD(config.fov * 0.5f)) * 2.0f;
+	
+	const float3 forward_(cam->get_forward());
+	const float3 up_(cam->get_up());
 	
 	const float3 right { (up_ ^ forward_).normalized() };
 	const float3 up { (forward_ ^ right).normalized() };
 	const float3 forward { forward_.normalized() };
-	oclr_debug("right: %v, up: %v, forward: %v", right, up, forward);
+	//oclr_debug("right: %v, up: %v, forward: %v", right, up, forward);
 	
 	const float3 width_vec { right * angle_ratio * aspect_ratio };
 	const float3 height_vec { up * angle_ratio };
-	oclr_debug("w/h: %v %v, %f %f", width_vec, height_vec, aspect_ratio, angle_ratio);
+	//oclr_debug("w/h: %v %v, %f %f", width_vec, height_vec, aspect_ratio, angle_ratio);
 	
-	camera.position = position_;
-	camera.x_vec = width_vec / float(config.width);
-	camera.y_vec = height_vec / float(config.height);
-	camera.origin = forward - (width_vec + height_vec) * 0.5f;
-	camera.origin.normalized();
-	oclr_msg("cam setup: %v %v %v %v",
-			 camera.position,
-			 camera.origin,
-			 camera.x_vec,
-			 camera.y_vec);
+	cam_setup.position = cam->get_position();
+	// TODO: general upscaling support
+#if !defined(__APPLE__)
+	cam_setup.x_vec = width_vec / float(config.width);
+	cam_setup.y_vec = height_vec / float(config.height);
+#else
+	const float scale_factor = osx_helper::get_scale_factor(config.wnd);
+	cam_setup.x_vec = (width_vec * scale_factor) / float(config.width);
+	cam_setup.y_vec = (height_vec * scale_factor) / float(config.height);
+#endif
+	cam_setup.origin = forward - ((width_vec + height_vec) * 0.5f);
+	cam_setup.origin.normalized();
+	cam_setup.forward = forward;
 }
 
 const oclraster::camera_setup& oclraster::get_camera_setup() {
-	return camera;
+	return cam_setup;
+}
+
+void oclraster::set_camera(camera* cam_) {
+	cam = cam_;
+}
+
+camera* oclraster::get_camera() {
+	return cam;
+}
+
+void oclraster::set_upscaling(const float& upscaling_) {
+	config.upscaling = upscaling_;
+}
+
+const float& oclraster::get_upscaling() {
+	return config.upscaling;
 }

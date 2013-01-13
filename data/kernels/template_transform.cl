@@ -3,13 +3,6 @@
 #include "oclr_math.h"
 #include "oclr_matrix.h"
 
-typedef struct __attribute__((packed, aligned(16))) {
-	// note: don't use float3 (-> will be aligned as float4, even with packed attribute)
-	float4 vertex;
-	float4 normal;
-	float2 tex_coord;
-} vertex_data;
-
 typedef struct __attribute__((packed)) {
 	float4 camera_position;
 	float4 camera_origin;
@@ -26,12 +19,57 @@ typedef struct __attribute__((packed)) {
 	float4 W;
 } transformed_data;
 
+// transform rerouting
+#define transform(vertex) _transform(vertex, VE, transformed_vertex)
+OCLRASTER_FUNC void _transform(float4 vertex, const float3* VE, float3* transformed_vertex) {
+	*transformed_vertex = vertex.xyz - *VE;
+}
+
+//###OCLRASTER_USER_CODE###
+//////////////////////////////////////////////////////////////////
+// transform program
+oclraster_in {
+	float4 vertex;
+	float4 normal;
+	float2 tex_coord;
+} simple_input;
+
+oclraster_out {
+	float4 vertex;
+	float4 normal;
+	float2 tex_coord;
+} simple_output;
+
+oclraster_uniforms {
+	mat4 modelview_matrix;
+} transform_uniforms;
+
+// void main() {
+void user_main(const int index,
+			   const simple_input* input_attributes,
+			   global simple_output* output_attributes,
+			   const transform_uniforms* simple_transform_uniforms,
+			   const float3* VE,
+			   float3* transformed_vertex) {
+	output_attributes->normal = input_attributes->normal;
+	output_attributes->tex_coord = input_attributes->tex_coord;
+	
+	float4 mv_vertex = mat4_mul_vec4(simple_transform_uniforms->modelview_matrix,
+									 input_attributes->vertex);
+	output_attributes->vertex = mv_vertex;
+	transform(mv_vertex);
+}
+
 //
-kernel void transform(global const vertex_data* vertex_buffer,
-					  global const unsigned int* index_buffer,
-					  global transformed_data* transformed_buffer,
-					  constant constant_data* cdata,
-					  const unsigned int triangle_count) {
+kernel void _transform_kernel(//###OCLRASTER_USER_STRUCTS###
+							  global const simple_input* vertex_buffer,
+							  global simple_output* vertex_output_buffer,
+							  constant transform_uniforms* input_uniforms,
+							  
+							  global const unsigned int* index_buffer,
+							  global transformed_data* transformed_buffer,
+							  constant constant_data* cdata,
+							  const unsigned int triangle_count) {
 	const unsigned int triangle_id = get_global_id(0);
 	// global work size is greater than the actual triangle count
 	// -> check for triangle_count instead of get_global_size(0)
@@ -49,11 +87,15 @@ kernel void transform(global const vertex_data* vertex_buffer,
 	const float3 DY = cdata->camera_y_vec.xyz;
 	const float3 VE = cdata->camera_position.xyz;
 	const float3 forward = cdata->camera_forward.xyz;
-	float3 vertices[3] = {
-		vertex_buffer[indices[0]].vertex.xyz - VE,
-		vertex_buffer[indices[1]].vertex.xyz - VE,
-		vertex_buffer[indices[2]].vertex.xyz - VE
-	};
+	
+	float3 vertices[3];
+	const transform_uniforms uniforms = *input_uniforms;
+	for(int i = 0; i < 3; i++) {
+		//###OCLRASTER_USER_MAIN_CALL###
+		simple_input input = vertex_buffer[indices[i]];
+		global simple_output* output = &vertex_output_buffer[indices[i]];
+		user_main(indices[i], &input, output, &uniforms, &VE, &vertices[i]);
+	}
 	
 	// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
 	const float4 triangle_cam_relation = (float4)(dot(vertices[0], forward),

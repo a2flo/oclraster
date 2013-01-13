@@ -29,6 +29,9 @@
 #include "core/unicode.h"
 
 class opencl_base;
+extern opencl_base* ocl;
+
+class camera;
 class OCLRASTER_API oclraster {
 public:
 	static void init(const char* callpath_, const char* datapath_);
@@ -48,7 +51,6 @@ public:
 	// class return functions
 	static event* get_event();
 	static xml* get_xml();
-	static opencl_base* get_opencl();
 
 	// miscellaneous control functions
 	static void set_caption(const char* caption);
@@ -74,6 +76,7 @@ public:
 	struct camera_setup {
 		float3 position;
 		float3 origin;
+		float3 forward;
 		float3 x_vec;
 		float3 y_vec;
 	};
@@ -92,7 +95,9 @@ public:
 	static void set_rotation(const float& xrot, const float& yrot);
 	static float3& get_rotation();
 	
-	static void setup_camera(const float3& position, const float3& forward, const float3& up);
+	static void set_camera(camera* cam);
+	static camera* get_camera();
+	static void run_camera(); // TODO: move to protected again (-> add better way of manipulating the camera during a frame)
 	
 	// fps functions
 	static unsigned int get_fps();
@@ -122,6 +127,8 @@ public:
 	static const float& get_fov();
 	static const float2& get_near_far_plane();
 	static void set_fov(const float& fov);
+	static void set_upscaling(const float& upscaling);
+	static const float& get_upscaling();
 	
 	// input
 	static unsigned int get_key_repeat();
@@ -134,9 +141,8 @@ protected:
 	~oclraster() = delete;
 	oclraster& operator=(const oclraster&) = delete;
 	
-	static event* e;
+	static event* evt;
 	static xml* x;
-	static opencl_base* ocl;
 	
 	static void init_internal();
 	
@@ -147,7 +153,8 @@ protected:
 		
 		// projection
 		float fov = 72.0f;
-		float2 near_far_plane = float2(0.1f, 1000.0f);
+		float2 near_far_plane { 0.1f, 1000.0f }; // TODO: still necessary?
+		float upscaling = 1.0f;
 		
 		// input
 		size_t key_repeat = 200;
@@ -178,7 +185,9 @@ protected:
 	static string kernelpath;
 
 	// transformation/positioning/rotation
-	static camera_setup camera;
+	//static void run_camera();
+	static camera* cam;
+	static camera_setup cam_setup;
 	static float3 position;
 	static float3 rotation;
 	static matrix4f projection_matrix;

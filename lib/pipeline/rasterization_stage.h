@@ -19,14 +19,19 @@
 #ifndef __OCLRASTER_RASTERIZATION_STAGE_H__
 #define __OCLRASTER_RASTERIZATION_STAGE_H__
 
-#include "oclraster/global.h"
+#include "cl/opencl.h"
 
+struct draw_state;
 class rasterization_stage {
 public:
 	rasterization_stage();
 	~rasterization_stage();
+	
+	void rasterize(draw_state& state,
+				   const unsigned int& triangle_count);
 
 protected:
+	opencl_base::buffer_object* const_buffer_rp = nullptr;
 
 };
 
