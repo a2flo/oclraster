@@ -59,8 +59,8 @@ int main(int argc, char* argv[]) {
 	evt->add_event_handler(quit_handler_fnctr, EVENT_TYPE::QUIT);
 	
 	///// testing
-	oclraster_program vs_prog(oclraster::kernel_path("user/simple_transform_vs.cl"));
-	oclraster_program fs_prog(oclraster::kernel_path("user/simple_transform_fs.cl"));
+	oclraster_program vs_prog(oclraster::kernel_path("user/simple_shader_vs.cl"));
+	oclraster_program fs_prog(oclraster::kernel_path("user/simple_shader_fs.cl"));
 	/////
 	
 	// init done

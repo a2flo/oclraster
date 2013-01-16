@@ -38,8 +38,6 @@
 		5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cudacl.h; sourceTree = "<group>"; };
 		5CD91DBC16627F3D00B99A38 /* rasterize.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = rasterize.cl; sourceTree = "<group>"; };
 		5CEC5B631699719F00C464D5 /* template_transform.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_transform.cl; sourceTree = "<group>"; };
-		5CEC5B6A169B343800C464D5 /* simple_transform_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_transform_fs.cl; sourceTree = "<group>"; };
-		5CEC5B6B169B343800C464D5 /* simple_transform_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_transform_vs.cl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,8 +130,6 @@
 		5CEC5B641699719F00C464D5 /* user */ = {
 			isa = PBXGroup;
 			children = (
-				5CEC5B6B169B343800C464D5 /* simple_transform_vs.cl */,
-				5CEC5B6A169B343800C464D5 /* simple_transform_fs.cl */,
 			);
 			path = user;
 			sourceTree = "<group>";
