@@ -48,13 +48,13 @@ oclraster_uniforms {
 void user_main(const int index,
 			   const simple_input* input_attributes,
 			   global simple_output* output_attributes,
-			   const transform_uniforms* simple_transform_uniforms,
+			   const transform_uniforms* uniforms,
 			   const float3* VE,
 			   float3* transformed_vertex) {
 	output_attributes->normal = input_attributes->normal;
 	output_attributes->tex_coord = input_attributes->tex_coord;
 	
-	float4 mv_vertex = mat4_mul_vec4(simple_transform_uniforms->modelview_matrix,
+	float4 mv_vertex = mat4_mul_vec4(uniforms->modelview_matrix,
 									 input_attributes->vertex);
 	output_attributes->vertex = mv_vertex;
 	transform(mv_vertex);

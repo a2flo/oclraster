@@ -6,13 +6,13 @@ oclraster_out simple_output {
 	float4 vertex;
 	float4 normal;
 	float2 tex_coord;
-};
+} output_attributes;
 
-oclraster_uniforms simple_raster_uniforms {
+oclraster_uniforms rasterize_uniforms {
 	float4 camera_position;
 	float4 light_position; // .w = light radius ^ 2
 	float4 light_color;
-};
+} uniforms;
 
 void main() {
 	// check if lit by light (compute attenuation)
