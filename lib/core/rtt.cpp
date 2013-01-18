@@ -211,7 +211,7 @@ rtt::fbo* rtt::add_buffer(unsigned int width, unsigned int height, GLenum* targe
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, buffer->target[i], buffer->tex[i], 0);
 		
 #if !defined(OCLRASTER_IOS)
-#if defined(oclr_debug)
+#if defined(OCLRASTER_DEBUG) && 0
 		// TODO: fbo/texture checking
 		GLint check_internal_format = 0, check_type = 0, check_size = 0;
 		glGetTexLevelParameteriv(buffer->target[i], 0, GL_TEXTURE_INTERNAL_FORMAT, &check_internal_format);

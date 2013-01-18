@@ -54,8 +54,8 @@ void pipeline::create_framebuffers(const uint2& size) {
 	framebuffer_size = scaled_size;
 	oclr_debug("size: %v -> %v", size, scaled_size);
 	
-	color_framebuffer = rtt::add_buffer(scaled_size.x, scaled_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 1, rtt::DEPTH_TYPE::NONE);
-	color_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, color_framebuffer->tex[0]);
+	//color_framebuffer = rtt::add_buffer(scaled_size.x, scaled_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 1, rtt::DEPTH_TYPE::NONE);
+	//color_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, color_framebuffer->tex[0]);
 	
 	// shared float texture doesn't work on the cpu, cl float image2d doesn't work on the gpu ... -> use the correct one
 	// TODO: correct device type check
@@ -64,6 +64,8 @@ void pipeline::create_framebuffers(const uint2& size) {
 		depth_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, depth_framebuffer->tex[0]);
 	}
 	else {
+		color_framebuffer = nullptr;
+		color_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, CL_RGBA, CL_UNORM_INT8, scaled_size.x, scaled_size.y);
 		depth_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 														  // CL_Rx is supported on all cl platforms except for AMD
 														  ocl->get_platform_vendor() != opencl::PLATFORM_VENDOR::AMD ? CL_Rx : CL_R,
@@ -118,13 +120,41 @@ void pipeline::stop() {
 		ocl->flush();
 		ocl->finish(); // finish before blitting if this is a cpu device
 	}
+	
+	//
 	oclraster::start_2d_draw();
+	
+#if 0
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, color_framebuffer->fbo_id);
+#else
+	void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::BUFFER_FLAG::READ, true);
+	GLuint fbo_id = 0, fbo_tex_id = 0;
+	glGenFramebuffers(1, &fbo_id);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+	glGenTextures(1, &fbo_tex_id);
+	glBindTexture(GL_TEXTURE_2D, fbo_tex_id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, framebuffer_size.x, framebuffer_size.y,
+				 0, GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_tex_id, 0);
+	ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
+#endif
+	
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glBlitFramebuffer(0, 0, framebuffer_size.x, framebuffer_size.y,
 					  0, 0, oclraster::get_width(), oclraster::get_height(),
 					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	oclraster::stop_2d_draw();
+	
+#if 1
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glDeleteTextures(1, &fbo_tex_id);
+	glDeleteFramebuffers(1, &fbo_id);
+#endif
 }
 
 void pipeline::draw(const transform_stage::vertex_buffer& vb,

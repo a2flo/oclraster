@@ -773,7 +773,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 	}
 	
 	// un-#if-0 for debug output
-#if 1
+#if 0
 	if(ro_formats.empty() && wo_formats.empty() && rw_formats.empty()) {
 		// context has been created, query image format information
 		context->getSupportedImageFormats(CL_MEM_READ_ONLY, CL_MEM_OBJECT_IMAGE2D, &ro_formats);
@@ -1490,11 +1490,11 @@ void* opencl::map_buffer(opencl::buffer_object* buffer_obj, BUFFER_FLAG access_t
 			map_ptr = queues[active_device->device]->enqueueMapBuffer(*buffer_obj->buffer, blocking, map_flags, 0, buffer_obj->size);
 		}
 		else if(buffer_obj->image_buffer != nullptr) {
-			size_t row_pitch, slice_pitch;
+			size_t row_pitch = 0, slice_pitch = 0;
 			map_ptr = queues[active_device->device]->enqueueMapImage(*buffer_obj->image_buffer, blocking, map_flags,
-																				 (cl::size_t<3>&)buffer_obj->origin,
-																				 (cl::size_t<3>&)buffer_obj->region,
-																				 &row_pitch, &slice_pitch);
+																	 (cl::size_t<3>&)buffer_obj->origin,
+																	 (cl::size_t<3>&)buffer_obj->region,
+																	 &row_pitch, &slice_pitch);
 		}
 		else {
 			oclr_error("unknown buffer object!");
