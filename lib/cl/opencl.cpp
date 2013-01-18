@@ -74,6 +74,10 @@ string opencl_base::platform_vendor_to_str(const opencl_base::PLATFORM_VENDOR& p
 	return "UNKNOWN";
 }
 
+opencl_base::PLATFORM_VENDOR opencl_base::get_platform_vendor() const {
+	return platform_vendor;
+}
+
 void opencl_base::destroy_kernels() {
 	for(const auto& k : kernels) {
 		delete k.second;
@@ -769,7 +773,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 	}
 	
 	// un-#if-0 for debug output
-#if 0
+#if 1
 	if(ro_formats.empty() && wo_formats.empty() && rw_formats.empty()) {
 		// context has been created, query image format information
 		context->getSupportedImageFormats(CL_MEM_READ_ONLY, CL_MEM_OBJECT_IMAGE2D, &ro_formats);
@@ -802,8 +806,12 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 					case CL_Rx: cout << "CL_Rx"; break;
 					case CL_RGx: cout << "CL_RGx"; break;
 					case CL_RGBx: cout << "CL_RGBx"; break;
+#if defined(CL_DEPTH)
 					case CL_DEPTH: cout << "CL_DEPTH"; break;
+#endif
+#if defined(CL_DEPTH_STENCIL)
 					case CL_DEPTH_STENCIL: cout << "CL_DEPTH_STENCIL"; break;
+#endif
 #if defined(CL_1RGB_APPLE)
 					case CL_1RGB_APPLE: cout << "CL_1RGB_APPLE"; break;
 #endif

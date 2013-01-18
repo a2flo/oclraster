@@ -120,6 +120,7 @@ public:
 	// <vendor, index/identifier for use in oclraster config>
 	static vector<pair<PLATFORM_VENDOR, string>> get_platforms();
 	static string platform_vendor_to_str(const PLATFORM_VENDOR& pvendor);
+	PLATFORM_VENDOR get_platform_vendor() const;
 	
 	enum class VENDOR {
 		NVIDIA,

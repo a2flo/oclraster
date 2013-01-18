@@ -64,7 +64,10 @@ void pipeline::create_framebuffers(const uint2& size) {
 		depth_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, depth_framebuffer->tex[0]);
 	}
 	else {
-		depth_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, CL_Rx, CL_FLOAT, scaled_size.x, scaled_size.y);
+		depth_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE,
+														  // CL_Rx is supported on all cl platforms except for AMD
+														  ocl->get_platform_vendor() != opencl::PLATFORM_VENDOR::AMD ? CL_Rx : CL_R,
+														  CL_FLOAT, scaled_size.x, scaled_size.y);
 	}
 	
 	//
