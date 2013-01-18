@@ -30,13 +30,20 @@ window_handler(this, &pipeline::window_event_handler) {
 }
 
 pipeline::~pipeline() {
+	oclr_msg("::1");
 	oclraster::get_event()->remove_event_handler(window_handler);
 	
+	oclr_msg("::2");
 	destroy_framebuffers();
+	oclr_msg("::3");
 	if(triangle_queues_buffer != nullptr) ocl->delete_buffer(triangle_queues_buffer);
+	oclr_msg("::4");
 	if(queue_sizes_buffer != nullptr) ocl->delete_buffer(queue_sizes_buffer);
+	oclr_msg("::5");
 	if(triangle_queues_buffer_zero != nullptr) delete [] triangle_queues_buffer_zero;
+	oclr_msg("::6");
 	if(queue_sizes_buffer_zero != nullptr) delete [] queue_sizes_buffer_zero;
+	oclr_msg("::7");
 }
 
 bool pipeline::window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
@@ -72,8 +79,9 @@ void pipeline::create_framebuffers(const uint2& size) {
 	}
 	else {
 		if(cl_framebuffer_fallback) {
-			color_framebuffer = nullptr;
-			color_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, CL_RGBA, CL_UNORM_INT8, framebuffer_size.x, framebuffer_size.y);
+			color_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE,
+															  CL_RGBA, CL_UNORM_INT8,
+															  framebuffer_size.x, framebuffer_size.y);
 			
 			glGenFramebuffers(1, &copy_fbo_id);
 			glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
@@ -110,9 +118,15 @@ void pipeline::destroy_framebuffers() {
 	color_framebuffer_cl = nullptr;
 	depth_framebuffer = nullptr;
 	depth_framebuffer_cl = nullptr;
+	oclr_msg("--1");
 	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	oclr_msg("--2");
 	if(copy_fbo_tex_id != 0) glDeleteTextures(1, &copy_fbo_tex_id);
+	oclr_msg("--3");
 	if(copy_fbo_id != 0) glDeleteFramebuffers(1, &copy_fbo_id);
+	oclr_msg("--4");
 	copy_fbo_tex_id = 0;
 	copy_fbo_id = 0;
 	cl_framebuffer_fallback = false;
