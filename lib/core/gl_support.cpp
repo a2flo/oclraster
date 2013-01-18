@@ -133,6 +133,33 @@ void init_gl_funcs() {
 	_glTexImage3DMultisample_ptr = (PFNGLTEXIMAGE3DMULTISAMPLEPROC)glGetProcAddress((ProcType)"glTexImage3DMultisampleARB"); // ARB_texture_multisample
 	_glGetMultisamplefv_ptr = (PFNGLGETMULTISAMPLEFVPROC)glGetProcAddress((ProcType)"glGetMultisamplefvARB"); // ARB_texture_multisample
 	_glSampleMaski_ptr = (PFNGLSAMPLEMASKIPROC)glGetProcAddress((ProcType)"glSampleMaskiARB"); // ARB_texture_multisample
+	
+	
+	// check gl function pointers (print error if nullptr)
+	if(_glIsRenderbuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glIsRenderbuffer\"!");
+	if(_glBindRenderbuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glBindRenderbuffer\"!");
+	if(_glDeleteRenderbuffers_ptr == nullptr) oclr_error("couldn't get function pointer to \"glDeleteRenderbuffers\"!");
+	if(_glGenRenderbuffers_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGenRenderbuffers\"!");
+	if(_glRenderbufferStorage_ptr == nullptr) oclr_error("couldn't get function pointer to \"glRenderbufferStorage\"!");
+	if(_glGetRenderbufferParameteriv_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGetRenderbufferParameteriv\"!");
+	if(_glIsFramebuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glIsFramebuffer\"!");
+	if(_glBindFramebuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glBindFramebuffer\"!");
+	if(_glDeleteFramebuffers_ptr == nullptr) oclr_error("couldn't get function pointer to \"glDeleteFramebuffers\"!");
+	if(_glGenFramebuffers_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGenFramebuffers\"!");
+	if(_glCheckFramebufferStatus_ptr == nullptr) oclr_error("couldn't get function pointer to \"glCheckFramebufferStatus\"!");
+	if(_glFramebufferTexture1D_ptr == nullptr) oclr_error("couldn't get function pointer to \"glFramebufferTexture1D\"!");
+	if(_glFramebufferTexture2D_ptr == nullptr) oclr_error("couldn't get function pointer to \"glFramebufferTexture2D\"!");
+	if(_glFramebufferTexture3D_ptr == nullptr) oclr_error("couldn't get function pointer to \"glFramebufferTexture3D\"!");
+	if(_glFramebufferRenderbuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glFramebufferRenderbuffer\"!");
+	if(_glGetFramebufferAttachmentParameteriv_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGetFramebufferAttachmentParameteriv\"!");
+	if(_glGenerateMipmap_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGenerateMipmap\"!");
+	if(_glBlitFramebuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glBlitFramebuffer\"!");
+	if(_glRenderbufferStorageMultisample_ptr == nullptr) oclr_error("couldn't get function pointer to \"glRenderbufferStorageMultisample\"!");
+	if(_glFramebufferTextureLayer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glFramebufferTextureLayer\"!");
+	if(_glTexImage2DMultisample_ptr == nullptr) oclr_error("couldn't get function pointer to \"glTexImage2DMultisample\"!");
+	if(_glTexImage3DMultisample_ptr == nullptr) oclr_error("couldn't get function pointer to \"glTexImage3DMultisample\"!");
+	if(_glGetMultisamplefv_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGetMultisamplefv\"!");
+	if(_glSampleMaski_ptr == nullptr) oclr_error("couldn't get function pointer to \"glSampleMaski\"!");
 }
 
 #endif
