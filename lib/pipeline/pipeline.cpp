@@ -18,7 +18,9 @@
 
 #include "pipeline.h"
 #include "oclraster.h"
+#if defined(__APPLE__)
 #include "osx_helper.h"
+#endif
 #include "a2m.h" // TODO: remove this again
 
 pipeline::pipeline() :

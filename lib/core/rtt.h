@@ -21,6 +21,7 @@
 
 #include "oclraster/global.h"
 #include "core/core.h"
+#include "core/gl_support.h"
 
 enum class TEXTURE_FILTERING : unsigned int {
 	POINT,

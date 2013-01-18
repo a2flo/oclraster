@@ -43,6 +43,8 @@
 		5C397665123189750075C168 /* xml.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C3975C3123189750075C168 /* xml.h */; };
 		5C3976D8123189750075C168 /* thread_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C397643123189750075C168 /* thread_base.cpp */; };
 		5C3976D9123189750075C168 /* thread_base.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C397644123189750075C168 /* thread_base.h */; };
+		5C47267416A8D97400F7EA21 /* gl_support.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C47267216A8D97400F7EA21 /* gl_support.cpp */; };
+		5C47267516A8D97400F7EA21 /* gl_support.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C47267316A8D97400F7EA21 /* gl_support.h */; };
 		5C4ABF8B15FD818F00E8BDE1 /* cudacl_translator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C4ABF8915FD818F00E8BDE1 /* cudacl_translator.cpp */; };
 		5C4ABF8C15FD818F00E8BDE1 /* cudacl_translator.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C4ABF8A15FD818F00E8BDE1 /* cudacl_translator.h */; };
 		5C61BDAC1231D32000FD3451 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C61BDA81231D32000FD3451 /* AppKit.framework */; };
@@ -61,7 +63,6 @@
 		5CCC96361641B36D005C3DE4 /* oclraster_version.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CCC96321641B36D005C3DE4 /* oclraster_version.h */; };
 		5CCC96371641B36D005C3DE4 /* global.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CCC96331641B36D005C3DE4 /* global.h */; };
 		5CD79ED712E3D16600CE2BE5 /* basic_math.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CD79ED612E3D16600CE2BE5 /* basic_math.h */; };
-		5CD83A3E1540FB4F002E5954 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CD83A3D1540FB4F002E5954 /* libfreetype.6.dylib */; };
 		5CD8DB661648526A0082BEF7 /* transform_stage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CD8DB641648526A0082BEF7 /* transform_stage.cpp */; };
 		5CD8DB671648526A0082BEF7 /* transform_stage.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CD8DB651648526A0082BEF7 /* transform_stage.h */; };
 		5CD8DB6A164852780082BEF7 /* processing_stage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CD8DB68164852780082BEF7 /* processing_stage.cpp */; };
@@ -120,6 +121,8 @@
 		5C3975C3123189750075C168 /* xml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xml.h; sourceTree = "<group>"; };
 		5C397643123189750075C168 /* thread_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = thread_base.cpp; sourceTree = "<group>"; };
 		5C397644123189750075C168 /* thread_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = thread_base.h; sourceTree = "<group>"; };
+		5C47267216A8D97400F7EA21 /* gl_support.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gl_support.cpp; sourceTree = "<group>"; };
+		5C47267316A8D97400F7EA21 /* gl_support.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gl_support.h; sourceTree = "<group>"; };
 		5C4ABF8915FD818F00E8BDE1 /* cudacl_translator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cudacl_translator.cpp; sourceTree = "<group>"; };
 		5C4ABF8A15FD818F00E8BDE1 /* cudacl_translator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cudacl_translator.h; sourceTree = "<group>"; };
 		5C61BDA81231D32000FD3451 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -175,7 +178,6 @@
 				5CC97E3E1501677200AB0D95 /* SDL2.framework in Frameworks */,
 				5CC97E3F1501677200AB0D95 /* SDL2_image.framework in Frameworks */,
 				5C2C9275140AA9D900AC808C /* libxml2.dylib in Frameworks */,
-				5CD83A3E1540FB4F002E5954 /* libfreetype.6.dylib in Frameworks */,
 				5C053F90160CB31400540A7B /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -302,6 +304,8 @@
 				5C3975C1123189750075C168 /* vector4.h */,
 				5C3975C2123189750075C168 /* xml.cpp */,
 				5C3975C3123189750075C168 /* xml.h */,
+				5C47267216A8D97400F7EA21 /* gl_support.cpp */,
+				5C47267316A8D97400F7EA21 /* gl_support.h */,
 			);
 			path = core;
 			sourceTree = SOURCE_ROOT;
@@ -388,6 +392,7 @@
 				5CD91DC41663F52900B99A38 /* a2m.h in Headers */,
 				5CE34283168D57FB0071068E /* camera.h in Headers */,
 				5CEC5B68169B27EC00C464D5 /* oclraster_program.h in Headers */,
+				5C47267516A8D97400F7EA21 /* gl_support.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -486,6 +491,7 @@
 				5CD91DC31663F52900B99A38 /* a2m.cpp in Sources */,
 				5CE34282168D57FB0071068E /* camera.cpp in Sources */,
 				5CEC5B69169B27EC00C464D5 /* oclraster_program.cpp in Sources */,
+				5C47267416A8D97400F7EA21 /* gl_support.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

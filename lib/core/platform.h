@@ -86,13 +86,6 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_syswm.h>
 #include <SDL2_image/SDL_image.h>
-#if !defined(OCLRASTER_IOS)
-#include <OpenGL/gl3.h>
-#include <OpenGL/gl3ext.h>
-#else
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
-#endif
 #include <sys/types.h>
 #include <pwd.h>
 #include <unistd.h>
@@ -104,8 +97,6 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_syswm.h>
 #include <SDL2/SDL_image.h>
-#include <GL/gl3.h>
-#include <GL/wglext.h>
 
 #elif defined(MINGW)
 #include <SDL2/SDL.h>
@@ -114,8 +105,6 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_syswm.h>
 #include <SDL2/SDL_image.h>
-#define GL3_PROTOTYPES
-#include <GL/gl3.h>
 
 #else
 #include <SDL.h>
@@ -124,11 +113,6 @@
 #include <SDL_image.h>
 #include <SDL_platform.h>
 #include <SDL_syswm.h>
-#include <GL/gl3.h>
-#if !defined(WIN_UNIXENV)
-#include <GL/glx.h>
-#include <GL/glxext.h>
-#endif
 #include <sys/types.h>
 #include <pwd.h>
 #include <unistd.h>

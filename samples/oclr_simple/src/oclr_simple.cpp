@@ -24,7 +24,7 @@ static event* evt = nullptr;
 static camera* cam = nullptr;
 static float3 cam_speeds = float3(0.01f, 0.1f, 0.001f);
 
-int main(int argc, char* argv[]) {
+int main(int argc oclr_unused, char* argv[]) {
 	// initialize oclraster
 	oclraster::init(argv[0], (const char*)"../data/");
 	oclraster::set_caption(APPLICATION_NAME);
@@ -155,7 +155,7 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	return true;
 }
 
-bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
+bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
 	if(type == EVENT_TYPE::MOUSE_RIGHT_CLICK) {
 		cam->set_mouse_input(cam->get_mouse_input() ^ true);
 		// TODO: switch cam input
@@ -164,7 +164,7 @@ bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	return true;
 }
 
-bool quit_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
+bool quit_handler(EVENT_TYPE type oclr_unused, shared_ptr<event_object> obj oclr_unused) {
 	done = true;
 	return true;
 }

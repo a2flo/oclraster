@@ -23,6 +23,7 @@
 #include "core/file_io.h"
 #include "core/core.h"
 #include "core/vector2.h"
+#include "core/gl_support.h"
 
 // necessary for now (when compiling with opencl 1.2+ headers)
 #define CL_USE_DEPRECATED_OPENCL_1_1_APIS 1

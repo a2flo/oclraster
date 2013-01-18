@@ -16,6 +16,8 @@
 /* Begin PBXFileReference section */
 		5C2F6C8F164984A800FF5C61 /* transform.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = transform.cl; sourceTree = "<group>"; };
 		5C38554E1670AE26003380CA /* clear_framebuffer.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = clear_framebuffer.cl; sourceTree = "<group>"; };
+		5C47267016A69E1200F7EA21 /* simple_shader_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_fs.cl; sourceTree = "<group>"; };
+		5C47267116A69E1200F7EA21 /* simple_shader_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_vs.cl; sourceTree = "<group>"; };
 		5C6EB4A0169F784D003D7C2A /* template_rasterize.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_rasterize.cl; sourceTree = "<group>"; };
 		5C91650E166685EA00626436 /* oclr_global.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_global.h; sourceTree = "<group>"; };
 		5C91650F166685EA00626436 /* oclr_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_math.h; sourceTree = "<group>"; };
@@ -130,6 +132,8 @@
 		5CEC5B641699719F00C464D5 /* user */ = {
 			isa = PBXGroup;
 			children = (
+				5C47267116A69E1200F7EA21 /* simple_shader_vs.cl */,
+				5C47267016A69E1200F7EA21 /* simple_shader_fs.cl */,
 			);
 			path = user;
 			sourceTree = "<group>";

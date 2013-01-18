@@ -20,6 +20,7 @@
 #include "cl/opencl.h"
 #include "core/rtt.h"
 #include "core/camera.h"
+#include "core/gl_support.h"
 
 #if defined(__APPLE__)
 #include "osx/osx_helper.h"
@@ -303,9 +304,9 @@ void oclraster::init_internal() {
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	
 #if !defined(OCLRASTER_IOS)
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 #else
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -367,6 +368,11 @@ void oclraster::init_internal() {
 #endif
 	
 	acquire_context();
+	
+	// initialize opengl functions (get function pointers) on non-apple platforms
+#if !defined(__APPLE__)
+	init_gl_funcs();
+#endif
 	
 	// check if a cudacl or pure opencl context should be created
 	// use absolute path

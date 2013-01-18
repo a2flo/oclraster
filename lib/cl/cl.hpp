@@ -840,9 +840,6 @@ struct GetInfoHelper<Func, CPP_TYPE> \
     F(cl_device_info, CL_DEVICE_PROFILE, STRING_CLASS) \
     F(cl_device_info, CL_DEVICE_VERSION, STRING_CLASS) \
     F(cl_device_info, CL_DEVICE_EXTENSIONS, STRING_CLASS) \
-	F(cl_device_info, CL_DEVICE_PRINTF_BUFFER_SIZE, ::size_t) \
-	F(cl_device_info, CL_DEVICE_PARTITION_MAX_SUB_DEVICES, cl_uint) \
-	F(cl_device_info, CL_DEVICE_BUILT_IN_KERNELS, STRING_CLASS) \
     \
     F(cl_context_info, CL_CONTEXT_REFERENCE_COUNT, cl_uint) \
     F(cl_context_info, CL_CONTEXT_DEVICES, VECTOR_CLASS<Device>) \
@@ -931,6 +928,13 @@ struct GetInfoHelper<Func, CPP_TYPE> \
     F(cl_event_info, CL_EVENT_CONTEXT, cl::Context)
 #endif // CL_VERSION_1_1
 
+#if defined(CL_VERSION_1_2)
+#define __PARAM_NAME_INFO_1_2(F) \
+	F(cl_device_info, CL_DEVICE_PRINTF_BUFFER_SIZE, ::size_t) \
+	F(cl_device_info, CL_DEVICE_PARTITION_MAX_SUB_DEVICES, cl_uint) \
+	F(cl_device_info, CL_DEVICE_BUILT_IN_KERNELS, STRING_CLASS)
+#endif // CL_VERSION_1_2
+
 #if defined(USE_CL_DEVICE_FISSION)
 #define __PARAM_NAME_DEVICE_FISSION(F) \
     F(cl_device_info, CL_DEVICE_PARENT_DEVICE_EXT, cl_device_id) \
@@ -956,6 +960,9 @@ __PARAM_NAME_INFO_1_0(__DECLARE_PARAM_TRAITS);
 #if defined(CL_VERSION_1_1)
 __PARAM_NAME_INFO_1_1(__DECLARE_PARAM_TRAITS);
 #endif // CL_VERSION_1_1
+#if defined(CL_VERSION_1_2)
+__PARAM_NAME_INFO_1_2(__DECLARE_PARAM_TRAITS);
+#endif // CL_VERSION_1_2
 
 #if defined(USE_CL_DEVICE_FISSION)
 __PARAM_NAME_DEVICE_FISSION(__DECLARE_PARAM_TRAITS);
@@ -3023,7 +3030,7 @@ public:
     }
 
     cl_int enqueueNativeKernel(
-        void (*userFptr)(void *),
+        void (CL_CALLBACK *userFptr)(void *),
         std::pair<void*, ::size_t> args,
         const VECTOR_CLASS<Memory>* mem_objects = nullptr,
         const VECTOR_CLASS<const void*>* mem_locs = nullptr,

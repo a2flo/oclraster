@@ -43,8 +43,8 @@ oclraster_program::~oclraster_program() {
 void oclraster_program::process_program(const string& code, const string& entry_function_) {
 	static const array<const pair<const char*, const STRUCT_TYPE>, 3> oclraster_struct_types {
 		{
-			{ u8"oclraster_in", STRUCT_TYPE::IN },
-			{ u8"oclraster_out", STRUCT_TYPE::OUT },
+			{ u8"oclraster_in", STRUCT_TYPE::INPUT },
+			{ u8"oclraster_out", STRUCT_TYPE::OUTPUT },
 			{ u8"oclraster_uniforms", STRUCT_TYPE::UNIFORMS },
 		}
 	};

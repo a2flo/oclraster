@@ -28,8 +28,8 @@ public:
 	~oclraster_program();
 	
 	enum class STRUCT_TYPE : unsigned int {
-		IN,
-		OUT,
+		INPUT,
+		OUTPUT,
 		UNIFORMS
 	};
 	struct oclraster_struct_info {

@@ -604,14 +604,16 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 			device->driver_version = internal_device.getInfo<CL_DRIVER_VERSION>();
 			device->extensions = internal_device.getInfo<CL_DEVICE_EXTENSIONS>();
 			
-			oclr_msg("printf buffer size: %u", internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>());
-			oclr_msg("max sub-devices: %u", internal_device.getInfo<CL_DEVICE_PARTITION_MAX_SUB_DEVICES>());
-			oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
 			oclr_msg("address space size: %u", internal_device.getInfo<CL_DEVICE_ADDRESS_BITS>());
 			oclr_msg("max mem alloc: %u", internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>());
 			oclr_msg("mem base address alignment: %u", internal_device.getInfo<CL_DEVICE_MEM_BASE_ADDR_ALIGN>());
 			oclr_msg("min data type alignment size: %u", internal_device.getInfo<CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE>());
 			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());
+#if defined(CL_VERSION_1_2)
+			oclr_msg("printf buffer size: %u", internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>());
+			oclr_msg("max sub-devices: %u", internal_device.getInfo<CL_DEVICE_PARTITION_MAX_SUB_DEVICES>());
+			oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
+#endif
 			
 			device->max_alloc = internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
 			device->max_wg_size = internal_device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();

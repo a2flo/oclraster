@@ -20,6 +20,7 @@
 
 #include "cudacl_translator.h"
 #include "core/core.h"
+#include "core/gl_support.h"
 #include <regex>
 
 #if defined(__APPLE__)
