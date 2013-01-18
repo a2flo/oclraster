@@ -151,6 +151,10 @@ solution "oclraster"
 			libdirs { os.findlib("SDL2"), os.findlib("SDL2_image"), os.findlib("Xxf86vm") }
 			buildoptions { "`sdl2-config --cflags`" }
 			linkoptions { "`sdl2-config --libs`" }
+			if(clang_libcxx) then
+				-- small linux workaround for now (linking will fail otherwise):
+				linkoptions { "-lrt -lc -lstdcxx" }
+			end
 		elseif(cygwin) then
 			-- link against windows opengl libs on cygwin
 			links { "opengl32", "SDL2_image.dll", "xml2" }
