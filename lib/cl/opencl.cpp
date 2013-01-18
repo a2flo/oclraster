@@ -1203,9 +1203,9 @@ opencl::buffer_object* opencl::create_ogl_buffer(opencl::BUFFER_FLAG type, GLuin
 }
 
 opencl::buffer_object* opencl::create_ogl_image2d_buffer(BUFFER_FLAG type, GLuint texture, GLenum target) {
+	opencl::buffer_object* buffer = nullptr;
 	try {
-		opencl::buffer_object* buffer = new opencl::buffer_object();
-		buffers.push_back(buffer);
+		buffer = new opencl::buffer_object();
 		
 		// type/flag validity check
 		BUFFER_FLAG vtype = BUFFER_FLAG::NONE;
@@ -1238,9 +1238,12 @@ opencl::buffer_object* opencl::create_ogl_image2d_buffer(BUFFER_FLAG type, GLuin
 		buffer->data = nullptr;
 		buffer->size = 0;
 		buffer->image_buffer = new cl::Image2DGL(*context, flags, target, 0, texture, &ierr);
+		buffers.push_back(buffer);
 		return buffer;
 	}
-	__HANDLE_CL_EXCEPTION("create_ogl_image2d_buffer")
+	__HANDLE_CL_EXCEPTION_START("create_ogl_image2d_buffer")
+		if(buffer != nullptr) delete buffer;
+	__HANDLE_CL_EXCEPTION_END
 	return nullptr;
 }
 

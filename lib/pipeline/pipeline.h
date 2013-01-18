@@ -100,6 +100,10 @@ protected:
 	rtt::fbo* depth_framebuffer = nullptr;
 	opencl::buffer_object* depth_framebuffer_cl = nullptr;
 	
+	// slow map/copy framebuffer fallback (requires no opengl sharing)
+	bool cl_framebuffer_fallback = false;
+	GLuint copy_fbo_id = 0, copy_fbo_tex_id = 0;
+	
 	//
 	const uint2 tile_size { 16, 16 };
 	opencl_base::buffer_object* triangle_queues_buffer = nullptr;

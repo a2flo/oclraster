@@ -32,6 +32,7 @@ window_handler(this, &pipeline::window_event_handler) {
 pipeline::~pipeline() {
 	oclraster::get_event()->remove_event_handler(window_handler);
 	
+	destroy_framebuffers();
 	if(triangle_queues_buffer != nullptr) ocl->delete_buffer(triangle_queues_buffer);
 	if(queue_sizes_buffer != nullptr) ocl->delete_buffer(queue_sizes_buffer);
 	if(triangle_queues_buffer_zero != nullptr) delete [] triangle_queues_buffer_zero;
@@ -54,18 +55,42 @@ void pipeline::create_framebuffers(const uint2& size) {
 	framebuffer_size = scaled_size;
 	oclr_debug("size: %v -> %v", size, scaled_size);
 	
-	//color_framebuffer = rtt::add_buffer(scaled_size.x, scaled_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 1, rtt::DEPTH_TYPE::NONE);
-	//color_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, color_framebuffer->tex[0]);
+	color_framebuffer = rtt::add_buffer(framebuffer_size.x, framebuffer_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 1, rtt::DEPTH_TYPE::NONE);
+	color_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, color_framebuffer->tex[0]);
+	if(color_framebuffer_cl == nullptr) {
+		oclr_error("failed to share opengl framebuffer - using slow framebuffer map/copy fallback!");
+		cl_framebuffer_fallback = true;
+		if(color_framebuffer != nullptr) rtt::delete_buffer(color_framebuffer);
+		color_framebuffer = nullptr;
+	}
 	
 	// shared float texture doesn't work on the cpu, cl float image2d doesn't work on the gpu ... -> use the correct one
 	// TODO: correct device type check
 	if(ocl->get_active_device()->type == opencl::DEVICE_TYPE::GPU0) {
-		depth_framebuffer = rtt::add_buffer(scaled_size.x, scaled_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_R32F, GL_RED, GL_FLOAT, 1, rtt::DEPTH_TYPE::NONE);
+		depth_framebuffer = rtt::add_buffer(framebuffer_size.x, framebuffer_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_R32F, GL_RED, GL_FLOAT, 1, rtt::DEPTH_TYPE::NONE);
 		depth_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, depth_framebuffer->tex[0]);
 	}
 	else {
-		color_framebuffer = nullptr;
-		color_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, CL_RGBA, CL_UNORM_INT8, scaled_size.x, scaled_size.y);
+		if(cl_framebuffer_fallback) {
+			color_framebuffer = nullptr;
+			color_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, CL_RGBA, CL_UNORM_INT8, framebuffer_size.x, framebuffer_size.y);
+			
+			glGenFramebuffers(1, &copy_fbo_id);
+			glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
+			glGenTextures(1, &copy_fbo_tex_id);
+			glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, framebuffer_size.x, framebuffer_size.y,
+						 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
+			glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+		
 		depth_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 														  // CL_Rx is supported on all cl platforms except for AMD
 														  ocl->get_platform_vendor() != opencl::PLATFORM_VENDOR::AMD ? CL_Rx : CL_R,
@@ -85,6 +110,12 @@ void pipeline::destroy_framebuffers() {
 	color_framebuffer_cl = nullptr;
 	depth_framebuffer = nullptr;
 	depth_framebuffer_cl = nullptr;
+	
+	if(copy_fbo_tex_id != 0) glDeleteTextures(1, &copy_fbo_tex_id);
+	if(copy_fbo_id != 0) glDeleteFramebuffers(1, &copy_fbo_id);
+	copy_fbo_tex_id = 0;
+	copy_fbo_id = 0;
+	cl_framebuffer_fallback = false;
 }
 
 void pipeline::start() {
@@ -98,13 +129,6 @@ void pipeline::start() {
 	}
 	
 	// clear framebuffer
-	// TODO: decide which to use
-	/*rtt::start_draw(color_framebuffer);
-	rtt::clear();
-	rtt::stop_draw();
-	rtt::start_draw(depth_framebuffer);
-	rtt::clear();
-	rtt::stop_draw();*/
 	unsigned int argc = 0;
 	ocl->use_kernel("CLEAR_COLOR_DEPTH_FRAMEBUFFER");
 	ocl->set_kernel_argument(argc++, framebuffer_size);
@@ -124,25 +148,17 @@ void pipeline::stop() {
 	//
 	oclraster::start_2d_draw();
 	
-#if 0
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, color_framebuffer->fbo_id);
-#else
-	void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::BUFFER_FLAG::READ, true);
-	GLuint fbo_id = 0, fbo_tex_id = 0;
-	glGenFramebuffers(1, &fbo_id);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-	glGenTextures(1, &fbo_tex_id);
-	glBindTexture(GL_TEXTURE_2D, fbo_tex_id);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, framebuffer_size.x, framebuffer_size.y,
-				 0, GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_tex_id, 0);
-	ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
-#endif
+	if(!cl_framebuffer_fallback) {
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, color_framebuffer->fbo_id);
+	}
+	else {
+		void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::BUFFER_FLAG::READ, true);
+		glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
+		glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, framebuffer_size.x, framebuffer_size.y,
+					 0, GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
+		ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
+	}
 	
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glBlitFramebuffer(0, 0, framebuffer_size.x, framebuffer_size.y,
@@ -150,11 +166,10 @@ void pipeline::stop() {
 					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	oclraster::stop_2d_draw();
 	
-#if 1
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	glDeleteTextures(1, &fbo_tex_id);
-	glDeleteFramebuffers(1, &fbo_id);
-#endif
+	if(cl_framebuffer_fallback) {
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
 }
 
 void pipeline::draw(const transform_stage::vertex_buffer& vb,

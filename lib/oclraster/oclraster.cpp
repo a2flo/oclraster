@@ -304,9 +304,11 @@ void oclraster::init_internal() {
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	
 #if !defined(OCLRASTER_IOS)
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#if defined(__APPLE__) // only default to opengl 3.2 core on os x for now (opengl version doesn't really matter on other platforms)
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#endif
 #else
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
