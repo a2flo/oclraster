@@ -20,6 +20,11 @@
 
 #if !defined(__APPLE__)
 
+#if !defined(WIN_UNIXENV)
+#include <GL/glx.h>
+#include <GL/glxext.h>
+#endif
+
 #if defined(__WINDOWS__) || defined(WIN_UNIXENV)
 #define glGetProcAddress(x) wglGetProcAddress(x)
 #define ProcType LPCSTR
