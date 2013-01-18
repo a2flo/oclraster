@@ -179,6 +179,9 @@ rtt::fbo* rtt::add_buffer(unsigned int width, unsigned int height, GLenum* targe
 		if(filtering[i] >= TEXTURE_FILTERING::BILINEAR) {
 			glTexParameteri(buffer->target[i], GL_TEXTURE_MAX_ANISOTROPY_EXT, max_anisotropic_filtering);
 		}
+		else {
+			glTexParameteri(buffer->target[i], GL_TEXTURE_MAX_LEVEL, 0);
+		}
 		
 		switch(buffer->target[i]) {
 #if !defined(OCLRASTER_IOS)
@@ -267,6 +270,7 @@ rtt::fbo* rtt::add_buffer(unsigned int width, unsigned int height, GLenum* targe
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 					
 					glTexImage2D(GL_TEXTURE_2D, 0, convert_internal_format(depth_internel_format), width, height, 0, depth_format, depth_storage_type, nullptr);
 					glFramebufferTexture2D(GL_FRAMEBUFFER, depth_attachment_type, GL_TEXTURE_2D, buffer->depth_buffer, 0);
@@ -311,6 +315,7 @@ rtt::fbo* rtt::add_buffer(unsigned int width, unsigned int height, GLenum* targe
 					glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 					glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 					glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+					glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAX_LEVEL, 0);
 					
 					glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, buffer->samples, convert_internal_format(depth_internel_format), width, height, false);
 					glFramebufferTexture2D(GL_FRAMEBUFFER, depth_attachment_type, GL_TEXTURE_2D_MULTISAMPLE, buffer->depth_buffer, 0);
