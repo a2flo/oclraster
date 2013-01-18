@@ -37,6 +37,10 @@
 #define GL3_PROTOTYPES
 #endif
 #include <GL/gl3.h>
+#if !defined(WIN_UNIXENV)
+#include <GL/glx.h>
+#include <GL/glxext.h>
+#endif
 
 //
 void init_gl_funcs();
