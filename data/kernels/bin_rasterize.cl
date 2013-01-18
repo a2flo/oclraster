@@ -158,10 +158,10 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 		}
 	}
 	
-	const uint2 x_bounds_u = (uint2)clamp((int2)(floor(x_bounds.x), ceil(x_bounds.y)),
-										  0, screen_size.x - 1); // valid pixel pos: [0, screen_size.x-1]
-	const uint2 y_bounds_u = (uint2)clamp((int2)(floor(y_bounds.x), ceil(y_bounds.y)),
-										  0, screen_size.y - 1);
+	const uint2 x_bounds_u = convert_uint2(clamp((int2)(floor(x_bounds.x), ceil(x_bounds.y)),
+												 0, screen_size.x - 1)); // valid pixel pos: [0, screen_size.x-1]
+	const uint2 y_bounds_u = convert_uint2(clamp((int2)(floor(y_bounds.x), ceil(y_bounds.y)),
+												 0, screen_size.y - 1));
 	
 	// insert triangle id intro appropriate queues/bins
 	const uint2 x_bins = x_bounds_u / tile_size.x;
