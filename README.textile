@@ -49,5 +49,8 @@ TODO: all papers
 * "High-Performance Software Rasterization on GPUs":http://research.nvidia.com/sites/default/files/publications/laine2011hpg_paper.pdf
 
 *Screenshots:*
-current progress, running on the CPU (2012/12/06):
+progress as of 2013/01/19, running on a GPU in OS X and inside a Window VM on a CPU:
+!https://dl.dropbox.com/u/1004620/Screen%20Shot%202013-01-19%20at%2012.04.45%20PM.png(moar bunnies)!
+!https://dl.dropbox.com/u/1004620/Screen%20Shot%202013-01-19%20at%2012.08.39%20PM.png(bunny on windows)!
+progress as of 2012/12/06, running on the CPU:
 !https://dl.dropbox.com/u/1004620/Screen%20Shot%202012-12-06%20at%2010.40.05%20AM.png(a bunny of course)!
