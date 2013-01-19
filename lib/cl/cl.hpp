@@ -2229,84 +2229,82 @@ class Kernel;
 class NDRange
 {
 private:
-    size_t<3> sizes_;
+    array<::size_t, 3> sizes_;
     cl_uint dimensions_;
 
 public:
     NDRange()
         : dimensions_(0)
     {
-        sizes_.push_back(0);
-        sizes_.push_back(0);
-        sizes_.push_back(0);
+        sizes_[0] = 0;
+        sizes_[1] = 0;
+        sizes_[2] = 0;
 	}
 
     NDRange(::size_t size0)
         : dimensions_(1)
     {
-        sizes_.push_back(size0);
-        sizes_.push_back(0);
-        sizes_.push_back(0);
+        sizes_[0] = size0;
+        sizes_[1] = 0;
+        sizes_[2] = 0;
     }
 
     NDRange(::size_t size0, ::size_t size1)
         : dimensions_(2)
     {
-        sizes_.push_back(size0);
-        sizes_.push_back(size1);
-        sizes_.push_back(0);
+        sizes_[0] = size0;
+        sizes_[1] = size1;
+        sizes_[2] = 0;
     }
 
     NDRange(::size_t size0, ::size_t size1, ::size_t size2)
         : dimensions_(3)
     {
-        sizes_.push_back(size0);
-        sizes_.push_back(size1);
-        sizes_.push_back(size2);
+        sizes_[0] = size0;
+        sizes_[1] = size1;
+        sizes_[2] = size2;
     }
 	
 	void set(::size_t size0) {
-		sizes_.clear();
 		dimensions_ = 1;
-        sizes_.push_back(size0);
-        sizes_.push_back(0);
-        sizes_.push_back(0);
+        sizes_[0] = size0;
+        sizes_[1] = 0;
+        sizes_[2] = 0;
 	}
 	
 	void set(::size_t size0, ::size_t size1) {
-		sizes_.clear();
 		dimensions_ = 2;
-        sizes_.push_back(size0);
-        sizes_.push_back(size1);
-        sizes_.push_back(0);
+        sizes_[0] = size0;
+        sizes_[1] = size1;
+        sizes_[2] = 0;
 	}
 	
 	void set(::size_t size0, ::size_t size1, ::size_t size2) {
-		sizes_.clear();
 		dimensions_ = 3;
-        sizes_.push_back(size0);
-        sizes_.push_back(size1);
-        sizes_.push_back(size2);
+        sizes_[0] = size0;
+        sizes_[1] = size1;
+        sizes_[2] = size2;
 	}
 
-    operator const ::size_t*() const { return (const ::size_t*) sizes_; }
+    operator const ::size_t*() const { return (const ::size_t*) &sizes_[0]; }
 #pragma warning(disable: 4267) // screw you, msvc
     ::size_t dimensions() const { return dimensions_; }
 	NDRange& operator=(const NDRange& range) {
-		sizes_.clear();
 		dimensions_ = (cl_uint)range.dimensions();
 		for(cl_uint i = 0; i < dimensions_; i++) {
-			sizes_.push_back(range[i]);
+			sizes_[i] = range[i];
 		}
 		for(cl_uint i = dimensions_; i < 3; i++) {
-			sizes_.push_back(0);
+			sizes_[i] = 0;
 		}
 		return *this;
 	}
 #pragma warning(default: 4267)
 };
 
-static const NDRange NullRange;
+#if !defined(NullRange)
+#define NullRange cl::NDRange(0, 0, 0)
+#endif
 
 /*!
  * \struct LocalSpaceArg
@@ -3189,13 +3187,13 @@ class KernelFunctor
 private:
     Kernel kernel_;
     CommandQueue queue_;
-    NDRange offset_;
+    NDRange offset_ { 0, 0, 0 };
     cl_int err_;
 	
 public:
 	// need to change these at a later point ...
-    NDRange global_;
-    NDRange local_;
+    NDRange global_ { 1, 1, 1 };
+    NDRange local_ { 1, 1, 1 };
 	
     KernelFunctor() { }
 

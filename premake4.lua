@@ -88,7 +88,7 @@ solution "oclraster"
 		buildoptions { "-Wall -x c++ -std=c++11" }
 		
 		if(clang_libcxx) then
-			buildoptions { "-stdlib=libc++ -integrated-as" }
+			buildoptions { "-stdlib=libc++" }
 			buildoptions { "-Weverything" }
 			buildoptions { "-Wno-unknown-warning-option" }
 			buildoptions { "-Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-header-hygiene -Wno-gnu -Wno-float-equal" }
@@ -96,6 +96,7 @@ solution "oclraster"
 			buildoptions { "-Wno-switch-enum -Wno-sign-conversion -Wno-conversion -Wno-exit-time-destructors" }
 			linkoptions { "-fvisibility=default" }
 			if(not win_unixenv) then
+				buildoptions { "-integrated-as" }
 				defines { "OCLRASTER_EXPORT=1" }
 				linkoptions { "-stdlib=libc++" }
 			else

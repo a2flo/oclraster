@@ -137,7 +137,7 @@
 #define __has_feature(x) 0
 #endif
 
-#if defined(clang) || defined(__GNUC__)
+#if defined(__clang__) || defined(__GNUC__)
 #define oclr_unreachable __builtin_unreachable
 #else
 #define oclr_unreachable

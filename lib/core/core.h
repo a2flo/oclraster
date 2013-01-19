@@ -103,22 +103,12 @@ public:
 	// system functions
 	static void system(const string& cmd, string& output);
 	
-	// misc
-	struct triangle {
-		float3 v1;
-		float3 v2;
-		float3 v3;
-	};
-	
-	struct quad {
-		float3 v1;
-		float3 v2;
-		float3 v3;
-		float3 v4;
-	};
-	
 protected:
+	// random_device with libc++ on windows/mingw is not supported right now (no /dev/urandom)
+	// -> use default mt19937
+#if !(defined(__clang__) && defined(WIN_UNIXENV))
 	static random_device rd;
+#endif
 	static mt19937 gen;
 
 };

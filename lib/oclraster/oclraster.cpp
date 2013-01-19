@@ -207,6 +207,7 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 		
 		config.opencl_platform = config_doc.get<string>("config.opencl.platform", "0");
 		config.clear_cache = config_doc.get<bool>("config.opencl.clear_cache", false);
+		config.gl_sharing = config_doc.get<bool>("config.opencl.gl_sharing", true);
 		const auto cl_dev_tokens(core::tokenize(config_doc.get<string>("config.opencl.restrict", ""), ','));
 		for(const auto& dev_token : cl_dev_tokens) {
 			if(dev_token == "") continue;
@@ -481,7 +482,7 @@ void oclraster::init_internal() {
 	// init opencl
 	ocl->init(false,
 			  config.opencl_platform == "cuda" ? 0 : string2size_t(config.opencl_platform),
-			  config.cl_device_restriction);
+			  config.cl_device_restriction, config.gl_sharing);
 	
 	// set dpi lower bound to 72
 	if(config.dpi < 72) config.dpi = 72;

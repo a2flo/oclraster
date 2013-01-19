@@ -165,6 +165,7 @@ protected:
 		// opencl
 		string opencl_platform = "0";
 		bool clear_cache = false;
+		bool gl_sharing = true;
 		set<string> cl_device_restriction;
 
 		// sdl

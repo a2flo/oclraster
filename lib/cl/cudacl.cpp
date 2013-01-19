@@ -297,7 +297,8 @@ cudacl::~cudacl() {
 	oclr_debug("cudacl object deleted");
 }
 
-void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_index oclr_unused, const set<string> device_restriction oclr_unused) {
+void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_index oclr_unused,
+				  const set<string> device_restriction oclr_unused, const bool gl_sharing oclr_unused) {
 	//
 	if(!supported) return;
 	

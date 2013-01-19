@@ -26,5 +26,6 @@
 <!ATTLIST opencl
 	platform CDATA #REQUIRED
 	clear_cache CDATA #REQUIRED
+	gl_sharing CDATA #REQUIRED
 	restrict CDATA #REQUIRED
 >

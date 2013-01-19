@@ -150,7 +150,8 @@ public:
 	enum_class_bitwise_and(BUFFER_FLAG)
 
 	virtual void init(bool use_platform_devices = false, const size_t platform_index = 0,
-					  const set<string> device_restriction = set<string> {}) = 0;
+					  const set<string> device_restriction = set<string> {},
+					  const bool gl_sharing = true) = 0;
 	void reload_kernels();
 	
 	void use_kernel(const string& identifier);
@@ -346,7 +347,8 @@ public:
 	virtual ~opencl();
 	
 	virtual void init(bool use_platform_devices = false, const size_t platform_index = 0,
-					  const set<string> device_restriction = set<string> {});
+					  const set<string> device_restriction = set<string> {},
+					  const bool gl_sharing = true);
 	
 	virtual void run_kernel(kernel_object* kernel_obj);
 	
@@ -401,7 +403,8 @@ public:
 	virtual ~cudacl();
 	
 	virtual void init(bool use_platform_devices = false, const size_t platform_index = 0,
-					  const set<string> device_restriction = set<string> {});
+					  const set<string> device_restriction = set<string> {},
+					  const bool gl_sharing = true);
 	
 	virtual void run_kernel(kernel_object* kernel_obj);
 	

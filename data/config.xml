@@ -15,7 +15,7 @@
 	 opencl platform options: either the opencl platform index (starting by 0) or "cuda" on supported platforms (OS X and Linux only)
 	 opencl restrict options: if this is set to any of (or a list of) "CPU", "GPU" or "ACCELERATOR", only those kind/type of devices are used
 	-->
-	<opencl platform="0" clear_cache="1" restrict=""/>
+	<opencl platform="0" clear_cache="1" gl_sharing="true" restrict=""/>
 	
 	<!-- application specific settings -->
 	<!-- none so far -->

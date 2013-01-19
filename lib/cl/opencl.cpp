@@ -298,7 +298,11 @@ pair<cl::NDRange, cl::NDRange> opencl_base::compute_kernel_ranges(const size_t& 
 	
 	// NOTE: same as 1D
 	// TODO: write this
-	return { cl::NDRange(work_items_x, work_items_y, work_items_z), cl::NDRange(1, 1, 1) };
+	const size_t wg_size = get_kernel_work_group_size();
+	const size_t max_wg_size = (wg_size > active_device->max_wi_sizes.x ?
+								active_device->max_wi_sizes.x : wg_size);
+	const size_t global_range = next_divisible_number(work_items_x, max_wg_size);
+	return { cl::NDRange(global_range, work_items_y, work_items_z), cl::NDRange(max_wg_size, 1, 1) };
 }
 
 void opencl_base::set_manual_gl_sharing(buffer_object* gl_buffer_obj, const bool state) {
@@ -416,8 +420,7 @@ opencl::opencl(const char* kernel_path, SDL_Window* wnd, const bool clear_cache)
 	// TODO: this currently doesn't work if there are spaces inside the path and surrounding
 	// the path by "" doesn't work either, probably a bug in the apple implementation -- or clang?
 	build_options = "-I" + kernel_path_str.substr(0, kernel_path_str.length()-1);
-	build_options += " -cl-std=CL1.1";
-	build_options += " -cl-strict-aliasing";
+	//build_options += " -cl-std=CL1.1";
 	build_options += " -cl-mad-enable";
 	build_options += " -cl-no-signed-zeros";
 	build_options += " -cl-fast-relaxed-math";
@@ -471,7 +474,8 @@ opencl::~opencl() {
 	oclr_debug("opencl object deleted");
 }
 
-void opencl::init(bool use_platform_devices, const size_t platform_index, const set<string> device_restriction) {
+void opencl::init(bool use_platform_devices, const size_t platform_index,
+				  const set<string> device_restriction, const bool gl_sharing) {
 	try {
 		platform = new cl::Platform();
 		platform->get(&platforms);
@@ -491,12 +495,14 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 #if defined(__APPLE__)
 		platform_vendor = PLATFORM_VENDOR::APPLE;
 		
-		cl_context_properties cl_properties[] = {
+		cl_context_properties cl_properties[] {
 			CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[platform_index](),
 #if !defined(OCLRASTER_IOS) // TODO: sharing isn't supported on iOS yet (code path exists, but fails with a gles sharegroup)
-			CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE, (cl_context_properties)CGLGetShareGroup(CGLGetCurrentContext()),
+			gl_sharing ? CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE : 0,
+			gl_sharing ? (cl_context_properties)CGLGetShareGroup(CGLGetCurrentContext()) : 0,
 #endif
-			0 };
+			0
+		};
 		
 		// from cl_gl_ext.h:
 		// "If the <num_devices> and <devices> argument values to clCreateContext are 0 and NULL respectively,
@@ -518,10 +524,12 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 #else
 		// context with gl share group (cl/gl interop)
 #if defined(__WINDOWS__)
-		cl_context_properties cl_properties[] = {
+		cl_context_properties cl_properties[] {
 			CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[platform_index](),
-			CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(),
-			CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
+			gl_sharing ? CL_GL_CONTEXT_KHR : 0,
+			gl_sharing ? (cl_context_properties)wglGetCurrentContext() : 0,
+			gl_sharing ? CL_WGL_HDC_KHR : 0,
+			gl_sharing ? (cl_context_properties)wglGetCurrentDC() : 0,
 			0
 		};
 #else // Linux, hopefully *BSD too
@@ -532,10 +540,12 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 			return;
 		}
 		
-		cl_context_properties cl_properties[] = {
+		cl_context_properties cl_properties[] {
 			CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[platform_index](),
-			CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
-			CL_GLX_DISPLAY_KHR, (cl_context_properties)wm_info.info.x11.display,
+			gl_sharing ? CL_GL_CONTEXT_KHR : 0,
+			gl_sharing ? (cl_context_properties)glXGetCurrentContext() : 0,
+			gl_sharing ? CL_GLX_DISPLAY_KHR : 0,
+			gl_sharing ? (cl_context_properties)wm_info.info.x11.display : 0,
 			0
 		};
 #endif
@@ -779,6 +789,9 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 		context->getSupportedImageFormats(CL_MEM_READ_ONLY, CL_MEM_OBJECT_IMAGE2D, &ro_formats);
 		context->getSupportedImageFormats(CL_MEM_WRITE_ONLY, CL_MEM_OBJECT_IMAGE2D, &wo_formats);
 		context->getSupportedImageFormats(CL_MEM_READ_WRITE, CL_MEM_OBJECT_IMAGE2D, &rw_formats);
+		if(ro_formats.empty() && wo_formats.empty() && rw_formats.empty()) {
+			oclr_error("no supported image formats!");
+		}
 		
 		//
 		array<pair<vector<cl::ImageFormat>&, string>, 3> formats {
@@ -789,73 +802,74 @@ void opencl::init(bool use_platform_devices, const size_t platform_index, const 
 			}
 		};
 		for(const auto& frmts : formats) {
-			cout << "## " << frmts.second << " formats:" << endl;
+			oclr_log("## %s formats:", frmts.second);
 			for(const auto& format : frmts.first) {
-				cout << "\t";
+				stringstream img_format;
+				img_format << "\t";
 				switch(format.image_channel_order) {
-					case CL_R: cout << "CL_R"; break;
-					case CL_A: cout << "CL_A"; break;
-					case CL_RG: cout << "CL_RG"; break;
-					case CL_RA: cout << "CL_RA"; break;
-					case CL_RGB: cout << "CL_RGB"; break;
-					case CL_RGBA: cout << "CL_RGBA"; break;
-					case CL_BGRA: cout << "CL_BGRA"; break;
-					case CL_ARGB: cout << "CL_ARGB"; break;
-					case CL_INTENSITY: cout << "CL_INTENSITY"; break;
-					case CL_LUMINANCE: cout << "CL_LUMINANCE"; break;
-					case CL_Rx: cout << "CL_Rx"; break;
-					case CL_RGx: cout << "CL_RGx"; break;
-					case CL_RGBx: cout << "CL_RGBx"; break;
+					case CL_R: img_format << "CL_R"; break;
+					case CL_A: img_format << "CL_A"; break;
+					case CL_RG: img_format << "CL_RG"; break;
+					case CL_RA: img_format << "CL_RA"; break;
+					case CL_RGB: img_format << "CL_RGB"; break;
+					case CL_RGBA: img_format << "CL_RGBA"; break;
+					case CL_BGRA: img_format << "CL_BGRA"; break;
+					case CL_ARGB: img_format << "CL_ARGB"; break;
+					case CL_INTENSITY: img_format << "CL_INTENSITY"; break;
+					case CL_LUMINANCE: img_format << "CL_LUMINANCE"; break;
+					case CL_Rx: img_format << "CL_Rx"; break;
+					case CL_RGx: img_format << "CL_RGx"; break;
+					case CL_RGBx: img_format << "CL_RGBx"; break;
 #if defined(CL_DEPTH)
-					case CL_DEPTH: cout << "CL_DEPTH"; break;
+					case CL_DEPTH: img_format << "CL_DEPTH"; break;
 #endif
 #if defined(CL_DEPTH_STENCIL)
-					case CL_DEPTH_STENCIL: cout << "CL_DEPTH_STENCIL"; break;
+					case CL_DEPTH_STENCIL: img_format << "CL_DEPTH_STENCIL"; break;
 #endif
 #if defined(CL_1RGB_APPLE)
-					case CL_1RGB_APPLE: cout << "CL_1RGB_APPLE"; break;
+					case CL_1RGB_APPLE: img_format << "CL_1RGB_APPLE"; break;
 #endif
 #if defined(CL_BGR1_APPLE)
-					case CL_BGR1_APPLE: cout << "CL_BGR1_APPLE"; break;
+					case CL_BGR1_APPLE: img_format << "CL_BGR1_APPLE"; break;
 #endif
 #if defined(CL_YCbYCr_APPLE)
-					case CL_YCbYCr_APPLE: cout << "CL_YCbYCr_APPLE"; break;
+					case CL_YCbYCr_APPLE: img_format << "CL_YCbYCr_APPLE"; break;
 #endif
 #if defined(CL_CbYCrY_APPLE)
-					case CL_CbYCrY_APPLE: cout << "CL_CbYCrY_APPLE"; break;
+					case CL_CbYCrY_APPLE: img_format << "CL_CbYCrY_APPLE"; break;
 #endif
 					default:
-						cout << format.image_channel_order;
+						img_format << format.image_channel_order;
 						break;
 				}
-				cout << " ";
+				img_format << " ";
 				switch(format.image_channel_data_type) {
-					case CL_SNORM_INT8: cout << "CL_SNORM_INT8"; break;
-					case CL_SNORM_INT16: cout << "CL_SNORM_INT16"; break;
-					case CL_UNORM_INT8: cout << "CL_UNORM_INT8"; break;
-					case CL_UNORM_INT16: cout << "CL_UNORM_INT16"; break;
-					case CL_UNORM_SHORT_565: cout << "CL_UNORM_SHORT_565"; break;
-					case CL_UNORM_SHORT_555: cout << "CL_UNORM_SHORT_555"; break;
-					case CL_UNORM_INT_101010: cout << "CL_UNORM_INT_101010"; break;
-					case CL_SIGNED_INT8: cout << "CL_SIGNED_INT8"; break;
-					case CL_SIGNED_INT16: cout << "CL_SIGNED_INT16"; break;
-					case CL_SIGNED_INT32: cout << "CL_SIGNED_INT32"; break;
-					case CL_UNSIGNED_INT8: cout << "CL_UNSIGNED_INT8"; break;
-					case CL_UNSIGNED_INT16: cout << "CL_UNSIGNED_INT16"; break;
-					case CL_UNSIGNED_INT32: cout << "CL_UNSIGNED_INT32"; break;
-					case CL_HALF_FLOAT: cout << "CL_HALF_FLOAT"; break;
-					case CL_FLOAT: cout << "CL_FLOAT"; break;
+					case CL_SNORM_INT8: img_format << "CL_SNORM_INT8"; break;
+					case CL_SNORM_INT16: img_format << "CL_SNORM_INT16"; break;
+					case CL_UNORM_INT8: img_format << "CL_UNORM_INT8"; break;
+					case CL_UNORM_INT16: img_format << "CL_UNORM_INT16"; break;
+					case CL_UNORM_SHORT_565: img_format << "CL_UNORM_SHORT_565"; break;
+					case CL_UNORM_SHORT_555: img_format << "CL_UNORM_SHORT_555"; break;
+					case CL_UNORM_INT_101010: img_format << "CL_UNORM_INT_101010"; break;
+					case CL_SIGNED_INT8: img_format << "CL_SIGNED_INT8"; break;
+					case CL_SIGNED_INT16: img_format << "CL_SIGNED_INT16"; break;
+					case CL_SIGNED_INT32: img_format << "CL_SIGNED_INT32"; break;
+					case CL_UNSIGNED_INT8: img_format << "CL_UNSIGNED_INT8"; break;
+					case CL_UNSIGNED_INT16: img_format << "CL_UNSIGNED_INT16"; break;
+					case CL_UNSIGNED_INT32: img_format << "CL_UNSIGNED_INT32"; break;
+					case CL_HALF_FLOAT: img_format << "CL_HALF_FLOAT"; break;
+					case CL_FLOAT: img_format << "CL_FLOAT"; break;
 #if defined(CL_SFIXED14_APPLE)
-					case CL_SFIXED14_APPLE: cout << "CL_SFIXED14_APPLE"; break;
+					case CL_SFIXED14_APPLE: img_format << "CL_SFIXED14_APPLE"; break;
 #endif
 #if defined(CL_BIASED_HALF_APPLE)
-					case CL_BIASED_HALF_APPLE: cout << "CL_BIASED_HALF_APPLE"; break;
+					case CL_BIASED_HALF_APPLE: img_format << "CL_BIASED_HALF_APPLE"; break;
 #endif
 					default:
-						cout << format.image_channel_data_type;
+						img_format << format.image_channel_data_type;
 						break;
 				}
-				cout << endl;
+				oclr_log("%s", img_format.str());
 			}
 		}
 	}

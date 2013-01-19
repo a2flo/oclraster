@@ -18,8 +18,12 @@
 
 #include "core.h"
 
+#if !(defined(__clang__) && defined(WIN_UNIXENV))
 random_device core::rd;
 mt19937 core::gen(core::rd());
+#else
+mt19937 core::gen;
+#endif
 
 /*! converts (projects) a 3d vertex to a 2d screen position
  *  @param v the 3d vertex
