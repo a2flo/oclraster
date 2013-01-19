@@ -6,6 +6,7 @@ local mingw = false
 local clang_libcxx = false
 local gcc_compat = false
 local cuda = false
+local windows_no_cmd = false
 local platform = "x32"
 local system_includes = ""
 
@@ -68,6 +69,9 @@ solution "oclraster"
 		end
 		if(_ARGS[argc] == "--cuda") then
 			cuda = true
+		end
+		if(_ARGS[argc] == "--windows") then
+			windows_no_cmd = true
 		end
 		argc=argc+1
 	end
@@ -166,7 +170,12 @@ solution "oclraster"
 			-- link against windows opengl libs on mingw
 			links { "opengl32", "glu32", "gdi32", "SDL2_image", "libxml2", "pthread" }
 			buildoptions { "`sdl2-config --cflags | sed -E 's/-Dmain=SDL_main//g'`" }
-			linkoptions { "`sdl2-config --libs`" }
+			if(windows_no_cmd) then
+				linkoptions { "`sdl2-config --libs`" }
+			else
+				-- no -mwindows flag -> creates a separate cmd window + working iostream output
+				linkoptions { "`sdl2-config --libs | sed -E 's/-mwindows//g'`" }
+			end
 		end
 
 		if(gcc_compat) then

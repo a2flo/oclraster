@@ -17,6 +17,9 @@ for arg in "$@"; do
 		"cuda")
 			BUILD_ARGS+=" --cuda"
 			;;
+		"windows")
+			BUILD_ARGS+=" --windows"
+			;;
 		*)
 			;;
 	esac
