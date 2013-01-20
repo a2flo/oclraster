@@ -88,6 +88,7 @@ public:
 	
 	// string functions
 	static string find_and_replace(const string& str, const string& find, const string& repl);
+	static void find_and_replace(string& str, const string& find, const string& repl); // inline find and replace
 	static string trim(const string& str);
 	static string escape_string(const string& str);
 	static vector<string> tokenize(const string& src, const char& delim);

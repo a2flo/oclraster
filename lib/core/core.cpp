@@ -82,18 +82,22 @@ unsigned long long int core::next_pot(const unsigned long long int& num) {
 }
 
 string core::find_and_replace(const string& str, const string& find, const string& repl) {
-	// consecutive search and replace routine
 	string ret = str;
+	find_and_replace(ret, find, repl);
+	return ret;
+}
+
+void core::find_and_replace(string& str, const string& find, const string& repl) {
+	// consecutive search and replace routine
 	size_t pos, old_pos;
 	size_t find_len = find.size();
 	size_t replace_len = repl.size();
-	if(find_len == 0) return ret; // replace_len might be 0 (if it's an empty string -> "")
+	if(find_len == 0) return; // replace_len might be 0 (if it's an empty string -> "")
 	old_pos = 0;
-	while((pos = ret.find(find, old_pos)) != string::npos) {
-		ret.replace(pos, find_len, repl.c_str(), replace_len);
+	while((pos = str.find(find, old_pos)) != string::npos) {
+		str.replace(pos, find_len, repl.c_str(), replace_len);
 		old_pos = pos + replace_len;
 	}
-	return ret;
 }
 
 vector<string> core::tokenize(const string& src, const char& delim) {

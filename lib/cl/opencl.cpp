@@ -777,11 +777,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		//const string lsl_str = " -DLOCAL_SIZE_LIMIT="+size_t2string(local_size_limit);
 		
 		internal_kernels = { // first time init:
-			make_tuple("TRANSFORM", "transform.cl", "transform", ""),
-			make_tuple("TEMPLATE_TRANSFORM", "template_transform.cl", "_transform_kernel", ""),
 			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "bin_rasterize", ""),
-			make_tuple("RASTERIZE", "rasterize.cl", "rasterize", ""),
-			make_tuple("TEMPLATE_RASTERIZE", "template_rasterize.cl", "_template_rasterize", ""),
 			make_tuple("CLEAR_COLOR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
 			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DDEPTH_FRAMEBUFFER=1"),
 		};

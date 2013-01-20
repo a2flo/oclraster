@@ -19,12 +19,16 @@
 #ifndef __OCLRASTER_TRANSFORM_PROGRAM_H__
 #define __OCLRASTER_TRANSFORM_PROGRAM_H__
 
-class transform_program {
+#include "oclraster_program.h"
+
+class transform_program : public oclraster_program {
 public:
-	transform_program();
-	~transform_program();
+	transform_program(const string& code, const string& identifier, const string entry_function = "main");
+	virtual ~transform_program();
 
 protected:
+	virtual void specialized_processing(const string& code);
+	virtual string create_entry_function_parameters();
 
 };
 

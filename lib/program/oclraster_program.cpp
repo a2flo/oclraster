@@ -20,27 +20,16 @@
 #include "oclraster.h"
 #include <regex>
 
-oclraster_program::oclraster_program(const string& filename, const string entry_function_) {
-	stringstream buffer;
-	if(!file_io::file_to_buffer(filename, buffer)) {
-		invalidate("couldn't open program \""+filename+"\"");
-		return;
-	}
-	process_program(buffer.str(), entry_function_);
-}
-
-oclraster_program::oclraster_program() {}
-
-oclraster_program oclraster_program::from_code(const string& code, const string entry_function_) {
-	oclraster_program prog;
-	prog.process_program(code, entry_function_);
-	return prog;
+oclraster_program::oclraster_program(const string& code oclr_unused,
+									 const string& identifier_,
+									 const string entry_function_) :
+identifier(identifier_), entry_function(entry_function_) {
 }
 
 oclraster_program::~oclraster_program() {
 }
 
-void oclraster_program::process_program(const string& code, const string& entry_function_) {
+void oclraster_program::process_program(const string& code) {
 	static const array<const pair<const char*, const STRUCT_TYPE>, 3> oclraster_struct_types {
 		{
 			{ u8"oclraster_in", STRUCT_TYPE::INPUT },
@@ -48,7 +37,6 @@ void oclraster_program::process_program(const string& code, const string& entry_
 			{ u8"oclraster_uniforms", STRUCT_TYPE::UNIFORMS },
 		}
 	};
-	entry_function = entry_function_;
 	
 	// current oclraster_struct grammar limitation/requirements:
 	// * no preprocessor (this would require a compiler)
@@ -78,8 +66,8 @@ void oclraster_program::process_program(const string& code, const string& entry_
 				if(space_pos == string::npos || code[space_pos] == '{') throw oclraster_exception("no struct name");
 				if(open_bracket_pos == string::npos) throw oclraster_exception("no struct open bracket");
 				const string struct_name = core::trim(code.substr(space_pos+1, open_bracket_pos-space_pos-1));
-				oclr_msg("struct type: \"%s\"", type.first);
-				oclr_msg("struct name: \"%s\"", struct_name);
+				//oclr_msg("struct type: \"%s\"", type.first);
+				//oclr_msg("struct name: \"%s\"", struct_name);
 				
 				// open/close bracket match
 				size_t bracket_pos = open_bracket_pos;
@@ -90,6 +78,15 @@ void oclraster_program::process_program(const string& code, const string& entry_
 					code[bracket_pos] == '{' ? open_bracket_count++ : open_bracket_count--;
 				}
 				const size_t close_bracket_pos = bracket_pos;
+				
+				//
+				const size_t end_semicolon_pos = code.find(";", close_bracket_pos+1);
+				if(end_semicolon_pos == string::npos) {
+					throw oclraster_exception("end-semicolon missing from struct \""+struct_name+"\"!");
+				}
+				const string object_name = core::trim(code.substr(close_bracket_pos+1,
+																  end_semicolon_pos-close_bracket_pos-1));
+				//oclr_msg("object name: \"%s\"", object_name);
 				
 				//
 				string struct_interior = code.substr(open_bracket_pos+1, close_bracket_pos-open_bracket_pos-1);
@@ -137,6 +134,8 @@ void oclraster_program::process_program(const string& code, const string& entry_
 				structs.push_back({
 					type.second,
 					struct_name,
+					object_name,
+					size2(struct_pos, end_semicolon_pos+1),
 					std::move(variable_names),
 					std::move(variable_types),
 					{}
@@ -151,6 +150,51 @@ void oclraster_program::process_program(const string& code, const string& entry_
 		for(auto& oclr_struct : structs) {
 			generate_struct_info_cl_program(oclr_struct);
 		}
+		
+		// build entry function parameter string
+		const string entry_function_params = create_entry_function_parameters();
+		
+		// check if entry function exists, and if so, replace it with a modified function name
+		const regex rx_entry_function("("+entry_function+")\\s*\\(\\s*\\)");
+		if(!regex_search(code, rx_entry_function)) {
+			throw oclraster_exception("entry function \""+entry_function+"\" not found!");
+		}
+		string processed_code = regex_replace(code, rx_entry_function,
+											  "_oclraster_user_"+entry_function+"("+entry_function_params+")");
+		
+		// recreate structs (in reverse, so that the offsets stay valid)
+		for(auto iter = structs.rbegin(); iter != structs.rend(); iter++) {
+			processed_code.erase(iter->code_pos.x, iter->code_pos.y - iter->code_pos.x);
+			
+			string struct_code = "";
+			switch(iter->type) {
+				case STRUCT_TYPE::INPUT:
+					struct_code += "oclraster_in";
+					break;
+				case STRUCT_TYPE::OUTPUT:
+					struct_code += "oclraster_out";
+					break;
+				case STRUCT_TYPE::UNIFORMS:
+					struct_code += "oclraster_uniforms";
+					break;
+			}
+			struct_code += " {\n";
+			for(size_t var_index = 0; var_index < iter->variables.size(); var_index++) {
+				struct_code += iter->variable_types[var_index] + " " + iter->variables[var_index] + ";\n";
+			}
+			struct_code += "} " + iter->name + ";\n";
+			processed_code.insert(iter->code_pos.x, struct_code);
+		}
+		
+		// and finally: call the specialized processing function of inheriting classes/programs
+		// note: this should inject the user code into their respective code templates
+		specialized_processing(processed_code);
+		
+		// TODO: compile
+		//const string program_identifier = "USER_PROGRAM."+ull2string(SDL_GetPerformanceCounter());
+		const string program_identifier = identifier;
+		opencl::kernel_object* kernel_obj = ocl->add_kernel_src(program_identifier, program_code, "_oclraster_program");
+		//ocl->delete_kernel(kernel_obj);
 	}
 	catch(oclraster_exception& ex) {
 		invalidate(ex.what());
@@ -212,14 +256,14 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 		
 		oclraster_struct_info::device_struct_info dev_info;
 		dev_info.struct_size = info_buffer_results[0];
-		oclr_msg("struct \"%s\" size: %d", struct_info.name, dev_info.struct_size);
+		//oclr_msg("struct \"%s\" size: %d", struct_info.name, dev_info.struct_size);
 		dev_info.sizes.resize(struct_info.variables.size());
 		dev_info.offsets.resize(struct_info.variables.size());
 		for(size_t i = 0; i < struct_info.variables.size(); i++) {
 			dev_info.sizes[i] = info_buffer_results[(i*2) + 1];
 			dev_info.offsets[i] = info_buffer_results[(i*2) + 2];
-			oclr_msg("\tmember \"%s\": size: %d, offset: %d",
-					 struct_info.variables[i], dev_info.sizes[i], dev_info.offsets[i]);
+			//oclr_msg("\tmember \"%s\": size: %d, offset: %d",
+			//		 struct_info.variables[i], dev_info.sizes[i], dev_info.offsets[i]);
 		}
 		struct_info.device_infos.push_back(dev_info);
 		

@@ -59,8 +59,17 @@ int main(int argc oclr_unused, char* argv[]) {
 	evt->add_event_handler(quit_handler_fnctr, EVENT_TYPE::QUIT);
 	
 	///// testing
-	oclraster_program vs_prog(oclraster::kernel_path("user/simple_shader_vs.cl"));
-	oclraster_program fs_prog(oclraster::kernel_path("user/simple_shader_fs.cl"));
+	stringstream vs_buffer, fs_buffer;
+	if(!file_io::file_to_buffer(oclraster::kernel_path("user/simple_shader_vs.cl"), vs_buffer)) {
+		oclr_error("couldn't open vs program!");
+		return -1;
+	}
+	if(!file_io::file_to_buffer(oclraster::kernel_path("user/simple_shader_fs.cl"), fs_buffer)) {
+		oclr_error("couldn't open fs program!");
+		return -1;
+	}
+	transform_program vs_prog(vs_buffer.str(), "TEMPLATE_TRANSFORM");
+	rasterize_program fs_prog(fs_buffer.str(), "TEMPLATE_RASTERIZE");
 	/////
 	
 	// init done

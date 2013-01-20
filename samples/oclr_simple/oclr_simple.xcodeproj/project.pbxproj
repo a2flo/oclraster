@@ -18,7 +18,6 @@
 		5C38554E1670AE26003380CA /* clear_framebuffer.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = clear_framebuffer.cl; sourceTree = "<group>"; };
 		5C47267016A69E1200F7EA21 /* simple_shader_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_fs.cl; sourceTree = "<group>"; };
 		5C47267116A69E1200F7EA21 /* simple_shader_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_vs.cl; sourceTree = "<group>"; };
-		5C6EB4A0169F784D003D7C2A /* template_rasterize.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_rasterize.cl; sourceTree = "<group>"; };
 		5C91650E166685EA00626436 /* oclr_global.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_global.h; sourceTree = "<group>"; };
 		5C91650F166685EA00626436 /* oclr_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_math.h; sourceTree = "<group>"; };
 		5C916510166685EA00626436 /* oclr_matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_matrix.h; sourceTree = "<group>"; };
@@ -39,7 +38,6 @@
 		5CCC967B1641BF72005C3DE4 /* cutil_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cutil_math.h; sourceTree = "<group>"; };
 		5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cudacl.h; sourceTree = "<group>"; };
 		5CD91DBC16627F3D00B99A38 /* rasterize.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = rasterize.cl; sourceTree = "<group>"; };
-		5CEC5B631699719F00C464D5 /* template_transform.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_transform.cl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,8 +119,6 @@
 				5C9165111666946B00626436 /* bin_rasterize.cl */,
 				5CD91DBC16627F3D00B99A38 /* rasterize.cl */,
 				5C38554E1670AE26003380CA /* clear_framebuffer.cl */,
-				5CEC5B631699719F00C464D5 /* template_transform.cl */,
-				5C6EB4A0169F784D003D7C2A /* template_rasterize.cl */,
 				5CEC5B641699719F00C464D5 /* user */,
 			);
 			name = kernels;

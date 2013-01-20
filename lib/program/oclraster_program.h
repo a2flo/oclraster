@@ -23,9 +23,8 @@
 
 class oclraster_program {
 public:
-	oclraster_program(const string& filename, const string entry_function = "main");
-	static oclraster_program from_code(const string& code, const string entry_function);
-	~oclraster_program();
+	oclraster_program(const string& code, const string& identifier, const string entry_function = "main");
+	virtual ~oclraster_program();
 	
 	enum class STRUCT_TYPE : unsigned int {
 		INPUT,
@@ -35,6 +34,8 @@ public:
 	struct oclraster_struct_info {
 		const STRUCT_TYPE type;
 		const string name;
+		const string object_name;
+		const size2 code_pos;
 		const vector<string> variables;
 		const vector<string> variable_types;
 		struct device_struct_info {
@@ -48,10 +49,13 @@ public:
 	bool is_valid() const;
 
 protected:
-	oclraster_program(); // only used internally
+	string identifier = "";
 	string entry_function = "main";
+	string program_code = "";
 	
-	void process_program(const string& code, const string& entry_function);
+	void process_program(const string& code);
+	virtual void specialized_processing(const string& code) = 0;
+	virtual string create_entry_function_parameters() = 0;
 	
 	bool valid = false;
 	void invalidate(const string error_info = "");

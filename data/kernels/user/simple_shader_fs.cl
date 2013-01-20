@@ -36,6 +36,6 @@ void main() {
 			spec_color = uniforms->light_color.xyz * attenuation * specular;
 		}
 		
-		pixel_color->xyz += diff_color + spec_color;
+		(*pixel_color).xyz += diff_color + spec_color;
 	}
 }
