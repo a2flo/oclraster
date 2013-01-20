@@ -559,6 +559,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 #endif
 
 #if !defined(__APPLE__)
+		// get platform vendor
 		const string platform_str = platforms[platform_index].getInfo<CL_PLATFORM_NAME>();
 		const string platform_vendor_str = core::str_to_lower(platform_str);
 		if(platform_vendor_str.find("nvidia") != string::npos) {
@@ -572,7 +573,32 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		}
 #endif
 
-		oclr_debug("opencl platform #%u vendor: %s", platform_index, platform_vendor_to_str(platform_vendor));
+		// get platform cl version
+		const string cl_version_str = platforms[platform_index].getInfo<CL_PLATFORM_VERSION>();
+		if(cl_version_str.length() >= 10 && cl_version_str.substr(0, 7) == "OpenCL ") { // "OpenCL X.Y" required by spec
+			const string version_str = cl_version_str.substr(7, cl_version_str.find(" ", 7) - 7);
+			const size_t dot_pos = version_str.find(".");
+			if(string2size_t(version_str.substr(0, dot_pos)) > 1) {
+				// major version is higher than 1 -> pretend we're running on CL 1.2
+				platform_cl_version = PLATFORM_CL_VERSION::CL_1_2;
+			}
+			else {
+				switch(string2size_t(version_str.substr(dot_pos+1, version_str.length()-dot_pos-1))) {
+					case 0: platform_cl_version = PLATFORM_CL_VERSION::CL_1_0; break;
+					case 1: platform_cl_version = PLATFORM_CL_VERSION::CL_1_1; break;
+					case 2:
+					default: // default to CL 1.2
+						platform_cl_version = PLATFORM_CL_VERSION::CL_1_2;
+						break;
+				}
+			}
+		}
+		else oclr_error("invalid opencl platform version string: %s", cl_version_str);
+
+		//
+		oclr_debug("opencl platform #%u vendor: %s (version CL%s)",
+				   platform_index, platform_vendor_to_str(platform_vendor),
+				   (platform_cl_version == PLATFORM_CL_VERSION::CL_1_0 ? "1.0" : (platform_cl_version == PLATFORM_CL_VERSION::CL_1_1 ? "1.1" : "1.2")));
 		
 		internal_devices.clear();
 		internal_devices = context->getInfo<CL_CONTEXT_DEVICES>();
@@ -624,9 +650,11 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			oclr_msg("min data type alignment size: %u", internal_device.getInfo<CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE>());
 			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());
 #if defined(CL_VERSION_1_2)
-			oclr_msg("printf buffer size: %u", internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>());
-			oclr_msg("max sub-devices: %u", internal_device.getInfo<CL_DEVICE_PARTITION_MAX_SUB_DEVICES>());
-			oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
+			if(platform_cl_version >= PLATFORM_CL_VERSION::CL_1_2) {
+				oclr_msg("printf buffer size: %u", internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>());
+				oclr_msg("max sub-devices: %u", internal_device.getInfo<CL_DEVICE_PARTITION_MAX_SUB_DEVICES>());
+				oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
+			}
 #endif
 			
 			device->max_alloc = internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();

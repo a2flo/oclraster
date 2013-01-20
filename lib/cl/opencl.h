@@ -117,6 +117,11 @@ public:
 		APPLE,
 		UNKNOWN
 	};
+	enum class PLATFORM_CL_VERSION {
+		CL_1_0,
+		CL_1_1,
+		CL_1_2
+	};
 	// <vendor, index/identifier for use in oclraster config>
 	static vector<pair<PLATFORM_VENDOR, string>> get_platforms();
 	static string platform_vendor_to_str(const PLATFORM_VENDOR& pvendor);
@@ -291,6 +296,7 @@ protected:
 	cl::Context* context;
 	cl::Platform* platform;
 	PLATFORM_VENDOR platform_vendor = PLATFORM_VENDOR::UNKNOWN;
+	PLATFORM_CL_VERSION platform_cl_version = PLATFORM_CL_VERSION::CL_1_0;
 	vector<cl::Platform> platforms;
 	vector<cl::Device> internal_devices;
 	vector<device_object*> devices;

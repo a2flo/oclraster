@@ -66,7 +66,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 	
 	// shared float texture doesn't work on the cpu, cl float image2d doesn't work on the gpu ... -> use the correct one
 	// TODO: correct device type check
-	if(ocl->get_active_device()->type == opencl::DEVICE_TYPE::GPU0) {
+	if(ocl->get_active_device()->type == opencl::DEVICE_TYPE::GPU0 && !cl_framebuffer_fallback) {
 		depth_framebuffer = rtt::add_buffer(framebuffer_size.x, framebuffer_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_R32F, GL_RED, GL_FLOAT, 1, rtt::DEPTH_TYPE::NONE);
 		depth_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, depth_framebuffer->tex[0]);
 	}
@@ -93,7 +93,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 		}
 		
 		depth_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-														  // CL_Rx is only supported on os x, use CL_R for amd and intel platforms (TODO: nvidia?)
+														  // CL_Rx is only supported on os x, use CL_R for amd, intel and nvidia platforms
 														  ocl->get_platform_vendor() == opencl::PLATFORM_VENDOR::APPLE ? CL_Rx : CL_R,
 														  CL_FLOAT, scaled_size.x, scaled_size.y);
 	}
