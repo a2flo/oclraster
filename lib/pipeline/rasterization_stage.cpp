@@ -62,8 +62,8 @@ void rasterization_stage::rasterize(draw_state& state,
 																(void*)&rasterize_uniforms);
 	
 	unsigned int argc = 0;
-	//cout << "rasterizing ..." << endl;
-	ocl->use_kernel("TEMPLATE_RASTERIZE");
+	//ocl->use_kernel("TEMPLATE_RASTERIZE");
+	ocl->use_kernel(state.rasterize_prog->get_identifier());
 	
 	// TODO: only use necessary data (-> condense buffer in transform stage / throw away unnecessary triangles)
 	ocl->set_kernel_argument(argc++, state.transformed_user_buffer); // transform output

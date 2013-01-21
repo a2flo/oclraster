@@ -26,6 +26,8 @@
 #include "core/rtt.h"
 #include "core/event.h"
 #include "program/oclraster_program.h"
+#include "program/transform_program.h"
+#include "program/rasterize_program.h"
 
 struct draw_state {
 	// TODO: store actual flags/data
@@ -57,6 +59,10 @@ struct draw_state {
 	//unordered_map<string, opencl_base::buffer_object*> user_buffers;
 	
 	//
+	const transform_program* transform_prog = nullptr;
+	const rasterize_program* rasterize_prog = nullptr;
+	
+	//
 	const uint2 tile_size { 32, 32 };
 	opencl_base::buffer_object* triangle_queues_buffer = nullptr;
 	opencl_base::buffer_object* queue_sizes_buffer = nullptr;
@@ -72,13 +78,18 @@ public:
 	pipeline();
 	~pipeline();
 	
+	//
 	void start();
 	void stop();
+	
+	//
+	template <class program_type> void bind_program(const program_type& program);
+	
+	// TODO: buffer binding
 	
 	// "draw calls" (for now, these always draw triangles)
 	void draw(const transform_stage::vertex_buffer& vb,
 			  const transform_stage::index_buffer& ib,
-			  //const transform_stage::constant_buffer& cb,
 			  // default element range: draw all
 			  const pair<unsigned int, unsigned int> element_range = { ~0u, ~0u });
 	
@@ -117,5 +128,21 @@ protected:
 	bool window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
 	
 };
+
+//
+template <class program_type> void pipeline::bind_program(const program_type& program) {
+	static_assert(is_base_of<oclraster_program, program_type>::value,
+				  "invalid program type (must derive from oclraster_program)!");
+	static_assert(is_base_of<transform_program, program_type>::value ||
+				  is_base_of<rasterize_program, program_type>::value,
+				  "invalid program type (must be a transform_program or rasterize_program or a derived class)!");
+	// static_if would be nice
+	if(is_base_of<transform_program, program_type>::value) {
+		state.transform_prog = (transform_program*)&program;
+	}
+	else if(is_base_of<rasterize_program, program_type>::value) {
+		state.rasterize_prog = (rasterize_program*)&program;
+	}
+}
 
 #endif

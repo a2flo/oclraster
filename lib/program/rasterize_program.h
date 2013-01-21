@@ -23,7 +23,7 @@
 
 class rasterize_program : public oclraster_program {
 public:
-	rasterize_program(const string& code, const string& identifier, const string entry_function = "main");
+	rasterize_program(const string& code, const string entry_function = "main");
 	virtual ~rasterize_program();
 
 protected:

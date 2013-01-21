@@ -23,7 +23,7 @@
 
 class oclraster_program {
 public:
-	oclraster_program(const string& code, const string& identifier, const string entry_function = "main");
+	oclraster_program(const string& code, const string entry_function = "main");
 	virtual ~oclraster_program();
 	
 	enum class STRUCT_TYPE : unsigned int {
@@ -47,6 +47,7 @@ public:
 	};
 	
 	bool is_valid() const;
+	const string& get_identifier() const;
 
 protected:
 	string identifier = "";
@@ -59,6 +60,8 @@ protected:
 	
 	bool valid = false;
 	void invalidate(const string error_info = "");
+	
+	opencl::kernel_object* kernel = nullptr;
 	
 	//
 	vector<oclraster_struct_info> structs;

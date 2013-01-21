@@ -59,10 +59,6 @@ public:
 
 protected:
 	opencl_base::buffer_object* const_buffer_tp = nullptr;
-	
-	static constexpr size_t _debug_buffer_size = 1024;
-	array<int, _debug_buffer_size / sizeof(int)> _debug_buffer;
-	opencl_base::buffer_object* _debug_buffer_tp = nullptr;
 
 };
 

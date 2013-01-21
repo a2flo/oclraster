@@ -177,7 +177,6 @@ void pipeline::stop() {
 
 void pipeline::draw(const transform_stage::vertex_buffer& vb,
 					const transform_stage::index_buffer& ib,
-					//const transform_stage::constant_buffer& cb,
 					const pair<unsigned int, unsigned int> element_range) {
 #if defined(OCLRASTER_DEBUG)
 	// TODO: check buffer sanity/correctness (in debug mode)
@@ -220,7 +219,7 @@ void pipeline::draw(const transform_stage::vertex_buffer& vb,
 void pipeline::_reserve_memory(const unsigned int triangle_count) {
 	reserved_triangle_count = triangle_count;
 	
-	// NOTE: this must be called again if the screen size changes! (TODO: ?)
+	// NOTE: this must be called again if the screen size changes!
 	const uint2 bin_count_xy(framebuffer_size.x / tile_size.x + ((framebuffer_size.x % tile_size.x) != 0 ? 1 : 0),
 							 framebuffer_size.y / tile_size.y + ((framebuffer_size.y % tile_size.y) != 0 ? 1 : 0));
 	const size_t bin_count = bin_count_xy.x * bin_count_xy.y;

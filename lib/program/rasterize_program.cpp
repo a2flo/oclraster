@@ -104,8 +104,8 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 	}
 )OCLRASTER_RAWSTR"};
 
-rasterize_program::rasterize_program(const string& code, const string& identifier_, const string entry_function_) :
-oclraster_program(code, identifier_, entry_function_) {
+rasterize_program::rasterize_program(const string& code, const string entry_function_) :
+oclraster_program(code, entry_function_) {
 	process_program(code);
 }
 

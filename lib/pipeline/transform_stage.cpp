@@ -33,19 +33,10 @@ transform_stage::transform_stage() {
 	const_buffer_tp = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 										 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 										 sizeof(constant_data_tp));
-	
-	_debug_buffer.fill(0);
-	/*_debug_buffer_tp = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
-										  opencl::BUFFER_FLAG::INITIAL_COPY |
-										  opencl::BUFFER_FLAG::READ_BACK_RESULT |
-										  opencl::BUFFER_FLAG::BLOCK_ON_READ |
-										  opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-										  _debug_buffer_size, &_debug_buffer[0]);*/
 }
 
 transform_stage::~transform_stage() {
 	ocl->delete_buffer(const_buffer_tp);
-	//ocl->delete_buffer(_debug_buffer_tp);
 }
 
 void transform_stage::transform(draw_state& state,
@@ -67,21 +58,16 @@ void transform_stage::transform(draw_state& state,
 	// -> 1D kernel, with max #work-items per work-group
 	// -> index_range / (max #work-items per work-group)
 	unsigned int argc = 0;
-
-	struct __attribute__((packed, aligned(16))) simple_output {
-		float4 vertex;
-		float4 normal;
-		float2 tex_coord;
-	};
 	
-	const auto identity_matrix = matrix4f();
+	static constexpr matrix4f identity_matrix { matrix4f() };
 	opencl::buffer_object* uniforms_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 																opencl::BUFFER_FLAG::INITIAL_COPY |
 																opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 																sizeof(matrix4f),
 																(void*)&identity_matrix);
 	
-	ocl->use_kernel("TEMPLATE_TRANSFORM");
+	//ocl->use_kernel("TEMPLATE_TRANSFORM");
+	ocl->use_kernel(state.transform_prog->get_identifier());
 	ocl->set_kernel_argument(argc++, vb.buffer);
 	ocl->set_kernel_argument(argc++, state.transformed_user_buffer);
 	ocl->set_kernel_argument(argc++, uniforms_buffer);
@@ -94,13 +80,4 @@ void transform_stage::transform(draw_state& state,
 	ocl->run_kernel();
 	
 	ocl->delete_buffer(uniforms_buffer);
-	
-#if 0
-	// debug buffer results
-	const int dbg_value_count = _debug_buffer[0];
-	oclr_debug("#debug values: %d", dbg_value_count);
-	for(int i = 0; i < dbg_value_count; i++) {
-		oclr_debug("\t%d: %d", i, _debug_buffer[i+1]);
-	}
-#endif
 }

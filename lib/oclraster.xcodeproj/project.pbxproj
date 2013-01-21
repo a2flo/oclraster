@@ -202,7 +202,6 @@
 			isa = PBXGroup;
 			children = (
 				5C05F789123171DA00D122BF /* Source */,
-				5C05F78A123171DA00D122BF /* Other Sources */,
 				5C05F78B123171DA00D122BF /* Frameworks */,
 				5C05F791123171DA00D122BF /* Products */,
 			);
@@ -223,13 +222,6 @@
 				5C397642123189750075C168 /* threading */,
 			);
 			path = Source;
-			sourceTree = "<group>";
-		};
-		5C05F78A123171DA00D122BF /* Other Sources */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "Other Sources";
 			sourceTree = "<group>";
 		};
 		5C05F78B123171DA00D122BF /* Frameworks */ = {

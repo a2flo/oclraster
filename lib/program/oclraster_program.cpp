@@ -21,12 +21,14 @@
 #include <regex>
 
 oclraster_program::oclraster_program(const string& code oclr_unused,
-									 const string& identifier_,
 									 const string entry_function_) :
-identifier(identifier_), entry_function(entry_function_) {
+entry_function(entry_function_) {
 }
 
 oclraster_program::~oclraster_program() {
+	if(kernel != nullptr && ocl != nullptr) {
+		ocl->delete_kernel(kernel);
+	}
 }
 
 void oclraster_program::process_program(const string& code) {
@@ -190,11 +192,9 @@ void oclraster_program::process_program(const string& code) {
 		// note: this should inject the user code into their respective code templates
 		specialized_processing(processed_code);
 		
-		// TODO: compile
-		//const string program_identifier = "USER_PROGRAM."+ull2string(SDL_GetPerformanceCounter());
-		const string program_identifier = identifier;
-		opencl::kernel_object* kernel_obj = ocl->add_kernel_src(program_identifier, program_code, "_oclraster_program");
-		//ocl->delete_kernel(kernel_obj);
+		// compile
+		identifier = "USER_PROGRAM."+ull2string(SDL_GetPerformanceCounter());
+		kernel = ocl->add_kernel_src(identifier, program_code, "_oclraster_program");
 	}
 	catch(oclraster_exception& ex) {
 		invalidate(ex.what());
@@ -206,30 +206,30 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	static const string kernel_start = "kernel void struct_info(global int* info_buffer) {\nint index = 0;\n";
 	static const string kernel_end = "}";
 	
-	string kernel = kernel_header;
+	string kernel_code = kernel_header;
 	
 	// struct decl
-	kernel += "typedef struct __attribute__((packed, aligned(16))) {\n";
+	kernel_code += "typedef struct __attribute__((packed, aligned(16))) {\n";
 	for(size_t i = 0; i < struct_info.variables.size(); i++) {
-		kernel += struct_info.variable_types[i] + " " + struct_info.variables[i] + ";\n";
+		kernel_code += struct_info.variable_types[i] + " " + struct_info.variables[i] + ";\n";
 	}
-	kernel += "} " + struct_info.name + ";\n";
+	kernel_code += "} " + struct_info.name + ";\n";
 	
 	// actual kernel
-	kernel += kernel_start;
-	kernel += "atomic_xchg(&info_buffer[index++], (int)sizeof("+struct_info.name+"));\n";
+	kernel_code += kernel_start;
+	kernel_code += "atomic_xchg(&info_buffer[index++], (int)sizeof("+struct_info.name+"));\n";
 	for(const auto& var : struct_info.variables) {
 		// standard c ftw
-		kernel += "atomic_xchg(&info_buffer[index++], (int)sizeof(("+struct_info.name+"*)0)->"+var+");\n"; // size
-		kernel += "atomic_xchg(&info_buffer[index++], (int)&((("+struct_info.name+"*)0)->"+var+"));\n"; // offset
+		kernel_code += "atomic_xchg(&info_buffer[index++], (int)sizeof(("+struct_info.name+"*)0)->"+var+");\n"; // size
+		kernel_code += "atomic_xchg(&info_buffer[index++], (int)&((("+struct_info.name+"*)0)->"+var+"));\n"; // offset
 	}
-	kernel += "}"; // eol
+	kernel_code += "}"; // eol
 	
-	//oclr_debug("generated kernel file:\n%s\n", kernel);
+	//oclr_debug("generated kernel file:\n%s\n", kernel_code);
 	
 	// and compile
 	const string unique_identifier = "STRUCT_INFO."+ull2string(SDL_GetPerformanceCounter());
-	opencl::kernel_object* kernel_obj = ocl->add_kernel_src(unique_identifier, kernel, "struct_info");
+	opencl::kernel_object* kernel_obj = ocl->add_kernel_src(unique_identifier, kernel_code, "struct_info");
 	
 	const size_t info_buffer_size = 1 + struct_info.variables.size() * 2;
 	int* info_buffer_results = new int[info_buffer_size];
@@ -284,4 +284,8 @@ void oclraster_program::invalidate(const string error_info) {
 	valid = false;
 	oclr_error("there was an error processing your program%s",
 			   error_info != "" ? ": " + error_info + "!" : "");
+}
+
+const string& oclraster_program::get_identifier() const {
+	return identifier;
 }

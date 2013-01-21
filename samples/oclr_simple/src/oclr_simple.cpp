@@ -68,8 +68,10 @@ int main(int argc oclr_unused, char* argv[]) {
 		oclr_error("couldn't open fs program!");
 		return -1;
 	}
-	transform_program vs_prog(vs_buffer.str(), "TEMPLATE_TRANSFORM");
-	rasterize_program fs_prog(fs_buffer.str(), "TEMPLATE_RASTERIZE");
+	transform_program vs_prog(vs_buffer.str());
+	rasterize_program fs_prog(fs_buffer.str());
+	p->bind_program(vs_prog);
+	p->bind_program(fs_prog);
 	/////
 	
 	// init done
