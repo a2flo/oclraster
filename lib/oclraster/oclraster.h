@@ -135,6 +135,9 @@ public:
 	static unsigned int get_ldouble_click_time();
 	static unsigned int get_mdouble_click_time();
 	static unsigned int get_rdouble_click_time();
+	
+	// opencl
+	static bool get_gl_sharing();
 
 protected:
 	oclraster(const char* callpath_, const char* datapath_) = delete;

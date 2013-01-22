@@ -55,13 +55,19 @@ void pipeline::create_framebuffers(const uint2& size) {
 	framebuffer_size = scaled_size;
 	oclr_debug("size: %v -> %v", size, scaled_size);
 	
-	color_framebuffer = rtt::add_buffer(framebuffer_size.x, framebuffer_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 1, rtt::DEPTH_TYPE::NONE);
-	color_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, color_framebuffer->tex[0]);
-	if(color_framebuffer_cl == nullptr) {
-		oclr_error("failed to share opengl framebuffer - using slow framebuffer map/copy fallback!");
+	if(oclraster::get_gl_sharing()) {
+		color_framebuffer = rtt::add_buffer(framebuffer_size.x, framebuffer_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 1, rtt::DEPTH_TYPE::NONE);
+		color_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, color_framebuffer->tex[0]);
+		if(color_framebuffer_cl == nullptr) {
+			oclr_error("failed to share opengl framebuffer - using slow framebuffer map/copy fallback!");
+			cl_framebuffer_fallback = true;
+			if(color_framebuffer != nullptr) rtt::delete_buffer(color_framebuffer);
+			color_framebuffer = nullptr;
+		}
+	}
+	else {
+		oclr_msg("opengl sharing disabled - using using slow framebuffer map/copy fallback!");
 		cl_framebuffer_fallback = true;
-		if(color_framebuffer != nullptr) rtt::delete_buffer(color_framebuffer);
-		color_framebuffer = nullptr;
 	}
 	
 	// shared float texture doesn't work on the cpu, cl float image2d doesn't work on the gpu ... -> use the correct one
@@ -182,7 +188,7 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	
 	// initialize draw state
 	state.depth_test = 1;
-	state.transformed_primitive_size = 4 * sizeof(float4); // TODO: get from vertex buffer?
+	state.transformed_primitive_size = 4 * sizeof(float4); // NOTE: this is just for the internal transformed buffer
 	state.framebuffer_size = framebuffer_size;
 	state.color_framebuffer = color_framebuffer_cl;
 	state.depth_framebuffer = depth_framebuffer_cl;

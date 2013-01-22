@@ -169,7 +169,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_buffer("input_attributes", input_attributes);
 		p->bind_buffer("tp_uniforms", *tp_uniforms_buffer);
 		p->bind_buffer("rp_uniforms", *rp_uniforms_buffer);
-		p->draw({0, bunny->get_index_count(0)});
+		p->draw({0, bunny->get_index_count(0)-1});
 		
 		p->stop();
 		oclraster::stop_draw();

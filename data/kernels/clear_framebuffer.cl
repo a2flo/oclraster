@@ -14,6 +14,6 @@ kernel void clear_framebuffer(const uint2 framebuffer_size,
 	if(y >= framebuffer_size.y) return;
 	write_imagef(color_framebuffer, (int2)(x, y), (float4)(0.0f, 0.0f, 0.0f, 0.0f));
 #if defined(DEPTH_FRAMEBUFFER)
-	write_imagef(depth_framebuffer, (int2)(x, y), (float4)(0.0f, 0.0f, 0.0f, 0.0f));
+	write_imagef(depth_framebuffer, (int2)(x, y), (float4)(FLT_MAX, 0.0f, 0.0f, 0.0f));
 #endif
 }

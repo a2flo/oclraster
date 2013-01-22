@@ -18,7 +18,7 @@
 
 #include "rasterize_program.h"
 
-static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
+static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 	#include "oclr_global.h"
 	#include "oclr_math.h"
 	#include "oclr_matrix.h"
@@ -49,7 +49,7 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 								   constant constant_data* cdata,
 								   const uint2 framebuffer_size,
 								   write_only image2d_t color_framebuffer,
-								   write_only image2d_t depth_framebuffer) {
+								   read_write image2d_t depth_framebuffer) {
 		const unsigned int x = get_global_id(0);
 		const unsigned int y = get_global_id(1);
 		if(x >= framebuffer_size.x) return;
@@ -57,8 +57,9 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		
 		float4 pixel_color = (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 		
-		const float far_plane = 1000.0f; // TODO: get this from somewhere else
-		float pixel_depth = far_plane; // TODO: read depth
+		const sampler_t depth_sampler = CLK_FILTER_NEAREST | CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE;
+		const float input_depth = read_imagef(depth_framebuffer, depth_sampler, (int2)(x, y)).x;
+		float pixel_depth = input_depth;
 		
 		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
 		const unsigned int queue_entries = queue_sizes_buffer[bin_index];
@@ -70,21 +71,22 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 			const float4 VV2 = transformed_buffer[triangle_id].VV2;
 			
 			//
-			const float3 xy1 = (float3)((float)x, (float)y, 1.0f);
-			float4 gad = (float4)(dot(xy1, VV0.xyz),
-								  dot(xy1, VV1.xyz),
-								  dot(xy1, VV2.xyz),
-								  VV0.w);
-			if(gad.x >= 0.0f || gad.y >= 0.0f || gad.z >= 0.0f) continue;
+			const float2 fragment_xy = (float2)(x, y);
+			const float3 xy1 = (float3)(fragment_xy.x, fragment_xy.y, 1.0f);
+			float4 barycentric = (float4)(dot(xy1, VV0.xyz),
+										  dot(xy1, VV1.xyz),
+										  dot(xy1, VV2.xyz),
+										  VV0.w); // .w = computed depth
+			if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
 			
 			// simplified:
-			gad /= gad.x + gad.y + gad.z;
+			barycentric /= barycentric.x + barycentric.y + barycentric.z;
 			
 			// depth test:
-			if(gad.w >= pixel_depth) continue;
+			if(barycentric.w >= pixel_depth) continue;
 			
 			// reset depth and color
-			pixel_depth = gad.w;
+			pixel_depth = barycentric.w;
 			pixel_color = (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 			
 			//
@@ -97,9 +99,9 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// write last depth (if it has changed)
-		if(pixel_depth < far_plane) {
+		if(pixel_depth < input_depth) {
 			write_imagef(color_framebuffer, (int2)(x, y), pixel_color);
-			write_imagef(depth_framebuffer, (int2)(x, y), (float4)(pixel_depth / far_plane, 0.0f, 0.0f, 1.0f));
+			write_imagef(depth_framebuffer, (int2)(x, y), (float4)(pixel_depth, 0.0f, 0.0f, 1.0f));
 		}
 	}
 )OCLRASTER_RAWSTR"};
@@ -114,7 +116,7 @@ rasterize_program::~rasterize_program() {
 
 void rasterize_program::specialized_processing(const string& code) {
 	// insert (processed) user code into template program
-	program_code = template_transform_program;
+	program_code = template_rasterize_program;
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_CODE###", code);
 	
 	// create kernel parameters string (buffers will be called "user_buffer_#")
@@ -163,7 +165,7 @@ void rasterize_program::specialized_processing(const string& code) {
 						buffer_handling_code += "user_buffer_outputs_" + cur_user_buffer_str + "[" + size_t2string(i) + "]." + var;
 						if(i < 2) buffer_handling_code += ", ";
 					}
-					buffer_handling_code += ", gad.xyz);\n";
+					buffer_handling_code += ", barycentric.xyz);\n";
 				}
 				main_call_parameters += "&" + interp_var_name + ", ";
 			}
@@ -176,7 +178,7 @@ void rasterize_program::specialized_processing(const string& code) {
 		}
 		cur_user_buffer++;
 	}
-	main_call_parameters += "&pixel_color, &pixel_depth"; // the same for all transform programs
+	main_call_parameters += "&pixel_color, &pixel_depth, fragment_xy, barycentric.xyz"; // the same for all rasterization programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
 						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	
@@ -185,7 +187,7 @@ void rasterize_program::specialized_processing(const string& code) {
 }
 
 string rasterize_program::create_entry_function_parameters() {
-	static const string rasterize_params = "float4* pixel_color, float* depth";
+	static const string rasterize_params = "float4* pixel_color, float* depth, const float2 fragment_xy, const float3 barycentric";
 	string entry_function_params = "";
 	for(size_t i = 0, struct_count = structs.size(); i < struct_count; i++) {
 		switch(structs[i].type) {

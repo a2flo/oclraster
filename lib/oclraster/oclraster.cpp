@@ -1068,3 +1068,7 @@ void oclraster::set_upscaling(const float& upscaling_) {
 const float& oclraster::get_upscaling() {
 	return config.upscaling;
 }
+
+bool oclraster::get_gl_sharing() {
+	return config.gl_sharing;
+}
