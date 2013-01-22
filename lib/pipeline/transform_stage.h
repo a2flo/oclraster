@@ -53,8 +53,6 @@ public:
 	
 	//
 	void transform(draw_state& state,
-				   const transform_stage::vertex_buffer& vb,
-				   const transform_stage::index_buffer& ib,
 				   const unsigned int& num_elements);
 
 protected:

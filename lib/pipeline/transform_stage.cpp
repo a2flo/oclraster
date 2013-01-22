@@ -40,8 +40,6 @@ transform_stage::~transform_stage() {
 }
 
 void transform_stage::transform(draw_state& state,
-								const transform_stage::vertex_buffer& vb,
-								const transform_stage::index_buffer& ib,
 								const unsigned int& num_elements) {
 	// update const buffer
 	const auto& cam = oclraster::get_camera_setup();
@@ -58,26 +56,30 @@ void transform_stage::transform(draw_state& state,
 	// -> 1D kernel, with max #work-items per work-group
 	// -> index_range / (max #work-items per work-group)
 	unsigned int argc = 0;
-	
-	static constexpr matrix4f identity_matrix { matrix4f() };
-	opencl::buffer_object* uniforms_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
-																opencl::BUFFER_FLAG::INITIAL_COPY |
-																opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-																sizeof(matrix4f),
-																(void*)&identity_matrix);
-	
-	//ocl->use_kernel("TEMPLATE_TRANSFORM");
 	ocl->use_kernel(state.transform_prog->get_identifier());
-	ocl->set_kernel_argument(argc++, vb.buffer);
-	ocl->set_kernel_argument(argc++, state.transformed_user_buffer);
-	ocl->set_kernel_argument(argc++, uniforms_buffer);
 	
-	ocl->set_kernel_argument(argc++, ib.buffer);
+	// set user buffers
+	for(const auto& user_struct : state.transform_prog->get_structs()) {
+		const auto buffer = state.user_buffers.find(user_struct.object_name);
+		// TODO: only check this in debug mode?
+		if(buffer == state.user_buffers.cend()) {
+			oclr_error("buffer \"%s\" not bound!", user_struct.object_name);
+			return;
+		}
+		ocl->set_kernel_argument(argc++, &buffer->second);
+	}
+	
+	const auto index_buffer = state.user_buffers.find("index_buffer");
+	if(index_buffer == state.user_buffers.cend()) {
+		oclr_error("index buffer not bound!");
+		return;
+	}
+	ocl->set_kernel_argument(argc++, &index_buffer->second);
+	
+	// internal buffer / kernel parameters
 	ocl->set_kernel_argument(argc++, state.transformed_buffer);
 	ocl->set_kernel_argument(argc++, const_buffer_tp);
 	ocl->set_kernel_argument(argc++, num_elements);
 	ocl->set_kernel_range(ocl->compute_kernel_ranges(num_elements));
 	ocl->run_kernel();
-	
-	ocl->delete_buffer(uniforms_buffer);
 }

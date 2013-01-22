@@ -45,6 +45,7 @@ public:
 		};
 		vector<const device_struct_info> device_infos;
 	};
+	const vector<oclraster_struct_info>& get_structs() const;
 	
 	bool is_valid() const;
 	const string& get_identifier() const;

@@ -289,3 +289,7 @@ void oclraster_program::invalidate(const string error_info) {
 const string& oclraster_program::get_identifier() const {
 	return identifier;
 }
+
+const vector<oclraster_program::oclraster_struct_info>& oclraster_program::get_structs() const {
+	return structs;
+}

@@ -255,3 +255,7 @@ const transform_stage::vertex_buffer& a2m::get_vertex_buffer() const {
 const transform_stage::index_buffer& a2m::get_index_buffer(const size_t& sub_object) const {
 	return cl_index_buffers[sub_object];
 }
+
+unsigned int a2m::get_index_count(const unsigned int& sub_object) const {
+	return index_count[sub_object];
+}

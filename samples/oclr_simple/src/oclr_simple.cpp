@@ -58,7 +58,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	event::handler quit_handler_fnctr(&quit_handler);
 	evt->add_event_handler(quit_handler_fnctr, EVENT_TYPE::QUIT);
 	
-	///// testing
+	// load, compile and bind user shaders
 	stringstream vs_buffer, fs_buffer;
 	if(!file_io::file_to_buffer(oclraster::kernel_path("user/simple_shader_vs.cl"), vs_buffer)) {
 		oclr_error("couldn't open vs program!");
@@ -72,12 +72,39 @@ int main(int argc oclr_unused, char* argv[]) {
 	rasterize_program fs_prog(fs_buffer.str());
 	p->bind_program(vs_prog);
 	p->bind_program(fs_prog);
-	/////
+	
+	// create / ref buffers
+	const opencl::buffer_object& index_buffer = *bunny->get_index_buffer(0).buffer;
+	const opencl::buffer_object& input_attributes = *bunny->get_vertex_buffer().buffer;
+	
+	matrix4f model_matrix { matrix4f() };
+	opencl::buffer_object* tp_uniforms_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
+																   opencl::BUFFER_FLAG::INITIAL_COPY |
+																   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+																   sizeof(matrix4f),
+																   (void*)&model_matrix);
+	
+	float light_pos = 0.0f, light_dist = 10.0f;
+	struct __attribute__((packed, aligned(16))) rp_uniforms {
+		float4 camera_position;
+		float4 light_position; // .w = light radius ^ 2
+		float4 light_color;
+	} rasterize_uniforms {
+		float4(oclraster::get_camera_setup().position, 1.0f),
+		float4(sinf(light_pos)*light_dist, 0.0f, cosf(light_pos)*light_dist, 16.0f*16.0f),
+		float4(0.0f, 0.3f, 0.7f, 1.0f)
+	};
+	opencl::buffer_object* rp_uniforms_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
+																   opencl::BUFFER_FLAG::INITIAL_COPY |
+																   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+																   sizeof(rp_uniforms),
+																   (void*)&rasterize_uniforms);
 	
 	// init done
 	oclraster::release_context();
 	
 	// main loop
+	float model_rotation = 0.0f;
 	while(!done) {
 		// event handling
 		evt->handle_events();
@@ -104,26 +131,39 @@ int main(int argc oclr_unused, char* argv[]) {
 		oclraster::start_draw();
 		p->start();
 		
-		// draw something
-		p->draw(bunny->get_vertex_buffer(), bunny->get_index_buffer(0));
+		// update uniforms
+		model_matrix.rotate_y(model_rotation);
+		model_rotation += 1.0f;
+		model_rotation = core::wrap(model_rotation, 360.0f);
+		ocl->write_buffer(tp_uniforms_buffer, &model_matrix);
 		
-		/*float3 cur_pos = cam->get_position();
-		for(unsigned int i = 0; i < 3; i++) {
-			cam->set_position(cur_pos.x + 0.5f * float(i), cur_pos.y, cur_pos.z);
-			oclraster::run_camera();
-			p->draw(bunny->get_vertex_buffer(), bunny->get_index_buffer(0));
-		}
-		cam->set_position(cur_pos);
-		oclraster::run_camera();*/
+		light_pos -= 0.25f;
+		rasterize_uniforms.light_position.set(sinf(light_pos)*light_dist, 0.0f, cosf(light_pos)*light_dist, 16.0f*16.0f);
+		static constexpr float color_step_range = 0.2f;
+		rasterize_uniforms.light_color.x += core::rand(-color_step_range, color_step_range);
+		rasterize_uniforms.light_color.y += core::rand(-color_step_range, color_step_range);
+		rasterize_uniforms.light_color.z += core::rand(-color_step_range, color_step_range);
+		rasterize_uniforms.light_color.clamp(0.0f, 1.0f);
+		ocl->write_buffer(rp_uniforms_buffer, &rasterize_uniforms);
+		
+		// draw something
+		p->bind_buffer("index_buffer", index_buffer);
+		p->bind_buffer("input_attributes", input_attributes);
+		p->bind_buffer("tp_uniforms", *tp_uniforms_buffer);
+		p->bind_buffer("rp_uniforms", *rp_uniforms_buffer);
+		p->draw({0, bunny->get_index_count(0)});
 		
 		p->stop();
 		oclraster::stop_draw();
 	}
 	
+	// cleanup
 	delete bunny;
 	delete cam;
 	
-	// cleanup
+	ocl->delete_buffer(tp_uniforms_buffer);
+	ocl->delete_buffer(rp_uniforms_buffer);
+	
 	evt->remove_event_handler(key_handler_fnctr);
 	evt->remove_event_handler(mouse_handler_fnctr);
 	evt->remove_event_handler(quit_handler_fnctr);

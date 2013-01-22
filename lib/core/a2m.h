@@ -40,6 +40,7 @@ public:
 	
 	const transform_stage::vertex_buffer& get_vertex_buffer() const;
 	const transform_stage::index_buffer& get_index_buffer(const size_t& sub_object) const;
+	unsigned int get_index_count(const unsigned int& sub_object) const;
 	
 protected:
 	unsigned int object_count = 0;

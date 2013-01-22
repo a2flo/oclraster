@@ -175,9 +175,7 @@ void pipeline::stop() {
 	}
 }
 
-void pipeline::draw(const transform_stage::vertex_buffer& vb,
-					const transform_stage::index_buffer& ib,
-					const pair<unsigned int, unsigned int> element_range) {
+void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 #if defined(OCLRASTER_DEBUG)
 	// TODO: check buffer sanity/correctness (in debug mode)
 #endif
@@ -195,25 +193,39 @@ void pipeline::draw(const transform_stage::vertex_buffer& vb,
 	state.queue_sizes_buffer_zero = queue_sizes_buffer_zero;
 	state.reserved_triangle_count = reserved_triangle_count;
 	
-	const auto num_elements = (element_range.first != ~0u ?
+	const auto index_count = (element_range.second - element_range.first + 1) * 3;
+	const auto num_elements = element_range.second - element_range.first + 1;
+	/*const auto num_elements = (element_range.first != ~0u ?
 							   element_range.second - element_range.first + 1 :
-							   ib.index_count / 3);
+							   ib.index_count / 3);*/
 	
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 												  state.transformed_primitive_size * num_elements);
-	state.transformed_user_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-													   // TODO: get size from program
-													   sizeof(a2m::vertex_data) * ib.index_count);
-	state.index_buffer = ib.buffer;
+	
+	// create user transformed buffers (transform program outputs)
+	for(const auto& tp_struct : state.transform_prog->get_structs()) {
+		if(tp_struct.type == oclraster_program::STRUCT_TYPE::OUTPUT) {
+			opencl::buffer_object* buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
+															   // TODO: get size from program
+															   sizeof(a2m::vertex_data) * index_count);
+			state.user_transformed_buffers.push_back(buffer);
+			bind_buffer(tp_struct.object_name, *buffer);
+		}
+	}
 	
 	// pipeline
-	transform.transform(state, vb, ib, num_elements);
+	transform.transform(state, num_elements);
 	binning.bin(state, num_elements); // TODO: actual triangle count and pipelining/splitting
 	rasterization.rasterize(state, num_elements); // TODO: actual triangle count (queue size?)
 	
 	//
 	ocl->delete_buffer(state.transformed_buffer);
-	ocl->delete_buffer(state.transformed_user_buffer);
+	
+	// delete user transformed buffers
+	for(const auto& ut_buffer : state.user_transformed_buffers) {
+		ocl->delete_buffer(ut_buffer);
+	}
+	state.user_transformed_buffers.clear();
 }
 
 void pipeline::_reserve_memory(const unsigned int triangle_count) {
@@ -239,4 +251,13 @@ void pipeline::_reserve_memory(const unsigned int triangle_count) {
 											opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 											sizeof(unsigned int) * bin_count,
 											queue_sizes_buffer_zero);
+}
+
+void pipeline::bind_buffer(const string& name, const opencl_base::buffer_object& buffer) {
+	const auto existing_buffer = state.user_buffers.find(name);
+	if(existing_buffer != state.user_buffers.cend()) {
+		// TODO: unbind previously bound buffer
+		state.user_buffers.erase(existing_buffer);
+	}
+	state.user_buffers.emplace(name, buffer);
 }

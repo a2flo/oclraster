@@ -53,10 +53,9 @@ struct draw_state {
 	opencl::buffer_object* depth_framebuffer = nullptr;
 	
 	//
-	opencl_base::buffer_object* transformed_buffer = nullptr;
-	opencl_base::buffer_object* transformed_user_buffer = nullptr;
-	opencl_base::buffer_object* index_buffer = nullptr;
-	//unordered_map<string, opencl_base::buffer_object*> user_buffers;
+	opencl::buffer_object* transformed_buffer = nullptr;
+	unordered_map<string, const opencl_base::buffer_object&> user_buffers;
+	vector<opencl::buffer_object*> user_transformed_buffers;
 	
 	//
 	const transform_program* transform_prog = nullptr;
@@ -85,13 +84,15 @@ public:
 	//
 	template <class program_type> void bind_program(const program_type& program);
 	
-	// TODO: buffer binding
+	// buffer binding
+	// NOTE: to bind the index buffer, use the name "index_buffer"
+	void bind_buffer(const string& name, const opencl_base::buffer_object& buffer);
 	
 	// "draw calls" (for now, these always draw triangles)
-	void draw(const transform_stage::vertex_buffer& vb,
-			  const transform_stage::index_buffer& ib,
-			  // default element range: draw all
-			  const pair<unsigned int, unsigned int> element_range = { ~0u, ~0u });
+	// TODO: get the necessary information from somewhere again ...
+	/*void draw(// default element range: draw all
+			  const pair<unsigned int, unsigned int> element_range = { ~0u, ~0u });*/
+	void draw(const pair<unsigned int, unsigned int> element_range);
 	
 	// for debugging and initial development purposes:
 	void _reserve_memory(const unsigned int triangle_count);
