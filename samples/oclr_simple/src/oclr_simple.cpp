@@ -105,6 +105,9 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	// main loop
 	float model_rotation = 0.0f;
+	float3 model_scale { 1.0f, 1.0f, 1.0f };
+	float3 target_scale { model_scale };
+	static constexpr float model_scale_range = 0.4f, model_scale_step = 0.01f;
 	while(!done) {
 		// event handling
 		evt->handle_events();
@@ -132,9 +135,24 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->start();
 		
 		// update uniforms
-		model_matrix.rotate_y(model_rotation);
+		model_matrix = matrix4f().rotate_y(model_rotation);
 		model_rotation += 1.0f;
 		model_rotation = core::wrap(model_rotation, 360.0f);
+		
+		const float3 scale_diff = (model_scale - target_scale).abs();
+		if((scale_diff <= float3(model_scale_step * 2.0f)).all()) {
+			target_scale.x = 1.0f + core::rand(-model_scale_range, model_scale_range);
+			target_scale.y = 1.0f + core::rand(-model_scale_range, model_scale_range);
+			target_scale.z = 1.0f + core::rand(-model_scale_range, model_scale_range);
+		}
+		else {
+			for(unsigned int i = 0; i < 3; i++) {
+				if(scale_diff[i] <= (model_scale_step * 2.0f)) continue;
+				model_scale[i] += model_scale_step * (model_scale[i] <= target_scale[i] ? 1.0f : -1.0f);
+			}
+		}
+		model_matrix.scale(model_scale.x, model_scale.y, model_scale.z);
+		
 		ocl->write_buffer(tp_uniforms_buffer, &model_matrix);
 		
 		light_pos -= 0.25f;

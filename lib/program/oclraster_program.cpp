@@ -236,7 +236,6 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	
 	auto active_device = ocl->get_active_device();
 	const auto& devices = ocl->get_devices();
-	//struct_info.device_infos.resize(devices.size());
 	for(size_t dev_num = 0; dev_num < devices.size(); dev_num++) {
 		// this has to be executed for all devices, since each device can have its own struct/member sizes/offsets
 		ocl->set_active_device(devices[dev_num]->type);
@@ -265,7 +264,7 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 			//oclr_msg("\tmember \"%s\": size: %d, offset: %d",
 			//		 struct_info.variables[i], dev_info.sizes[i], dev_info.offsets[i]);
 		}
-		struct_info.device_infos.push_back(dev_info);
+		struct_info.device_infos.emplace(devices[dev_num], dev_info);
 		
 		ocl->delete_buffer(info_buffer);
 	}

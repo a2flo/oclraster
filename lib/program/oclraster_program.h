@@ -43,7 +43,7 @@ public:
 			vector<size_t> sizes;
 			vector<size_t> offsets;
 		};
-		vector<const device_struct_info> device_infos;
+		unordered_map<opencl::device_object*, const device_struct_info> device_infos;
 	};
 	const vector<oclraster_struct_info>& get_structs() const;
 	
