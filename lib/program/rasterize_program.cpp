@@ -48,19 +48,20 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 								   const unsigned int queue_size,
 								   constant constant_data* cdata,
 								   const uint2 framebuffer_size,
-								   write_only image2d_t color_framebuffer,
-								   read_write image2d_t depth_framebuffer) {
+								   global uchar4* color_framebuffer,
+								   global float* depth_framebuffer) {
 		const unsigned int x = get_global_id(0);
 		const unsigned int y = get_global_id(1);
 		if(x >= framebuffer_size.x) return;
 		if(y >= framebuffer_size.y) return;
 		
-		float4 pixel_color = (float4)(0.0f, 0.0f, 0.0f, 1.0f);
-		
-		const sampler_t depth_sampler = CLK_FILTER_NEAREST | CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE;
-		const float input_depth = read_imagef(depth_framebuffer, depth_sampler, (int2)(x, y)).x;
+		const unsigned int framebuffer_offset = (y * framebuffer_size.x) + x;
+		float4 pixel_color = convert_float4(color_framebuffer[framebuffer_offset]) / 255.0f;
+		const float input_depth = depth_framebuffer[framebuffer_offset];
 		float pixel_depth = input_depth;
+		mem_fence(CLK_GLOBAL_MEM_FENCE);
 		
+		const float2 fragment_xy = (float2)(x, y);
 		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
 		const unsigned int queue_entries = queue_sizes_buffer[bin_index];
 		const unsigned int queue_offset = (queue_size * bin_index);
@@ -71,11 +72,9 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 			const float4 VV2 = transformed_buffer[triangle_id].VV2;
 			
 			//
-			const float2 fragment_xy = (float2)(x, y);
-			const float3 xy1 = (float3)(fragment_xy.x, fragment_xy.y, 1.0f);
-			float4 barycentric = (float4)(dot(xy1, VV0.xyz),
-										  dot(xy1, VV1.xyz),
-										  dot(xy1, VV2.xyz),
+			float4 barycentric = (float4)(fragment_xy.x * VV0.x + fragment_xy.y * VV0.y + VV0.z,
+										  fragment_xy.x * VV1.x + fragment_xy.y * VV1.y + VV1.z,
+										  fragment_xy.x * VV2.x + fragment_xy.y * VV2.y + VV2.z,
 										  VV0.w); // .w = computed depth
 			if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
 			
@@ -85,9 +84,8 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 			// depth test:
 			if(barycentric.w >= pixel_depth) continue;
 			
-			// reset depth and color
+			// reset depth (note: pixel_color will contain the last valid color)
 			pixel_depth = barycentric.w;
-			pixel_color = (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 			
 			//
 			const unsigned int indices[3] = {
@@ -99,9 +97,10 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// write last depth (if it has changed)
+		mem_fence(CLK_GLOBAL_MEM_FENCE);
 		if(pixel_depth < input_depth) {
-			write_imagef(color_framebuffer, (int2)(x, y), pixel_color);
-			write_imagef(depth_framebuffer, (int2)(x, y), (float4)(pixel_depth, 0.0f, 0.0f, 1.0f));
+			color_framebuffer[framebuffer_offset] = convert_uchar4_sat(pixel_color * 255.0f);
+			depth_framebuffer[framebuffer_offset] = pixel_depth;
 		}
 	}
 )OCLRASTER_RAWSTR"};

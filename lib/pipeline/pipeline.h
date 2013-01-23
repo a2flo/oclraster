@@ -107,13 +107,10 @@ protected:
 	void create_framebuffers(const uint2& size);
 	void destroy_framebuffers();
 	uint2 framebuffer_size { 1280, 720 };
-	rtt::fbo* color_framebuffer = nullptr;
 	opencl::buffer_object* color_framebuffer_cl = nullptr;
-	rtt::fbo* depth_framebuffer = nullptr;
 	opencl::buffer_object* depth_framebuffer_cl = nullptr;
 	
-	// slow map/copy framebuffer fallback (requires no opengl sharing)
-	bool cl_framebuffer_fallback = false;
+	// map/copy fbo
 	GLuint copy_fbo_id = 0, copy_fbo_tex_id = 0;
 	
 	//

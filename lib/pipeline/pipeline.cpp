@@ -21,7 +21,6 @@
 #if defined(__APPLE__)
 #include "osx_helper.h"
 #endif
-#include "a2m.h" // TODO: remove this again
 
 pipeline::pipeline() :
 window_handler(this, &pipeline::window_event_handler) {
@@ -55,54 +54,32 @@ void pipeline::create_framebuffers(const uint2& size) {
 	framebuffer_size = scaled_size;
 	oclr_debug("size: %v -> %v", size, scaled_size);
 	
-	if(oclraster::get_gl_sharing()) {
-		color_framebuffer = rtt::add_buffer(framebuffer_size.x, framebuffer_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 1, rtt::DEPTH_TYPE::NONE);
-		color_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, color_framebuffer->tex[0]);
-		if(color_framebuffer_cl == nullptr) {
-			oclr_error("failed to share opengl framebuffer - using slow framebuffer map/copy fallback!");
-			cl_framebuffer_fallback = true;
-			if(color_framebuffer != nullptr) rtt::delete_buffer(color_framebuffer);
-			color_framebuffer = nullptr;
-		}
-	}
-	else {
-		oclr_msg("opengl sharing disabled - using using slow framebuffer map/copy fallback!");
-		cl_framebuffer_fallback = true;
-	}
+	//
+	color_framebuffer_cl = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
+											  opencl::BUFFER_FLAG::BLOCK_ON_READ |
+											  opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+											  framebuffer_size.x * framebuffer_size.y * 4); // uchar4
+	depth_framebuffer_cl = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
+											  opencl::BUFFER_FLAG::BLOCK_ON_READ |
+											  opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+											  framebuffer_size.x * framebuffer_size.y * sizeof(float));
 	
-	// shared float texture doesn't work on the cpu, cl float image2d doesn't work on the gpu ... -> use the correct one
-	// TODO: correct device type check
-	if(ocl->get_active_device()->type == opencl::DEVICE_TYPE::GPU0 && !cl_framebuffer_fallback) {
-		depth_framebuffer = rtt::add_buffer(framebuffer_size.x, framebuffer_size.y, GL_TEXTURE_2D, TEXTURE_FILTERING::POINT, rtt::TEXTURE_ANTI_ALIASING::NONE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_R32F, GL_RED, GL_FLOAT, 1, rtt::DEPTH_TYPE::NONE);
-		depth_framebuffer_cl = ocl->create_ogl_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE, depth_framebuffer->tex[0]);
-	}
-	else {
-		if(cl_framebuffer_fallback) {
-			color_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-															  CL_RGBA, CL_UNORM_INT8,
-															  framebuffer_size.x, framebuffer_size.y);
-			
-			glGenFramebuffers(1, &copy_fbo_id);
-			glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
-			glGenTextures(1, &copy_fbo_tex_id);
-			glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, framebuffer_size.x, framebuffer_size.y,
-						 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
-			glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
-			glBindTexture(GL_TEXTURE_2D, 0);
-		}
-		
-		depth_framebuffer_cl = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-														  // CL_Rx is only supported on os x, use CL_R for amd, intel and nvidia platforms
-														  ocl->get_platform_vendor() == opencl::PLATFORM_VENDOR::APPLE ? CL_Rx : CL_R,
-														  CL_FLOAT, scaled_size.x, scaled_size.y);
-	}
+	// create a fbo for copying the color framebuffer every frame and displaying it
+	// (there is no other way, unfortunately)
+	glGenFramebuffers(1, &copy_fbo_id);
+	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
+	glGenTextures(1, &copy_fbo_tex_id);
+	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, framebuffer_size.x, framebuffer_size.y,
+				 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	//
 	_reserve_memory(reserved_triangle_count);
@@ -110,12 +87,8 @@ void pipeline::create_framebuffers(const uint2& size) {
 
 void pipeline::destroy_framebuffers() {
 	if(color_framebuffer_cl != nullptr) ocl->delete_buffer(color_framebuffer_cl);
-	if(color_framebuffer != nullptr) rtt::delete_buffer(color_framebuffer);
 	if(depth_framebuffer_cl != nullptr) ocl->delete_buffer(depth_framebuffer_cl);
-	if(depth_framebuffer != nullptr) rtt::delete_buffer(depth_framebuffer);
-	color_framebuffer = nullptr;
 	color_framebuffer_cl = nullptr;
-	depth_framebuffer = nullptr;
 	depth_framebuffer_cl = nullptr;
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -124,7 +97,6 @@ void pipeline::destroy_framebuffers() {
 	if(copy_fbo_id != 0) glDeleteFramebuffers(1, &copy_fbo_id);
 	copy_fbo_tex_id = 0;
 	copy_fbo_id = 0;
-	cl_framebuffer_fallback = false;
 }
 
 void pipeline::start() {
@@ -149,25 +121,14 @@ void pipeline::start() {
 
 void pipeline::stop() {
 	// draw/blit to screen
-	if(ocl->get_active_device()->type == opencl::DEVICE_TYPE::CPU0) {
-		ocl->flush();
-		ocl->finish(); // finish before blitting if this is a cpu device
-	}
-	
-	//
 	oclraster::start_2d_draw();
 	
-	if(!cl_framebuffer_fallback) {
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, color_framebuffer->fbo_id);
-	}
-	else {
-		void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::BUFFER_FLAG::READ, true);
-		glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
-		glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, framebuffer_size.x, framebuffer_size.y,
-					 0, GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
-		ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
-	}
+	void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::BUFFER_FLAG::READ, true);
+	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
+	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer_size.x, framebuffer_size.y,
+					GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
+	ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
 	
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glBlitFramebuffer(0, 0, framebuffer_size.x, framebuffer_size.y,
@@ -175,10 +136,8 @@ void pipeline::stop() {
 					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	oclraster::stop_2d_draw();
 	
-	if(cl_framebuffer_fallback) {
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {

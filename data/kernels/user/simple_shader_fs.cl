@@ -36,6 +36,6 @@ void main() {
 			spec_color = rp_uniforms->light_color.xyz * attenuation * specular;
 		}
 		
-		(*pixel_color).xyz += diff_color + spec_color;
+		*pixel_color = (float4)(diff_color + spec_color, 1.0f);
 	}
 }

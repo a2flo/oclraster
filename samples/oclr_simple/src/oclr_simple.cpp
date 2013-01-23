@@ -152,7 +152,6 @@ int main(int argc oclr_unused, char* argv[]) {
 			}
 		}
 		model_matrix.scale(model_scale.x, model_scale.y, model_scale.z);
-		
 		ocl->write_buffer(tp_uniforms_buffer, &model_matrix);
 		
 		light_pos -= 0.25f;

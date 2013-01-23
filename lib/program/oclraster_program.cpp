@@ -193,8 +193,13 @@ void oclraster_program::process_program(const string& code) {
 		specialized_processing(processed_code);
 		
 		// compile
-		identifier = "USER_PROGRAM."+ull2string(SDL_GetPerformanceCounter());
+		identifier = "USER_PROGRAM."+entry_function+"."+ull2string(SDL_GetPerformanceCounter());
 		kernel = ocl->add_kernel_src(identifier, program_code, "_oclraster_program");
+#if defined(OCLRASTER_DEBUG)
+		if(kernel == nullptr) {
+			oclr_debug("kernel source: %s", program_code);
+		}
+#endif
 	}
 	catch(oclraster_exception& ex) {
 		invalidate(ex.what());

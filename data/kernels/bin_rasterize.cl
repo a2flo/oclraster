@@ -26,10 +26,11 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	if(triangle_id >= get_global_size(0)) return;
 	if(triangle_id >= triangle_count) return;
 	
-	const float4 VV0 = transformed_buffer[triangle_id].VV0;
-	const float4 VV1 = transformed_buffer[triangle_id].VV1;
-	const float4 VV2 = transformed_buffer[triangle_id].VV2;
-	const float3 VV[3] = { VV0.xyz, VV1.xyz, VV2.xyz };
+	const float3 VV[3] = {
+		transformed_buffer[triangle_id].VV0.xyz,
+		transformed_buffer[triangle_id].VV1.xyz,
+		transformed_buffer[triangle_id].VV2.xyz
+	};
 	
 	// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
 	const float4 vertex_cam_relation = transformed_buffer[triangle_id].W;
@@ -41,81 +42,53 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	}
 	
 	// compute x/y bounds
-	const float clip_x0 = -VV0.z / VV0.x;
-	const float clip_x1 = -VV1.z / VV1.x;
-	const float clip_x2 = -VV2.z / VV2.x;
-	const float clip_y0 = -VV0.z / VV0.y;
-	const float clip_y1 = -VV1.z / VV1.y;
-	const float clip_y2 = -VV2.z / VV2.y;
-	
-	const float2 fscreen_size = convert_float2(screen_size);
-	const float clip_v_x0 = -(VV0.z + VV0.y * fscreen_size.y) / VV0.x;
-	const float clip_v_x1 = -(VV1.z + VV1.y * fscreen_size.y) / VV1.x;
-	const float clip_v_x2 = -(VV2.z + VV2.y * fscreen_size.y) / VV2.x;
-	const float clip_v_y0 = -(VV0.z + VV0.x * fscreen_size.x) / VV0.y;
-	const float clip_v_y1 = -(VV1.z + VV1.x * fscreen_size.x) / VV1.y;
-	const float clip_v_y2 = -(VV2.z + VV2.x * fscreen_size.x) / VV2.y;
-	
-	const float d0 = 1.0f / (VV1.x * VV2.y - VV1.y * VV2.x);
-	const float d1 = 1.0f / (VV0.x * VV2.y - VV0.y * VV2.x);
-	const float d2 = 1.0f / (VV0.x * VV1.y - VV0.y * VV1.x);
-	const float x0 = (vertex_cam_relation.x < 0.0f ?
-					  -1.0f : (VV1.y * VV2.z - VV1.z * VV2.y) * d0);
-	const float y0 = (vertex_cam_relation.x < 0.0f ?
-					  -1.0f : (VV1.z * VV2.x - VV1.x * VV2.z) * d0);
-	const float x1 = (vertex_cam_relation.y < 0.0f ?
-					  -1.0f : (VV0.y * VV2.z - VV0.z * VV2.y) * d1);
-	const float y1 = (vertex_cam_relation.y < 0.0f ?
-					  -1.0f : (VV0.z * VV2.x - VV0.x * VV2.z) * d1);
-	const float x2 = (vertex_cam_relation.z < 0.0f ?
-					  -1.0f : (VV0.y * VV1.z - VV0.z * VV1.y) * d2);
-	const float y2 = (vertex_cam_relation.z < 0.0f ?
-					  -1.0f : (VV0.z * VV1.x - VV0.x * VV1.z) * d2);
-	
-	float xs[9] = {
-		x0, x1, x2,
-		clip_x0, clip_x1, clip_x2,
-		clip_v_x0, clip_v_x1, clip_v_x2
-	};
-	
-	float ys[9] = {
-		y0, y1, y2,
-		clip_y0, clip_y1, clip_y2,
-		clip_v_y0, clip_v_y1, clip_v_y2
-	};
-	
-	for(unsigned int i = 0; i < 9; i++) {
-		if(xs[i] < 0.0f || xs[i] >= fscreen_size.x) {
-			xs[i] = -1.0f;
-		}
-		if(ys[i] < 0.0f || ys[i] >= fscreen_size.y) {
-			ys[i] = -1.0f;
-		}
-	}
-	
-	////
 	// valid clip and vertex positions: 0 <= x < screen_size.x && 0 <= y < screen_size.y
+	const float2 fscreen_size = convert_float2(screen_size);
 	float2 x_bounds = (float2)(fscreen_size.x, 0.0f);
 	float2 y_bounds = (float2)(fscreen_size.y, 0.0f);
 	
-	//
-	for(unsigned int i = 0; i < 3; i++) {
-		const float xi = xs[i];
-		const float yi = ys[i];
+#define viewport_test(coord, axis) ((coord < 0.0f || coord >= fscreen_size[axis]) ? -1.0f : coord)
+	
+	float clipxs[9];
+	float clipys[9];
+	for(unsigned int i = 0u; i < 3u; i++) {
+		// { 1, 2 }, { 0, 2 }, { 0, 1 }
+		const unsigned int i0 = (i == 0u ? 1u : 0u);
+		const unsigned int i1 = (i == 2u ? 1u : 2u);
 		
-		if(xi >= 0.0f && yi >= 0.0f) {
-			x_bounds.x = min(x_bounds.x, xi);
-			x_bounds.y = max(x_bounds.y, xi);
-			y_bounds.x = min(y_bounds.x, yi);
-			y_bounds.y = max(y_bounds.y, yi);
+		const float d = 1.0f / (VV[i0].x * VV[i1].y - VV[i0].y * VV[i1].x);
+		clipxs[i] = (vertex_cam_relation[i] < 0.0f ? -1.0f :
+					 (VV[i0].y * VV[i1].z - VV[i0].z * VV[i1].y) * d);
+		clipys[i] = (vertex_cam_relation[i] < 0.0f ? -1.0f :
+					 (VV[i0].z * VV[i1].x - VV[i0].x * VV[i1].z) * d);
+		clipxs[i] = viewport_test(clipxs[i], 0);
+		clipys[i] = viewport_test(clipys[i], 1);
+		
+		if(clipxs[i] >= 0.0f && clipys[i] >= 0.0f) {
+			x_bounds.x = min(x_bounds.x, clipxs[i]);
+			x_bounds.y = max(x_bounds.y, clipxs[i]);
+			y_bounds.x = min(y_bounds.x, clipys[i]);
+			y_bounds.y = max(y_bounds.y, clipys[i]);
 		}
+		
+		//
+		clipxs[i+3] = -VV[i].z / VV[i].x;
+		clipys[i+3] = -VV[i].z / VV[i].y;
+		clipxs[i+3] = viewport_test(clipxs[i+3], 0);
+		clipys[i+3] = viewport_test(clipys[i+3], 1);
+		
+		clipxs[i+6] = -(VV[i].z + VV[i].y * fscreen_size.y) / VV[i].x;
+		clipys[i+6] = -(VV[i].z + VV[i].x * fscreen_size.x) / VV[i].y;
+		clipxs[i+6] = viewport_test(clipxs[i+6], 0);
+		clipys[i+6] = viewport_test(clipys[i+6], 1);
 	}
 	
+	// check remaining clip coordinates
 	for(unsigned int i = 0; i < 3; i++) {
-		const float cx = xs[i + 3];
-		const float cy = ys[i + 3];
-		const float cmx = xs[i + 6];
-		const float cmy = ys[i + 6];
+		const float cx = clipxs[i + 3];
+		const float cy = clipys[i + 3];
+		const float cmx = clipxs[i + 6];
+		const float cmy = clipys[i + 6];
 		
 		const unsigned int edge_0 = (i + 1) % 3;
 		const unsigned int edge_1 = (i + 2) % 3;

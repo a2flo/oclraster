@@ -516,9 +516,7 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 		//const string lsl_str = " -DLOCAL_SIZE_LIMIT="+size_t2string(local_size_limit);
 		
 		internal_kernels = { // first time init:
-			make_tuple("TRANSFORM", "transform.cl", "transform", ""),
 			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "bin_rasterize", ""),
-			make_tuple("RASTERIZE", "rasterize.cl", "rasterize", ""),
 			make_tuple("CLEAR_COLOR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
 			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DDEPTH_FRAMEBUFFER=1"),
 		};

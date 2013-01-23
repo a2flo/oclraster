@@ -780,6 +780,8 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "bin_rasterize", ""),
 			make_tuple("CLEAR_COLOR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
 			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DDEPTH_FRAMEBUFFER=1"),
+			make_tuple("CLEAR_COLOR_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DIMAGE_FRAMEBUFFERS=1"),
+			make_tuple("CLEAR_COLOR_DEPTH_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DIMAGE_FRAMEBUFFERS=1 -DDEPTH_FRAMEBUFFER=1"),
 		};
 		
 		load_internal_kernels();
@@ -1000,7 +1002,11 @@ opencl::kernel_object* opencl::add_kernel_src(const string& identifier, const st
 			oclr_debug("build options: %s", buildoptions);
 		}
 		
+		delete kernels[identifier];
+		kernels.erase(identifier);
+		
 		//log_program_binary(kernels[identifier], options);
+		return nullptr;
 	__HANDLE_CL_EXCEPTION_END
 	//log_program_binary(kernels[identifier], options);
 	return kernels[identifier];

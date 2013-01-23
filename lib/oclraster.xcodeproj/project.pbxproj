@@ -663,8 +663,6 @@
 					/usr/X11/include,
 					"-isystem",
 					/usr/include/libxml2,
-					"-isystem",
-					/usr/X11/include/freetype2,
 				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -718,8 +716,6 @@
 					/usr/X11/include,
 					"-isystem",
 					/usr/include/libxml2,
-					"-isystem",
-					/usr/X11/include/freetype2,
 				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
