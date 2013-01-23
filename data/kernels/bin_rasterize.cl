@@ -33,19 +33,23 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	};
 	
 	// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
-	const float4 vertex_cam_relation = transformed_buffer[triangle_id].W;
-	if(vertex_cam_relation.x < 0.0f &&
-	   vertex_cam_relation.y < 0.0f &&
-	   vertex_cam_relation.z < 0.0f) {
+	const float vertex_cam_relation[3] = {
+		transformed_buffer[triangle_id].W.x,
+		transformed_buffer[triangle_id].W.y,
+		transformed_buffer[triangle_id].W.z
+	};
+	if(vertex_cam_relation[0] < 0.0f &&
+	   vertex_cam_relation[1] < 0.0f &&
+	   vertex_cam_relation[2] < 0.0f) {
 		// all vertices are behind the camera
 		return;
 	}
 	
 	// compute x/y bounds
 	// valid clip and vertex positions: 0 <= x < screen_size.x && 0 <= y < screen_size.y
-	const float2 fscreen_size = convert_float2(screen_size);
-	float2 x_bounds = (float2)(fscreen_size.x, 0.0f);
-	float2 y_bounds = (float2)(fscreen_size.y, 0.0f);
+	const float fscreen_size[2] = { convert_float(screen_size.x), convert_float(screen_size.y) };
+	float2 x_bounds = (float2)(fscreen_size[0], 0.0f);
+	float2 y_bounds = (float2)(fscreen_size[1], 0.0f);
 	
 #define viewport_test(coord, axis) ((coord < 0.0f || coord >= fscreen_size[axis]) ? -1.0f : coord)
 	
@@ -77,8 +81,8 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 		clipxs[i+3] = viewport_test(clipxs[i+3], 0);
 		clipys[i+3] = viewport_test(clipys[i+3], 1);
 		
-		clipxs[i+6] = -(VV[i].z + VV[i].y * fscreen_size.y) / VV[i].x;
-		clipys[i+6] = -(VV[i].z + VV[i].x * fscreen_size.x) / VV[i].y;
+		clipxs[i+6] = -(VV[i].z + VV[i].y * fscreen_size[1]) / VV[i].x;
+		clipys[i+6] = -(VV[i].z + VV[i].x * fscreen_size[0]) / VV[i].y;
 		clipxs[i+6] = viewport_test(clipxs[i+6], 0);
 		clipys[i+6] = viewport_test(clipys[i+6], 1);
 	}
@@ -112,21 +116,21 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 			}
 		}
 		if(cmx >= 0.0f) {
-			float val1 = cmx * VV[edge_0].x + fscreen_size.y * VV[edge_0].y + VV[edge_0].z;
-			float val2 = cmx * VV[edge_1].x + fscreen_size.y * VV[edge_1].y + VV[edge_1].z;
+			float val1 = cmx * VV[edge_0].x + fscreen_size[1] * VV[edge_0].y + VV[edge_0].z;
+			float val2 = cmx * VV[edge_1].x + fscreen_size[1] * VV[edge_1].y + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
 				x_bounds.x = min(x_bounds.x, cmx);
 				x_bounds.y = max(x_bounds.y, cmx);
-				y_bounds.y = fscreen_size.y;
+				y_bounds.y = fscreen_size[1];
 			}
 		}
 		if(cmy >= 0.0f) {
-			float val1 = fscreen_size.x * VV[edge_0].x + cmy * VV[edge_0].y + VV[edge_0].z;
-			float val2 = fscreen_size.x * VV[edge_1].x + cmy * VV[edge_1].y + VV[edge_1].z;
+			float val1 = fscreen_size[0] * VV[edge_0].x + cmy * VV[edge_0].y + VV[edge_0].z;
+			float val2 = fscreen_size[0] * VV[edge_1].x + cmy * VV[edge_1].y + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
 				y_bounds.x = min(y_bounds.x, cmy);
 				y_bounds.y = max(y_bounds.y, cmy);
-				x_bounds.y = fscreen_size.x;
+				x_bounds.y = fscreen_size[0];
 			}
 		}
 	}
