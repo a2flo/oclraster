@@ -56,10 +56,9 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 		if(y >= framebuffer_size.y) return;
 		
 		const unsigned int framebuffer_offset = (y * framebuffer_size.x) + x;
-		float4 pixel_color = convert_float4(color_framebuffer[framebuffer_offset]) / 255.0f;
+		float4 fragment_color = convert_float4(color_framebuffer[framebuffer_offset]) / 255.0f;
 		const float input_depth = depth_framebuffer[framebuffer_offset];
-		float pixel_depth = input_depth;
-		mem_fence(CLK_GLOBAL_MEM_FENCE);
+		float fragment_depth = input_depth;
 		
 		const float2 fragment_xy = (float2)(x, y);
 		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
@@ -82,10 +81,10 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 			barycentric /= barycentric.x + barycentric.y + barycentric.z;
 			
 			// depth test:
-			if(barycentric.w >= pixel_depth) continue;
+			if(barycentric.w >= fragment_depth) continue;
 			
-			// reset depth (note: pixel_color will contain the last valid color)
-			pixel_depth = barycentric.w;
+			// reset depth (note: fragment_color will contain the last valid color)
+			fragment_depth = barycentric.w;
 			
 			//
 			const unsigned int indices[3] = {
@@ -97,10 +96,9 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// write last depth (if it has changed)
-		mem_fence(CLK_GLOBAL_MEM_FENCE);
-		if(pixel_depth < input_depth) {
-			color_framebuffer[framebuffer_offset] = convert_uchar4_sat(pixel_color * 255.0f);
-			depth_framebuffer[framebuffer_offset] = pixel_depth;
+		if(fragment_depth < input_depth) {
+			color_framebuffer[framebuffer_offset] = convert_uchar4_sat(fragment_color * 255.0f);
+			depth_framebuffer[framebuffer_offset] = fragment_depth;
 		}
 	}
 )OCLRASTER_RAWSTR"};
@@ -177,7 +175,7 @@ void rasterize_program::specialized_processing(const string& code) {
 		}
 		cur_user_buffer++;
 	}
-	main_call_parameters += "&pixel_color, &pixel_depth, fragment_xy, barycentric.xyz"; // the same for all rasterization programs
+	main_call_parameters += "&fragment_color, &fragment_depth, fragment_xy, barycentric.xyz"; // the same for all rasterization programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
 						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	
@@ -186,7 +184,7 @@ void rasterize_program::specialized_processing(const string& code) {
 }
 
 string rasterize_program::create_entry_function_parameters() {
-	static const string rasterize_params = "float4* pixel_color, float* depth, const float2 fragment_xy, const float3 barycentric";
+	static const string rasterize_params = "float4* fragment_color, float* depth, const float2 fragment_xy, const float3 barycentric";
 	string entry_function_params = "";
 	for(size_t i = 0, struct_count = structs.size(); i < struct_count; i++) {
 		switch(structs[i].type) {
