@@ -15,8 +15,9 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 ** -if you have a Nvidia GPU, you can also use "CUDA":https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda")- currently defunct
 
 *Requirements:*
-* Windows: NT 6.0+ x64 (Vista/7/8/2008/2008R2/2012)
+* Windows: NT 6.0+ x86 (Vista/7/8/2008/2008R2/2012), NT 5.1/5.2 x86 (XP/2003) support is uncertain
 * OS X: 10.7+
+* Linux: any x64 distribution that supports the AMD, Intel or Nvidia OpenCL SDK/drivers
 * OpenGL 3.2+ and OpenCL 1.1+ capable GPU/CPU and platform (GeForce 400+, Radeon HD5+, Core2+, Athlon64+?)
 * OpenCL extension support for:
 ** cl_khr_global_int32_base_atomics
@@ -28,7 +29,17 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * 256 MB VRAM minimum, 1 GB VRAM are recommended
 
 *Build Instructions:*
-* TODO
+TODO / gist (for mingw and linux):
+* install all necessary libraries (-> Credits; freetype2 and a2elight are not required)
+* ./premake.sh
+* make
+* there is a install script located in lib/ which should be executed from that folder (will install to /usr/local/)
+
+for OS X:
+* install Xquartz, SDL2 and SDL2_image
+* compile oclraster.xcodeproj
+* install/symlink oclraster .dylib and lib folder to /usr/local/{lib,include} resp.
+* compile any samples you like
 
 *Credits:*
 * https://github.com/a2flo/a2elight / a2elight
@@ -39,7 +50,7 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * http://mingw-w64.sourceforge.net / MinGW-w64/MSYS environment
 * http://www.freetype.org / FreeType2
 * http://www.dejavu-fonts.org / Bitstream DejaVu Fonts
-* clang/libc++ (http://www.llvm.org) and gcc/libstdc++ (http://gcc.gnu.org)
+* clang/libc++ (http://www.llvm.org)
 * Khronos (http://www.khronos.org) / Nvidia / AMD / Apple / Intel (OpenGL/OpenCL)
 * CUDA (http://www.nvidia.com)
 
