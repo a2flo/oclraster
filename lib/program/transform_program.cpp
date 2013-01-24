@@ -33,11 +33,14 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		uint2 viewport;
 	} constant_data;
 	
-	typedef struct __attribute__((packed)) {
+	typedef struct __attribute__((packed, aligned(16))) {
 		float4 VV0;
 		float4 VV1;
 		float4 VV2;
 		float4 W;
+		float4 v0;
+		float4 v1;
+		float4 v2;
 	} transformed_data;
 	
 	// transform rerouting
@@ -111,6 +114,9 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		transformed_buffer[triangle_id].VV1 = VV1;
 		transformed_buffer[triangle_id].VV2 = VV2;
 		transformed_buffer[triangle_id].W = triangle_cam_relation; // TODO: don't call it .W any more
+		transformed_buffer[triangle_id].v0 = (float4)(vertices[0], 1.0f);
+		transformed_buffer[triangle_id].v1 = (float4)(vertices[1], 1.0f);
+		transformed_buffer[triangle_id].v2 = (float4)(vertices[2], 1.0f);
 	}
 )OCLRASTER_RAWSTR"};
 

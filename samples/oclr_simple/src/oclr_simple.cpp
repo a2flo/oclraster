@@ -37,8 +37,8 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	//
 	cam = new camera();
-	cam->set_position(0.0f, 0.1f, -0.3f);
-	cam->set_rotation(0.0f, 0.0f, 0.0f);
+	cam->set_position(10.0f, 5.0f, -10.0f);
+	cam->set_rotation(-20.0f, -45.0f, 0.0f);
 	cam->set_speed(cam_speeds.x);
 	cam->set_wasd_input(true);
 	oclraster::set_camera(cam);
@@ -46,7 +46,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	//
 	pipeline* p = new pipeline();
 	
-	a2m* bunny = new a2m(oclraster::data_path("bunny.a2m"));
+	a2m* bunny = new a2m(oclraster::data_path("cube.a2m"));
 	
 	p->_reserve_memory(std::max(8192u, bunny->get_index_buffer(0).index_count / 3));
 	
@@ -134,6 +134,8 @@ int main(int argc oclr_unused, char* argv[]) {
 		oclraster::start_draw();
 		p->start();
 		
+		//cout << endl << endl << " ### frame ### " << endl << endl;
+		
 		// update uniforms
 		model_matrix = matrix4f().rotate_y(model_rotation);
 		model_rotation += 1.0f;
@@ -152,7 +154,7 @@ int main(int argc oclr_unused, char* argv[]) {
 			}
 		}
 		model_matrix.scale(model_scale.x, model_scale.y, model_scale.z);
-		ocl->write_buffer(tp_uniforms_buffer, &model_matrix);
+		//ocl->write_buffer(tp_uniforms_buffer, &model_matrix);
 		
 		light_pos -= 0.25f;
 		rasterize_uniforms.light_position.set(sinf(light_pos)*light_dist, 0.0f, cosf(light_pos)*light_dist, 16.0f*16.0f);
@@ -161,7 +163,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		rasterize_uniforms.light_color.y += core::rand(-color_step_range, color_step_range);
 		rasterize_uniforms.light_color.z += core::rand(-color_step_range, color_step_range);
 		rasterize_uniforms.light_color.clamp(0.0f, 1.0f);
-		ocl->write_buffer(rp_uniforms_buffer, &rasterize_uniforms);
+		//ocl->write_buffer(rp_uniforms_buffer, &rasterize_uniforms);
 		
 		// draw something
 		p->bind_buffer("index_buffer", index_buffer);

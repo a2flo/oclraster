@@ -2,15 +2,18 @@
 #include "oclr_global.h"
 #include "oclr_math.h"
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed, aligned(16))) {
 	unsigned int triangle_count;
 } constant_data;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed, aligned(16))) {
 	float4 VV0;
 	float4 VV1;
 	float4 VV2;
 	float4 W;
+	float4 v0;
+	float4 v1;
+	float4 v2;
 } transformed_data;
 
 //
