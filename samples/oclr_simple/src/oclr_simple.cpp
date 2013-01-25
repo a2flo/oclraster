@@ -37,8 +37,13 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	//
 	cam = new camera();
+#if 1
+	cam->set_position(0.0f, 0.1f, -0.3f);
+	cam->set_rotation(0.0f, 0.0f, 0.0f);
+#else
 	cam->set_position(10.0f, 5.0f, -10.0f);
 	cam->set_rotation(-20.0f, -45.0f, 0.0f);
+#endif
 	cam->set_speed(cam_speeds.x);
 	cam->set_wasd_input(true);
 	oclraster::set_camera(cam);
@@ -46,7 +51,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	//
 	pipeline* p = new pipeline();
 	
-	a2m* bunny = new a2m(oclraster::data_path("cube.a2m"));
+	a2m* bunny = new a2m(oclraster::data_path("bunny.a2m"));
 	
 	p->_reserve_memory(std::max(8192u, bunny->get_index_buffer(0).index_count / 3));
 	
@@ -84,7 +89,7 @@ int main(int argc oclr_unused, char* argv[]) {
 																   sizeof(matrix4f),
 																   (void*)&model_matrix);
 	
-	float light_pos = 0.0f, light_dist = 10.0f;
+	float light_pos = M_PI, light_dist = 10.0f;
 	struct __attribute__((packed, aligned(16))) rp_uniforms {
 		float4 camera_position;
 		float4 light_position; // .w = light radius ^ 2
@@ -163,7 +168,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		rasterize_uniforms.light_color.y += core::rand(-color_step_range, color_step_range);
 		rasterize_uniforms.light_color.z += core::rand(-color_step_range, color_step_range);
 		rasterize_uniforms.light_color.clamp(0.0f, 1.0f);
-		//ocl->write_buffer(rp_uniforms_buffer, &rasterize_uniforms);
+		ocl->write_buffer(rp_uniforms_buffer, &rasterize_uniforms);
 		
 		// draw something
 		p->bind_buffer("index_buffer", index_buffer);

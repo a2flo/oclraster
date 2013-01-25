@@ -24,7 +24,7 @@ OCLRASTER_FUNC uint get_work_dim() {
 	return 3;
 }
 
-OCLRASTER_FUNC size_t get_global_size (uint dimindx) {
+OCLRASTER_FUNC size_t get_global_size(uint dimindx) {
 	switch(dimindx) {
 		case 0: return gridDim.x;
 		case 1: return gridDim.y;
@@ -34,7 +34,7 @@ OCLRASTER_FUNC size_t get_global_size (uint dimindx) {
 	return 0;
 }
 
-OCLRASTER_FUNC size_t get_global_id (uint dimindx) {
+OCLRASTER_FUNC size_t get_global_id(uint dimindx) {
 	switch(dimindx) {
 		case 0: return blockDim.x * blockIdx.x + threadIdx.x;
 		case 1: return blockDim.y * blockIdx.y + threadIdx.y;
@@ -44,7 +44,7 @@ OCLRASTER_FUNC size_t get_global_id (uint dimindx) {
 	return 0;
 }
 
-OCLRASTER_FUNC size_t get_local_size (uint dimindx) {
+OCLRASTER_FUNC size_t get_local_size(uint dimindx) {
 	switch(dimindx) {
 		case 0: return blockDim.x;
 		case 1: return blockDim.y;
@@ -54,7 +54,7 @@ OCLRASTER_FUNC size_t get_local_size (uint dimindx) {
 	return 0;
 }
 
-OCLRASTER_FUNC size_t get_local_id (uint dimindx) {
+OCLRASTER_FUNC size_t get_local_id(uint dimindx) {
 	switch(dimindx) {
 		case 0: return threadIdx.x;
 		case 1: return threadIdx.y;
@@ -64,7 +64,7 @@ OCLRASTER_FUNC size_t get_local_id (uint dimindx) {
 	return 0;
 }
 
-OCLRASTER_FUNC size_t get_num_groups (uint dimindx) {
+OCLRASTER_FUNC size_t get_num_groups(uint dimindx) {
 	switch(dimindx) {
 		case 0: return gridDim.x / blockDim.x;
 		case 1: return gridDim.y / blockDim.y;
@@ -74,7 +74,7 @@ OCLRASTER_FUNC size_t get_num_groups (uint dimindx) {
 	return 0;
 }
 
-OCLRASTER_FUNC size_t get_group_id (uint dimindx) {
+OCLRASTER_FUNC size_t get_group_id(uint dimindx) {
 	switch(dimindx) {
 		case 0: return blockIdx.x;
 		case 1: return blockIdx.y;
@@ -84,7 +84,7 @@ OCLRASTER_FUNC size_t get_group_id (uint dimindx) {
 	return 0;
 }
 
-OCLRASTER_FUNC size_t get_global_offset (uint dimindx) {
+OCLRASTER_FUNC size_t get_global_offset(uint dimindx) {
 	return 0; // not required/supported by opencl
 }
 

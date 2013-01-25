@@ -82,19 +82,19 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
-		const float4 triangle_cam_relation = (float4)(dot(vertices[0], forward),
-													  dot(vertices[1], forward),
-													  dot(vertices[2], forward),
-													  0.0f);
-		// TODO: if xyz < 0, don't add it in the first place
+		float4 triangle_cam_relation = (float4)(dot(vertices[0], forward),
+												dot(vertices[1], forward),
+												dot(vertices[2], forward),
+												0.0f);
+		// TODO: if xyz < 0, don't add it in the first place (cull directly)
 		
 		// TODO: actual culling
 		
 		// since VE0 can be interpreted as (0, 0, 0, 1) after it has been substracted from the vertices,
 		// the original algorithm (requiring the computation of 4x4 matrix determinants) can be simplified:
-		const float3 c01 = cross(vertices[0], vertices[1]);
-		const float3 c20 = cross(vertices[2], vertices[0]);
-		const float3 c12 = cross(vertices[1], vertices[2]);
+		const float3 c01 = cross(vertices[0] - vertices[1], vertices[1]);
+		const float3 c20 = cross(vertices[2] - vertices[0], vertices[0]);
+		const float3 c12 = cross(vertices[1] - vertices[2], vertices[2]);
 		const float o01 = dot(D0, c01);
 		const float o20 = dot(D0, c20);
 		const float o12 = dot(D0, c12);
@@ -104,6 +104,8 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		const float y01 = dot(DY, c01);
 		const float y20 = dot(DY, c20);
 		const float y12 = dot(DY, c12);
+		
+		// TODO: compute triangle area through dx/dy -> vertices diff?
 		
 		float4 VV0 = (float4)(x12, y12, o12, dot(vertices[0], c12));
 		float4 VV1 = (float4)(x20, y20, o20, 0.0f);

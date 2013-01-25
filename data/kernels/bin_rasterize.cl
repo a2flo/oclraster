@@ -48,6 +48,16 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 		return;
 	}
 	
+	/*printf("[%d] (%f %f %f) (%f %f %f) (%f %f %f)\n",
+		   triangle_id,
+		   VV[0].x, VV[0].y, VV[0].z,
+		   VV[1].x, VV[1].y, VV[1].z,
+		   VV[2].x, VV[2].y, VV[2].z);*/
+	unsigned int passing_indices[3] = { 0, 0, 0 };
+	float2 clipping_coords[3] = { (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f) };
+	unsigned int passing_direct = 0;
+	unsigned int clipped_count = 0;
+	
 	// compute x/y bounds
 	// valid clip and vertex positions: 0 <= x < screen_size.x && 0 <= y < screen_size.y
 	const float fscreen_size[2] = { convert_float(screen_size.x), convert_float(screen_size.y) };
@@ -55,6 +65,7 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	float2 y_bounds = (float2)(fscreen_size[1], 0.0f);
 	
 #define viewport_test(coord, axis) ((coord < 0.0f || coord >= fscreen_size[axis]) ? -1.0f : coord)
+#define discard() printf("[%d] -> discard\n", triangle_id); return;
 	
 	float clipxs[9];
 	float clipys[9];
@@ -72,10 +83,14 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 		clipys[i] = viewport_test(clipys[i], 1);
 		
 		if(clipxs[i] >= 0.0f && clipys[i] >= 0.0f) {
+			printf("[%d] %d | x: %f, y: %f\n", triangle_id, i, clipxs[i], clipys[i]);
 			x_bounds.x = min(x_bounds.x, clipxs[i]);
 			x_bounds.y = max(x_bounds.y, clipxs[i]);
 			y_bounds.x = min(y_bounds.x, clipys[i]);
 			y_bounds.y = max(y_bounds.y, clipys[i]);
+			passing_indices[i]++;
+			passing_direct++;
+			clipping_coords[i] = (float2)(clipxs[i], clipys[i]);
 		}
 		
 		//
@@ -104,36 +119,52 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 			float val1 = cx * VV[edge_0].x + VV[edge_0].z;
 			float val2 = cx * VV[edge_1].x + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
+				printf("[%d] %d | x: %f\n", triangle_id, i, cx);
 				x_bounds.x = min(x_bounds.x, cx);
 				x_bounds.y = max(x_bounds.y, cx);
 				y_bounds.x = 0.0f;
+				passing_indices[i]++;
+				clipped_count++;
+				clipping_coords[i] = (float2)(cx, 0.0f);
 			}
 		}
 		if(cy >= 0.0f) {
 			float val1 = cy * VV[edge_0].y + VV[edge_0].z;
 			float val2 = cy * VV[edge_1].y + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
+				printf("[%d] %d | y: %f\n", triangle_id, i, cy);
 				y_bounds.x = min(y_bounds.x, cy);
 				y_bounds.y = max(y_bounds.y, cy);
 				x_bounds.x = 0.0f;
+				passing_indices[i]++;
+				clipped_count++;
+				clipping_coords[i] = (float2)(0.0f, cy);
 			}
 		}
 		if(cmx >= 0.0f) {
 			float val1 = cmx * VV[edge_0].x + fscreen_size[1] * VV[edge_0].y + VV[edge_0].z;
 			float val2 = cmx * VV[edge_1].x + fscreen_size[1] * VV[edge_1].y + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
+				printf("[%d] %d | xm: %f\n", triangle_id, i, cmx);
 				x_bounds.x = min(x_bounds.x, cmx);
 				x_bounds.y = max(x_bounds.y, cmx);
 				y_bounds.y = fscreen_size[1];
+				passing_indices[i]++;
+				clipped_count++;
+				clipping_coords[i] = (float2)(cmx, 0.0f);
 			}
 		}
 		if(cmy >= 0.0f) {
 			float val1 = fscreen_size[0] * VV[edge_0].x + cmy * VV[edge_0].y + VV[edge_0].z;
 			float val2 = fscreen_size[0] * VV[edge_1].x + cmy * VV[edge_1].y + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
+				printf("[%d] %d | ym: %f\n", triangle_id, i, cmy);
 				y_bounds.x = min(y_bounds.x, cmy);
 				y_bounds.y = max(y_bounds.y, cmy);
 				x_bounds.y = fscreen_size[0];
+				passing_indices[i]++;
+				clipped_count++;
+				clipping_coords[i] = (float2)(0.0f, cmy);
 			}
 		}
 	}
@@ -142,6 +173,35 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 												 0, screen_size.x - 1)); // valid pixel pos: [0, screen_size.x-1]
 	const uint2 y_bounds_u = convert_uint2(clamp((int2)(floor(y_bounds.x), ceil(y_bounds.y)),
 												 0, screen_size.y - 1));
+	
+	printf("[%d] (%u %u) (%u %u)\n",
+		   triangle_id,
+		   x_bounds_u.x, x_bounds_u.y,
+		   y_bounds_u.x, y_bounds_u.y);
+	
+	printf("[%d] passing: %u // %u // %u %u %u\n",
+		   triangle_id, passing_direct, clipped_count,
+		   passing_indices[0], passing_indices[1], passing_indices[2]);
+	
+	float area = 0.0f;
+	if(passing_indices[0] > 0 && passing_indices[1] > 0 && passing_indices[2] > 0) {
+		// TODO: actually: if any edge must be clipped -> triangle area has to be big enough
+		// otherwise, there wouldn't be any clipping necessary
+		// -> only compute area if all 3 edges/vertices pass directly
+		// however: all edges must be valid in the first place! (check precision?)
+		const float2 e0 = clipping_coords[1] - clipping_coords[0];
+		const float2 e1 = clipping_coords[2] - clipping_coords[0];
+		area = 0.5f * (e0.x * e1.y - e0.y * e1.x); // TODO: check if this is correct
+		printf("[%d] %f %f -> %f %f\n", triangle_id, e0.x, e0.y, e1.x, e1.y);
+		if(area < 0.5f) { // half sample size (TODO: -> check if between sample points)
+			//discard();
+		}
+		printf("[%d] area: %f\n", triangle_id, area);
+	}
+	
+	// TODO: determine triangle backside
+	
+	// TODO: already read depth from framebuffer in here -> cull if greated depth
 	
 	// insert triangle id intro appropriate queues/bins
 	const uint2 x_bins = x_bounds_u / tile_size.x;

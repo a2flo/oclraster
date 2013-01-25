@@ -67,6 +67,7 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
 		const unsigned int queue_entries = queue_sizes_buffer[bin_index];
 		const unsigned int queue_offset = (queue_size * bin_index);
+		//if(queue_entries > 0) fragment_color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
 		for(unsigned int queue_entry = 0; queue_entry < queue_entries; queue_entry++) {
 			const unsigned int triangle_id = triangle_queues_buffer[queue_offset + queue_entry];
 			const float4 VV0 = transformed_buffer[triangle_id].VV0;
@@ -99,7 +100,7 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// write last depth (if it has changed)
-		if(fragment_depth < input_depth) {
+		if(fragment_depth < input_depth /*|| fragment_depth == input_depth*/) {
 			color_framebuffer[framebuffer_offset] = convert_uchar4_sat(fragment_color * 255.0f);
 			depth_framebuffer[framebuffer_offset] = fragment_depth;
 		}
