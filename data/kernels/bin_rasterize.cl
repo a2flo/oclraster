@@ -7,13 +7,13 @@ typedef struct __attribute__((packed, aligned(16))) {
 } constant_data;
 
 typedef struct __attribute__((packed, aligned(16))) {
-	float4 VV0;
-	float4 VV1;
-	float4 VV2;
-	float4 W;
-	float4 v0;
-	float4 v1;
-	float4 v2;
+	// VV0: 0 - 2
+	// VV1: 3 - 5
+	// VV2: 6 - 8
+	// depth: 9
+	// cam relation: 10 - 12
+	// unused: 13 - 15
+	float data[16];
 } transformed_data;
 
 //
@@ -30,20 +30,26 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	if(triangle_id >= triangle_count) return;
 	
 	const float3 VV[3] = {
-		transformed_buffer[triangle_id].VV0.xyz,
-		transformed_buffer[triangle_id].VV1.xyz,
-		transformed_buffer[triangle_id].VV2.xyz
+		(float3)(transformed_buffer[triangle_id].data[0],
+				 transformed_buffer[triangle_id].data[1],
+				 transformed_buffer[triangle_id].data[2]),
+		(float3)(transformed_buffer[triangle_id].data[3],
+				 transformed_buffer[triangle_id].data[4],
+				 transformed_buffer[triangle_id].data[5]),
+		(float3)(transformed_buffer[triangle_id].data[6],
+				 transformed_buffer[triangle_id].data[7],
+				 transformed_buffer[triangle_id].data[8])
 	};
 	
 	// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
-	const float vertex_cam_relation[3] = {
-		transformed_buffer[triangle_id].W.x,
-		transformed_buffer[triangle_id].W.y,
-		transformed_buffer[triangle_id].W.z
+	const float triangle_cam_relation[3] = {
+		transformed_buffer[triangle_id].data[10],
+		transformed_buffer[triangle_id].data[11],
+		transformed_buffer[triangle_id].data[12]
 	};
-	if(vertex_cam_relation[0] < 0.0f &&
-	   vertex_cam_relation[1] < 0.0f &&
-	   vertex_cam_relation[2] < 0.0f) {
+	if(triangle_cam_relation[0] < 0.0f &&
+	   triangle_cam_relation[1] < 0.0f &&
+	   triangle_cam_relation[2] < 0.0f) {
 		// all vertices are behind the camera
 		return;
 	}
@@ -75,9 +81,9 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 		const unsigned int i1 = (i == 2u ? 1u : 2u);
 		
 		const float d = 1.0f / (VV[i0].x * VV[i1].y - VV[i0].y * VV[i1].x);
-		clipxs[i] = (vertex_cam_relation[i] < 0.0f ? -1.0f :
+		clipxs[i] = (triangle_cam_relation[i] < 0.0f ? -1.0f :
 					 (VV[i0].y * VV[i1].z - VV[i0].z * VV[i1].y) * d);
-		clipys[i] = (vertex_cam_relation[i] < 0.0f ? -1.0f :
+		clipys[i] = (triangle_cam_relation[i] < 0.0f ? -1.0f :
 					 (VV[i0].z * VV[i1].x - VV[i0].x * VV[i1].z) * d);
 		clipxs[i] = viewport_test(clipxs[i], 0);
 		clipys[i] = viewport_test(clipys[i], 1);
@@ -191,7 +197,7 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 		// however: all edges must be valid in the first place! (check precision?)
 		const float2 e0 = clipping_coords[1] - clipping_coords[0];
 		const float2 e1 = clipping_coords[2] - clipping_coords[0];
-		area = 0.5f * (e0.x * e1.y - e0.y * e1.x); // TODO: check if this is correct
+		area = 0.5f * (e0.x * e1.y - e0.y * e1.x);
 		printf("[%d] %f %f -> %f %f\n", triangle_id, e0.x, e0.y, e1.x, e1.y);
 		if(area < 0.5f) { // half sample size (TODO: -> check if between sample points)
 			//discard();
@@ -201,7 +207,7 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	
 	// TODO: determine triangle backside
 	
-	// TODO: already read depth from framebuffer in here -> cull if greated depth
+	// TODO: already read depth from framebuffer in here -> cull if greater depth
 	
 	// insert triangle id intro appropriate queues/bins
 	const uint2 x_bins = x_bounds_u / tile_size.x;

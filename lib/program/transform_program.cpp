@@ -34,13 +34,13 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 	} constant_data;
 	
 	typedef struct __attribute__((packed, aligned(16))) {
-		float4 VV0;
-		float4 VV1;
-		float4 VV2;
-		float4 W;
-		float4 v0;
-		float4 v1;
-		float4 v2;
+		// VV0: 0 - 2
+		// VV1: 3 - 5
+		// VV2: 6 - 8
+		// depth: 9
+		// cam relation: 10 - 12
+		// unused: 13 - 15
+		float data[16];
 	} transformed_data;
 	
 	// transform rerouting
@@ -107,18 +107,65 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		
 		// TODO: compute triangle area through dx/dy -> vertices diff?
 		
-		float4 VV0 = (float4)(x12, y12, o12, dot(vertices[0], c12));
-		float4 VV1 = (float4)(x20, y20, o20, 0.0f);
-		float4 VV2 = (float4)(x01, y01, o01, 0.0f);
+		//
+		const float3 VV[3] = {
+			(float3)(x12, y12, o12),
+			(float3)(x20, y20, o20),
+			(float3)(x01, y01, o01)
+		};
+		float VV_depth = dot(vertices[0], c12);
 		
 		//
-		transformed_buffer[triangle_id].VV0 = VV0;
-		transformed_buffer[triangle_id].VV1 = VV1;
-		transformed_buffer[triangle_id].VV2 = VV2;
-		transformed_buffer[triangle_id].W = triangle_cam_relation; // TODO: don't call it .W any more
-		transformed_buffer[triangle_id].v0 = (float4)(vertices[0], 1.0f);
-		transformed_buffer[triangle_id].v1 = (float4)(vertices[1], 1.0f);
-		transformed_buffer[triangle_id].v2 = (float4)(vertices[2], 1.0f);
+		const float fscreen_size[2] = { convert_float(cdata->viewport.x), convert_float(cdata->viewport.y) };
+#define viewport_test(coord, axis) ((coord < 0.0f || coord >= fscreen_size[axis]) ? -1.0f : coord)
+		float coord_xs[3];
+		float coord_ys[3];
+		unsigned int valid_coords = 0;
+		for(unsigned int i = 0u; i < 3u; i++) {
+			// { 1, 2 }, { 0, 2 }, { 0, 1 }
+			const unsigned int i0 = (i == 0u ? 1u : 0u);
+			const unsigned int i1 = (i == 2u ? 1u : 2u);
+			
+			const float d = 1.0f / (VV[i0].x * VV[i1].y - VV[i0].y * VV[i1].x);
+			coord_xs[i] = (triangle_cam_relation[i] < 0.0f ? -1.0f :
+						   (VV[i0].y * VV[i1].z - VV[i0].z * VV[i1].y) * d);
+			coord_ys[i] = (triangle_cam_relation[i] < 0.0f ? -1.0f :
+						   (VV[i0].z * VV[i1].x - VV[i0].x * VV[i1].z) * d);
+			coord_xs[i] = viewport_test(coord_xs[i], 0);
+			coord_ys[i] = viewport_test(coord_ys[i], 1);
+			
+			if(coord_xs[i] >= 0.0f && coord_ys[i] >= 0.0f) {
+				valid_coords++;
+			}
+		}
+		
+		if(valid_coords == 3) {
+			//
+			const float2 e0 = (float2)(coord_xs[1] - coord_xs[0],
+									   coord_ys[1] - coord_ys[0]);
+			const float2 e1 = (float2)(coord_xs[2] - coord_xs[0],
+									   coord_ys[2] - coord_ys[0]);
+			const float area = -0.5f * (e0.x * e1.y - e0.y * e1.x);
+			//printf("|%d| area: %f\n", triangle_id, area);
+			// half sample size (TODO: -> check if between sample points)
+			if(area < 0.5f) { // cull
+				triangle_cam_relation.x = -1.0f;
+				triangle_cam_relation.y = -1.0f;
+				triangle_cam_relation.z = -1.0f;
+			}
+		}
+		
+		// output:
+		global float* data = transformed_buffer[triangle_id].data;
+		for(unsigned int i = 0u; i < 3u; i++) {
+			*data++ = VV[i].x;
+			*data++ = VV[i].y;
+			*data++ = VV[i].z;
+		}
+		*data++ = VV_depth;
+		*data++ = triangle_cam_relation.x;
+		*data++ = triangle_cam_relation.y;
+		*data++ = triangle_cam_relation.z;
 	}
 )OCLRASTER_RAWSTR"};
 

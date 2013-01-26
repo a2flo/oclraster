@@ -28,13 +28,13 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 	} constant_data;
 	
 	typedef struct __attribute__((packed, aligned(16))) {
-		float4 VV0;
-		float4 VV1;
-		float4 VV2;
-		float4 W;
-		float4 v0;
-		float4 v1;
-		float4 v2;
+		// VV0: 0 - 2
+		// VV1: 3 - 5
+		// VV2: 6 - 8
+		// depth: 9
+		// cam relation: 10 - 12
+		// unused: 13 - 15
+		float data[16];
 	} transformed_data;
 	
 	//###OCLRASTER_USER_CODE###
@@ -70,15 +70,21 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 		//if(queue_entries > 0) fragment_color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
 		for(unsigned int queue_entry = 0; queue_entry < queue_entries; queue_entry++) {
 			const unsigned int triangle_id = triangle_queues_buffer[queue_offset + queue_entry];
-			const float4 VV0 = transformed_buffer[triangle_id].VV0;
-			const float4 VV1 = transformed_buffer[triangle_id].VV1;
-			const float4 VV2 = transformed_buffer[triangle_id].VV2;
+			const float3 VV0 = (float3)(transformed_buffer[triangle_id].data[0],
+										transformed_buffer[triangle_id].data[1],
+										transformed_buffer[triangle_id].data[2]);
+			const float3 VV1 = (float3)(transformed_buffer[triangle_id].data[3],
+										transformed_buffer[triangle_id].data[4],
+										transformed_buffer[triangle_id].data[5]);
+			const float3 VV2 = (float3)(transformed_buffer[triangle_id].data[6],
+										transformed_buffer[triangle_id].data[7],
+										transformed_buffer[triangle_id].data[8]);
 			
 			//
 			float4 barycentric = (float4)(fragment_xy.x * VV0.x + fragment_xy.y * VV0.y + VV0.z,
 										  fragment_xy.x * VV1.x + fragment_xy.y * VV1.y + VV1.z,
 										  fragment_xy.x * VV2.x + fragment_xy.y * VV2.y + VV2.z,
-										  VV0.w); // .w = computed depth
+										  transformed_buffer[triangle_id].data[9]); // .w = computed depth
 			if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
 			
 			// simplified:

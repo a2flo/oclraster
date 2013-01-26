@@ -147,7 +147,7 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	
 	// initialize draw state
 	state.depth_test = 1;
-	state.transformed_primitive_size = 7 * sizeof(float4); // NOTE: this is just for the internal transformed buffer
+	state.transformed_primitive_size = 16 * sizeof(float); // NOTE: this is just for the internal transformed buffer
 	state.framebuffer_size = framebuffer_size;
 	state.color_framebuffer = color_framebuffer_cl;
 	state.depth_framebuffer = depth_framebuffer_cl;
