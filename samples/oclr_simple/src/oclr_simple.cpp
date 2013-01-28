@@ -52,6 +52,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	pipeline* p = new pipeline();
 	
 	a2m* bunny = new a2m(oclraster::data_path("bunny.a2m"));
+	//a2m* bunny = new a2m(oclraster::data_path("cube.a2m"));
 	
 	p->_reserve_memory(std::max(8192u, bunny->get_index_buffer(0).index_count / 3));
 	
@@ -73,8 +74,8 @@ int main(int argc oclr_unused, char* argv[]) {
 		oclr_error("couldn't open fs program!");
 		return -1;
 	}
-	transform_program vs_prog(vs_buffer.str());
-	rasterize_program fs_prog(fs_buffer.str());
+	transform_program vs_prog(vs_buffer.str(), "transform_main");
+	rasterization_program fs_prog(fs_buffer.str(), "rasterize_main");
 	p->bind_program(vs_prog);
 	p->bind_program(fs_prog);
 	

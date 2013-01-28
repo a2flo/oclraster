@@ -1099,7 +1099,7 @@ void cudacl::write_image3d(opencl_base::buffer_object* buffer_obj oclr_unused, c
 	__HANDLE_CL_EXCEPTION("write_buffer")*/
 }
 
-void cudacl::read_buffer(void* dst oclr_unused, opencl_base::buffer_object* buffer_obj oclr_unused) {
+void cudacl::read_buffer(void* dst oclr_unused, opencl_base::buffer_object* buffer_obj oclr_unused, const size_t size oclr_unused) {
 	// TODO
 	/*try {
 		queues[active_device->device]->enqueueReadBuffer(*buffer_obj->buffer, ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) > 0),
@@ -1341,6 +1341,14 @@ void cudacl::unmap_buffer(opencl_base::buffer_object* buffer_obj oclr_unused, vo
 		queues[active_device->device]->enqueueUnmapMemObject(*(cl::Memory*)buffer_ptr, map_ptr);
 	}
 	__HANDLE_CL_EXCEPTION("unmap_buffer")*/
+}
+
+void cudacl::_fill_buffer(buffer_object* buffer_obj oclr_unused,
+						  const void* pattern oclr_unused,
+						  const size_t& pattern_size oclr_unused,
+						  const size_t offset oclr_unused,
+						  const size_t size oclr_unused) {
+	// TODO
 }
 
 size_t cudacl::get_kernel_work_group_size() const {

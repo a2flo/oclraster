@@ -78,6 +78,10 @@ opencl_base::PLATFORM_VENDOR opencl_base::get_platform_vendor() const {
 	return platform_vendor;
 }
 
+opencl_base::PLATFORM_CL_VERSION opencl_base::get_platform_cl_version() const {
+	return platform_cl_version;
+}
+
 void opencl_base::destroy_kernels() {
 	for(const auto& k : kernels) {
 		delete k.second;
@@ -1398,11 +1402,12 @@ void opencl::write_image3d(opencl::buffer_object* buffer_obj, const void* src, s
 	__HANDLE_CL_EXCEPTION("write_buffer")
 }
 
-void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj) {
+void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj, const size_t size_) {
 	try {
+		const size_t size = (size_ == 0 ? buffer_obj->size : size_);
 		queues[active_device->device]->enqueueReadBuffer(*buffer_obj->buffer,
 														 ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) != BUFFER_FLAG::NONE),
-														 0, buffer_obj->size, dst);
+														 0, size, dst);
 	}
 	__HANDLE_CL_EXCEPTION("read_buffer")
 }
@@ -1565,6 +1570,26 @@ void opencl::unmap_buffer(opencl::buffer_object* buffer_obj, void* map_ptr) {
 		queues[active_device->device]->enqueueUnmapMemObject(*(cl::Memory*)buffer_ptr, map_ptr);
 	}
 	__HANDLE_CL_EXCEPTION("unmap_buffer")
+}
+
+void opencl::_fill_buffer(buffer_object* buffer_obj,
+						  const void* pattern,
+						  const size_t& pattern_size,
+						  const size_t offset,
+						  const size_t size_) {
+#if defined(CL_VERSION_1_2)
+	try {
+		// TODO: get 1.2 cl.hpp
+		const size_t size = (size_ == 0 ? (buffer_obj->size / pattern_size) : size_);
+		cl::CommandQueue* cmd_queue = queues[active_device->device];
+		const cl_int err = clEnqueueFillBuffer((*cmd_queue)(), (*buffer_obj->buffer)(),
+											   pattern, pattern_size, offset, size, 0, nullptr, nullptr);
+		if(err != CL_SUCCESS) {
+			throw cl::Error(err);
+		}
+	}
+	__HANDLE_CL_EXCEPTION("fill_buffer")
+#endif
 }
 
 size_t opencl::get_kernel_work_group_size() const {

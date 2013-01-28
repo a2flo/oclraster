@@ -22,10 +22,19 @@
 #include "osx_helper.h"
 #endif
 
+struct __attribute__((packed, aligned(16))) info_buffer_struct {
+	unsigned int passing_triangles;
+};
+
 pipeline::pipeline() :
 window_handler(this, &pipeline::window_event_handler) {
 	create_framebuffers(size2(oclraster::get_width(), oclraster::get_height()));
 	oclraster::get_event()->add_internal_event_handler(window_handler, EVENT_TYPE::WINDOW_RESIZE);
+
+	info_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
+									 opencl::BUFFER_FLAG::BLOCK_ON_READ |
+									 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+									 sizeof(info_buffer_struct));
 }
 
 pipeline::~pipeline() {
@@ -36,6 +45,10 @@ pipeline::~pipeline() {
 	if(queue_sizes_buffer != nullptr) ocl->delete_buffer(queue_sizes_buffer);
 	if(triangle_queues_buffer_zero != nullptr) delete [] triangle_queues_buffer_zero;
 	if(queue_sizes_buffer_zero != nullptr) delete [] queue_sizes_buffer_zero;
+	
+	if(info_buffer != nullptr) {
+		ocl->delete_buffer(info_buffer);
+	}
 }
 
 bool pipeline::window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
@@ -157,6 +170,7 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	state.triangle_queues_buffer_zero = triangle_queues_buffer_zero;
 	state.queue_sizes_buffer_zero = queue_sizes_buffer_zero;
 	state.reserved_triangle_count = reserved_triangle_count;
+	state.info_buffer = info_buffer;
 	
 	const auto index_count = (element_range.second - element_range.first + 1) * 3;
 	const auto num_elements = element_range.second - element_range.first + 1;
@@ -164,8 +178,13 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 							   element_range.second - element_range.first + 1 :
 							   ib.index_count / 3);*/
 	
+	// TODO: this should be static!
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 												  state.transformed_primitive_size * num_elements);
+	
+	// clear info buffer
+	const info_buffer_struct empty_info_buffer { 0 };
+	ocl->write_buffer(info_buffer, &empty_info_buffer);
 	
 	// create user transformed buffers (transform program outputs)
 	const auto active_device = ocl->get_active_device();
@@ -181,8 +200,12 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	
 	// pipeline
 	transform.transform(state, num_elements);
-	binning.bin(state, num_elements); // TODO: actual triangle count and pipelining/splitting
-	rasterization.rasterize(state, num_elements); // TODO: actual triangle count (queue size?)
+	const unsigned int post_transform_triangle_count = binning.bin(state);
+	if(post_transform_triangle_count > 0) {
+		// TODO: pipelining/splitting
+		// TODO: actual triangle count (queue size?)
+		rasterization.rasterize(state, post_transform_triangle_count);
+	}
 	
 	//
 	ocl->delete_buffer(state.transformed_buffer);

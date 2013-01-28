@@ -27,7 +27,7 @@
 #include "core/event.h"
 #include "program/oclraster_program.h"
 #include "program/transform_program.h"
-#include "program/rasterize_program.h"
+#include "program/rasterization_program.h"
 
 struct draw_state {
 	// TODO: store actual flags/data
@@ -53,13 +53,14 @@ struct draw_state {
 	opencl::buffer_object* depth_framebuffer = nullptr;
 	
 	//
+	opencl::buffer_object* info_buffer = nullptr;
 	opencl::buffer_object* transformed_buffer = nullptr;
 	unordered_map<string, const opencl_base::buffer_object&> user_buffers;
 	vector<opencl::buffer_object*> user_transformed_buffers;
 	
 	//
 	const transform_program* transform_prog = nullptr;
-	const rasterize_program* rasterize_prog = nullptr;
+	const rasterization_program* rasterize_prog = nullptr;
 	
 	//
 	const uint2 tile_size { 32, 32 };
@@ -121,6 +122,8 @@ protected:
 	unsigned int* queue_sizes_buffer_zero = nullptr;
 	unsigned int reserved_triangle_count = 512;
 	
+	opencl::buffer_object* info_buffer = nullptr;
+	
 	// window event handlers
 	event::handler window_handler;
 	bool window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
@@ -132,14 +135,14 @@ template <class program_type> void pipeline::bind_program(const program_type& pr
 	static_assert(is_base_of<oclraster_program, program_type>::value,
 				  "invalid program type (must derive from oclraster_program)!");
 	static_assert(is_base_of<transform_program, program_type>::value ||
-				  is_base_of<rasterize_program, program_type>::value,
-				  "invalid program type (must be a transform_program or rasterize_program or a derived class)!");
+				  is_base_of<rasterization_program, program_type>::value,
+				  "invalid program type (must be a transform_program or rasterization_program or a derived class)!");
 	// static_if would be nice
 	if(is_base_of<transform_program, program_type>::value) {
 		state.transform_prog = (transform_program*)&program;
 	}
-	else if(is_base_of<rasterize_program, program_type>::value) {
-		state.rasterize_prog = (rasterize_program*)&program;
+	else if(is_base_of<rasterization_program, program_type>::value) {
+		state.rasterize_prog = (rasterization_program*)&program;
 	}
 }
 

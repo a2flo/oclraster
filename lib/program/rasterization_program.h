@@ -16,15 +16,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_RASTERIZE_PROGRAM_H__
-#define __OCLRASTER_RASTERIZE_PROGRAM_H__
+#ifndef __OCLRASTER_RASTERIZATION_PROGRAM_H__
+#define __OCLRASTER_RASTERIZATION_PROGRAM_H__
 
 #include "oclraster_program.h"
 
-class rasterize_program : public oclraster_program {
+class rasterization_program : public oclraster_program {
 public:
-	rasterize_program(const string& code, const string entry_function = "main");
-	virtual ~rasterize_program();
+	rasterization_program(const string& code, const string entry_function = "main");
+	virtual ~rasterization_program();
 
 protected:
 	virtual void specialized_processing(const string& code);

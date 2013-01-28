@@ -27,8 +27,7 @@ public:
 	binning_stage();
 	~binning_stage();
 	
-	void bin(draw_state& state,
-			 const unsigned int& triangle_count);
+	unsigned int bin(draw_state& state);
 
 protected:
 

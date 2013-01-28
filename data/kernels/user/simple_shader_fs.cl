@@ -14,7 +14,7 @@ oclraster_uniforms rasterize_uniforms {
 	float4 light_color;
 } rp_uniforms;
 
-void main() {
+void rasterize_main() {
 	// check if lit by light (compute attenuation)
 	float3 light_dir = rp_uniforms->light_position.xyz - output_attributes->vertex.xyz;
 	light_dir /= rp_uniforms->light_position.w;

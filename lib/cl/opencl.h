@@ -126,6 +126,7 @@ public:
 	static vector<pair<PLATFORM_VENDOR, string>> get_platforms();
 	static string platform_vendor_to_str(const PLATFORM_VENDOR& pvendor);
 	PLATFORM_VENDOR get_platform_vendor() const;
+	PLATFORM_CL_VERSION get_platform_cl_version() const;
 	
 	enum class VENDOR {
 		NVIDIA,
@@ -185,10 +186,17 @@ public:
 	virtual void write_buffer(buffer_object* buffer_obj, const void* src, const size_t offset = 0, const size_t size = 0) = 0;
 	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region) = 0;
 	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region) = 0;
-	virtual void read_buffer(void* dst, buffer_object* buffer_obj) = 0;
+	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t size = 0) = 0;
 	virtual void* map_buffer(buffer_object* buffer_obj, BUFFER_FLAG access_type, bool blocking = true) = 0;
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr) = 0;
 	void set_manual_gl_sharing(buffer_object* gl_buffer_obj, const bool state);
+	
+	//! note: this is only available in opencl 1.2
+	virtual void _fill_buffer(buffer_object* buffer_obj,
+							  const void* pattern,
+							  const size_t& pattern_size,
+							  const size_t offset = 0,
+							  const size_t size = 0) = 0;
 	
 	virtual void set_active_device(const DEVICE_TYPE& dev) = 0;
 	virtual bool set_kernel_argument(const unsigned int& index, buffer_object* arg) = 0;
@@ -377,9 +385,15 @@ public:
 	virtual void write_buffer(buffer_object* buffer_obj, const void* src, const size_t offset = 0, const size_t size = 0);
 	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region);
 	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region);
-	virtual void read_buffer(void* dst, buffer_object* buffer_obj);
+	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t size = 0);
 	virtual void* map_buffer(buffer_object* buffer_obj, BUFFER_FLAG access_type, bool blocking = true);
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
+	
+	virtual void _fill_buffer(buffer_object* buffer_obj,
+							  const void* pattern,
+							  const size_t& pattern_size,
+							  const size_t offset = 0,
+							  const size_t size = 0);
 	
 	virtual void set_active_device(const DEVICE_TYPE& dev);
 	virtual bool set_kernel_argument(const unsigned int& index, buffer_object* arg);
@@ -433,9 +447,15 @@ public:
 	virtual void write_buffer(buffer_object* buffer_obj, const void* src, const size_t offset = 0, const size_t size = 0);
 	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region);
 	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region);
-	virtual void read_buffer(void* dst, buffer_object* buffer_obj);
+	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t size = 0);
 	virtual void* map_buffer(buffer_object* buffer_obj, BUFFER_FLAG access_type, bool blocking = true);
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
+	
+	virtual void _fill_buffer(buffer_object* buffer_obj,
+							  const void* pattern,
+							  const size_t& pattern_size,
+							  const size_t offset = 0,
+							  const size_t size = 0);
 	
 	virtual void set_active_device(const DEVICE_TYPE& dev);
 	virtual bool set_kernel_argument(const unsigned int& index, buffer_object* arg);

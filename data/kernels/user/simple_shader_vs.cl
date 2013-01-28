@@ -18,7 +18,7 @@ oclraster_uniforms transform_uniforms {
 	mat4 modelview_matrix;
 } tp_uniforms;
 
-void main() {
+void transform_main() {
 	output_attributes->normal = input_attributes->normal;
 	output_attributes->tex_coord = input_attributes->tex_coord;
 	

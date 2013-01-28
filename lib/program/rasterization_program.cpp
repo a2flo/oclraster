@@ -16,9 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "rasterize_program.h"
+#include "rasterization_program.h"
 
-static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
+static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 	#include "oclr_global.h"
 	#include "oclr_math.h"
 	#include "oclr_matrix.h"
@@ -41,7 +41,6 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 	
 	//
 	kernel void _oclraster_program(//###OCLRASTER_USER_STRUCTS###
-								   global const unsigned int* index_buffer, // TODO: necessary for now, output should be packed later on
 								   
 								   global const transformed_data* transformed_buffer,
 								   global const unsigned int* triangle_queues_buffer,
@@ -63,7 +62,7 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 		const float input_depth = depth_framebuffer[framebuffer_offset];
 		float fragment_depth = input_depth;
 		
-		const float2 fragment_xy = (float2)(x, y);
+		const float2 fragment_coord = (float2)(x, y);
 		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
 		const unsigned int queue_entries = queue_sizes_buffer[bin_index];
 		const unsigned int queue_offset = (queue_size * bin_index);
@@ -81,9 +80,9 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 										transformed_buffer[triangle_id].data[8]);
 			
 			//
-			float4 barycentric = (float4)(fragment_xy.x * VV0.x + fragment_xy.y * VV0.y + VV0.z,
-										  fragment_xy.x * VV1.x + fragment_xy.y * VV1.y + VV1.z,
-										  fragment_xy.x * VV2.x + fragment_xy.y * VV2.y + VV2.z,
+			float4 barycentric = (float4)(fragment_coord.x * VV0.x + fragment_coord.y * VV0.y + VV0.z,
+										  fragment_coord.x * VV1.x + fragment_coord.y * VV1.y + VV1.z,
+										  fragment_coord.x * VV2.x + fragment_coord.y * VV2.y + VV2.z,
 										  transformed_buffer[triangle_id].data[9]); // .w = computed depth
 			if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
 			
@@ -97,33 +96,28 @@ static constexpr char template_rasterize_program[] { u8R"OCLRASTER_RAWSTR(
 			fragment_depth = barycentric.w;
 			
 			//
-			const unsigned int indices[3] = {
-				index_buffer[triangle_id*3],
-				index_buffer[triangle_id*3 + 1],
-				index_buffer[triangle_id*3 + 2]
-			};
 			//###OCLRASTER_USER_MAIN_CALL###
 		}
 		
 		// write last depth (if it has changed)
-		if(fragment_depth < input_depth /*|| fragment_depth == input_depth*/) {
+		if(fragment_depth < input_depth || fragment_depth == input_depth) {
 			color_framebuffer[framebuffer_offset] = convert_uchar4_sat(fragment_color * 255.0f);
 			depth_framebuffer[framebuffer_offset] = fragment_depth;
 		}
 	}
 )OCLRASTER_RAWSTR"};
 
-rasterize_program::rasterize_program(const string& code, const string entry_function_) :
+rasterization_program::rasterization_program(const string& code, const string entry_function_) :
 oclraster_program(code, entry_function_) {
 	process_program(code);
 }
 
-rasterize_program::~rasterize_program() {
+rasterization_program::~rasterization_program() {
 }
 
-void rasterize_program::specialized_processing(const string& code) {
+void rasterization_program::specialized_processing(const string& code) {
 	// insert (processed) user code into template program
-	program_code = template_rasterize_program;
+	program_code = template_rasterization_program;
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_CODE###", code);
 	
 	// create kernel parameters string (buffers will be called "user_buffer_#")
@@ -159,7 +153,7 @@ void rasterize_program::specialized_processing(const string& code) {
 			case oclraster_program::STRUCT_TYPE::OUTPUT: {
 				buffer_handling_code += "const " + oclr_struct.name + " user_buffer_outputs_" + cur_user_buffer_str + "[3] = { ";
 				for(size_t i = 0; i < 3; i++) {
-					buffer_handling_code += "user_buffer_" + cur_user_buffer_str + "[indices[" + size_t2string(i) + "]]";
+					buffer_handling_code += "user_buffer_" + cur_user_buffer_str + "[(triangle_id * 3) + " + size_t2string(i) + "]";
 					if(i < 2) buffer_handling_code += ", ";
 				}
 				buffer_handling_code += " };\n";
@@ -185,7 +179,7 @@ void rasterize_program::specialized_processing(const string& code) {
 		}
 		cur_user_buffer++;
 	}
-	main_call_parameters += "&fragment_color, &fragment_depth, fragment_xy, barycentric.xyz"; // the same for all rasterization programs
+	main_call_parameters += "&fragment_color, &fragment_depth, fragment_coord, barycentric.xyz"; // the same for all rasterization programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
 						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	
@@ -193,8 +187,8 @@ void rasterize_program::specialized_processing(const string& code) {
 	//oclr_msg("generated rasterize user program: %s", program_code);
 }
 
-string rasterize_program::create_entry_function_parameters() {
-	static const string rasterize_params = "float4* fragment_color, float* depth, const float2 fragment_xy, const float3 barycentric";
+string rasterization_program::create_entry_function_parameters() {
+	static const string rasterize_params = "float4* fragment_color, float* depth, const float2 fragment_coord, const float3 barycentric";
 	string entry_function_params = "";
 	for(size_t i = 0, struct_count = structs.size(); i < struct_count; i++) {
 		switch(structs[i].type) {

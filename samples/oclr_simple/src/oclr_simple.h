@@ -26,7 +26,7 @@
 #include <oclraster/core/camera.h>
 #include <oclraster/program/oclraster_program.h>
 #include <oclraster/program/transform_program.h>
-#include <oclraster/program/rasterize_program.h>
+#include <oclraster/program/rasterization_program.h>
 
 #define APPLICATION_NAME "oclraster simple sample"
 

@@ -43,6 +43,10 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		float data[16];
 	} transformed_data;
 	
+	typedef struct __attribute__((packed, aligned(16))) {
+		unsigned int triangle_count;
+	} info_buffer_data;
+	
 	// transform rerouting
 	#define transform(vertex) _oclraster_transform(vertex, VE, transformed_vertex)
 	OCLRASTER_FUNC void _oclraster_transform(float4 vertex, const float3* VE, float3* transformed_vertex) {
@@ -55,6 +59,7 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 	kernel void _oclraster_program(//###OCLRASTER_USER_STRUCTS###
 								   global const unsigned int* index_buffer,
 								   global transformed_data* transformed_buffer,
+								   global info_buffer_data* info_buffer,
 								   constant constant_data* cdata,
 								   const unsigned int triangle_count) {
 		const unsigned int triangle_id = get_global_id(0);
@@ -82,13 +87,19 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
-		float4 triangle_cam_relation = (float4)(dot(vertices[0], forward),
-												dot(vertices[1], forward),
-												dot(vertices[2], forward),
-												0.0f);
-		// TODO: if xyz < 0, don't add it in the first place (cull directly)
+		const float triangle_cam_relation[3] = {
+			dot(vertices[0], forward),
+			dot(vertices[1], forward),
+			dot(vertices[2], forward)
+		};
 		
-		// TODO: actual culling
+		// if xyz < 0, don't add the triangle in the first place
+		if(triangle_cam_relation[0] < 0.0f &&
+		   triangle_cam_relation[1] < 0.0f &&
+		   triangle_cam_relation[2] < 0.0f) {
+			// all vertices are behind the camera
+			return;
+		}
 		
 		// since VE0 can be interpreted as (0, 0, 0, 1) after it has been substracted from the vertices,
 		// the original algorithm (requiring the computation of 4x4 matrix determinants) can be simplified:
@@ -115,7 +126,8 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		};
 		float VV_depth = dot(vertices[0], c12);
 		
-		//
+		
+		// TODO: actual culling
 		const float fscreen_size[2] = { convert_float(cdata->viewport.x), convert_float(cdata->viewport.y) };
 #define viewport_test(coord, axis) ((coord < 0.0f || coord >= fscreen_size[axis]) ? -1.0f : coord)
 		float coord_xs[3];
@@ -140,32 +152,35 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		if(valid_coords == 3) {
-			//
+			// compute triangle area if all vertices pass
 			const float2 e0 = (float2)(coord_xs[1] - coord_xs[0],
 									   coord_ys[1] - coord_ys[0]);
 			const float2 e1 = (float2)(coord_xs[2] - coord_xs[0],
 									   coord_ys[2] - coord_ys[0]);
 			const float area = -0.5f * (e0.x * e1.y - e0.y * e1.x);
-			//printf("|%d| area: %f\n", triangle_id, area);
 			// half sample size (TODO: -> check if between sample points)
-			if(area < 0.5f) { // cull
-				triangle_cam_relation.x = -1.0f;
-				triangle_cam_relation.y = -1.0f;
-				triangle_cam_relation.z = -1.0f;
+			if(area < 0.5f) {
+				return; // cull
 			}
 		}
 		
 		// output:
-		global float* data = transformed_buffer[triangle_id].data;
+		const unsigned int triangle_index = atomic_inc(&info_buffer->triangle_count);
+		global float* data = transformed_buffer[triangle_index].data;
 		for(unsigned int i = 0u; i < 3u; i++) {
 			*data++ = VV[i].x;
 			*data++ = VV[i].y;
 			*data++ = VV[i].z;
 		}
 		*data++ = VV_depth;
-		*data++ = triangle_cam_relation.x;
-		*data++ = triangle_cam_relation.y;
-		*data++ = triangle_cam_relation.z;
+		*data++ = triangle_cam_relation[0];
+		*data++ = triangle_cam_relation[1];
+		*data++ = triangle_cam_relation[2];
+		
+		// note: this is isn't the most space efficient way to do this,
+		// but it doesn't require any index -> triangle id mapping or
+		// multiple dependent memory lookups (-> faster in the end)
+		//###OCLRASTER_USER_OUTPUT_COPY###
 	}
 )OCLRASTER_RAWSTR"};
 
@@ -205,6 +220,7 @@ void transform_program::specialized_processing(const string& code) {
 	// insert main call + prior buffer handling
 	string buffer_handling_code = "";
 	string pre_buffer_handling_code = "";
+	string output_handling_code = "";
 	string main_call_parameters = "";
 	size_t cur_user_buffer = 0;
 	for(const auto& oclr_struct : structs) {
@@ -216,9 +232,15 @@ void transform_program::specialized_processing(const string& code) {
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
 			case oclraster_program::STRUCT_TYPE::OUTPUT:
-				buffer_handling_code += ("global " + oclr_struct.name + "* user_buffer_element_" + cur_user_buffer_str +
-										 " = &user_buffer_"+cur_user_buffer_str+"[indices[i]];\n");
-				main_call_parameters += "user_buffer_element_" + cur_user_buffer_str + ", ";
+				pre_buffer_handling_code += oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str + "[3];\n";
+				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + "[i], ";
+				output_handling_code += "for(unsigned int i = 0; i < 3; i++) {\n";
+				output_handling_code += "const unsigned int idx = (triangle_index * 3) + i;\n";
+				for(const auto& var : oclr_struct.variables) {
+					output_handling_code += "user_buffer_" + cur_user_buffer_str + "[idx]." + var + " = ";
+					output_handling_code += "user_buffer_element_" + cur_user_buffer_str + "[i]." + var + ";\n";
+				}
+				output_handling_code += "}\n";
 				break;
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
 				pre_buffer_handling_code += ("const " + oclr_struct.name + " user_buffer_element_" +
@@ -232,6 +254,7 @@ void transform_program::specialized_processing(const string& code) {
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_PRE_MAIN_CALL###", pre_buffer_handling_code);
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
 						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
+	core::find_and_replace(program_code, "//###OCLRASTER_USER_OUTPUT_COPY###", output_handling_code);
 	
 	// done
 	//oclr_msg("generated transform user program: %s", program_code);
@@ -247,7 +270,7 @@ string transform_program::create_entry_function_parameters() {
 				entry_function_params += "const ";
 				break;
 			case STRUCT_TYPE::OUTPUT:
-				entry_function_params += "global ";
+				// private memory
 				break;
 		}
 		entry_function_params += structs[i].name + "* " + structs[i].object_name;

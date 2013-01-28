@@ -55,8 +55,8 @@
 		5C61BDEF1232A25500FD3451 /* logger.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C61BDED1232A25500FD3451 /* logger.h */; };
 		5C970E0015E23C06007841C8 /* task.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C970DFE15E23C06007841C8 /* task.cpp */; };
 		5C970E0115E23C06007841C8 /* task.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C970DFF15E23C06007841C8 /* task.h */; };
-		5CB5A9A516ABBE280005317B /* rasterize_program.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5A9A316ABBE280005317B /* rasterize_program.cpp */; };
-		5CB5A9A616ABBE280005317B /* rasterize_program.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5A9A416ABBE280005317B /* rasterize_program.h */; };
+		5CA4472316B5B44200CEC70F /* rasterization_program.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CA4472116B5B44200CEC70F /* rasterization_program.cpp */; };
+		5CA4472416B5B44200CEC70F /* rasterization_program.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CA4472216B5B44200CEC70F /* rasterization_program.h */; };
 		5CBD7DA915FC571700FB3954 /* cudacl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CBD7DA815FC571700FB3954 /* cudacl.cpp */; };
 		5CC97E3E1501677200AB0D95 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CC97E3C1501677200AB0D95 /* SDL2.framework */; };
 		5CC97E3F1501677200AB0D95 /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CC97E3D1501677200AB0D95 /* SDL2_image.framework */; };
@@ -135,8 +135,8 @@
 		5C61BDED1232A25500FD3451 /* logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = logger.h; sourceTree = "<group>"; };
 		5C970DFE15E23C06007841C8 /* task.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = task.cpp; sourceTree = "<group>"; };
 		5C970DFF15E23C06007841C8 /* task.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = task.h; sourceTree = "<group>"; };
-		5CB5A9A316ABBE280005317B /* rasterize_program.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rasterize_program.cpp; sourceTree = "<group>"; };
-		5CB5A9A416ABBE280005317B /* rasterize_program.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rasterize_program.h; sourceTree = "<group>"; };
+		5CA4472116B5B44200CEC70F /* rasterization_program.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rasterization_program.cpp; sourceTree = "<group>"; };
+		5CA4472216B5B44200CEC70F /* rasterization_program.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rasterization_program.h; sourceTree = "<group>"; };
 		5CBCBF52158C139E007A661C /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		5CBD7DA815FC571700FB3954 /* cudacl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cudacl.cpp; sourceTree = "<group>"; };
 		5CBD7DAA15FC5B1400FB3954 /* CUDA.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CUDA.framework; path = /Library/Frameworks/CUDA.framework; sourceTree = "<group>"; };
@@ -341,8 +341,8 @@
 				5CEC5B66169B27EC00C464D5 /* oclraster_program.h */,
 				5CD8DB79164853ED0082BEF7 /* transform_program.cpp */,
 				5CD8DB7A164853ED0082BEF7 /* transform_program.h */,
-				5CB5A9A316ABBE280005317B /* rasterize_program.cpp */,
-				5CB5A9A416ABBE280005317B /* rasterize_program.h */,
+				5CA4472116B5B44200CEC70F /* rasterization_program.cpp */,
+				5CA4472216B5B44200CEC70F /* rasterization_program.h */,
 			);
 			path = program;
 			sourceTree = SOURCE_ROOT;
@@ -391,7 +391,7 @@
 				5CE34283168D57FB0071068E /* camera.h in Headers */,
 				5CEC5B68169B27EC00C464D5 /* oclraster_program.h in Headers */,
 				5C47267516A8D97400F7EA21 /* gl_support.h in Headers */,
-				5CB5A9A616ABBE280005317B /* rasterize_program.h in Headers */,
+				5CA4472416B5B44200CEC70F /* rasterization_program.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -491,7 +491,7 @@
 				5CE34282168D57FB0071068E /* camera.cpp in Sources */,
 				5CEC5B69169B27EC00C464D5 /* oclraster_program.cpp in Sources */,
 				5C47267416A8D97400F7EA21 /* gl_support.cpp in Sources */,
-				5CB5A9A516ABBE280005317B /* rasterize_program.cpp in Sources */,
+				5CA4472316B5B44200CEC70F /* rasterization_program.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
