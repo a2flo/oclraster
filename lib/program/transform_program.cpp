@@ -126,8 +126,26 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		};
 		float VV_depth = dot(vertices[0], c12);
 		
+		// imprecision culling (this will really mess up the later pipeline if it isn't culled here)
+		// also note that all values must be below the epsilon, otherwise these might be valid for clipping
+#define VV_EPSILON 0.00001f
+#define VV_EPSILON_9 0.00009f
+		//if(fabs(VV[0].x) <= VV_EPSILON && fabs(VV[0].y) <= VV_EPSILON && fabs(VV[0].z) <= VV_EPSILON &&
+		//   fabs(VV[1].x) <= VV_EPSILON && fabs(VV[1].y) <= VV_EPSILON && fabs(VV[1].z) <= VV_EPSILON &&
+		//   fabs(VV[2].x) <= VV_EPSILON && fabs(VV[2].y) <= VV_EPSILON && fabs(VV[2].z) <= VV_EPSILON) {
+		// TODO: dot product might also work (even lower epsilon though)
+		// TODO: epsilon too high?
+		/*if(((fabs(VV[0].x) + fabs(VV[0].y)) +
+			(fabs(VV[0].z) + fabs(VV[1].x)) +
+			(fabs(VV[1].y) + fabs(VV[1].z)) +
+			(fabs(VV[2].x) + fabs(VV[2].y) + fabs(VV[2].z))) <= VV_EPSILON_9) {
+			//printf("imprecision culled (tp1): %d\n", triangle_id);
+			return;
+		}*/
 		
 		// TODO: actual culling
+		// triangle area and backface culling:
+		// note: in this stage, this requires the triangle to be completely visible (no clipping)
 		const float fscreen_size[2] = { convert_float(cdata->viewport.x), convert_float(cdata->viewport.y) };
 #define viewport_test(coord, axis) ((coord < 0.0f || coord >= fscreen_size[axis]) ? -1.0f : coord)
 		float coord_xs[3];
@@ -158,10 +176,22 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 			const float2 e1 = (float2)(coord_xs[2] - coord_xs[0],
 									   coord_ys[2] - coord_ys[0]);
 			const float area = -0.5f * (e0.x * e1.y - e0.y * e1.x);
-			// half sample size (TODO: -> check if between sample points)
-			if(area < 0.5f) {
+			// half sample size (TODO: -> check if between sample points; <=1/8 sample size seems to be a good threshold?)
+			if(area <= 0.0125f) {
 				return; // cull
 			}
+		}
+		
+		// second imprecision culling:
+		// if all direct clip/vertex screen space coordinates are invalid or 0 -> cull
+		if((coord_xs[0] == 0.0f || coord_xs[0] == -1.0f) &&
+		   (coord_xs[1] == 0.0f || coord_xs[1] == -1.0f) &&
+		   (coord_xs[2] == 0.0f || coord_xs[2] == -1.0f) &&
+		   (coord_ys[0] == 0.0f || coord_ys[0] == -1.0f) &&
+		   (coord_ys[1] == 0.0f || coord_ys[1] == -1.0f) &&
+		   (coord_ys[2] == 0.0f || coord_ys[2] == -1.0f)) {
+			//printf("imprecision culled (tp2): %d\n", triangle_id);
+			return;
 		}
 		
 		// output:

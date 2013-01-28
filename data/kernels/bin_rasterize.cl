@@ -48,11 +48,6 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 		transformed_buffer[triangle_id].data[12]
 	};
 	
-	/*printf("[%d] (%f %f %f) (%f %f %f) (%f %f %f)\n",
-		   triangle_id,
-		   VV[0].x, VV[0].y, VV[0].z,
-		   VV[1].x, VV[1].y, VV[1].z,
-		   VV[2].x, VV[2].y, VV[2].z);*/
 	unsigned int passing_indices[3] = { 0, 0, 0 };
 	float2 clipping_coords[3] = { (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f) };
 	unsigned int passing_direct = 0;
@@ -83,7 +78,6 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 		clipys[i] = viewport_test(clipys[i], 1);
 		
 		if(clipxs[i] >= 0.0f && clipys[i] >= 0.0f) {
-			//printf("[%d] %d | x: %f, y: %f\n", triangle_id, i, clipxs[i], clipys[i]);
 			x_bounds.x = min(x_bounds.x, clipxs[i]);
 			x_bounds.y = max(x_bounds.y, clipxs[i]);
 			y_bounds.x = min(y_bounds.x, clipys[i]);
@@ -119,7 +113,6 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 			float val1 = cx * VV[edge_0].x + VV[edge_0].z;
 			float val2 = cx * VV[edge_1].x + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
-				//printf("[%d] %d | x: %f\n", triangle_id, i, cx);
 				x_bounds.x = min(x_bounds.x, cx);
 				x_bounds.y = max(x_bounds.y, cx);
 				y_bounds.x = 0.0f;
@@ -132,7 +125,6 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 			float val1 = cy * VV[edge_0].y + VV[edge_0].z;
 			float val2 = cy * VV[edge_1].y + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
-				//printf("[%d] %d | y: %f\n", triangle_id, i, cy);
 				y_bounds.x = min(y_bounds.x, cy);
 				y_bounds.y = max(y_bounds.y, cy);
 				x_bounds.x = 0.0f;
@@ -145,7 +137,6 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 			float val1 = cmx * VV[edge_0].x + fscreen_size[1] * VV[edge_0].y + VV[edge_0].z;
 			float val2 = cmx * VV[edge_1].x + fscreen_size[1] * VV[edge_1].y + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
-				//printf("[%d] %d | xm: %f\n", triangle_id, i, cmx);
 				x_bounds.x = min(x_bounds.x, cmx);
 				x_bounds.y = max(x_bounds.y, cmx);
 				y_bounds.y = fscreen_size[1];
@@ -158,7 +149,6 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 			float val1 = fscreen_size[0] * VV[edge_0].x + cmy * VV[edge_0].y + VV[edge_0].z;
 			float val2 = fscreen_size[0] * VV[edge_1].x + cmy * VV[edge_1].y + VV[edge_1].z;
 			if(val1 < 0.0f && val2 < 0.0f) {
-				//printf("[%d] %d | ym: %f\n", triangle_id, i, cmy);
 				y_bounds.x = min(y_bounds.x, cmy);
 				y_bounds.y = max(y_bounds.y, cmy);
 				x_bounds.y = fscreen_size[0];
@@ -169,9 +159,10 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 		}
 	}
 	
-	const uint2 x_bounds_u = convert_uint2(clamp((int2)(floor(x_bounds.x), ceil(x_bounds.y)),
+	// TODO: rounding should depend on sampling mode (more samples -> use floor/ceil again)
+	const uint2 x_bounds_u = convert_uint2(clamp((int2)(round(x_bounds.x), round(x_bounds.y)),
 												 0, screen_size.x - 1)); // valid pixel pos: [0, screen_size.x-1]
-	const uint2 y_bounds_u = convert_uint2(clamp((int2)(floor(y_bounds.x), ceil(y_bounds.y)),
+	const uint2 y_bounds_u = convert_uint2(clamp((int2)(round(y_bounds.x), round(y_bounds.y)),
 												 0, screen_size.y - 1));
 	
 	/*printf("[%d] (%u %u) (%u %u)\n",
@@ -202,18 +193,6 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	// TODO: determine triangle backside
 	
 	// TODO: already read depth from framebuffer in here -> cull if greater depth
-	/*if((x_bounds_u.y >= (screen_size.x - 1)) ||
-	   (y_bounds_u.y >= (screen_size.y - 1))) {
-	//if((x_bounds_u.y >= (screen_size.x - 1) &&
-	//	x_bounds_u.x < x_bounds_u.y) ||
-	//   (y_bounds_u.y >= (screen_size.y - 1) &&
-	//	y_bounds_u.x < y_bounds_u.y)) {
-		printf("[%d] bounds: %u %u /// %u %u\n",
-			   triangle_id,
-			   x_bounds_u.x, x_bounds_u.y,
-			   y_bounds_u.x, y_bounds_u.y);
-	}*/
-	// TODO: find binning error (possibly memory fault)
 	
 	// insert triangle id intro appropriate queues/bins
 	const uint2 x_bins = x_bounds_u / tile_size.x;

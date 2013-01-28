@@ -39,6 +39,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	cam = new camera();
 #if 1
 	cam->set_position(0.0f, 0.1f, -0.3f);
+	//cam->set_position(1.12157e-12f, 0.1f, -2.22f);
 	cam->set_rotation(0.0f, 0.0f, 0.0f);
 #else
 	cam->set_position(10.0f, 5.0f, -10.0f);

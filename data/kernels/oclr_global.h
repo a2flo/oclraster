@@ -7,7 +7,7 @@
 #undef __APPLE__
 #endif
 
-#if (!defined(CPU) && !defined(OCLRASTER_CUDA_CL)) || true
+#if (!defined(CPU) && !defined(OCLRASTER_CUDA_CL)) || false
 #undef printf
 #define printf(x, ...)
 #endif
