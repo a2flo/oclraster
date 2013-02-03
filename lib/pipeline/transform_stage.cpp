@@ -20,12 +20,13 @@
 #include "pipeline.h"
 #include "oclraster.h"
 
-struct __attribute__((packed)) constant_data_tp {
+struct __attribute__((packed, aligned(16))) constant_data_tp {
 	float4 camera_position;
 	float4 camera_origin;
 	float4 camera_x_vec;
 	float4 camera_y_vec;
 	float4 camera_forward;
+	array<float4, 3> frustum_normals;
 	uint2 viewport;
 };
 
@@ -49,6 +50,7 @@ void transform_stage::transform(draw_state& state,
 		cam.x_vec,
 		cam.y_vec,
 		cam.forward,
+		cam.frustum_normals,
 		state.framebuffer_size
 	};
 	ocl->write_buffer(const_buffer_tp, &const_data_tp); // TODO: make this non-blocking

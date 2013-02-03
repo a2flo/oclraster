@@ -22,7 +22,7 @@
 static bool done = false;
 static event* evt = nullptr;
 static camera* cam = nullptr;
-static float3 cam_speeds = float3(0.01f, 0.1f, 0.001f);
+static constexpr float3 cam_speeds { 0.01f, 0.1f, 0.001f };
 
 int main(int argc oclr_unused, char* argv[]) {
 	// initialize oclraster

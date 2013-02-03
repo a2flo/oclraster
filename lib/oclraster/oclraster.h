@@ -79,6 +79,8 @@ public:
 		float3 forward;
 		float3 x_vec;
 		float3 y_vec;
+		// note: there is no far plane and front plane normal == -forward
+		array<float4, 3> frustum_normals;
 	};
 	static const camera_setup& get_camera_setup();
 	static void push_projection_matrix();

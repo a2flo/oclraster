@@ -100,7 +100,7 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// write last depth (if it has changed)
-		if(fragment_depth < input_depth || fragment_depth == input_depth) {
+		if(fragment_depth < input_depth /*|| fragment_depth == input_depth*/) {
 			color_framebuffer[framebuffer_offset] = convert_uchar4_sat(fragment_color * 255.0f);
 			depth_framebuffer[framebuffer_offset] = fragment_depth;
 		}

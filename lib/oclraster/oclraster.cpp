@@ -1032,6 +1032,8 @@ void oclraster::run_camera() {
 	
 	const float3 width_vec { right * angle_ratio * aspect_ratio };
 	const float3 height_vec { up * angle_ratio };
+	const float3 half_width_vec { width_vec * 0.5f };
+	const float3 half_height_vec { height_vec * 0.5f };
 	//oclr_debug("w/h: %v %v, %f %f", width_vec, height_vec, aspect_ratio, angle_ratio);
 	
 	cam_setup.position = cam->get_position();
@@ -1044,9 +1046,43 @@ void oclraster::run_camera() {
 	cam_setup.x_vec = (width_vec * scale_factor) / float(config.width);
 	cam_setup.y_vec = (height_vec * scale_factor) / float(config.height);
 #endif
-	cam_setup.origin = forward - ((width_vec + height_vec) * 0.5f);
+	cam_setup.origin = forward - half_width_vec - half_height_vec;
 	cam_setup.origin.normalized();
 	cam_setup.forward = forward;
+	
+	// compute frustum (normals of left/top/right/bottom plane)
+	// note: near plane normal == forward vector, and since there is no
+	// far plane, this doesn't have to computed either (would be -forward)
+	const array<float3, 4> near_points {
+		{
+			cam_setup.origin, // bottom left
+			forward - half_width_vec + half_height_vec, // top left
+			forward + half_width_vec + half_height_vec, // top right
+			forward + half_width_vec - half_height_vec, // bottom right
+		}
+	};
+
+	// to compute the outer planes normals, we don't need to compute "far points"
+	// since they are located on the same ray as the "near points" which also
+	// always goes through (0, 0, 0)
+	// -> pretend the near points are the far points and (0, 0, 0) is the near
+	// point in all cases (substraction is omitted for obvious reasons)
+	// also note: normals point inwards for algorithmic reasons
+	const array<float3, 4> frustum_normals = {
+		{
+			(near_points[1] ^ near_points[0]).normalized(), // left
+			(near_points[2] ^ near_points[1]).normalized(), // top
+			(near_points[3] ^ near_points[2]).normalized(), // right
+			(near_points[0] ^ near_points[3]).normalized(), // bottom
+		}
+	};
+	// "transpose" to save memory and do 4 computations at a time (if possible)
+	for(size_t i = 0; i < 3; i++) {
+		cam_setup.frustum_normals[i].x = frustum_normals[0][i];
+		cam_setup.frustum_normals[i].y = frustum_normals[1][i];
+		cam_setup.frustum_normals[i].z = frustum_normals[2][i];
+		cam_setup.frustum_normals[i].w = frustum_normals[3][i];
+	}
 }
 
 const oclraster::camera_setup& oclraster::get_camera_setup() {

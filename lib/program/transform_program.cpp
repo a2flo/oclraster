@@ -24,12 +24,13 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 	#include "oclr_math.h"
 	#include "oclr_matrix.h"
 	
-	typedef struct __attribute__((packed)) {
+	typedef struct __attribute__((packed, aligned(16))) {
 		float4 camera_position;
 		float4 camera_origin;
 		float4 camera_x_vec;
 		float4 camera_y_vec;
 		float4 camera_forward;
+		float4 frustum_normals[3];
 		uint2 viewport;
 	} constant_data;
 	
@@ -87,6 +88,7 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
+		// TODO: substract near plane vector for this to be accurate?
 		const float triangle_cam_relation[3] = {
 			dot(vertices[0], forward),
 			dot(vertices[1], forward),
@@ -98,6 +100,25 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		   triangle_cam_relation[1] < 0.0f &&
 		   triangle_cam_relation[2] < 0.0f) {
 			// all vertices are behind the camera
+			return;
+		}
+		
+		// frustum culling using the "p/n-test"
+		// also thx to ryg for figuring out this optimized version of the p/n-test
+		const float3 aabb_min = fmin(fmin(vertices[0], vertices[1]), vertices[2]);
+		const float3 aabb_max = fmax(fmax(vertices[0], vertices[1]), vertices[2]);
+		const float3 aabb_center = (aabb_max + aabb_min); // note: actual scale doesn't matter (-> no *0.5f)
+		const float3 aabb_extent = (aabb_max - aabb_min); // extent must have the same scale though
+		float4 fc_dot = (float4)(0.0f, 0.0f, 0.0f, 0.0f);
+		for(unsigned int i = 0; i < 3; i++) {
+			const float4 plane_normal = cdata->frustum_normals[i];
+			const uint4 plane_sign = *(const uint4*)&plane_normal & (uint4)(0x80000000, 0x80000000, 0x80000000, 0x80000000);
+			const uint4 flipped_extent = (uint4)(((const uint*)&aabb_extent)[i]) ^ plane_sign;
+			const float4 dot_param = (float4)(((const float*)&aabb_center)[i]) + *(const float4*)&flipped_extent;
+			fc_dot += dot_param * plane_normal;
+		}
+		// if any dot product is less than 0 (aabb is completely outside any plane) -> cull
+		if(any(signbit(fc_dot))) {
 			return;
 		}
 		
@@ -143,7 +164,6 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 			return;
 		}*/
 		
-		// TODO: actual culling
 		// triangle area and backface culling:
 		// note: in this stage, this requires the triangle to be completely visible (no clipping)
 		const float fscreen_size[2] = { convert_float(cdata->viewport.x), convert_float(cdata->viewport.y) };
