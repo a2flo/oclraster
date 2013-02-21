@@ -60,6 +60,10 @@ TODO: all papers
 * "High-Performance Software Rasterization on GPUs":http://research.nvidia.com/sites/default/files/publications/laine2011hpg_paper.pdf
 
 *Screenshots:*
+progress as of 2013/02/21, running on a CPU in OS X and on a dual-core ARM CPU in iOS:
+!https://dl.dropbox.com/u/1004620/osx_blender_monkey_1.png(subdivided blender monkey with parallax mapping)!
+!https://dl.dropbox.com/u/1004620/osx_blender_monkey_2.png(subdivided blender monkey with parallax mapping)!
+!https://dl.dropbox.com/u/1004620/ios_blender_monkey.png(note: framebuffer is upscaled by 2x and there are lots of issues with OpenCL on iOS -> defect depth testing)!
 progress as of 2013/01/19, running on a GPU in OS X and inside a Window VM on a CPU:
 !https://dl.dropbox.com/u/1004620/Screen%20Shot%202013-01-19%20at%2012.04.45%20PM.png(moar bunnies)!
 !https://dl.dropbox.com/u/1004620/Screen%20Shot%202013-01-19%20at%2012.08.39%20PM.png(bunny on windows)!

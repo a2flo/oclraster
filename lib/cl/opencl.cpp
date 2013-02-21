@@ -1552,7 +1552,17 @@ void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buf
 			default: break;
 		}
 		if((access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
-			map_flags |= CL_MAP_WRITE_INVALIDATE_REGION;
+#if defined(CL_VERSION_1_2)
+			if(get_platform_cl_version() >= PLATFORM_CL_VERSION::CL_1_2) {
+				map_flags |= CL_MAP_WRITE_INVALIDATE_REGION;
+			}
+			else {
+#else
+				map_flags |= CL_MAP_WRITE;
+#endif
+#if defined(CL_VERSION_1_2)
+			}
+#endif
 		}
 		
 		void* __attribute__((aligned(sizeof(cl_long16)))) map_ptr = nullptr;

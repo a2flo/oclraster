@@ -22,18 +22,10 @@
 constexpr int event::handlers_locked;
 
 event::event() : thread_base("event") {
-	mouse_down_state[0] = mouse_down_state[1] = mouse_down_state[2] =
-	mouse_up_state[0] = mouse_up_state[1] = mouse_up_state[2] =
-		ipnt(-1, -1);
-	
-	lm_double_click_timer = SDL_GetTicks();
-	rm_double_click_timer = SDL_GetTicks();
-	mm_double_click_timer = SDL_GetTicks();
-	
-	ldouble_click_time = 200;
-	rdouble_click_time = 200;
-	mdouble_click_time = 200;
-	
+	const unsigned int cur_time { SDL_GetTicks() };
+	lm_double_click_timer = cur_time;
+	rm_double_click_timer = cur_time;
+	mm_double_click_timer = cur_time;
 	this->start();
 }
 
@@ -74,21 +66,18 @@ void event::handle_events() {
 					switch(event_handle.button.button) {
 						case SDL_BUTTON_LEFT:
 							if(event_handle.button.state == SDL_PRESSED) {
-								mouse_down_state[0] = mouse_coord;
 								handle_event(EVENT_TYPE::MOUSE_LEFT_DOWN,
 											 make_shared<mouse_left_down_event>(cur_ticks, mouse_coord));
 							}
 							break;
 						case SDL_BUTTON_RIGHT:
 							if(event_handle.button.state == SDL_PRESSED) {
-								mouse_down_state[1] = mouse_coord;
 								handle_event(EVENT_TYPE::MOUSE_RIGHT_DOWN,
 											 make_shared<mouse_right_down_event>(cur_ticks, mouse_coord));
 							}
 							break;
 						case SDL_BUTTON_MIDDLE:
 							if(event_handle.button.state == SDL_PRESSED) {
-								mouse_down_state[2] = mouse_coord;
 								handle_event(EVENT_TYPE::MOUSE_MIDDLE_DOWN,
 											 make_shared<mouse_middle_down_event>(cur_ticks, mouse_coord));
 							}
@@ -100,7 +89,6 @@ void event::handle_events() {
 					switch(event_handle.button.button) {
 						case SDL_BUTTON_LEFT:
 							if(event_handle.button.state == SDL_RELEASED) {
-								mouse_up_state[0] = mouse_coord;
 								handle_event(EVENT_TYPE::MOUSE_LEFT_UP,
 											 make_shared<mouse_left_up_event>(cur_ticks, mouse_coord));
 								
@@ -126,7 +114,6 @@ void event::handle_events() {
 							break;
 						case SDL_BUTTON_RIGHT:
 							if(event_handle.button.state == SDL_RELEASED) {
-								mouse_up_state[1] = mouse_coord;
 								handle_event(EVENT_TYPE::MOUSE_RIGHT_UP,
 											 make_shared<mouse_right_up_event>(cur_ticks, mouse_coord));
 								
@@ -152,7 +139,6 @@ void event::handle_events() {
 							break;
 						case SDL_BUTTON_MIDDLE:
 							if(event_handle.button.state == SDL_RELEASED) {
-								mouse_up_state[2] = mouse_coord;
 								handle_event(EVENT_TYPE::MOUSE_MIDDLE_UP,
 											 make_shared<mouse_middle_up_event>(cur_ticks, mouse_coord));
 								
@@ -211,6 +197,34 @@ void event::handle_events() {
 				}
 				break;
 			}
+		}
+		if(event_type == SDL_FINGERDOWN ||
+		   event_type == SDL_FINGERUP) {
+			// touch event handling
+			const int2 finger_coord = int2(event_handle.tfinger.x, event_handle.tfinger.y);
+			const unsigned int pressure = event_handle.tfinger.pressure;
+			const unsigned long long int finger_id = event_handle.tfinger.fingerId;
+			
+			if(event_type == SDL_FINGERDOWN) {
+				if(event_handle.tfinger.state == SDL_PRESSED) {
+					handle_event(EVENT_TYPE::FINGER_DOWN,
+								 make_shared<finger_down_event>(cur_ticks, finger_coord, pressure, finger_id));
+				}
+			}
+			else if(event_type == SDL_FINGERUP) {
+				if(event_handle.tfinger.state == SDL_RELEASED) {
+					handle_event(EVENT_TYPE::FINGER_UP,
+								 make_shared<finger_up_event>(cur_ticks, finger_coord, pressure, finger_id));
+				}
+			}
+		}
+		else if(event_type == SDL_FINGERMOTION) {
+			const int2 abs_pos = int2(event_handle.tfinger.x, event_handle.tfinger.y);
+			const int2 rel_move = int2(event_handle.tfinger.dx, event_handle.tfinger.dy);
+			const unsigned int pressure = event_handle.tfinger.pressure;
+			const unsigned long long int finger_id = event_handle.tfinger.fingerId;
+			handle_event(EVENT_TYPE::FINGER_MOVE,
+						 make_shared<finger_move_event>(cur_ticks, abs_pos, rel_move, pressure, finger_id));
 		}
 		else {
 			// key, etc. event handling

@@ -1054,7 +1054,7 @@ void oclraster::run_camera() {
 #if !defined(OCLRASTER_IOS)
 	const float scale_factor = osx_helper::get_scale_factor(config.wnd);
 #else
-	constexpr float scale_factor = 1.0f; // TODO: get this from somewhere ...
+	const float scale_factor = config.upscaling; // TODO: get this from somewhere ...
 #endif
 	cam_setup.x_vec = (width_vec * scale_factor) / float(config.width);
 	cam_setup.y_vec = (height_vec * scale_factor) / float(config.height);

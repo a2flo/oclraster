@@ -29,9 +29,10 @@
 enum class EVENT_TYPE : unsigned int {
 	__MOUSE_EVENT	= (1u << 31u),
 	__KEY_EVENT		= (1u << 30u),
-	__GUI_EVENT		= (1u << 29u),
-	__OTHER_EVENT	= (1u << 28u),
-	__USER_EVENT	= (1u << 27u),
+	__TOUCH_EVENT	= (1u << 29u),
+	__GUI_EVENT		= (1u << 28u),
+	__OTHER_EVENT	= (1u << 27u),
+	__USER_EVENT	= (1u << 26u),
 	
 	MOUSE_LEFT_DOWN = __MOUSE_EVENT + 1,
 	MOUSE_LEFT_UP,
@@ -60,6 +61,10 @@ enum class EVENT_TYPE : unsigned int {
 	KEY_UP,
 	KEY_HOLD,
 	UNICODE_INPUT,
+	
+	FINGER_DOWN = __TOUCH_EVENT + 1,
+	FINGER_UP,
+	FINGER_MOVE,
 	
 	QUIT = __OTHER_EVENT + 1,
 	WINDOW_RESIZE,
@@ -156,6 +161,26 @@ typedef key_event<EVENT_TYPE::KEY_DOWN> key_down_event;
 typedef key_event<EVENT_TYPE::KEY_UP> key_up_event;
 typedef key_event<EVENT_TYPE::KEY_HOLD> key_hold_event;
 typedef key_event<EVENT_TYPE::UNICODE_INPUT> unicode_input_event;
+
+// touch events
+template<EVENT_TYPE event_type> struct touch_event_base : public event_object_base<event_type> {
+	const ipnt position;
+	const unsigned int pressure;
+	const unsigned long long int id;
+	touch_event_base(const unsigned int& time_, const ipnt& position_, const unsigned int& pressure_, const unsigned long long int& id_) : event_object_base<event_type>(time_), position(position_), pressure(pressure_), id(id_) {}
+};
+template<EVENT_TYPE event_type> struct touch_move_event_base : public touch_event_base<event_type> {
+	const ipnt move;
+	touch_move_event_base(const unsigned int& time_,
+						  const ipnt& position_,
+						  const ipnt& move_,
+						  const unsigned int& pressure_,
+						  const unsigned long long int& id_)
+	: touch_event_base<event_type>(time_, position_, pressure_, id_), move(move_) {}
+};
+typedef touch_event_base<EVENT_TYPE::FINGER_DOWN> finger_down_event;
+typedef touch_event_base<EVENT_TYPE::FINGER_UP> finger_up_event;
+typedef touch_move_event_base<EVENT_TYPE::FINGER_MOVE> finger_move_event;
 
 // misc
 typedef event_object_base<EVENT_TYPE::QUIT> quit_event;

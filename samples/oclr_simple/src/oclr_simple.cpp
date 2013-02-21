@@ -77,6 +77,10 @@ int main(int argc oclr_unused, char* argv[]) {
 	evt->add_internal_event_handler(mouse_handler_fnctr, EVENT_TYPE::MOUSE_RIGHT_CLICK, EVENT_TYPE::MOUSE_MOVE);
 	event::handler quit_handler_fnctr(&quit_handler);
 	evt->add_event_handler(quit_handler_fnctr, EVENT_TYPE::QUIT);
+#if defined(OCLRASTER_IOS)
+	event::handler touch_handler_fnctr(&touch_handler);
+	evt->add_event_handler(touch_handler_fnctr, EVENT_TYPE::FINGER_UP, EVENT_TYPE::FINGER_DOWN, EVENT_TYPE::FINGER_MOVE);
+#endif
 	
 	// load, compile and bind user shaders
 	string vs_str, fs_str;
@@ -125,7 +129,7 @@ int main(int argc oclr_unused, char* argv[]) {
 																   sizeof(tp_uniforms),
 																   (void*)&transform_uniforms);
 	
-	float light_pos = M_PI_2, light_dist = 10.0f, light_intensity = 32.0f;
+	float light_pos = M_PI, light_dist = 10.0f, light_intensity = 32.0f;
 	struct __attribute__((packed, aligned(16))) rp_uniforms {
 		float4 camera_position;
 		float4 light_position; // .w = light radius ^ 2
@@ -225,7 +229,10 @@ int main(int argc oclr_unused, char* argv[]) {
 		if(update_model) {
 			transform_uniforms.modelview = matrix4f().rotate_y(model_rotation);
 			model_rotation += 1.0f;
-			model_rotation = core::wrap(model_rotation, 360.0f);
+			if(model_rotation >= 360.0f) {
+				selected_material = (selected_material + 1) % 4;
+				model_rotation = core::wrap(model_rotation, 360.0f);
+			}
 			
 			const float3 scale_diff = (model_scale - target_scale).abs();
 			if((scale_diff <= float3(model_scale_step * 2.0f)).all()) {
@@ -359,3 +366,22 @@ bool quit_handler(EVENT_TYPE type oclr_unused, shared_ptr<event_object> obj oclr
 	done = true;
 	return true;
 }
+
+#if defined(OCLRASTER_IOS)
+bool touch_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+	if(type == EVENT_TYPE::FINGER_UP) {
+		//const shared_ptr<finger_up_event>& touch_evt = (shared_ptr<finger_up_event>&)obj;
+		//oclr_msg("finger up: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
+		selected_material = (selected_material + 1) % 4;
+	}
+	/*else if(type == EVENT_TYPE::FINGER_DOWN) {
+		const shared_ptr<finger_down_event>& touch_evt = (shared_ptr<finger_down_event>&)obj;
+		oclr_msg("finger down: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
+	}
+	else if(type == EVENT_TYPE::FINGER_MOVE) {
+		const shared_ptr<finger_move_event>& touch_evt = (shared_ptr<finger_move_event>&)obj;
+		oclr_msg("finger move: %v -> %v, %u, #%u", touch_evt->position, touch_evt->move, touch_evt->pressure, touch_evt->id);
+	}*/
+	return true;
+}
+#endif

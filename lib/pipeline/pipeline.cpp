@@ -147,35 +147,29 @@ void pipeline::start() {
 
 void pipeline::stop() {
 	// draw/blit to screen
-#if !defined(OCLRASTER_IOS)
+#if defined(OCLRASTER_IOS)
+	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+#endif
 	oclraster::start_2d_draw();
 	
+	// copy opencl framebuffer to blit framebuffer/texture
 	void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
+#if !defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
+#endif
 	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer_size.x, framebuffer_size.y,
 					GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
 	ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
 	
+#if !defined(OCLRASTER_IOS)
+	// blit
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBlitFramebuffer(0, 0, framebuffer_size.x, framebuffer_size.y,
 					  0, 0, oclraster::get_width(), oclraster::get_height(),
 					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
-	oclraster::stop_2d_draw();
-	
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
-	glBindTexture(GL_TEXTURE_2D, 0);
 #else
-	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
-	oclraster::start_2d_draw();
-	
-	void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::BUFFER_FLAG::READ, true);
-	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer_size.x, framebuffer_size.y,
-					GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
-	ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
-	
-	//
+	// draw
 	shader_object* shd = ios_helper::get_shader("BLIT");
 	glUseProgram(shd->program.program);
 	glUniform1i(shd->program.uniforms.find("tex")->second.location, 0);
@@ -192,8 +186,13 @@ void pipeline::stop() {
 	glFrontFace(GL_CCW);
 	
 	glUseProgram(0);
+#endif
 	
 	oclraster::stop_2d_draw();
+	
+#if !defined(OCLRASTER_IOS)
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindTexture(GL_TEXTURE_2D, 0);
 #endif
 }
 

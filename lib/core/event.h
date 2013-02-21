@@ -79,19 +79,15 @@ protected:
 	//
 	unordered_map<EVENT_TYPE, shared_ptr<event_object>> prev_events;
 	
-	// [left, right, middle]
-	ipnt mouse_down_state[3];
-	ipnt mouse_up_state[3];
-	
 	//! timer that decides if there is a * mouse double click
 	unsigned int lm_double_click_timer;
 	unsigned int rm_double_click_timer;
 	unsigned int mm_double_click_timer;
 	
 	//! config setting for * mouse double click "timeframe"
-	unsigned int ldouble_click_time;
-	unsigned int rdouble_click_time;
-	unsigned int mdouble_click_time;
+	unsigned int ldouble_click_time = 200;
+	unsigned int rdouble_click_time = 200;
+	unsigned int mdouble_click_time = 200;
 	
 	//
 	void unwind_add_event_handler(handler& handler_, EVENT_TYPE type) {
