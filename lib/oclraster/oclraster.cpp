@@ -23,7 +23,11 @@
 #include "core/gl_support.h"
 
 #if defined(__APPLE__)
+#if !defined(OCLRASTER_IOS)
 #include "osx/osx_helper.h"
+#else
+#include "ios/ios_helper.h"
+#endif
 #endif
 
 // init statics
@@ -375,6 +379,11 @@ void oclraster::init_internal() {
 	// initialize opengl functions (get function pointers) on non-apple platforms
 #if !defined(__APPLE__)
 	init_gl_funcs();
+#endif
+	
+	// on iOS/GLES we need a simple "blit shader" to draw the opencl framebuffer
+#if defined(OCLRASTER_IOS)
+	ios_helper::compile_shaders();
 #endif
 	
 	// check if a cudacl or pure opencl context should be created
@@ -985,7 +994,7 @@ void oclraster::acquire_context() {
 		}
 	}
 #if defined(OCLRASTER_IOS)
-	glBindFramebuffer(GL_FRAMEBUFFER, 1);
+	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 #endif
 }
 
@@ -1042,7 +1051,11 @@ void oclraster::run_camera() {
 	cam_setup.x_vec = width_vec / float(config.width);
 	cam_setup.y_vec = height_vec / float(config.height);
 #else
+#if !defined(OCLRASTER_IOS)
 	const float scale_factor = osx_helper::get_scale_factor(config.wnd);
+#else
+	constexpr float scale_factor = 1.0f; // TODO: get this from somewhere ...
+#endif
 	cam_setup.x_vec = (width_vec * scale_factor) / float(config.width);
 	cam_setup.y_vec = (height_vec * scale_factor) / float(config.height);
 #endif

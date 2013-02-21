@@ -237,6 +237,7 @@ rtt::fbo* rtt::add_buffer(unsigned int width, unsigned int height, GLenum* targe
 #endif
 		GLenum depth_format = GL_DEPTH_COMPONENT;
 		GLenum depth_attachment_type = GL_DEPTH_ATTACHMENT;
+#if !defined(OCLRASTER_IOS)
 		if(stencil_type == STENCIL_TYPE::STENCIL_8) {
 #if !defined(OCLRASTER_INFERRED_RENDERING_CL)
 			depth_internel_format = GL_DEPTH24_STENCIL8;
@@ -248,6 +249,9 @@ rtt::fbo* rtt::add_buffer(unsigned int width, unsigned int height, GLenum* targe
 			depth_format = GL_DEPTH_STENCIL;
 			depth_attachment_type = GL_DEPTH_STENCIL_ATTACHMENT;
 		}
+#else
+		buffer->stencil_type = STENCIL_TYPE::NONE; // not supported in iOS/GLES
+#endif
 		buffer->depth_attachment_type = depth_attachment_type;
 		
 		switch(buffer->anti_aliasing[0]) {

@@ -117,10 +117,6 @@ public:
 
 	static void mipmap();
 
-protected:
-	static vector<fbo*> buffers;
-	static fbo* current_buffer;
-	
 	//
 	static GLint convert_internal_format(const GLint& internal_format) {
 #if !defined(OCLRASTER_IOS)
@@ -148,6 +144,12 @@ protected:
 		return internal_format;
 #endif
 	}
+	
+protected:
+	static vector<fbo*> buffers;
+	static fbo* current_buffer;
+	
+	//
 	static GLenum select_filter(const TEXTURE_FILTERING& filter) {
 		switch(filter) {
 			case TEXTURE_FILTERING::POINT: return GL_NEAREST;

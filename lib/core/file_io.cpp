@@ -30,6 +30,9 @@ file_io::file_io(const string& filename, const OPEN_TYPE open_type_) {
 /*! there is no function currently
  */
 file_io::~file_io() {
+	if(filestream.is_open()) {
+		close();
+	}
 }
 
 /*! opens a input file stream
@@ -101,7 +104,19 @@ bool file_io::file_to_buffer(const string& filename, stringstream& buffer) {
 	buffer.seekg(0);
 	buffer.clear();
 	buffer.str("");
-	file.read_file(&buffer);
+	if(!file.read_file(buffer)) return false;
+	file.close();
+	return true;
+}
+
+bool file_io::file_to_string(const string& filename, string& str) {
+	file_io file(filename, file_io::OPEN_TYPE::READ);
+	if(!file.is_open()) {
+		return false;
+	}
+	
+	str.clear();
+	if(!file.read_file(str)) return false;
 	file.close();
 	return true;
 }
@@ -310,14 +325,27 @@ fstream* file_io::get_filestream() {
 	return &(filestream);
 }
 
-void file_io::read_file(stringstream* buffer) {
-	unsigned int size = (unsigned int)get_filesize();
+bool file_io::read_file(stringstream& buffer) {
+	const size_t size = (size_t)get_filesize();
 	char* data = new char[size+1];
+	if(data == nullptr) return false;
 	memset(data, 0, size+1);
 	filestream.read(data, size);
 	filestream.seekg(0, ios::beg);
 	filestream.seekp(0, ios::beg);
 	filestream.clear();
-	buffer->write(data, size);
+	buffer.write(data, size);
 	delete [] data;
+	return true;
+}
+
+bool file_io::read_file(string& str) {
+	const size_t size = (size_t)get_filesize();
+	str.resize(size);
+	if(str.size() != size) return false;
+	filestream.read(&str.front(), size);
+	filestream.seekg(0, ios::beg);
+	filestream.seekp(0, ios::beg);
+	filestream.clear();
+	return true;
 }

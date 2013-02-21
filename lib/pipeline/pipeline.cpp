@@ -18,8 +18,9 @@
 
 #include "pipeline.h"
 #include "oclraster.h"
-#if defined(__APPLE__)
-#include "osx_helper.h"
+
+#if defined(OCLRASTER_IOS)
+#include "ios_helper.h"
 #endif
 
 struct __attribute__((packed, aligned(16))) info_buffer_struct {
@@ -35,6 +36,14 @@ window_handler(this, &pipeline::window_event_handler) {
 									 opencl::BUFFER_FLAG::BLOCK_ON_READ |
 									 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 									 sizeof(info_buffer_struct));
+	
+#if defined(OCLRASTER_IOS)
+	static const float fullscreen_triangle[6] { 1.0f, 1.0f, 1.0f, -3.0f, -3.0f, 1.0f };
+	glGenBuffers(1, &vbo_fullscreen_triangle);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_fullscreen_triangle);
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), fullscreen_triangle, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+#endif
 }
 
 pipeline::~pipeline() {
@@ -49,6 +58,10 @@ pipeline::~pipeline() {
 	if(info_buffer != nullptr) {
 		ocl->delete_buffer(info_buffer);
 	}
+	
+#if defined(OCLRASTER_IOS)
+	if(glIsBuffer(vbo_fullscreen_triangle)) glDeleteBuffers(1, &vbo_fullscreen_triangle);
+#endif
 }
 
 bool pipeline::window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
@@ -88,7 +101,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, framebuffer_size.x, framebuffer_size.y,
+	glTexImage2D(GL_TEXTURE_2D, 0, rtt::convert_internal_format(GL_RGBA8), framebuffer_size.x, framebuffer_size.y,
 				 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
@@ -104,7 +117,7 @@ void pipeline::destroy_framebuffers() {
 	color_framebuffer_cl = nullptr;
 	depth_framebuffer_cl = nullptr;
 	
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	if(copy_fbo_tex_id != 0) glDeleteTextures(1, &copy_fbo_tex_id);
 	if(copy_fbo_id != 0) glDeleteFramebuffers(1, &copy_fbo_id);
@@ -134,23 +147,54 @@ void pipeline::start() {
 
 void pipeline::stop() {
 	// draw/blit to screen
+#if !defined(OCLRASTER_IOS)
 	oclraster::start_2d_draw();
 	
-	void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::BUFFER_FLAG::READ, true);
+	void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
 	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
 	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer_size.x, framebuffer_size.y,
 					GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
 	ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
 	
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBlitFramebuffer(0, 0, framebuffer_size.x, framebuffer_size.y,
 					  0, 0, oclraster::get_width(), oclraster::get_height(),
 					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	oclraster::stop_2d_draw();
 	
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
+#else
+	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	oclraster::start_2d_draw();
+	
+	void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::BUFFER_FLAG::READ, true);
+	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer_size.x, framebuffer_size.y,
+					GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
+	ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
+	
+	//
+	shader_object* shd = ios_helper::get_shader("BLIT");
+	glUseProgram(shd->program.program);
+	glUniform1i(shd->program.uniforms.find("tex")->second.location, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
+	
+	glFrontFace(GL_CW);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_fullscreen_triangle);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDisableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glFrontFace(GL_CCW);
+	
+	glUseProgram(0);
+	
+	oclraster::stop_2d_draw();
+#endif
 }
 
 void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
@@ -249,4 +293,8 @@ void pipeline::bind_buffer(const string& name, const opencl_base::buffer_object&
 		state.user_buffers.erase(existing_buffer);
 	}
 	state.user_buffers.emplace(name, buffer);
+}
+
+void pipeline::bind_image(const string& name, const image& img) {
+	bind_buffer(name, *img.get_buffer()); // TODO: let the user directly call this?
 }

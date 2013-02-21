@@ -55,7 +55,7 @@ static constexpr array<const param_type_type_map, 4> type_mapping {
 struct param_access_type_map { const char* type_str; CUDACL_PARAM_ACCESS type; };
 static constexpr array<const param_access_type_map, 6> access_mapping {
 	{
-		{"__read_only", CUDACL_PARAM_ACCESS::READ_ONLY},
+		{ "__read_only", CUDACL_PARAM_ACCESS::READ_ONLY },
 		{ "read_only", CUDACL_PARAM_ACCESS::READ_ONLY },
 		{ "__write_only", CUDACL_PARAM_ACCESS::WRITE_ONLY },
 		{ "write_only", CUDACL_PARAM_ACCESS::WRITE_ONLY },
@@ -69,8 +69,8 @@ void cudacl_translate(const string& tmp_name,
 					  const string& preprocess_options,
 					  string& cuda_source,
 					  vector<cudacl_kernel_info>& kernels) {
-	static oclr_constexpr const char* cuda_preprocess_header = "#include \"oclr_cudacl.h\"\n";
-	static oclr_constexpr const char* cuda_header = "#include <cuda_runtime.h>\n#include \"cutil_math.h\"\n";
+	static constexpr char cuda_preprocess_header[] { u8"#include \"oclr_cudacl.h\"\n" };
+	static constexpr char cuda_header[] { u8"#include <cuda_runtime.h>\n#include \"cutil_math.h\"\n" };
 	
 	cuda_source = cuda_preprocess_header + cl_source;
 	

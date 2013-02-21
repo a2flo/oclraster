@@ -325,11 +325,11 @@ template<> float xml::xml_doc::get<float>(const string& path, const float defaul
 }
 template<> size_t xml::xml_doc::get<size_t>(const string& path, const size_t default_value) const {
 	const string& attr = extract_attr(path);
-	return (attr != "INVALID" ? strtoull(attr.c_str(), nullptr, 10) : default_value);
+	return (attr != "INVALID" ? (size_t)strtoull(attr.c_str(), nullptr, 10) : default_value);
 }
 template<> ssize_t xml::xml_doc::get<ssize_t>(const string& path, const ssize_t default_value) const {
 	const string& attr = extract_attr(path);
-	return (attr != "INVALID" ? strtoll(attr.c_str(), nullptr, 10) : default_value);
+	return (attr != "INVALID" ? (ssize_t)strtoll(attr.c_str(), nullptr, 10) : default_value);
 }
 template<> bool xml::xml_doc::get<bool>(const string& path, const bool default_value) const {
 	const string& attr = extract_attr(path);
@@ -363,54 +363,54 @@ template<> size2 xml::xml_doc::get<size2>(const string& path, const size2 defaul
 	const string& attr = extract_attr(path);
 	vector<string> tokens= core::tokenize(attr, ',');
 	return (attr != "INVALID" && tokens.size() >= 2 ?
-			size2(strtoull(tokens[0].c_str(), nullptr, 10),
-				  strtoull(tokens[1].c_str(), nullptr, 10))
+			size2((size_t)strtoull(tokens[0].c_str(), nullptr, 10),
+				  (size_t)strtoull(tokens[1].c_str(), nullptr, 10))
 			: default_value);
 }
 template<> size3 xml::xml_doc::get<size3>(const string& path, const size3 default_value) const {
 	const string& attr = extract_attr(path);
 	vector<string> tokens= core::tokenize(attr, ',');
 	return (attr != "INVALID" && tokens.size() >= 3 ?
-			size3(strtoull(tokens[0].c_str(), nullptr, 10),
-				  strtoull(tokens[1].c_str(), nullptr, 10),
-				  strtoull(tokens[2].c_str(), nullptr, 10))
+			size3((size_t)strtoull(tokens[0].c_str(), nullptr, 10),
+				  (size_t)strtoull(tokens[1].c_str(), nullptr, 10),
+				  (size_t)strtoull(tokens[2].c_str(), nullptr, 10))
 			: default_value);
 }
 template<> size4 xml::xml_doc::get<size4>(const string& path, const size4 default_value) const {
 	const string& attr = extract_attr(path);
 	vector<string> tokens= core::tokenize(attr, ',');
 	return (attr != "INVALID" && tokens.size() >= 4 ?
-			size4(strtoull(tokens[0].c_str(), nullptr, 10),
-				  strtoull(tokens[1].c_str(), nullptr, 10),
-				  strtoull(tokens[2].c_str(), nullptr, 10),
-				  strtoull(tokens[3].c_str(), nullptr, 10))
+			size4((size_t)strtoull(tokens[0].c_str(), nullptr, 10),
+				  (size_t)strtoull(tokens[1].c_str(), nullptr, 10),
+				  (size_t)strtoull(tokens[2].c_str(), nullptr, 10),
+				  (size_t)strtoull(tokens[3].c_str(), nullptr, 10))
 			: default_value);
 }
 template<> ssize2 xml::xml_doc::get<ssize2>(const string& path, const ssize2 default_value) const {
 	const string& attr = extract_attr(path);
 	vector<string> tokens= core::tokenize(attr, ',');
 	return (attr != "INVALID" && tokens.size() >= 2 ?
-			ssize2(strtoll(tokens[0].c_str(), nullptr, 10),
-				   strtoll(tokens[1].c_str(), nullptr, 10))
+			ssize2((ssize_t)strtoll(tokens[0].c_str(), nullptr, 10),
+				   (ssize_t)strtoll(tokens[1].c_str(), nullptr, 10))
 			: default_value);
 }
 template<> ssize3 xml::xml_doc::get<ssize3>(const string& path, const ssize3 default_value) const {
 	const string& attr = extract_attr(path);
 	vector<string> tokens= core::tokenize(attr, ',');
 	return (attr != "INVALID" && tokens.size() >= 3 ?
-			ssize3(strtoll(tokens[0].c_str(), nullptr, 10),
-				   strtoll(tokens[1].c_str(), nullptr, 10),
-				   strtoll(tokens[2].c_str(), nullptr, 10))
+			ssize3((ssize_t)strtoll(tokens[0].c_str(), nullptr, 10),
+				   (ssize_t)strtoll(tokens[1].c_str(), nullptr, 10),
+				   (ssize_t)strtoll(tokens[2].c_str(), nullptr, 10))
 			: default_value);
 }
 template<> ssize4 xml::xml_doc::get<ssize4>(const string& path, const ssize4 default_value) const {
 	const string& attr = extract_attr(path);
 	vector<string> tokens= core::tokenize(attr, ',');
 	return (attr != "INVALID" && tokens.size() >= 4 ?
-			ssize4(strtoll(tokens[0].c_str(), nullptr, 10),
-				   strtoll(tokens[1].c_str(), nullptr, 10),
-				   strtoll(tokens[2].c_str(), nullptr, 10),
-				   strtoll(tokens[3].c_str(), nullptr, 10))
+			ssize4((ssize_t)strtoll(tokens[0].c_str(), nullptr, 10),
+				   (ssize_t)strtoll(tokens[1].c_str(), nullptr, 10),
+				   (ssize_t)strtoll(tokens[2].c_str(), nullptr, 10),
+				   (ssize_t)strtoll(tokens[3].c_str(), nullptr, 10))
 			: default_value);
 }
 

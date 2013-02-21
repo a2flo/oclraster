@@ -62,13 +62,27 @@ void transform_stage::transform(draw_state& state,
 	
 	// set user buffers
 	for(const auto& user_struct : state.transform_prog->get_structs()) {
-		const auto buffer = state.user_buffers.find(user_struct.object_name);
-		// TODO: only check this in debug mode?
-		if(buffer == state.user_buffers.cend()) {
-			oclr_error("buffer \"%s\" not bound!", user_struct.object_name);
-			return;
+		if(user_struct.type == oclraster_program::STRUCT_TYPE::IMAGES) {
+			// TODO: ! (combine)
+			for(const auto& img_name : user_struct.variables) {
+				const auto buffer = state.user_buffers.find(img_name);
+				// TODO: only check this in debug mode?
+				if(buffer == state.user_buffers.cend()) {
+					oclr_error("buffer \"%s\" not bound!", img_name);
+					return;
+				}
+				ocl->set_kernel_argument(argc++, &buffer->second);
+			}
 		}
-		ocl->set_kernel_argument(argc++, &buffer->second);
+		else {
+			const auto buffer = state.user_buffers.find(user_struct.object_name);
+			// TODO: only check this in debug mode?
+			if(buffer == state.user_buffers.cend()) {
+				oclr_error("buffer \"%s\" not bound!", user_struct.object_name);
+				return;
+			}
+			ocl->set_kernel_argument(argc++, &buffer->second);
+		}
 	}
 	
 	const auto index_buffer = state.user_buffers.find("index_buffer");

@@ -139,21 +139,32 @@ public:
 	
 	//! buffer flags (associated kernel => buffer has been set as a kernel argument, at least once and the latest one for an index)
 	enum class BUFFER_FLAG : unsigned int {
-		NONE				= (0),
-		READ				= (1 << 0),			//!< enum read only buffer (kernel POV)
-		WRITE				= (1 << 1),			//!< enum write only buffer (kernel POV)
-		READ_WRITE			= (READ | WRITE),	//!< enum read and write buffer (kernel POV)
-		INITIAL_COPY		= (1 << 2),			//!< enum the specified data will be copied to the buffer at creation time
-		COPY_ON_USE			= (1 << 3),			//!< enum the specified data will be copied to the buffer each time an associated kernel is being used (that is right before kernel execution)
-		USE_HOST_MEMORY		= (1 << 4),			//!< enum buffer memory will be allocated in host memory
-		READ_BACK_RESULT	= (1 << 5),			//!< enum every time an associated kernel has been executed, the result buffer data will be read back/copied to the specified pointer location
-		DELETE_AFTER_USE	= (1 << 6),			//!< enum the buffer will be deleted after its first use (after an associated kernel has been executed)
-		BLOCK_ON_READ		= (1 << 7),			//!< enum the read command is blocking, all data will be read/copied before program continuation
-		BLOCK_ON_WRITE		= (1 << 8),			//!< enum the write command is blocking, all data will be written before program continuation
-		OPENGL_BUFFER		= (1 << 9),			//!< enum determines if a buffer is a shared opengl buffer/image/memory object
+		NONE				= (0u),
+		READ				= (1u << 0u),			//!< enum read only buffer (kernel POV)
+		WRITE				= (1u << 1u),			//!< enum write only buffer (kernel POV)
+		READ_WRITE			= (READ | WRITE),		//!< enum read and write buffer (kernel POV)
+		INITIAL_COPY		= (1u << 2u),			//!< enum the specified data will be copied to the buffer at creation time
+		COPY_ON_USE			= (1u << 3u),			//!< enum the specified data will be copied to the buffer each time an associated kernel is being used (that is right before kernel execution)
+		USE_HOST_MEMORY		= (1u << 4u),			//!< enum buffer memory will be allocated in host memory
+		READ_BACK_RESULT	= (1u << 5u),			//!< enum every time an associated kernel has been executed, the result buffer data will be read back/copied to the specified pointer location
+		DELETE_AFTER_USE	= (1u << 6u),			//!< enum the buffer will be deleted after its first use (after an associated kernel has been executed)
+		BLOCK_ON_READ		= (1u << 7u),			//!< enum the read command is blocking, all data will be read/copied before program continuation
+		BLOCK_ON_WRITE		= (1u << 8u),			//!< enum the write command is blocking, all data will be written before program continuation
+		OPENGL_BUFFER		= (1u << 9u),			//!< enum determines if a buffer is a shared opengl buffer/image/memory object
 	};
 	enum_class_bitwise_or(BUFFER_FLAG)
 	enum_class_bitwise_and(BUFFER_FLAG)
+	
+	enum class MAP_BUFFER_FLAG : unsigned int {
+		NONE				= (0u),
+		READ				= (1u << 0u),
+		WRITE				= (1u << 1u),
+		WRITE_INVALIDATE	= (1u << 2u), //!< CL_MAP_WRITE_INVALIDATE_REGION
+		READ_WRITE			= (READ | WRITE),
+		BLOCK				= (1u << 3u),
+	};
+	enum_class_bitwise_or(MAP_BUFFER_FLAG)
+	enum_class_bitwise_and(MAP_BUFFER_FLAG)
 
 	virtual void init(bool use_platform_devices = false, const size_t platform_index = 0,
 					  const set<string> device_restriction = set<string> {},
@@ -187,7 +198,7 @@ public:
 	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region) = 0;
 	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region) = 0;
 	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t size = 0) = 0;
-	virtual void* map_buffer(buffer_object* buffer_obj, BUFFER_FLAG access_type, bool blocking = true) = 0;
+	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK)) = 0;
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr) = 0;
 	void set_manual_gl_sharing(buffer_object* gl_buffer_obj, const bool state);
 	
@@ -386,7 +397,7 @@ public:
 	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region);
 	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region);
 	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t size = 0);
-	virtual void* map_buffer(buffer_object* buffer_obj, BUFFER_FLAG access_type, bool blocking = true);
+	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK));
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	
 	virtual void _fill_buffer(buffer_object* buffer_obj,
@@ -448,7 +459,7 @@ public:
 	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region);
 	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region);
 	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t size = 0);
-	virtual void* map_buffer(buffer_object* buffer_obj, BUFFER_FLAG access_type, bool blocking = true);
+	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK));
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	
 	virtual void _fill_buffer(buffer_object* buffer_obj,

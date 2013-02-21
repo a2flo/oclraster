@@ -33,8 +33,8 @@ public:
 	struct __attribute__((packed, aligned(16))) vertex_data {
 		float4 vertex;
 		float4 normal;
-		//float4 binormal;
-		//float4 tangent;
+		float4 binormal;
+		float4 tangent;
 		float2 tex_coord;
 	};
 	

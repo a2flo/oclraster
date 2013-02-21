@@ -22,6 +22,7 @@
 #include <oclraster/oclraster.h>
 #include <oclraster/pipeline/pipeline.h>
 #include <oclraster/pipeline/transform_stage.h>
+#include <oclraster/pipeline/image.h>
 #include <oclraster/core/a2m.h>
 #include <oclraster/core/camera.h>
 #include <oclraster/program/oclraster_program.h>

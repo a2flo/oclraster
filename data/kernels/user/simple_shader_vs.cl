@@ -5,6 +5,8 @@
 oclraster_in simple_input {
 	float4 vertex;
 	float4 normal;
+	float4 binormal; // unused
+	float4 tangent; // unused
 	float2 tex_coord;
 } input_attributes;
 
@@ -15,6 +17,7 @@ oclraster_out simple_output {
 } output_attributes;
 
 oclraster_uniforms transform_uniforms {
+	mat4 rotation_scale_matrix;
 	mat4 modelview_matrix;
 } tp_uniforms;
 

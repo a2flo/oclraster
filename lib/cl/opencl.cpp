@@ -18,6 +18,10 @@
 
 #include "opencl.h"
 
+#if defined(OCLRASTER_IOS)
+#include "ios/ios_helper.h"
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // common in all opencl implementations:
 
@@ -424,7 +428,7 @@ opencl::opencl(const char* kernel_path, SDL_Window* wnd, const bool clear_cache)
 	// TODO: this currently doesn't work if there are spaces inside the path and surrounding
 	// the path by "" doesn't work either, probably a bug in the apple implementation -- or clang?
 	build_options = "-I" + kernel_path_str.substr(0, kernel_path_str.length()-1);
-	//build_options += " -cl-std=CL1.1";
+	build_options += " -cl-std=CL1.1";
 	build_options += " -cl-mad-enable";
 	build_options += " -cl-no-signed-zeros";
 	build_options += " -cl-fast-relaxed-math";
@@ -501,9 +505,11 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		
 		cl_context_properties cl_properties[] {
 			CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[platform_index](),
-#if !defined(OCLRASTER_IOS) // TODO: sharing isn't supported on iOS yet (code path exists, but fails with a gles sharegroup)
 			gl_sharing ? CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE : 0,
+#if !defined(OCLRASTER_IOS)
 			gl_sharing ? (cl_context_properties)CGLGetShareGroup(CGLGetCurrentContext()) : 0,
+#else
+			gl_sharing ? (cl_context_properties)ios_helper::get_eagl_sharegroup() : 0,
 #endif
 			0
 		};
@@ -1527,17 +1533,29 @@ bool opencl::set_kernel_argument(const unsigned int& index, size_t size, void* a
 	return false;
 }
 
-void* opencl::map_buffer(opencl::buffer_object* buffer_obj, BUFFER_FLAG access_type, bool blocking) {
+void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type) {
 	try {
-		cl_map_flags map_flags = CL_MAP_READ;
-		switch(access_type & BUFFER_FLAG::READ_WRITE) {
-			case BUFFER_FLAG::READ_WRITE: map_flags = CL_MAP_READ | CL_MAP_WRITE; break;
-			case BUFFER_FLAG::READ: map_flags = CL_MAP_READ; break;
-			case BUFFER_FLAG::WRITE: map_flags = CL_MAP_WRITE; break;
-			default: break;
+		const bool blocking { (access_type & MAP_BUFFER_FLAG::BLOCK) != MAP_BUFFER_FLAG::NONE };
+		
+		if((access_type & MAP_BUFFER_FLAG::READ_WRITE) != MAP_BUFFER_FLAG::NONE &&
+		   (access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
+			oclr_error("READ or WRITE access and WRITE_INVALIDATE are mutually exclusive!");
+			return nullptr;
 		}
 		
-		void* map_ptr = nullptr;
+		cl_map_flags map_flags = ((access_type & (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::WRITE_INVALIDATE)) ==
+								  MAP_BUFFER_FLAG::NONE) ? CL_MAP_READ : 0; // if no access type is specified, use read-only
+		switch(access_type & MAP_BUFFER_FLAG::READ_WRITE) {
+			case MAP_BUFFER_FLAG::READ_WRITE: map_flags = CL_MAP_READ | CL_MAP_WRITE; break;
+			case MAP_BUFFER_FLAG::READ: map_flags = CL_MAP_READ; break;
+			case MAP_BUFFER_FLAG::WRITE: map_flags = CL_MAP_WRITE; break;
+			default: break;
+		}
+		if((access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
+			map_flags |= CL_MAP_WRITE_INVALIDATE_REGION;
+		}
+		
+		void* __attribute__((aligned(sizeof(cl_long16)))) map_ptr = nullptr;
 		if(buffer_obj->buffer != nullptr) {
 			map_ptr = queues[active_device->device]->enqueueMapBuffer(*buffer_obj->buffer, blocking, map_flags, 0, buffer_obj->size);
 		}
@@ -1572,12 +1590,12 @@ void opencl::unmap_buffer(opencl::buffer_object* buffer_obj, void* map_ptr) {
 	__HANDLE_CL_EXCEPTION("unmap_buffer")
 }
 
+#if defined(CL_VERSION_1_2)
 void opencl::_fill_buffer(buffer_object* buffer_obj,
 						  const void* pattern,
 						  const size_t& pattern_size,
 						  const size_t offset,
 						  const size_t size_) {
-#if defined(CL_VERSION_1_2)
 	try {
 		// TODO: get 1.2 cl.hpp
 		const size_t size = (size_ == 0 ? (buffer_obj->size / pattern_size) : size_);
@@ -1589,8 +1607,15 @@ void opencl::_fill_buffer(buffer_object* buffer_obj,
 		}
 	}
 	__HANDLE_CL_EXCEPTION("fill_buffer")
-#endif
 }
+#else
+void opencl::_fill_buffer(buffer_object* buffer_obj oclr_unused,
+						  const void* pattern oclr_unused,
+						  const size_t& pattern_size oclr_unused,
+						  const size_t offset oclr_unused,
+						  const size_t size_ oclr_unused) {
+}
+#endif
 
 size_t opencl::get_kernel_work_group_size() const {
 	if(cur_kernel == nullptr || active_device == nullptr) return 0;

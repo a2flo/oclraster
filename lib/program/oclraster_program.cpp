@@ -32,11 +32,12 @@ oclraster_program::~oclraster_program() {
 }
 
 void oclraster_program::process_program(const string& code) {
-	static const array<const pair<const char*, const STRUCT_TYPE>, 3> oclraster_struct_types {
+	static const array<const pair<const char*, const STRUCT_TYPE>, 4> oclraster_struct_types {
 		{
 			{ u8"oclraster_in", STRUCT_TYPE::INPUT },
 			{ u8"oclraster_out", STRUCT_TYPE::OUTPUT },
 			{ u8"oclraster_uniforms", STRUCT_TYPE::UNIFORMS },
+			{ u8"oclraster_images", STRUCT_TYPE::IMAGES },
 		}
 	};
 	
@@ -150,6 +151,7 @@ void oclraster_program::process_program(const string& code) {
 		
 		// process found structs
 		for(auto& oclr_struct : structs) {
+			if(oclr_struct.type == STRUCT_TYPE::IMAGES) continue;
 			generate_struct_info_cl_program(oclr_struct);
 		}
 		
@@ -167,6 +169,7 @@ void oclraster_program::process_program(const string& code) {
 		// recreate structs (in reverse, so that the offsets stay valid)
 		for(auto iter = structs.rbegin(); iter != structs.rend(); iter++) {
 			processed_code.erase(iter->code_pos.x, iter->code_pos.y - iter->code_pos.x);
+			if(iter->type == STRUCT_TYPE::IMAGES) continue;
 			
 			string struct_code = "";
 			switch(iter->type) {
@@ -179,6 +182,7 @@ void oclraster_program::process_program(const string& code) {
 				case STRUCT_TYPE::UNIFORMS:
 					struct_code += "oclraster_uniforms";
 					break;
+				case STRUCT_TYPE::IMAGES: oclr_unreachable();
 			}
 			struct_code += " {\n";
 			for(size_t var_index = 0; var_index < iter->variables.size(); var_index++) {
@@ -244,7 +248,7 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	for(size_t dev_num = 0; dev_num < devices.size(); dev_num++) {
 		// this has to be executed for all devices, since each device can have its own struct/member sizes/offsets
 		ocl->set_active_device(devices[dev_num]->type);
-		//oclr_msg("DEVICE: %s", devices[dev_num]->name);
+		oclr_msg("DEVICE: %s", devices[dev_num]->name);
 		
 		// read/write is necessary, because of atomic_xchg
 		opencl::buffer_object* info_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
@@ -260,14 +264,14 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 		
 		oclraster_struct_info::device_struct_info dev_info;
 		dev_info.struct_size = info_buffer_results[0];
-		//oclr_msg("struct \"%s\" size: %d", struct_info.name, dev_info.struct_size);
+		oclr_msg("struct \"%s\" size: %d", struct_info.name, dev_info.struct_size);
 		dev_info.sizes.resize(struct_info.variables.size());
 		dev_info.offsets.resize(struct_info.variables.size());
 		for(size_t i = 0; i < struct_info.variables.size(); i++) {
 			dev_info.sizes[i] = info_buffer_results[(i*2) + 1];
 			dev_info.offsets[i] = info_buffer_results[(i*2) + 2];
-			//oclr_msg("\tmember \"%s\": size: %d, offset: %d",
-			//		 struct_info.variables[i], dev_info.sizes[i], dev_info.offsets[i]);
+			oclr_msg("\tmember \"%s\": size: %d, offset: %d",
+					 struct_info.variables[i], dev_info.sizes[i], dev_info.offsets[i]);
 		}
 		struct_info.device_infos.emplace(devices[dev_num], dev_info);
 		

@@ -23,6 +23,7 @@
 #include "pipeline/transform_stage.h"
 #include "pipeline/binning_stage.h"
 #include "pipeline/rasterization_stage.h"
+#include "pipeline/image.h"
 #include "core/rtt.h"
 #include "core/event.h"
 #include "program/oclraster_program.h"
@@ -88,6 +89,7 @@ public:
 	// buffer binding
 	// NOTE: to bind the index buffer, use the name "index_buffer"
 	void bind_buffer(const string& name, const opencl_base::buffer_object& buffer);
+	void bind_image(const string& name, const image& img);
 	
 	// "draw calls" (for now, these always draw triangles)
 	// TODO: get the necessary information from somewhere again ...
@@ -113,6 +115,9 @@ protected:
 	
 	// map/copy fbo
 	GLuint copy_fbo_id = 0, copy_fbo_tex_id = 0;
+#if defined(OCLRASTER_IOS)
+	GLuint vbo_fullscreen_triangle = 0;
+#endif
 	
 	//
 	const uint2 tile_size { 16, 16 };

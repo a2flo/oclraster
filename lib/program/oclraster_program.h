@@ -29,7 +29,8 @@ public:
 	enum class STRUCT_TYPE : unsigned int {
 		INPUT,
 		OUTPUT,
-		UNIFORMS
+		UNIFORMS,
+		IMAGES,
 	};
 	struct oclraster_struct_info {
 		const STRUCT_TYPE type;

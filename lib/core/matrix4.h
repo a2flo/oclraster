@@ -55,9 +55,9 @@ public:
 	oclr_constexpr matrix4(const matrix4<T>& m4) noexcept : data(m4.data) {}
 	oclr_constexpr matrix4(const matrix4<T>* m4) noexcept : data(m4->data) {}
 	oclr_constexpr matrix4(const T& m0, const T& m1, const T& m2, const T& m3,
-						  const T& m4, const T& m5, const T& m6, const T& m7,
-						  const T& m8, const T& m9, const T& m10, const T& m11,
-						  const T& m12, const T& m13, const T& m14, const T& m15) noexcept :
+						   const T& m4, const T& m5, const T& m6, const T& m7,
+						   const T& m8, const T& m9, const T& m10, const T& m11,
+						   const T& m12, const T& m13, const T& m14, const T& m15) noexcept :
 	data({{m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}}) {}
 	oclr_constexpr matrix4(const vector4<T>& col_0, const vector4<T>& col_1, const vector4<T>& col_2, const vector4<T>& col_3) noexcept :
 	data({{

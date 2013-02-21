@@ -23,10 +23,20 @@ static bool done = false;
 static event* evt = nullptr;
 static camera* cam = nullptr;
 static constexpr float3 cam_speeds { 0.01f, 0.1f, 0.001f };
+static atomic<unsigned int> update_model { false };
+static atomic<unsigned int> update_light { true };
+static atomic<unsigned int> update_light_color { true };
+static atomic<unsigned int> selected_material { 0 };
 
 int main(int argc oclr_unused, char* argv[]) {
 	// initialize oclraster
-	oclraster::init(argv[0], (const char*)"../data/");
+	oclraster::init(argv[0],
+#if !defined(OCLRASTER_IOS)
+					(const char*)"../data/"
+#else
+					(const char*)"/var/mobile/Documents/oclraster/"
+#endif
+					);
 	oclraster::set_caption(APPLICATION_NAME);
 	oclraster::acquire_context();
 	
@@ -37,25 +47,28 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	//
 	cam = new camera();
-#if 1
+#if 0
 	cam->set_position(0.0f, 0.1f, -0.3f);
 	//cam->set_position(1.12157e-12f, 0.1f, -2.22f);
 	cam->set_rotation(0.0f, 0.0f, 0.0f);
+#elif 1
+	cam->set_position(0.8f, 0.28f, 3.2f);
+	cam->set_rotation(-5.2f, 196.0f, 0.0f);
 #else
 	cam->set_position(10.0f, 5.0f, -10.0f);
 	cam->set_rotation(-20.0f, -45.0f, 0.0f);
 #endif
 	cam->set_speed(cam_speeds.x);
+	cam->set_rotation_speed(cam->get_rotation_speed() * 1.5f);
 	cam->set_wasd_input(true);
 	oclraster::set_camera(cam);
 	
 	//
 	pipeline* p = new pipeline();
 	
-	a2m* bunny = new a2m(oclraster::data_path("bunny.a2m"));
-	//a2m* bunny = new a2m(oclraster::data_path("cube.a2m"));
+	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
 	
-	p->_reserve_memory(std::max(8192u, bunny->get_index_buffer(0).index_count / 3));
+	p->_reserve_memory(std::max(8192u, model->get_index_buffer(0).index_count / 3));
 	
 	// add event handlers
 	event::handler key_handler_fnctr(&key_handler);
@@ -66,39 +79,60 @@ int main(int argc oclr_unused, char* argv[]) {
 	evt->add_event_handler(quit_handler_fnctr, EVENT_TYPE::QUIT);
 	
 	// load, compile and bind user shaders
-	stringstream vs_buffer, fs_buffer;
-	if(!file_io::file_to_buffer(oclraster::kernel_path("user/simple_shader_vs.cl"), vs_buffer)) {
+	string vs_str, fs_str;
+#if 0
+	if(!file_io::file_to_string(oclraster::kernel_path("user/simple_shader_vs.cl"), vs_str)) {
 		oclr_error("couldn't open vs program!");
 		return -1;
 	}
-	if(!file_io::file_to_buffer(oclraster::kernel_path("user/simple_shader_fs.cl"), fs_buffer)) {
+	if(!file_io::file_to_string(oclraster::kernel_path("user/simple_shader_fs.cl"), fs_str)) {
 		oclr_error("couldn't open fs program!");
 		return -1;
 	}
-	transform_program vs_prog(vs_buffer.str(), "transform_main");
-	rasterization_program fs_prog(fs_buffer.str(), "rasterize_main");
-	p->bind_program(vs_prog);
-	p->bind_program(fs_prog);
+	transform_program simple_vs(vs_str, "transform_main");
+	rasterization_program simple_fs(fs_str, "rasterize_main");
+	p->bind_program(simple_vs);
+	p->bind_program(simple_fs);
+#else
+	if(!file_io::file_to_string(oclraster::kernel_path("user/simple_texturing_vs.cl"), vs_str)) {
+		oclr_error("couldn't open vs program!");
+		return -1;
+	}
+	if(!file_io::file_to_string(oclraster::kernel_path("user/simple_texturing_fs.cl"), fs_str)) {
+		oclr_error("couldn't open fs program!");
+		return -1;
+	}
+	transform_program texturing_vs(vs_str, "transform_main");
+	rasterization_program texturing_fs(fs_str, "rasterize_main");
+	p->bind_program(texturing_vs);
+	p->bind_program(texturing_fs);
+#endif
 	
 	// create / ref buffers
-	const opencl::buffer_object& index_buffer = *bunny->get_index_buffer(0).buffer;
-	const opencl::buffer_object& input_attributes = *bunny->get_vertex_buffer().buffer;
+	const opencl::buffer_object& index_buffer = *model->get_index_buffer(0).buffer;
+	const opencl::buffer_object& input_attributes = *model->get_vertex_buffer().buffer;
 	
-	matrix4f model_matrix { matrix4f() };
+	struct __attribute__((packed, aligned(16))) tp_uniforms {
+		matrix4f rotation_scale;
+		matrix4f modelview;
+	} transform_uniforms {
+		matrix4f(),
+		matrix4f()
+	};
 	opencl::buffer_object* tp_uniforms_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 																   opencl::BUFFER_FLAG::INITIAL_COPY |
 																   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-																   sizeof(matrix4f),
-																   (void*)&model_matrix);
+																   sizeof(tp_uniforms),
+																   (void*)&transform_uniforms);
 	
-	float light_pos = M_PI, light_dist = 10.0f;
+	float light_pos = M_PI_2, light_dist = 10.0f, light_intensity = 32.0f;
 	struct __attribute__((packed, aligned(16))) rp_uniforms {
 		float4 camera_position;
 		float4 light_position; // .w = light radius ^ 2
 		float4 light_color;
 	} rasterize_uniforms {
 		float4(oclraster::get_camera_setup().position, 1.0f),
-		float4(sinf(light_pos)*light_dist, 0.0f, cosf(light_pos)*light_dist, 16.0f*16.0f),
+		float4(sinf(light_pos)*light_dist, 0.0f, cosf(light_pos)*light_dist, light_intensity*light_intensity),
 		float4(0.0f, 0.3f, 0.7f, 1.0f)
 	};
 	opencl::buffer_object* rp_uniforms_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
@@ -106,6 +140,47 @@ int main(int argc oclr_unused, char* argv[]) {
 																   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 																   sizeof(rp_uniforms),
 																   (void*)&rasterize_uniforms);
+	
+	// textures
+	static const array<string, 12> texture_names {
+		{
+			"light_512",
+			"light_normal_512",
+			"light_height_512",
+			"planks_512",
+			"planks_normal_512",
+			"planks_height_512",
+			"rockwall_512",
+			"rockwall_normal_512",
+			"rockwall_height_512",
+			"acid_512",
+			"acid_normal_512",
+			"acid_height_512",
+		}
+	};
+	
+	array<array<image, 3>, 4> materials {{ // excessive braces are excessive
+		{{
+			image::from_file(oclraster::data_path(texture_names[0]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[1]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[2]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA)
+		}},
+		{{
+			image::from_file(oclraster::data_path(texture_names[3]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[4]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[5]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA)
+		}},
+		{{
+			image::from_file(oclraster::data_path(texture_names[6]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[7]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[8]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA)
+		}},
+		{{
+			image::from_file(oclraster::data_path(texture_names[9]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[10]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[11]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA)
+		}}
+	}};
 	
 	// init done
 	oclraster::release_context();
@@ -129,11 +204,14 @@ int main(int argc oclr_unused, char* argv[]) {
 		
 		// set caption (app name and fps count)
 		if(oclraster::is_new_fps_count()) {
+			const unsigned int fps = oclraster::get_fps();
+			//oclr_log("fps: %u", fps);
 			static stringstream caption;
 			caption << APPLICATION_NAME;
-			caption << " | " << oclraster::get_fps() << " FPS";
+			caption << " | " << fps << " FPS";
 			caption << " | ~" << oclraster::get_frame_time() << "ms ";
 			caption << " | Cam: " << cam->get_position();
+			caption << " " << cam->get_rotation();
 			oclraster::set_caption(caption.str().c_str());
 			core::reset(caption);
 		}
@@ -144,47 +222,62 @@ int main(int argc oclr_unused, char* argv[]) {
 		//cout << endl << endl << " ### frame ### " << endl << endl;
 		
 		// update uniforms
-		model_matrix = matrix4f().rotate_y(model_rotation);
-		model_rotation += 1.0f;
-		model_rotation = core::wrap(model_rotation, 360.0f);
-		
-		const float3 scale_diff = (model_scale - target_scale).abs();
-		if((scale_diff <= float3(model_scale_step * 2.0f)).all()) {
-			target_scale.x = 1.0f + core::rand(-model_scale_range, model_scale_range);
-			target_scale.y = 1.0f + core::rand(-model_scale_range, model_scale_range);
-			target_scale.z = 1.0f + core::rand(-model_scale_range, model_scale_range);
-		}
-		else {
-			for(unsigned int i = 0; i < 3; i++) {
-				if(scale_diff[i] <= (model_scale_step * 2.0f)) continue;
-				model_scale[i] += model_scale_step * (model_scale[i] <= target_scale[i] ? 1.0f : -1.0f);
+		if(update_model) {
+			transform_uniforms.modelview = matrix4f().rotate_y(model_rotation);
+			model_rotation += 1.0f;
+			model_rotation = core::wrap(model_rotation, 360.0f);
+			
+			const float3 scale_diff = (model_scale - target_scale).abs();
+			if((scale_diff <= float3(model_scale_step * 2.0f)).all()) {
+				target_scale.x = 1.0f + core::rand(-model_scale_range, model_scale_range);
+				target_scale.y = 1.0f + core::rand(-model_scale_range, model_scale_range);
+				target_scale.z = 1.0f + core::rand(-model_scale_range, model_scale_range);
 			}
+			else {
+				for(unsigned int i = 0; i < 3; i++) {
+					if(scale_diff[i] <= (model_scale_step * 2.0f)) continue;
+					model_scale[i] += model_scale_step * (model_scale[i] <= target_scale[i] ? 1.0f : -1.0f);
+				}
+			}
+			transform_uniforms.modelview.scale(model_scale.x, model_scale.y, model_scale.z);
+			transform_uniforms.rotation_scale = transform_uniforms.modelview;
+			ocl->write_buffer(tp_uniforms_buffer, &transform_uniforms);
 		}
-		model_matrix.scale(model_scale.x, model_scale.y, model_scale.z);
-		//ocl->write_buffer(tp_uniforms_buffer, &model_matrix);
-		
-		light_pos -= 0.25f;
-		rasterize_uniforms.light_position.set(sinf(light_pos)*light_dist, 0.0f, cosf(light_pos)*light_dist, 16.0f*16.0f);
-		static constexpr float color_step_range = 0.2f;
-		rasterize_uniforms.light_color.x += core::rand(-color_step_range, color_step_range);
-		rasterize_uniforms.light_color.y += core::rand(-color_step_range, color_step_range);
-		rasterize_uniforms.light_color.z += core::rand(-color_step_range, color_step_range);
-		rasterize_uniforms.light_color.clamp(0.0f, 1.0f);
-		ocl->write_buffer(rp_uniforms_buffer, &rasterize_uniforms);
+			
+		if(update_light) {
+			light_pos -= 0.25f;
+			rasterize_uniforms.light_position.set(sinf(light_pos)*light_dist,
+												  0.0f,
+												  cosf(light_pos)*light_dist,
+												  light_intensity * light_intensity);
+		}
+		if(update_light_color) {
+			static constexpr float color_step_range = 0.05f;
+			rasterize_uniforms.light_color.x += core::rand(-color_step_range, color_step_range);
+			rasterize_uniforms.light_color.y += core::rand(-color_step_range, color_step_range);
+			rasterize_uniforms.light_color.z += core::rand(-color_step_range, color_step_range);
+			rasterize_uniforms.light_color.clamp(0.0f, 1.0f);
+		}
+		if(update_light || update_light_color) {
+			ocl->write_buffer(rp_uniforms_buffer, &rasterize_uniforms);
+		}
 		
 		// draw something
 		p->bind_buffer("index_buffer", index_buffer);
 		p->bind_buffer("input_attributes", input_attributes);
 		p->bind_buffer("tp_uniforms", *tp_uniforms_buffer);
 		p->bind_buffer("rp_uniforms", *rp_uniforms_buffer);
-		p->draw({0, bunny->get_index_count(0)-1});
+		p->bind_image("diffuse_texture", materials[selected_material][0]);
+		p->bind_image("normal_texture", materials[selected_material][1]);
+		p->bind_image("height_texture", materials[selected_material][2]);
+		p->draw({0, model->get_index_count(0)-1});
 		
 		p->stop();
 		oclraster::stop_draw();
 	}
 	
 	// cleanup
-	delete bunny;
+	delete model;
 	delete cam;
 	
 	ocl->delete_buffer(tp_uniforms_buffer);
@@ -225,6 +318,27 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 			case SDLK_F19:
 			case SDLK_0:
 				oclraster::reload_kernels();
+				break;
+			case SDLK_m:
+				update_model ^= true;
+				break;
+			case SDLK_l:
+				update_light ^= true;
+				break;
+			case SDLK_c:
+				update_light_color ^= true;
+				break;
+			case SDLK_1:
+				selected_material = 0;
+				break;
+			case SDLK_2:
+				selected_material = 1;
+				break;
+			case SDLK_3:
+				selected_material = 2;
+				break;
+			case SDLK_4:
+				selected_material = 3;
 				break;
 			default: return false;
 		}

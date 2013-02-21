@@ -50,6 +50,7 @@ public:
 	};
 	
 	static bool file_to_buffer(const string& filename, stringstream& buffer);
+	static bool file_to_string(const string& filename, string& str);
 
 	bool open(const string& filename, OPEN_TYPE open_type);
 	void close();
@@ -59,7 +60,8 @@ public:
 	streampos get_current_offset();
 	
 	// file input:
-	void read_file(stringstream* buffer);
+	bool read_file(stringstream& buffer);
+	bool read_file(string& str);
 	void get_line(char* finput, unsigned int length);
 	void get_block(char* data, size_t size);
 	void get_terminated_block(string& str, const char terminator);

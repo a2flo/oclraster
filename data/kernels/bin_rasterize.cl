@@ -160,10 +160,18 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	}
 	
 	// TODO: rounding should depend on sampling mode (more samples -> use floor/ceil again)
+#if !defined(APPLE_ARM) && 0
 	const uint2 x_bounds_u = convert_uint2(clamp((int2)(round(x_bounds.x), round(x_bounds.y)),
 												 0, screen_size.x - 1)); // valid pixel pos: [0, screen_size.x-1]
 	const uint2 y_bounds_u = convert_uint2(clamp((int2)(round(y_bounds.x), round(y_bounds.y)),
 												 0, screen_size.y - 1));
+#else
+	// valid pixel pos: [0, screen_size.x-1]
+	const uint2 x_bounds_u = convert_uint2((int2)(clamp((int)round(x_bounds.x), 0, (int)screen_size.x - 1),
+												  clamp((int)round(x_bounds.y), 0, (int)screen_size.x - 1)));
+	const uint2 y_bounds_u = convert_uint2((int2)(clamp((int)round(y_bounds.x), 0, (int)screen_size.y - 1),
+												  clamp((int)round(y_bounds.y), 0, (int)screen_size.y - 1)));
+#endif
 	
 	/*printf("[%d] (%u %u) (%u %u)\n",
 		   triangle_id,

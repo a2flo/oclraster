@@ -22,6 +22,7 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 	#include "oclr_global.h"
 	#include "oclr_math.h"
 	#include "oclr_matrix.h"
+	#include "oclr_image.h"
 	
 	typedef struct __attribute__((packed)) {
 		unsigned int triangle_count;
@@ -80,9 +81,9 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 										transformed_buffer[triangle_id].data[8]);
 			
 			//
-			float4 barycentric = (float4)(fragment_coord.x * VV0.x + fragment_coord.y * VV0.y + VV0.z,
-										  fragment_coord.x * VV1.x + fragment_coord.y * VV1.y + VV1.z,
-										  fragment_coord.x * VV2.x + fragment_coord.y * VV2.y + VV2.z,
+			float4 barycentric = (float4)(mad(fragment_coord.x, VV0.x, mad(fragment_coord.y, VV0.y, VV0.z)),
+										  mad(fragment_coord.x, VV1.x, mad(fragment_coord.y, VV1.y, VV1.z)),
+										  mad(fragment_coord.x, VV2.x, mad(fragment_coord.y, VV2.y, VV2.z)),
 										  transformed_buffer[triangle_id].data[9]); // .w = computed depth
 			if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
 			
@@ -134,6 +135,12 @@ void rasterization_program::specialized_processing(const string& code) {
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
 				kernel_parameters += "constant ";
 				break;
+			case oclraster_program::STRUCT_TYPE::IMAGES:
+				// TODO: !
+				for(const auto& img : oclr_struct.variables) {
+					kernel_parameters += "uint32_image "+img+",\n";
+				}
+				continue;
 		}
 		kernel_parameters += oclr_struct.name + "* user_buffer_"+size_t2string(user_buffer_count)+",\n";
 		user_buffer_count++;
@@ -176,6 +183,12 @@ void rasterization_program::specialized_processing(const string& code) {
 										 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
+			case oclraster_program::STRUCT_TYPE::IMAGES:
+				// TODO: !
+				for(const auto& img : oclr_struct.variables) {
+					main_call_parameters += img + ", ";
+				}
+				continue;
 		}
 		cur_user_buffer++;
 	}
@@ -199,11 +212,16 @@ string rasterization_program::create_entry_function_parameters() {
 			case STRUCT_TYPE::OUTPUT:
 				entry_function_params += "const ";
 				break;
+			case oclraster_program::STRUCT_TYPE::IMAGES:
+				// TODO: !
+				for(size_t img_num = 0, img_count = structs[i].variables.size();
+					img_num < img_count; img_num++) {
+					entry_function_params += "uint32_image " + structs[i].variables[img_num] + ", ";
+				}
+				continue;
 		}
-		entry_function_params += structs[i].name + "* " + structs[i].object_name;
-		if(i < struct_count-1) entry_function_params += ", ";
+		entry_function_params += structs[i].name + "* " + structs[i].object_name + ", ";
 	}
-	if(entry_function_params != "") entry_function_params += ", ";
 	entry_function_params += rasterize_params;
 	return entry_function_params;
 }

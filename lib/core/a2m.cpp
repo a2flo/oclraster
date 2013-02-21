@@ -136,21 +136,16 @@ void a2m::load(const string& filename) {
 	reorganize_model_data();
 	
 	// create opencl buffers
-	cl_vertex_buffer.elements.emplace_back("vertex", sizeof(float4));
-	cl_vertex_buffer.elements.emplace_back("normal", sizeof(float4));
-	//cl_vertex_buffer.elements.emplace_back("binormal", sizeof(float4));
-	//cl_vertex_buffer.elements.emplace_back("tangent", sizeof(float4));
-	cl_vertex_buffer.elements.emplace_back("tex_coord", sizeof(float2));
 	vertex_data* vdata = new vertex_data[vertex_count];
 	for(unsigned int i = 0; i < vertex_count; i++) {
 		vdata[i].vertex = vertices[i];
 		vdata[i].normal = normals[i];
-		//vdata[i].binormal = binormals[i];
-		//vdata[i].tangent = tangents[i];
+		vdata[i].binormal = binormals[i];
+		vdata[i].tangent = tangents[i];
 		vdata[i].vertex.w = 1.0f;
 		vdata[i].normal.w = 1.0f;
-		//vdata[i].binormal.w = 1.0f;
-		//vdata[i].tangent.w = 1.0f;
+		vdata[i].binormal.w = 1.0f;
+		vdata[i].tangent.w = 1.0f;
 		vdata[i].tex_coord = tex_coords[i];
 	}
 	cl_vertex_buffer.buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |

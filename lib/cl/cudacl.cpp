@@ -1296,7 +1296,7 @@ bool cudacl::set_kernel_argument(const unsigned int& index, size_t size, void* a
 	return false;
 }
 
-void* cudacl::map_buffer(opencl_base::buffer_object* buffer_obj oclr_unused, BUFFER_FLAG access_type oclr_unused, bool blocking oclr_unused) {
+void* __attribute__((aligned(sizeof(cl_long16)))) cudacl::map_buffer(opencl_base::buffer_object* buffer_obj oclr_unused, const MAP_BUFFER_FLAG access_type oclr_unused) {
 	// TODO
 	/*try {
 		cl_map_flags map_flags = CL_MAP_READ;

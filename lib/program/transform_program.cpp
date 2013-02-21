@@ -17,12 +17,14 @@
  */
 
 #include "transform_program.h"
+#include "image.h"
 
 // awesome raw string literals are awesome
 static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 	#include "oclr_global.h"
 	#include "oclr_math.h"
 	#include "oclr_matrix.h"
+	#include "oclr_image.h"
 	
 	typedef struct __attribute__((packed, aligned(16))) {
 		float4 camera_position;
@@ -88,7 +90,6 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
-		// TODO: substract near plane vector for this to be accurate?
 		const float triangle_cam_relation[3] = {
 			dot(vertices[0], forward),
 			dot(vertices[1], forward),
@@ -196,8 +197,8 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 			const float2 e1 = (float2)(coord_xs[2] - coord_xs[0],
 									   coord_ys[2] - coord_ys[0]);
 			const float area = -0.5f * (e0.x * e1.y - e0.y * e1.x);
-			// half sample size (TODO: -> check if between sample points; <=1/8 sample size seems to be a good threshold?)
-			if(area <= 0.0125f) {
+			// half sample size (TODO: -> check if between sample points; <=1/2^8 sample size seems to be a good threshold?)
+			if(area < 0.00390625f) {
 				return; // cull
 			}
 		}
@@ -261,6 +262,12 @@ void transform_program::specialized_processing(const string& code) {
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
 				kernel_parameters += "constant ";
 				break;
+			case oclraster_program::STRUCT_TYPE::IMAGES:
+				// TODO: !
+				for(const auto& img : oclr_struct.variables) {
+					kernel_parameters += "uint32_image "+img+",\n";
+				}
+				continue;
 		}
 		kernel_parameters += oclr_struct.name + "* user_buffer_"+size_t2string(user_buffer_count)+",\n";
 		user_buffer_count++;
@@ -277,8 +284,8 @@ void transform_program::specialized_processing(const string& code) {
 		const string cur_user_buffer_str = size_t2string(cur_user_buffer);
 		switch (oclr_struct.type) {
 			case oclraster_program::STRUCT_TYPE::INPUT:
-				buffer_handling_code += (oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str +
-										 " = user_buffer_"+cur_user_buffer_str+"[indices[i]];\n");
+				buffer_handling_code += oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str +
+										 " = user_buffer_"+cur_user_buffer_str+"[indices[i]];\n";
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
 			case oclraster_program::STRUCT_TYPE::OUTPUT:
@@ -297,6 +304,12 @@ void transform_program::specialized_processing(const string& code) {
 											 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
+			case oclraster_program::STRUCT_TYPE::IMAGES:
+				// TODO: !
+				for(const auto& img : oclr_struct.variables) {
+					main_call_parameters += img + ", ";
+				}
+				continue;
 		}
 		cur_user_buffer++;
 	}
@@ -322,11 +335,16 @@ string transform_program::create_entry_function_parameters() {
 			case STRUCT_TYPE::OUTPUT:
 				// private memory
 				break;
+			case oclraster_program::STRUCT_TYPE::IMAGES:
+				// TODO: !
+				for(size_t img_num = 0, img_count = structs[i].variables.size();
+					img_num < img_count; img_num++) {
+					entry_function_params += "uint32_image " + structs[i].variables[img_num] + ", ";
+				}
+				continue;
 		}
-		entry_function_params += structs[i].name + "* " + structs[i].object_name;
-		if(i < struct_count-1) entry_function_params += ", ";
+		entry_function_params += structs[i].name + "* " + structs[i].object_name + ", ";
 	}
-	if(entry_function_params != "") entry_function_params += ", ";
 	entry_function_params += transform_params;
 	return entry_function_params;
 }
