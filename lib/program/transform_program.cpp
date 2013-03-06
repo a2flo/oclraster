@@ -243,35 +243,15 @@ oclraster_program(code, entry_function_) {
 transform_program::~transform_program() {
 }
 
-void transform_program::specialized_processing(const string& code) {
+string transform_program::specialized_processing(const string& code,
+												 const kernel_image_spec& image_spec) {
 	// insert (processed) user code into template program
-	program_code = template_transform_program;
+	string program_code = template_transform_program;
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_CODE###", code);
 	
-	// create kernel parameters string (buffers will be called "user_buffer_#")
-	string kernel_parameters = "";
-	size_t user_buffer_count = 0;
-	for(const auto& oclr_struct : structs) {
-		switch (oclr_struct.type) {
-			case oclraster_program::STRUCT_TYPE::INPUT:
-				kernel_parameters += "global const ";
-				break;
-			case oclraster_program::STRUCT_TYPE::OUTPUT:
-				kernel_parameters += "global ";
-				break;
-			case oclraster_program::STRUCT_TYPE::UNIFORMS:
-				kernel_parameters += "constant ";
-				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES:
-				// TODO: !
-				for(const auto& img : oclr_struct.variables) {
-					kernel_parameters += "uint32_image "+img+",\n";
-				}
-				continue;
-		}
-		kernel_parameters += oclr_struct.name + "* user_buffer_"+size_t2string(user_buffer_count)+",\n";
-		user_buffer_count++;
-	}
+	//
+	vector<string> image_decls;
+	const string kernel_parameters { create_user_kernel_parameters(image_spec, image_decls) };
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_STRUCTS###", kernel_parameters);
 	
 	// insert main call + prior buffer handling
@@ -304,14 +284,12 @@ void transform_program::specialized_processing(const string& code) {
 											 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES:
-				// TODO: !
-				for(const auto& img : oclr_struct.variables) {
-					main_call_parameters += img + ", ";
-				}
-				continue;
+			case oclraster_program::STRUCT_TYPE::IMAGES: oclr_unreachable();
 		}
 		cur_user_buffer++;
+	}
+	for(const auto& img : images.image_names) {
+		main_call_parameters += img + ", ";
 	}
 	main_call_parameters += "i, &VE, &vertices[i]"; // the same for all transform programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_PRE_MAIN_CALL###", pre_buffer_handling_code);
@@ -319,32 +297,29 @@ void transform_program::specialized_processing(const string& code) {
 						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_OUTPUT_COPY###", output_handling_code);
 	
+	// replace remaining image placeholders
+	for(size_t i = 0, img_count = image_decls.size(); i < img_count; i++) {
+		core::find_and_replace(program_code, "//###OCLRASTER_IMAGE_"+size_t2string(i)+"###", image_decls[i]);
+	}
+	
 	// done
 	//oclr_msg("generated transform user program: %s", program_code);
+	return program_code;
 }
 
-string transform_program::create_entry_function_parameters() {
-	static const string transform_params = "const int index, const float3* VE, float3* transformed_vertex";
-	string entry_function_params = "";
-	for(size_t i = 0, struct_count = structs.size(); i < struct_count; i++) {
-		switch(structs[i].type) {
-			case STRUCT_TYPE::INPUT:
-			case STRUCT_TYPE::UNIFORMS:
-				entry_function_params += "const ";
-				break;
-			case STRUCT_TYPE::OUTPUT:
-				// private memory
-				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES:
-				// TODO: !
-				for(size_t img_num = 0, img_count = structs[i].variables.size();
-					img_num < img_count; img_num++) {
-					entry_function_params += "uint32_image " + structs[i].variables[img_num] + ", ";
-				}
-				continue;
-		}
-		entry_function_params += structs[i].name + "* " + structs[i].object_name + ", ";
+string transform_program::get_fixed_entry_function_parameters() const {
+	return "const int index, const float3* VE, float3* transformed_vertex";
+}
+
+string transform_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type) const {
+	switch(type) {
+		case STRUCT_TYPE::INPUT:
+		case STRUCT_TYPE::UNIFORMS:
+			return "const";
+		case STRUCT_TYPE::OUTPUT:
+			// private memory
+			return "";
+		case oclraster_program::STRUCT_TYPE::IMAGES:
+			return "";
 	}
-	entry_function_params += transform_params;
-	return entry_function_params;
 }

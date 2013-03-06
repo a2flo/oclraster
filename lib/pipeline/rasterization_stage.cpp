@@ -24,7 +24,7 @@ struct __attribute__((packed)) constant_data_rp {
 	const unsigned int triangle_count;
 };
 
-rasterization_stage::rasterization_stage() {
+rasterization_stage::rasterization_stage() : stage_base() {
 	const_buffer_rp = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 										 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 										 sizeof(constant_data_rp), nullptr);
@@ -44,36 +44,15 @@ void rasterization_stage::rasterize(draw_state& state,
 	ocl->write_buffer(const_buffer_rp, &const_data_rp); // TODO: make this non-blocking
 
 	//
-	unsigned int argc = 0;
-	ocl->use_kernel(state.rasterize_prog->get_identifier());
-	
-	// TODO: only use necessary data (-> condense buffer in transform stage / throw away unnecessary triangles)
-	// set user buffers
-	for(const auto& user_struct : state.rasterize_prog->get_structs()) {
-		if(user_struct.type == oclraster_program::STRUCT_TYPE::IMAGES) {
-			// TODO: ! (combine)
-			for(const auto& img_name : user_struct.variables) {
-				const auto buffer = state.user_buffers.find(img_name);
-				// TODO: only check this in debug mode?
-				if(buffer == state.user_buffers.cend()) {
-					oclr_error("buffer \"%s\" not bound!", img_name);
-					return;
-				}
-				ocl->set_kernel_argument(argc++, &buffer->second);
-			}
-		}
-		else {
-			const auto buffer = state.user_buffers.find(user_struct.object_name);
-			// TODO: only check this in debug mode?
-			if(buffer == state.user_buffers.cend()) {
-				oclr_error("buffer \"%s\" not bound!", user_struct.object_name);
-				return;
-			}
-			ocl->set_kernel_argument(argc++, &buffer->second);
-		}
+	oclraster_program::kernel_image_spec image_spec;
+	if(!create_kernel_image_spec(state, *state.rasterize_prog, image_spec)) {
+		return;
 	}
+	ocl->use_kernel(state.rasterize_prog->get_kernel(image_spec));
 	
 	//
+	unsigned int argc = 0;
+	if(!bind_user_buffers(state, *state.rasterize_prog, argc)) return;
 	ocl->set_kernel_argument(argc++, state.transformed_buffer);
 	ocl->set_kernel_argument(argc++, state.triangle_queues_buffer);
 	ocl->set_kernel_argument(argc++, state.queue_sizes_buffer);

@@ -185,6 +185,10 @@ void opencl_base::use_kernel(const string& identifier) {
 	cur_kernel = kernels[identifier];
 }
 
+void opencl_base::use_kernel(opencl_base::kernel_object* kernel_obj) {
+	cur_kernel = kernel_obj;
+}
+
 void opencl_base::run_kernel() {
 	run_kernel(cur_kernel);
 }
@@ -655,13 +659,17 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			device->extensions = internal_device.getInfo<CL_DEVICE_EXTENSIONS>();
 			
 			oclr_msg("address space size: %u", internal_device.getInfo<CL_DEVICE_ADDRESS_BITS>());
-			oclr_msg("max mem alloc: %u", internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>());
+			oclr_msg("max mem alloc: %u bytes / %u MB",
+					 internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(),
+					 internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>() / 1024 / 1024);
 			oclr_msg("mem base address alignment: %u", internal_device.getInfo<CL_DEVICE_MEM_BASE_ADDR_ALIGN>());
 			oclr_msg("min data type alignment size: %u", internal_device.getInfo<CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE>());
 			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());
 #if defined(CL_VERSION_1_2)
 			if(platform_cl_version >= PLATFORM_CL_VERSION::CL_1_2) {
-				oclr_msg("printf buffer size: %u", internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>());
+				oclr_msg("printf buffer size: %u bytes / %u MB",
+						 internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>(),
+						 internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>() / 1024 / 1024);
 				oclr_msg("max sub-devices: %u", internal_device.getInfo<CL_DEVICE_PARTITION_MAX_SUB_DEVICES>());
 				oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
 			}
@@ -932,6 +940,16 @@ opencl::kernel_object* opencl::add_kernel_src(const string& identifier, const st
 #if defined(__WINDOWS__)
 		options += " -D__WINDOWS__";
 #endif
+		
+		// platform specific compile options
+		switch(platform_vendor) {
+			case PLATFORM_VENDOR::AMD:
+				// use the "static c++" compiler
+				options += " -x clc++";
+				break;
+			default:
+				break;
+		}
 		
 		// add kernel
 		kernels[identifier] = new opencl::kernel_object();

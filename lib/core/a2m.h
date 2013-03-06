@@ -38,8 +38,8 @@ public:
 		float2 tex_coord;
 	};
 	
-	const transform_stage::vertex_buffer& get_vertex_buffer() const;
-	const transform_stage::index_buffer& get_index_buffer(const size_t& sub_object) const;
+	const opencl::buffer_object& get_vertex_buffer() const;
+	const opencl::buffer_object& get_index_buffer(const size_t& sub_object) const;
 	unsigned int get_index_count(const unsigned int& sub_object) const;
 	
 protected:
@@ -59,8 +59,8 @@ protected:
 	index3** tex_indices = nullptr;
 	
 	//
-	transform_stage::vertex_buffer cl_vertex_buffer;
-	vector<transform_stage::index_buffer> cl_index_buffers;
+	opencl::buffer_object* cl_vertex_buffer;
+	vector<opencl::buffer_object*> cl_index_buffers;
 	
 	//
 	void load(const string& filename);

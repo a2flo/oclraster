@@ -1,40 +1,38 @@
 /*
  *  Flexible OpenCL Rasterizer (oclraster)
  *  Copyright (C) 2012 - 2013 Florian Ziesche
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; version 2 of the License only.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_TRANSFORM_STAGE_H__
-#define __OCLRASTER_TRANSFORM_STAGE_H__
+#include "global.h"
+#include "image_types.h"
 
-#include "cl/opencl.h"
-#include "pipeline/stage_base.h"
-
-struct draw_state;
-class transform_stage : public stage_base {
-public:
-	transform_stage();
-	virtual ~transform_stage();
-	
-	//
-	void transform(draw_state& state,
-				   const unsigned int& num_elements);
-
-protected:
-	opencl_base::buffer_object* const_buffer_tp = nullptr;
-
+static constexpr array<const char*, (size_t)IMAGE_TYPE::__MAX_TYPE> data_type_str_table {
+	{
+		"",
+		"char", "short", "int", "long",
+		"uchar", "ushort", "uint", "ulong",
+		"half", "float", "double"
+	}
 };
 
-#endif
+static constexpr array<const char*, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL> channel_type_str_table {
+	{ "", "", "2", "3", "4" }
+};
+
+string image_type_to_string(const image_type& img_type) {
+	return (string(data_type_str_table[(size_t)get_image_data_type(img_type)]) +
+			channel_type_str_table[(size_t)get_image_channel_type(img_type)]);
+}

@@ -16,6 +16,17 @@
 #define OCLRASTER_FUNC inline
 #endif
 
+#if defined(__clang__)
+#define FUNC_OVERLOAD __attribute__((overloadable))
+#else
+#define FUNC_OVERLOAD
+#endif
+
+// ignore all "no previous prototype" warnings
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#endif
+
 #if defined(PLATFORM_NVIDIA)
 #pragma OPENCL EXTENSION cl_nv_compiler_options : enable
 #endif
@@ -33,6 +44,43 @@
 #endif
 
 #pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable
+#pragma OPENCL EXTENSION cl_khr_fp16 : enable
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+
+//
+#if !defined(cl_khr_fp16)
+
+#if defined(__clang__)
+typedef half oclr_half;
+typedef __attribute__(( ext_vector_type(2) ))  half oclr_half2;
+typedef __attribute__(( ext_vector_type(3) ))  half oclr_half3;
+typedef __attribute__(( ext_vector_type(4) ))  half oclr_half4;
+typedef __attribute__(( ext_vector_type(8) ))  half oclr_half8;
+typedef __attribute__(( ext_vector_type(16) )) half oclr_half16;
+#else
+// TODO: define correct half types on platforms without fp16/half support
+typedef half oclr_half;
+typedef half2 oclr_half2;
+typedef half3 oclr_half3;
+typedef half4 oclr_half4;
+typedef half8 oclr_half8;
+typedef half16 oclr_half16;
+#endif
+
+#if !defined(PLATFORM_APPLE) || \
+	(defined(PLATFORM_APPLE) && defined(CPU))
+float2 FUNC_OVERLOAD convert_float2(oclr_half2 vec) {
+	return (float2)(convert_float(vec.x), convert_float(vec.y));
+}
+float3 FUNC_OVERLOAD convert_float3(oclr_half3 vec) {
+	return (float3)(convert_float(vec.x), convert_float(vec.y), convert_float(vec.z));
+}
+float4 FUNC_OVERLOAD convert_float4(oclr_half4 vec) {
+	return (float4)(convert_float(vec.x), convert_float(vec.y), convert_float(vec.z), convert_float(vec.w));
+}
+#endif
+
+#endif
 
 //
 #define print_float3(vec) { \
@@ -61,10 +109,5 @@
 #define oclraster_in typedef struct __attribute__((packed, aligned(16)))
 #define oclraster_out typedef struct __attribute__((packed, aligned(16)))
 #define oclraster_uniforms typedef struct __attribute__((packed, aligned(16)))
-
-// ignore all "no previous prototype" warnings
-#if defined(__clang__)
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-#endif
 
 #endif

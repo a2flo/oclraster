@@ -172,6 +172,7 @@ public:
 	void reload_kernels();
 	
 	void use_kernel(const string& identifier);
+	void use_kernel(kernel_object* kernel_obj);
 	void run_kernel();
 	void run_kernel(const string& identifier);
 	virtual void run_kernel(kernel_object* kernel_obj) = 0;

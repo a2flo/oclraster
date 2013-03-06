@@ -57,6 +57,7 @@
 		5C38554E1670AE26003380CA /* clear_framebuffer.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = clear_framebuffer.cl; sourceTree = "<group>"; };
 		5C47267016A69E1200F7EA21 /* simple_shader_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_fs.cl; sourceTree = "<group>"; };
 		5C47267116A69E1200F7EA21 /* simple_shader_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_vs.cl; sourceTree = "<group>"; };
+		5C55F7F016E4F92E0050946C /* oclr_image_support.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_image_support.h; sourceTree = "<group>"; };
 		5C5C186516C24D2500AB23E6 /* oclr_simple_iosd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = oclr_simple_iosd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C5C188216C24E2400AB23E6 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		5C5C188416C24E2800AB23E6 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/System/Library/Frameworks/OpenGLES.framework; sourceTree = DEVELOPER_DIR; };
@@ -229,6 +230,7 @@
 				5C91650F166685EA00626436 /* oclr_math.h */,
 				5C916510166685EA00626436 /* oclr_matrix.h */,
 				5C2D23CB16D50C1700013DBF /* oclr_image.h */,
+				5C55F7F016E4F92E0050946C /* oclr_image_support.h */,
 				5CCC967B1641BF72005C3DE4 /* cutil_math.h */,
 				5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */,
 				5C9165111666946B00626436 /* bin_rasterize.cl */,
@@ -525,7 +527,47 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-fno-elide-type",
+					"-fdiagnostics-show-template-tree",
+				);
 				SDKROOT = macosx;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-header-hygiene",
+					"-Wno-gnu",
+					"-Wno-float-equal",
+					"-Wno-documentation",
+					"-Wno-system-headers",
+					"-Wno-global-constructors",
+					"-Wno-padded",
+					"-Wno-packed",
+					"-Wno-switch-enum",
+					"-Wno-sign-conversion",
+					"-Wno-conversion",
+					"-Wno-exit-time-destructors",
+					"-Wno-unknown-warning-option",
+					"-Wmissing-field-initializers",
+					"-Wmissing-prototypes",
+					"-Wreturn-type",
+					"-Woverloaded-virtual",
+					"-Wmissing-braces",
+					"-Wunused-function",
+					"-Wunused-label",
+					"-Wunused-parameter",
+					"-Wunused-variable",
+					"-Wuninitialized",
+					"-Wunknown-pragmas",
+					"-Wfour-char-constants",
+					"-Wshorten-64-to-32",
+					"-Wnewline-eof",
+					"-Wnon-virtual-dtor",
+					"-Wno-disabled-macro-expansion",
+					"-Wno-nested-anon-types",
+				);
 			};
 			name = Debug;
 		};
@@ -547,7 +589,47 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-fno-elide-type",
+					"-fdiagnostics-show-template-tree",
+				);
 				SDKROOT = macosx;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-header-hygiene",
+					"-Wno-gnu",
+					"-Wno-float-equal",
+					"-Wno-documentation",
+					"-Wno-system-headers",
+					"-Wno-global-constructors",
+					"-Wno-padded",
+					"-Wno-packed",
+					"-Wno-switch-enum",
+					"-Wno-sign-conversion",
+					"-Wno-conversion",
+					"-Wno-exit-time-destructors",
+					"-Wno-unknown-warning-option",
+					"-Wmissing-field-initializers",
+					"-Wmissing-prototypes",
+					"-Wreturn-type",
+					"-Woverloaded-virtual",
+					"-Wmissing-braces",
+					"-Wunused-function",
+					"-Wunused-label",
+					"-Wunused-parameter",
+					"-Wunused-variable",
+					"-Wuninitialized",
+					"-Wunknown-pragmas",
+					"-Wfour-char-constants",
+					"-Wshorten-64-to-32",
+					"-Wnewline-eof",
+					"-Wnon-virtual-dtor",
+					"-Wno-disabled-macro-expansion",
+					"-Wno-nested-anon-types",
+				);
 			};
 			name = Release;
 		};

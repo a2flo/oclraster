@@ -27,8 +27,10 @@ public:
 	virtual ~transform_program();
 
 protected:
-	virtual void specialized_processing(const string& code);
-	virtual string create_entry_function_parameters();
+	virtual string specialized_processing(const string& code,
+										  const kernel_image_spec& image_spec);
+	virtual string get_fixed_entry_function_parameters() const;
+	virtual string get_qualifier_for_struct_type(const STRUCT_TYPE& type) const;
 
 };
 

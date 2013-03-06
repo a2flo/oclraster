@@ -18,13 +18,17 @@ oclraster_uniforms rasterize_uniforms {
 } rp_uniforms;
 
 oclraster_images {
-	image2d diffuse_texture;
-	image2d normal_texture;
-	image2d height_texture;
+	// NOTE: hints are optional (will default to <UINT_8, RGBA>)
+	read_only image2d<UINT_8, RGBA> diffuse_texture;
+	read_only image2d normal_texture;
+	read_only image2d height_texture;
+	read_only image2d fp_noise;
+	//framebuffer fb; // coming soon(tm)
 };
 
 void rasterize_main() {
 	// parallax mapping
+	const sampler_t sampler = CLK_FILTER_LINEAR;
 	const float parallax = 0.03f; // determines the "deepness"
 	const float3 view_vec = normalize(output_attributes->view_vec.xyz);
 	
@@ -32,13 +36,18 @@ void rasterize_main() {
 	float offset = 0.0f;
 	float2 parallax_tex_coord = output_attributes->tex_coord;
 	for(unsigned int i = 1; i < 4; i++) {
-		height += oclr_read_image_lin(height_texture, parallax_tex_coord).x;
+		height += image_read(height_texture, sampler, parallax_tex_coord).x;
 		offset = parallax * ((2.0f / convert_float(i)) * height - 1.0f);
 		parallax_tex_coord = output_attributes->tex_coord + offset * view_vec.xy;
 	}
 	
 	//
-	float3 normal = oclr_read_image_lin(normal_texture, parallax_tex_coord).xyz * 2.0f - 1.0f;
+	const sampler_t point_sampler = CLK_FILTER_NEAREST;
+	const float noise_offset = image_read(fp_noise, point_sampler, parallax_tex_coord).x;
+	const float noise = image_read(fp_noise, sampler, fragment_coord/100.0f + noise_offset).x;
+	
+	//
+	float3 normal = image_read(normal_texture, sampler, parallax_tex_coord).xyz * 2.0f - 1.0f;
 	mat3 nbt_mat;
 	nbt_mat.m[0] = output_attributes->tangent.xyz;
 	nbt_mat.m[1] = output_attributes->binormal.xyz;
@@ -70,6 +79,7 @@ void rasterize_main() {
 		}
 		
 		*fragment_color = (float4)(diff_color + spec_color, 1.0f);
-		(*fragment_color).xyz *= oclr_read_image_lin(diffuse_texture, parallax_tex_coord).xyz;
+		(*fragment_color).xyz *= image_read(diffuse_texture, sampler, parallax_tex_coord).xyz;
+		(*fragment_color).xyz *= 0.5f + (noise * 0.5f);
 	}
 }

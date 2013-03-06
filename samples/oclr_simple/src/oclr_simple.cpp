@@ -68,7 +68,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
 	
-	p->_reserve_memory(std::max(8192u, model->get_index_buffer(0).index_count / 3));
+	p->_reserve_memory(std::max(8192u, model->get_index_count(0)));
 	
 	// add event handlers
 	event::handler key_handler_fnctr(&key_handler);
@@ -113,8 +113,8 @@ int main(int argc oclr_unused, char* argv[]) {
 #endif
 	
 	// create / ref buffers
-	const opencl::buffer_object& index_buffer = *model->get_index_buffer(0).buffer;
-	const opencl::buffer_object& input_attributes = *model->get_vertex_buffer().buffer;
+	const opencl::buffer_object& index_buffer = model->get_index_buffer(0);
+	const opencl::buffer_object& input_attributes = model->get_vertex_buffer();
 	
 	struct __attribute__((packed, aligned(16))) tp_uniforms {
 		matrix4f rotation_scale;
@@ -165,26 +165,34 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	array<array<image, 3>, 4> materials {{ // excessive braces are excessive
 		{{
-			image::from_file(oclraster::data_path(texture_names[0]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[1]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[2]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA)
+			image::from_file(oclraster::data_path(texture_names[0]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[1]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[2]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}},
 		{{
-			image::from_file(oclraster::data_path(texture_names[3]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[4]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[5]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA)
+			image::from_file(oclraster::data_path(texture_names[3]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[4]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[5]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}},
 		{{
-			image::from_file(oclraster::data_path(texture_names[6]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[7]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[8]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA)
+			image::from_file(oclraster::data_path(texture_names[6]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[7]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[8]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}},
 		{{
-			image::from_file(oclraster::data_path(texture_names[9]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[10]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[11]+".png"), image::TYPE::UINT_8, image::CHANNEL::RGBA)
+			image::from_file(oclraster::data_path(texture_names[9]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[10]+".png"),IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[11]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}}
 	}};
+	
+	//
+	float* fp_noise_data = new float[512*512];
+	for(size_t i = 0; i < (512*512); i++) {
+		fp_noise_data[i] = core::rand(0.0f, 1.0f);
+	}
+	image* fp_noise = new image(512, 512, IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R, fp_noise_data);
+	delete [] fp_noise_data;
 	
 	// init done
 	oclraster::release_context();
@@ -277,6 +285,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_image("diffuse_texture", materials[selected_material][0]);
 		p->bind_image("normal_texture", materials[selected_material][1]);
 		p->bind_image("height_texture", materials[selected_material][2]);
+		p->bind_image("fp_noise", *fp_noise);
 		p->draw({0, model->get_index_count(0)-1});
 		
 		p->stop();
@@ -284,6 +293,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	}
 	
 	// cleanup
+	delete fp_noise;
 	delete model;
 	delete cam;
 	

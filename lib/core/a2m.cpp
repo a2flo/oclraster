@@ -28,12 +28,12 @@ a2m::a2m(const string& filename) {
 }
 
 a2m::~a2m() {
-	if(cl_vertex_buffer.buffer != nullptr) {
-		ocl->delete_buffer(cl_vertex_buffer.buffer);
+	if(cl_vertex_buffer != nullptr) {
+		ocl->delete_buffer(cl_vertex_buffer);
 	}
 	for(const auto& ib : cl_index_buffers) {
-		if(ib.buffer != nullptr) {
-			ocl->delete_buffer(ib.buffer);
+		if(ib != nullptr) {
+			ocl->delete_buffer(ib);
 		}
 	}
 	if(vertices != nullptr) delete [] vertices;
@@ -148,22 +148,21 @@ void a2m::load(const string& filename) {
 		vdata[i].tangent.w = 1.0f;
 		vdata[i].tex_coord = tex_coords[i];
 	}
-	cl_vertex_buffer.buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
-												 opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
-												 opencl::BUFFER_FLAG::INITIAL_COPY,
-												 sizeof(vertex_data) * vertex_count,
-												 vdata);
+	cl_vertex_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
+										  opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
+										  opencl::BUFFER_FLAG::INITIAL_COPY,
+										  sizeof(vertex_data) * vertex_count,
+										  vdata);
 	delete [] vdata;
 	
 	for(unsigned int i = 0; i < object_count; i++) {
-		transform_stage::index_buffer ib;
-		ib.index_count = index_count[i] * 3; // 3 vertices/indices per triangle
-		ib.buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
-									   opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
-									   opencl::BUFFER_FLAG::INITIAL_COPY,
-									   sizeof(unsigned int) * ib.index_count,
-									   indices[i]);
-		cl_index_buffers.emplace_back(ib);
+		opencl::buffer_object* index_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
+																 opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
+																 opencl::BUFFER_FLAG::INITIAL_COPY,
+																 // 3 vertices/indices per triangle
+																 sizeof(unsigned int) * index_count[i] * 3,
+																 indices[i]);
+		cl_index_buffers.emplace_back(index_buffer);
 	}
 }
 
@@ -243,12 +242,12 @@ void a2m::reorganize_model_data() {
 	indices = tex_indices;
 }
 
-const transform_stage::vertex_buffer& a2m::get_vertex_buffer() const {
-	return cl_vertex_buffer;
+const opencl::buffer_object& a2m::get_vertex_buffer() const {
+	return *cl_vertex_buffer;
 }
 
-const transform_stage::index_buffer& a2m::get_index_buffer(const size_t& sub_object) const {
-	return cl_index_buffers[sub_object];
+const opencl::buffer_object& a2m::get_index_buffer(const size_t& sub_object) const {
+	return *cl_index_buffers[sub_object];
 }
 
 unsigned int a2m::get_index_count(const unsigned int& sub_object) const {

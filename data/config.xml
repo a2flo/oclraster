@@ -5,7 +5,7 @@
 	<screen width="1280" height="720" fullscreen="0" vsync="0" stereo="0" dpi="0"/>
 	<!--<screen width="1920" height="1080" fullscreen="1" vsync="1" stereo="0" dpi="0"/>-->
 
-	<!-- you might want to change the field of view and upscaling, but near/far should remain at 1/1000 -->
+	<!-- you might want to change the field of view and upscaling, but near/far should remain at 0.1/1000 -->
 	<projection fov="45.0" near="0.1" far="1000.0" upscaling="1.0"/>
 
 	<!-- there should be no need to change these -->

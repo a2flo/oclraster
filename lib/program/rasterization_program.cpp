@@ -116,35 +116,15 @@ oclraster_program(code, entry_function_) {
 rasterization_program::~rasterization_program() {
 }
 
-void rasterization_program::specialized_processing(const string& code) {
+string rasterization_program::specialized_processing(const string& code,
+													 const kernel_image_spec& image_spec) {
 	// insert (processed) user code into template program
-	program_code = template_rasterization_program;
+	string program_code = template_rasterization_program;
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_CODE###", code);
 	
-	// create kernel parameters string (buffers will be called "user_buffer_#")
-	string kernel_parameters = "";
-	size_t user_buffer_count = 0;
-	for(const auto& oclr_struct : structs) {
-		switch (oclr_struct.type) {
-			case oclraster_program::STRUCT_TYPE::INPUT:
-				// there are no input structs
-				continue;
-			case oclraster_program::STRUCT_TYPE::OUTPUT:
-				kernel_parameters += "global ";
-				break;
-			case oclraster_program::STRUCT_TYPE::UNIFORMS:
-				kernel_parameters += "constant ";
-				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES:
-				// TODO: !
-				for(const auto& img : oclr_struct.variables) {
-					kernel_parameters += "uint32_image "+img+",\n";
-				}
-				continue;
-		}
-		kernel_parameters += oclr_struct.name + "* user_buffer_"+size_t2string(user_buffer_count)+",\n";
-		user_buffer_count++;
-	}
+	//
+	vector<string> image_decls;
+	const string kernel_parameters { create_user_kernel_parameters(image_spec, image_decls) };
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_STRUCTS###", kernel_parameters);
 	
 	// insert main call + prior buffer handling
@@ -183,45 +163,40 @@ void rasterization_program::specialized_processing(const string& code) {
 										 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES:
-				// TODO: !
-				for(const auto& img : oclr_struct.variables) {
-					main_call_parameters += img + ", ";
-				}
-				continue;
+			case oclraster_program::STRUCT_TYPE::IMAGES: oclr_unreachable();
 		}
 		cur_user_buffer++;
+	}
+	for(const auto& img : images.image_names) {
+		main_call_parameters += img + ", ";
 	}
 	main_call_parameters += "&fragment_color, &fragment_depth, fragment_coord, barycentric.xyz"; // the same for all rasterization programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
 						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	
+	// replace remaining image placeholders
+	for(size_t i = 0, img_count = image_decls.size(); i < img_count; i++) {
+		core::find_and_replace(program_code, "###OCLRASTER_IMAGE_"+size_t2string(i)+"###", image_decls[i]);
+	}
+	
 	// done
 	//oclr_msg("generated rasterize user program: %s", program_code);
+	return program_code;
 }
 
-string rasterization_program::create_entry_function_parameters() {
-	static const string rasterize_params = "float4* fragment_color, float* depth, const float2 fragment_coord, const float3 barycentric";
-	string entry_function_params = "";
-	for(size_t i = 0, struct_count = structs.size(); i < struct_count; i++) {
-		switch(structs[i].type) {
-			case STRUCT_TYPE::INPUT:
-				// there are no input structs
-				continue;
-			case STRUCT_TYPE::UNIFORMS:
-			case STRUCT_TYPE::OUTPUT:
-				entry_function_params += "const ";
-				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES:
-				// TODO: !
-				for(size_t img_num = 0, img_count = structs[i].variables.size();
-					img_num < img_count; img_num++) {
-					entry_function_params += "uint32_image " + structs[i].variables[img_num] + ", ";
-				}
-				continue;
-		}
-		entry_function_params += structs[i].name + "* " + structs[i].object_name + ", ";
+string rasterization_program::get_fixed_entry_function_parameters() const {
+	return "float4* fragment_color, float* depth, const float2 fragment_coord, const float3 barycentric";
+}
+
+string rasterization_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type) const {
+	switch(type) {
+		case STRUCT_TYPE::INPUT:
+			// there are no input structs
+			return "";
+		case STRUCT_TYPE::UNIFORMS:
+		case STRUCT_TYPE::OUTPUT:
+			return "const";
+		case oclraster_program::STRUCT_TYPE::IMAGES:
+			return "";
 	}
-	entry_function_params += rasterize_params;
-	return entry_function_params;
 }

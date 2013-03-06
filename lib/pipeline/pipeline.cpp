@@ -295,5 +295,10 @@ void pipeline::bind_buffer(const string& name, const opencl_base::buffer_object&
 }
 
 void pipeline::bind_image(const string& name, const image& img) {
-	bind_buffer(name, *img.get_buffer()); // TODO: let the user directly call this?
+	const auto existing_image = state.user_images.find(name);
+	if(existing_image != state.user_images.cend()) {
+		// TODO: unbind previously bound buffer
+		state.user_images.erase(existing_image);
+	}
+	state.user_images.emplace(name, img);
 }

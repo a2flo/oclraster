@@ -26,3 +26,5 @@ build/
 obj/
 log.txt
 config.xml.local
+etc/image_support/oclr_image_support.h
+

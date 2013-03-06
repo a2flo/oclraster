@@ -20,41 +20,20 @@
 #define __OCLRASTER_IMAGE_H__
 
 #include "cl/opencl.h"
+#include "pipeline/image_types.h"
 
 class image {
 public:
-	// this directly maps to opencl types (6.1.1)
-	enum class TYPE : unsigned int {
-		INT_8,		//!< char
-		INT_16,		//!< short
-		INT_32,		//!< int
-		INT_64,		//!< long
-		UINT_8,		//!< uchar
-		UINT_16,	//!< ushort
-		UINT_32,	//!< uint
-		UINT_64,	//!< ulong
-		FLOAT_16,	//!< half
-		FLOAT_32,	//!< float
-		FLOAT_64,	//!< double (note: must be supported by the device)
-		__MAX_TYPE
-	};
-	enum class CHANNEL : unsigned int {
-		R,
-		RG,
-		RGB,
-		RGBA,
-		__MAX_CHANNEL
-	};
-	
+	//
 	image(const unsigned int& width, const unsigned int& height,
-		  const TYPE& type, const CHANNEL& channel_order,
+		  const IMAGE_TYPE& type, const IMAGE_CHANNEL& channel_order,
 		  const void* pixels = nullptr);
 	image(image&& img);
 	~image();
 	
 	// this uses SDL2_image to create an image from a .png file
 	static image from_file(const string& filename,
-						   const TYPE& type, const CHANNEL& channel_order);
+						   const IMAGE_TYPE& type, const IMAGE_CHANNEL& channel_order);
 	
 	//
 	enum class BACKING : unsigned int {
@@ -62,6 +41,9 @@ public:
 		IMAGE	//!< backed by an actual opencl image object
 	};
 	BACKING get_backing() const;
+	
+	IMAGE_TYPE get_data_type() const;
+	IMAGE_CHANNEL get_channel_order() const;
 	
 	// note: opencl only supports read_only and write_only images
 	// -> if you need read_write access inside your kernel,
@@ -73,20 +55,22 @@ public:
 	};
 	
 	// image header when a buffer is used
-	struct __attribute__((packed, aligned(16))) header {
-		TYPE type;
-		CHANNEL channel_order;
-		unsigned int width;
-		unsigned int height;
+	struct __attribute__((packed, aligned(8))) header {
+		IMAGE_TYPE type;
+		IMAGE_CHANNEL channel_order;
+		unsigned short int width;
+		unsigned short int height;
 	};
-	static_assert(sizeof(header) == 16, "invalid image header size!");
+	static_assert(sizeof(header) == 8, "invalid image header size!");
 	static constexpr size_t header_size() { return sizeof(header); }
 	
 	//
 	const opencl::buffer_object* get_buffer() const;
 	
 protected:
-	BACKING backing = BACKING::BUFFER;
+	const BACKING backing;
+	const IMAGE_TYPE data_type;
+	const IMAGE_CHANNEL channel_order;
 	opencl::buffer_object* buffer = nullptr;
 	
 };

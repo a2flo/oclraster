@@ -20,12 +20,13 @@
 #define __OCLRASTER_RASTERIZATION_STAGE_H__
 
 #include "cl/opencl.h"
+#include "pipeline/stage_base.h"
 
 struct draw_state;
-class rasterization_stage {
+class rasterization_stage : public stage_base {
 public:
 	rasterization_stage();
-	~rasterization_stage();
+	virtual ~rasterization_stage();
 	
 	void rasterize(draw_state& state,
 				   const unsigned int& triangle_count);

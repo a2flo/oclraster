@@ -30,7 +30,7 @@ struct __attribute__((packed, aligned(16))) constant_data_tp {
 	uint2 viewport;
 };
 
-transform_stage::transform_stage() {
+transform_stage::transform_stage() : stage_base() {
 	const_buffer_tp = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 										 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 										 sizeof(constant_data_tp));
@@ -55,35 +55,18 @@ void transform_stage::transform(draw_state& state,
 	};
 	ocl->write_buffer(const_buffer_tp, &const_data_tp); // TODO: make this non-blocking
 	
+	//
+	oclraster_program::kernel_image_spec image_spec;
+	if(!create_kernel_image_spec(state, *state.transform_prog, image_spec)) {
+		return;
+	}
+	
 	// -> 1D kernel, with max #work-items per work-group
 	// -> index_range / (max #work-items per work-group)
-	unsigned int argc = 0;
-	ocl->use_kernel(state.transform_prog->get_identifier());
+	ocl->use_kernel(state.transform_prog->get_kernel(image_spec));
 	
-	// set user buffers
-	for(const auto& user_struct : state.transform_prog->get_structs()) {
-		if(user_struct.type == oclraster_program::STRUCT_TYPE::IMAGES) {
-			// TODO: ! (combine)
-			for(const auto& img_name : user_struct.variables) {
-				const auto buffer = state.user_buffers.find(img_name);
-				// TODO: only check this in debug mode?
-				if(buffer == state.user_buffers.cend()) {
-					oclr_error("buffer \"%s\" not bound!", img_name);
-					return;
-				}
-				ocl->set_kernel_argument(argc++, &buffer->second);
-			}
-		}
-		else {
-			const auto buffer = state.user_buffers.find(user_struct.object_name);
-			// TODO: only check this in debug mode?
-			if(buffer == state.user_buffers.cend()) {
-				oclr_error("buffer \"%s\" not bound!", user_struct.object_name);
-				return;
-			}
-			ocl->set_kernel_argument(argc++, &buffer->second);
-		}
-	}
+	unsigned int argc = 0;
+	if(!bind_user_buffers(state, *state.transform_prog, argc)) return;
 	
 	const auto index_buffer = state.user_buffers.find("index_buffer");
 	if(index_buffer == state.user_buffers.cend()) {

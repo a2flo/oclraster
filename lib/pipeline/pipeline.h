@@ -57,11 +57,12 @@ struct draw_state {
 	opencl::buffer_object* info_buffer = nullptr;
 	opencl::buffer_object* transformed_buffer = nullptr;
 	unordered_map<string, const opencl_base::buffer_object&> user_buffers;
+	unordered_map<string, const image&> user_images;
 	vector<opencl::buffer_object*> user_transformed_buffers;
 	
 	//
-	const transform_program* transform_prog = nullptr;
-	const rasterization_program* rasterize_prog = nullptr;
+	transform_program* transform_prog = nullptr;
+	rasterization_program* rasterize_prog = nullptr;
 	
 	//
 	const uint2 tile_size { 32, 32 };
