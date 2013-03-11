@@ -23,7 +23,10 @@ oclraster_images {
 	read_only image2d normal_texture;
 	read_only image2d height_texture;
 	read_only image2d fp_noise;
-	//framebuffer fb; // coming soon(tm)
+};
+oclraster_framebuffer {
+	image2d color;
+	depth_image depth;
 };
 
 void rasterize_main() {
@@ -78,8 +81,9 @@ void rasterize_main() {
 			spec_color = attenuation * specular;
 		}
 		
-		*fragment_color = (float4)(diff_color + spec_color, 1.0f);
-		(*fragment_color).xyz *= image_read(diffuse_texture, sampler, parallax_tex_coord).xyz;
-		(*fragment_color).xyz *= 0.5f + (noise * 0.5f);
+		float4 color = (float4)(diff_color + spec_color, 1.0f);
+		color.xyz *= image_read(diffuse_texture, sampler, parallax_tex_coord).xyz;
+		color.xyz *= 0.5f + (noise * 0.5f);
+		framebuffer->color = color;
 	}
 }

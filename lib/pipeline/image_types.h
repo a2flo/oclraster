@@ -58,6 +58,8 @@ constexpr IMAGE_CHANNEL get_image_channel_type(const image_type& img_type) {
 	return (IMAGE_CHANNEL)((img_type >> 16u) & 0xFFFFu);
 }
 extern string image_type_to_string(const image_type& img_type);
+extern string image_data_type_to_string(const IMAGE_TYPE& img_data_type);
+extern string image_channel_type_to_string(const IMAGE_CHANNEL& img_channel_type);
 
 // TODO: user defined types
 

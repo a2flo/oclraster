@@ -19,6 +19,13 @@ RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(nearest)(global const IMG_TY
 	return (RETURN_TYPE_VEC4)( ((IMG_CONVERT_FUNC(texel)IMG_NORMALIZATION VEC4_FILL);
 }
 
+RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const uint2 coord) {
+	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+	const IMG_TYPE texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
+	// double "(" is intended to make things easier with more complex normalization
+	return (RETURN_TYPE_VEC4)( ((IMG_CONVERT_FUNC(texel)IMG_NORMALIZATION VEC4_FILL);
+}
+
 RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(linear)(global const IMG_TYPE* img, const float2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
 	const float2 fimg_size = convert_float2(img_size) - 1.0f;
@@ -61,5 +68,11 @@ RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_NAME()(global const IMG_TYPE* img, const
 	// need to check linear first (CLK_FILTER_NEAREST might be 0)
 	if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return IMG_FUNC_FILTER_NAME(linear)(img, coord);
 	else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return IMG_FUNC_FILTER_NAME(nearest)(img, coord);
+	return (RETURN_TYPE_VEC4)(IMG_ZERO, IMG_ZERO, IMG_ZERO, IMG_ONE);
+}
+
+RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_NAME()(global const IMG_TYPE* img, const sampler_t sampler, const uint2 coord) {
+	// filter must be set to CLK_FILTER_NEAREST
+	if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return IMG_FUNC_FILTER_NAME(nearest)(img, coord);
 	return (RETURN_TYPE_VEC4)(IMG_ZERO, IMG_ZERO, IMG_ZERO, IMG_ONE);
 }

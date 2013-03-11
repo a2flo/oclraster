@@ -50,18 +50,17 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 								   const uint2 bin_count,
 								   const unsigned int queue_size,
 								   constant constant_data* cdata,
-								   const uint2 framebuffer_size,
-								   global uchar4* color_framebuffer,
-								   global float* depth_framebuffer) {
+								   const uint2 framebuffer_size) {
 		const unsigned int x = get_global_id(0);
 		const unsigned int y = get_global_id(1);
 		if(x >= framebuffer_size.x) return;
 		if(y >= framebuffer_size.y) return;
 		
-		const unsigned int framebuffer_offset = (y * framebuffer_size.x) + x;
-		float4 fragment_color = convert_float4(color_framebuffer[framebuffer_offset]) / 255.0f;
-		const float input_depth = depth_framebuffer[framebuffer_offset];
-		float fragment_depth = input_depth;
+		// TODO: handling if there is no depth buffer / depth testing
+		// TODO: stencil testing
+		// TODO: scissor testing
+		
+		//###OCLRASTER_FRAMEBUFFER_READ###
 		
 		const float2 fragment_coord = (float2)(x, y);
 		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
@@ -91,19 +90,18 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 			barycentric /= barycentric.x + barycentric.y + barycentric.z;
 			
 			// depth test:
-			if(barycentric.w >= fragment_depth) continue;
+			if(barycentric.w >= *fragment_depth) continue;
 			
 			// reset depth (note: fragment_color will contain the last valid color)
-			fragment_depth = barycentric.w;
+			*fragment_depth = barycentric.w;
 			
 			//
 			//###OCLRASTER_USER_MAIN_CALL###
 		}
 		
-		// write last depth (if it has changed)
-		if(fragment_depth < input_depth /*|| fragment_depth == input_depth*/) {
-			color_framebuffer[framebuffer_offset] = convert_uchar4_sat(fragment_color * 255.0f);
-			depth_framebuffer[framebuffer_offset] = fragment_depth;
+		// write framebuffer output (if depth has changed)
+		if(*fragment_depth < input_depth /*|| fragment_depth == *input_depth*/) {
+			//###OCLRASTER_FRAMEBUFFER_WRITE###
 		}
 	}
 )OCLRASTER_RAWSTR"};
@@ -163,21 +161,93 @@ string rasterization_program::specialized_processing(const string& code,
 										 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES: oclr_unreachable();
+			case oclraster_program::STRUCT_TYPE::IMAGES:
+			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
 		}
 		cur_user_buffer++;
 	}
-	for(const auto& img : images.image_names) {
-		main_call_parameters += img + ", ";
+	for(size_t i = 0, img_count = image_decls.size(); i < img_count; i++) {
+		// framebuffer is passed in separately
+		if(images.is_framebuffer[i]) continue;
+		main_call_parameters += images.image_names[i] + ", ";
 	}
-	main_call_parameters += "&fragment_color, &fragment_depth, fragment_coord, barycentric.xyz"; // the same for all rasterization programs
+	main_call_parameters += "&framebuffer, fragment_coord, barycentric.xyz"; // the same for all rasterization programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
 						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	
-	// replace remaining image placeholders
-	for(size_t i = 0, img_count = image_decls.size(); i < img_count; i++) {
+	// image and framebuffer handling
+	string framebuffer_read_code = "", framebuffer_write_code = "";
+	framebuffer_read_code += "oclraster_framebuffer framebuffer;\n";
+	framebuffer_read_code += "const unsigned int framebuffer_offset = (y * framebuffer_size.x) + x + OCLRASTER_IMAGE_HEADER_SIZE;\n";
+	for(size_t i = 0, fb_img_idx = 0, img_count = image_decls.size(); i < img_count; i++) {
+		if(images.is_framebuffer[i]) {
+			// framebuffer type handling
+			// -> 8-bit and 16-bit integer and half float formats have to be treated as floats inside the kernel
+			// -> do the appropriate input/output data conversion
+			// NOTE: 32-bit and 64-bit types (both integer and float) will not be converted to float, since
+			// there is no correct conversion for these types and it probably is not wanted in the first place
+			const auto data_type = get_image_data_type(image_spec[i]);
+			const auto channel_type = get_image_channel_type(image_spec[i]);
+			const string native_data_type_str = image_data_type_to_string(data_type);
+			const string native_channel_type_str = image_channel_type_to_string(channel_type);
+			const string native_type = native_data_type_str + native_channel_type_str;
+			string type_in_kernel = native_type;
+			string input_convert = "";
+			string output_convert = "";
+			string input_normalization = "))";
+			string output_normalization = "))";
+			switch(data_type) {
+				case IMAGE_TYPE::UINT_8:
+				case IMAGE_TYPE::UINT_16:
+				case IMAGE_TYPE::INT_8:
+				case IMAGE_TYPE::INT_16:
+				case IMAGE_TYPE::FLOAT_16:
+					type_in_kernel = "float" + native_channel_type_str;
+					input_convert = "convert_"+type_in_kernel;
+					output_convert = "convert_" + native_type;
+					if(data_type != IMAGE_TYPE::FLOAT_16) output_convert += "_sat"; // only allowed for integer formats
+					break;
+				default: break;
+			}
+			switch(data_type) {
+				case IMAGE_TYPE::UINT_8:
+					input_normalization = ") / 255.0f)";
+					output_normalization = ") * 255.0f)";
+					break;
+				case IMAGE_TYPE::UINT_16:
+					input_normalization = ") / 65535.0f)";
+					output_normalization = ") * 65535.0f)";
+					break;
+				case IMAGE_TYPE::INT_8:
+					input_normalization = " + 128.0f) / 255.0f) * 2.0f - 1.0f";
+					output_normalization = " + 1.0f) * 0.5f) * 255.0f - 128.0f";
+					break;
+				case IMAGE_TYPE::INT_16:
+					input_normalization = " + 32768.0f) / 65535.0f) * 2.0f - 1.0f";
+					output_normalization = " + 1.0f) * 0.5f) * 65535.0f - 32768.0f";
+					break;
+				default: break;
+			}
+			
+			// now that we know the framebuffer type inside the kernel, replace/insert the type in the framebuffer struct declaration
+			core::find_and_replace(program_code, "###OCLRASTER_FRAMEBUFFER_IMAGE_"+size_t2string(fb_img_idx)+"###", type_in_kernel);
+			
+			// framebuffer read/write code
+			framebuffer_read_code += "framebuffer."+images.image_names[i]+" = (("+input_convert+"(";
+			framebuffer_read_code += "oclr_framebuffer_"+images.image_names[i]+"[framebuffer_offset])"+input_normalization+";\n";
+			framebuffer_write_code += "oclr_framebuffer_"+images.image_names[i]+"[framebuffer_offset] = ";
+			framebuffer_write_code += output_convert+"(((framebuffer."+images.image_names[i]+output_normalization+");\n";
+			if(images.image_types[i] == IMAGE_VAR_TYPE::DEPTH_IMAGE) {
+				framebuffer_read_code += "float* fragment_depth = &framebuffer."+images.image_names[i]+";\n";
+				framebuffer_read_code += "const float input_depth = *fragment_depth;\n";
+			}
+			
+			fb_img_idx++;
+		}
 		core::find_and_replace(program_code, "###OCLRASTER_IMAGE_"+size_t2string(i)+"###", image_decls[i]);
 	}
+	core::find_and_replace(program_code, "//###OCLRASTER_FRAMEBUFFER_READ###", framebuffer_read_code);
+	core::find_and_replace(program_code, "//###OCLRASTER_FRAMEBUFFER_WRITE###", framebuffer_write_code);
 	
 	// done
 	//oclr_msg("generated rasterize user program: %s", program_code);
@@ -185,7 +255,7 @@ string rasterization_program::specialized_processing(const string& code,
 }
 
 string rasterization_program::get_fixed_entry_function_parameters() const {
-	return "float4* fragment_color, float* depth, const float2 fragment_coord, const float3 barycentric";
+	return "oclraster_framebuffer* framebuffer, const float2 fragment_coord, const float3 barycentric";
 }
 
 string rasterization_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type) const {
@@ -197,6 +267,7 @@ string rasterization_program::get_qualifier_for_struct_type(const STRUCT_TYPE& t
 		case STRUCT_TYPE::OUTPUT:
 			return "const";
 		case oclraster_program::STRUCT_TYPE::IMAGES:
+		case oclraster_program::STRUCT_TYPE::FRAMEBUFFER:
 			return "";
 	}
 }

@@ -66,6 +66,7 @@ public:
 	
 	//
 	const opencl::buffer_object* get_buffer() const;
+	opencl::buffer_object* get_buffer();
 	
 protected:
 	const BACKING backing;

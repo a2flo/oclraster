@@ -61,8 +61,6 @@ void rasterization_stage::rasterize(draw_state& state,
 	ocl->set_kernel_argument(argc++, (unsigned int)triangle_count); // "queue size" for now, TODO: actual one
 	ocl->set_kernel_argument(argc++, const_buffer_rp);
 	ocl->set_kernel_argument(argc++, state.framebuffer_size);
-	ocl->set_kernel_argument(argc++, state.color_framebuffer);
-	ocl->set_kernel_argument(argc++, state.depth_framebuffer);
 	// TODO: use queue size? compute queue size earlier?
 	ocl->set_kernel_range(ocl->compute_kernel_ranges(state.framebuffer_size.x, state.framebuffer_size.y));
 	ocl->run_kernel();

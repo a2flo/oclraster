@@ -284,7 +284,8 @@ string transform_program::specialized_processing(const string& code,
 											 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES: oclr_unreachable();
+			case oclraster_program::STRUCT_TYPE::IMAGES:
+			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
 		}
 		cur_user_buffer++;
 	}
@@ -320,6 +321,7 @@ string transform_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type)
 			// private memory
 			return "";
 		case oclraster_program::STRUCT_TYPE::IMAGES:
+		case oclraster_program::STRUCT_TYPE::FRAMEBUFFER:
 			return "";
 	}
 }

@@ -63,6 +63,9 @@
 		5CBD7DA915FC571700FB3954 /* cudacl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CBD7DA815FC571700FB3954 /* cudacl.cpp */; };
 		5CC97E3E1501677200AB0D95 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CC97E3C1501677200AB0D95 /* SDL2.framework */; };
 		5CC97E3F1501677200AB0D95 /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CC97E3D1501677200AB0D95 /* SDL2_image.framework */; };
+		5CCB940516E89B9500079EC1 /* framebuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CCB940316E89B9500079EC1 /* framebuffer.cpp */; };
+		5CCB940616E89B9500079EC1 /* framebuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CCB940316E89B9500079EC1 /* framebuffer.cpp */; };
+		5CCB940716E89B9500079EC1 /* framebuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CCB940416E89B9500079EC1 /* framebuffer.h */; };
 		5CCC96341641B36D005C3DE4 /* oclraster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CCC96301641B36D005C3DE4 /* oclraster.cpp */; };
 		5CCC96351641B36D005C3DE4 /* oclraster.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CCC96311641B36D005C3DE4 /* oclraster.h */; };
 		5CCC96361641B36D005C3DE4 /* oclraster_version.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CCC96321641B36D005C3DE4 /* oclraster_version.h */; };
@@ -211,6 +214,8 @@
 		5CBD7DAA15FC5B1400FB3954 /* CUDA.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CUDA.framework; path = /Library/Frameworks/CUDA.framework; sourceTree = "<group>"; };
 		5CC97E3C1501677200AB0D95 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = Library/Frameworks/SDL2.framework; sourceTree = SDKROOT; };
 		5CC97E3D1501677200AB0D95 /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = Library/Frameworks/SDL2_image.framework; sourceTree = SDKROOT; };
+		5CCB940316E89B9500079EC1 /* framebuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = framebuffer.cpp; sourceTree = "<group>"; };
+		5CCB940416E89B9500079EC1 /* framebuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = framebuffer.h; sourceTree = "<group>"; };
 		5CCC96301641B36D005C3DE4 /* oclraster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = oclraster.cpp; path = oclraster/oclraster.cpp; sourceTree = SOURCE_ROOT; };
 		5CCC96311641B36D005C3DE4 /* oclraster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oclraster.h; path = oclraster/oclraster.h; sourceTree = SOURCE_ROOT; };
 		5CCC96321641B36D005C3DE4 /* oclraster_version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oclraster_version.h; path = oclraster/oclraster_version.h; sourceTree = SOURCE_ROOT; };
@@ -454,6 +459,8 @@
 				5CCCDD7416BF036300C14D3C /* image.h */,
 				5CF109D716E61178007426FB /* image_types.cpp */,
 				5C45EB7216E1E86F005F13A8 /* image_types.h */,
+				5CCB940316E89B9500079EC1 /* framebuffer.cpp */,
+				5CCB940416E89B9500079EC1 /* framebuffer.h */,
 			);
 			path = pipeline;
 			sourceTree = SOURCE_ROOT;
@@ -537,6 +544,7 @@
 				5CA4472416B5B44200CEC70F /* rasterization_program.h in Headers */,
 				5CCCDD7616BF036300C14D3C /* image.h in Headers */,
 				5C0959FB16DC61490075E5B6 /* stage_base.h in Headers */,
+				5CCB940716E89B9500079EC1 /* framebuffer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -658,6 +666,7 @@
 				5CCCDD7516BF036300C14D3C /* image.cpp in Sources */,
 				5C0959F916DC61490075E5B6 /* stage_base.cpp in Sources */,
 				5CF109D816E61178007426FB /* image_types.cpp in Sources */,
+				5CCB940516E89B9500079EC1 /* framebuffer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -698,6 +707,7 @@
 				5CE9725816D683BC00271278 /* ios_helper.mm in Sources */,
 				5C0959FA16DC61490075E5B6 /* stage_base.cpp in Sources */,
 				5CF109D916E61178007426FB /* image_types.cpp in Sources */,
+				5CCB940616E89B9500079EC1 /* framebuffer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

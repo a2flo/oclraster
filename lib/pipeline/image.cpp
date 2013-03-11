@@ -304,6 +304,10 @@ const opencl::buffer_object* image::get_buffer() const {
 	return buffer;
 }
 
+opencl::buffer_object* image::get_buffer() {
+	return buffer;
+}
+
 IMAGE_TYPE image::get_data_type() const {
 	return data_type;
 }

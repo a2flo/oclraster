@@ -36,3 +36,11 @@ string image_type_to_string(const image_type& img_type) {
 	return (string(data_type_str_table[(size_t)get_image_data_type(img_type)]) +
 			channel_type_str_table[(size_t)get_image_channel_type(img_type)]);
 }
+
+string image_data_type_to_string(const IMAGE_TYPE& img_data_type) {
+	return data_type_str_table[(size_t)img_data_type];
+}
+
+string image_channel_type_to_string(const IMAGE_CHANNEL& img_channel_type) {
+	return channel_type_str_table[(size_t)img_channel_type];
+}

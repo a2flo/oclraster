@@ -33,6 +33,7 @@ public:
 		OUTPUT,
 		UNIFORMS,
 		IMAGES,
+		FRAMEBUFFER
 	};
 	enum class ACCESS_TYPE : unsigned int {
 		READ,
@@ -43,7 +44,8 @@ public:
 		IMAGE_1D,
 		IMAGE_2D,
 		IMAGE_3D,
-		FRAMEBUFFER
+		DEPTH_IMAGE,
+		STENCIL_IMAGE
 	};
 	struct oclraster_struct_info {
 		const STRUCT_TYPE type;
@@ -67,6 +69,7 @@ public:
 		vector<string> image_names;
 		vector<IMAGE_VAR_TYPE> image_types;
 		vector<ACCESS_TYPE> image_specifiers;
+		vector<bool> is_framebuffer;
 		kernel_image_spec image_hints;
 	};
 	const oclraster_image_info& get_images() const;
@@ -87,7 +90,8 @@ protected:
 	void process_program(const string& code);
 	void process_image_struct(const vector<string>& variable_names,
 							  const vector<string>& variable_types,
-							  const vector<string>& variable_specifiers);
+							  const vector<string>& variable_specifiers,
+							  const bool is_framebuffer);
 	string create_entry_function_parameters() const;
 	string create_user_kernel_parameters(const kernel_image_spec& image_spec,
 										 vector<string>& image_decls) const;

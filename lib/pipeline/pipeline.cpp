@@ -81,14 +81,9 @@ void pipeline::create_framebuffers(const uint2& size) {
 	oclr_debug("size: %v -> %v", size, scaled_size);
 	
 	//
-	color_framebuffer_cl = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
-											  opencl::BUFFER_FLAG::BLOCK_ON_READ |
-											  opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-											  framebuffer_size.x * framebuffer_size.y * 4); // uchar4
-	depth_framebuffer_cl = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
-											  opencl::BUFFER_FLAG::BLOCK_ON_READ |
-											  opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-											  framebuffer_size.x * framebuffer_size.y * sizeof(float));
+	default_framebuffer = new framebuffer(framebuffer_size.x, framebuffer_size.y,
+										  { { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA } },
+										  { IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R });
 	
 	// create a fbo for copying the color framebuffer every frame and displaying it
 	// (there is no other way, unfortunately)
@@ -112,10 +107,8 @@ void pipeline::create_framebuffers(const uint2& size) {
 }
 
 void pipeline::destroy_framebuffers() {
-	if(color_framebuffer_cl != nullptr) ocl->delete_buffer(color_framebuffer_cl);
-	if(depth_framebuffer_cl != nullptr) ocl->delete_buffer(depth_framebuffer_cl);
-	color_framebuffer_cl = nullptr;
-	depth_framebuffer_cl = nullptr;
+	if(default_framebuffer != nullptr) delete default_framebuffer;
+	default_framebuffer = nullptr;
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -139,8 +132,8 @@ void pipeline::start() {
 	unsigned int argc = 0;
 	ocl->use_kernel("CLEAR_COLOR_DEPTH_FRAMEBUFFER");
 	ocl->set_kernel_argument(argc++, framebuffer_size);
-	ocl->set_kernel_argument(argc++, color_framebuffer_cl);
-	ocl->set_kernel_argument(argc++, depth_framebuffer_cl);
+	ocl->set_kernel_argument(argc++, default_framebuffer->get_image(0)->get_buffer());
+	ocl->set_kernel_argument(argc++, default_framebuffer->get_depth_buffer()->get_buffer());
 	ocl->set_kernel_range(ocl->compute_kernel_ranges(framebuffer_size.x, framebuffer_size.y));
 	ocl->run_kernel();
 }
@@ -153,14 +146,14 @@ void pipeline::stop() {
 	oclraster::start_2d_draw();
 	
 	// copy opencl framebuffer to blit framebuffer/texture
-	void* fbo_data = ocl->map_buffer(color_framebuffer_cl, opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
+	void* fbo_data = ocl->map_buffer(default_framebuffer->get_image(0)->get_buffer(), opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
 #if !defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
 #endif
 	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer_size.x, framebuffer_size.y,
 					GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
-	ocl->unmap_buffer(color_framebuffer_cl, fbo_data);
+	ocl->unmap_buffer(default_framebuffer->get_image(0)->get_buffer(), fbo_data);
 	
 #if !defined(OCLRASTER_IOS)
 	// blit
@@ -205,8 +198,7 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	state.depth_test = 1;
 	state.transformed_primitive_size = 16 * sizeof(float); // NOTE: this is just for the internal transformed buffer
 	state.framebuffer_size = framebuffer_size;
-	state.color_framebuffer = color_framebuffer_cl;
-	state.depth_framebuffer = depth_framebuffer_cl;
+	state.active_framebuffer = default_framebuffer;
 	//state.tile_size = tile_size; // TODO: dynamic?
 	state.triangle_queues_buffer = triangle_queues_buffer;
 	state.queue_sizes_buffer = queue_sizes_buffer;
@@ -301,4 +293,28 @@ void pipeline::bind_image(const string& name, const image& img) {
 		state.user_images.erase(existing_image);
 	}
 	state.user_images.emplace(name, img);
+}
+
+void pipeline::bind_framebuffer(framebuffer* fb) {
+	// TODO: implement this!
+	if(fb == nullptr) {
+		state.active_framebuffer = default_framebuffer;
+	}
+	else state.active_framebuffer = fb;
+	
+	// TODO: handle this differently (better)
+	const auto new_fb_size = state.active_framebuffer->get_size();
+	if(new_fb_size.x != state.framebuffer_size.x ||
+	   new_fb_size.y != state.framebuffer_size.y) {
+		_reserve_memory(reserved_triangle_count);
+		state.framebuffer_size = new_fb_size;
+	}
+}
+
+const framebuffer* pipeline::get_default_framebuffer() const {
+	return default_framebuffer;
+}
+
+framebuffer* pipeline::get_default_framebuffer() {
+	return default_framebuffer;
 }

@@ -12,6 +12,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar* img, const flo
  const uchar texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float(texel)) / 255.0f) , 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uchar texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float(texel)) / 255.0f) , 0.0f, 0.0f, 1.0f);
+}
 float4 FUNC_OVERLOAD image_read_float_linear(global const uchar* img, const float2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
  const float2 fimg_size = convert_float2(img_size) - 1.0f;
@@ -47,6 +52,10 @@ float4 FUNC_OVERLOAD image_read(global const uchar* img, const sampler_t sampler
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const uchar* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar2* img, const float2 coord) {
@@ -55,6 +64,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar2* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uchar2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float2(texel)) / 255.0f) , 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uchar2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float2(texel)) / 255.0f) , 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const uchar2* img, const float2 coord) {
@@ -92,6 +106,10 @@ float4 FUNC_OVERLOAD image_read(global const uchar2* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const uchar2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar3* img, const float2 coord) {
@@ -100,6 +118,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar3* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uchar3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float3(texel)) / 255.0f) , 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uchar3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float3(texel)) / 255.0f) , 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const uchar3* img, const float2 coord) {
@@ -137,6 +160,10 @@ float4 FUNC_OVERLOAD image_read(global const uchar3* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const uchar3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar4* img, const float2 coord) {
@@ -145,6 +172,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar4* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uchar4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float4(texel)) / 255.0f) );
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uchar4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float4(texel)) / 255.0f) );
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const uchar4* img, const float2 coord) {
@@ -182,6 +214,10 @@ float4 FUNC_OVERLOAD image_read(global const uchar4* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const uchar4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar* img, const float2 coord) {
@@ -190,6 +226,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar* img, const float
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uchar texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint(texel))) , 0, 0, 1);
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uchar texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint(texel))) , 0, 0, 1);
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const uchar* img, const float2 coord) {
@@ -227,6 +268,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uchar* img, const sampler_t sam
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const uchar* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar2* img, const float2 coord) {
@@ -235,6 +280,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar2* img, const floa
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uchar2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint2(texel))) , 0, 1);
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uchar2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint2(texel))) , 0, 1);
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const uchar2* img, const float2 coord) {
@@ -272,6 +322,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uchar2* img, const sampler_t sa
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const uchar2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar3* img, const float2 coord) {
@@ -280,6 +334,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar3* img, const floa
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uchar3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint3(texel))) , 1);
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uchar3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint3(texel))) , 1);
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const uchar3* img, const float2 coord) {
@@ -317,6 +376,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uchar3* img, const sampler_t sa
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const uchar3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar4* img, const float2 coord) {
@@ -325,6 +388,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar4* img, const floa
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uchar4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint4(texel))) );
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uchar4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint4(texel))) );
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const uchar4* img, const float2 coord) {
@@ -362,6 +430,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uchar4* img, const sampler_t sa
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const uchar4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort* img, const float2 coord) {
@@ -370,6 +442,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ushort texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float(texel)) / 65535.0f) , 0.0f, 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ushort texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float(texel)) / 65535.0f) , 0.0f, 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const ushort* img, const float2 coord) {
@@ -407,6 +484,10 @@ float4 FUNC_OVERLOAD image_read(global const ushort* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const ushort* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort2* img, const float2 coord) {
@@ -415,6 +496,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort2* img, const f
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ushort2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float2(texel)) / 65535.0f) , 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ushort2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float2(texel)) / 65535.0f) , 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const ushort2* img, const float2 coord) {
@@ -452,6 +538,10 @@ float4 FUNC_OVERLOAD image_read(global const ushort2* img, const sampler_t sampl
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const ushort2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort3* img, const float2 coord) {
@@ -460,6 +550,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort3* img, const f
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ushort3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float3(texel)) / 65535.0f) , 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ushort3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float3(texel)) / 65535.0f) , 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const ushort3* img, const float2 coord) {
@@ -497,6 +592,10 @@ float4 FUNC_OVERLOAD image_read(global const ushort3* img, const sampler_t sampl
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const ushort3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort4* img, const float2 coord) {
@@ -505,6 +604,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort4* img, const f
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ushort4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float4(texel)) / 65535.0f) );
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ushort4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float4(texel)) / 65535.0f) );
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const ushort4* img, const float2 coord) {
@@ -542,6 +646,10 @@ float4 FUNC_OVERLOAD image_read(global const ushort4* img, const sampler_t sampl
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const ushort4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort* img, const float2 coord) {
@@ -550,6 +658,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort* img, const floa
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ushort texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint(texel))) , 0, 0, 1);
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ushort texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint(texel))) , 0, 0, 1);
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const ushort* img, const float2 coord) {
@@ -587,6 +700,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const ushort* img, const sampler_t sa
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const ushort* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort2* img, const float2 coord) {
@@ -595,6 +712,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort2* img, const flo
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ushort2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint2(texel))) , 0, 1);
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ushort2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint2(texel))) , 0, 1);
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const ushort2* img, const float2 coord) {
@@ -632,6 +754,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const ushort2* img, const sampler_t s
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const ushort2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort3* img, const float2 coord) {
@@ -640,6 +766,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort3* img, const flo
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ushort3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint3(texel))) , 1);
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ushort3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint3(texel))) , 1);
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const ushort3* img, const float2 coord) {
@@ -677,6 +808,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const ushort3* img, const sampler_t s
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const ushort3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort4* img, const float2 coord) {
@@ -685,6 +820,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort4* img, const flo
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ushort4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint4(texel))) );
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ushort4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint4(texel))) );
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const ushort4* img, const float2 coord) {
@@ -722,6 +862,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const ushort4* img, const sampler_t s
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const ushort4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint* img, const float2 coord) {
@@ -730,6 +874,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint* img, const float2
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uint texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint(texel))) , 0, 0, 1);
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uint texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint(texel))) , 0, 0, 1);
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const uint* img, const float2 coord) {
@@ -767,6 +916,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uint* img, const sampler_t samp
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const uint* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint2* img, const float2 coord) {
@@ -775,6 +928,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint2* img, const float
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uint2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint2(texel))) , 0, 1);
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uint2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint2(texel))) , 0, 1);
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const uint2* img, const float2 coord) {
@@ -812,6 +970,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uint2* img, const sampler_t sam
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const uint2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint3* img, const float2 coord) {
@@ -820,6 +982,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint3* img, const float
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uint3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint3(texel))) , 1);
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uint3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint3(texel))) , 1);
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const uint3* img, const float2 coord) {
@@ -857,6 +1024,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uint3* img, const sampler_t sam
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const uint3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint4* img, const float2 coord) {
@@ -865,6 +1036,11 @@ uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint4* img, const float
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const uint4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (uint4)( ((convert_uint4(texel))) );
+}
+uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const uint4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (uint4)( ((convert_uint4(texel))) );
 }
 uint4 FUNC_OVERLOAD image_read_uint_linear(global const uint4* img, const float2 coord) {
@@ -902,6 +1078,10 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uint4* img, const sampler_t sam
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+uint4 FUNC_OVERLOAD image_read_uint(global const uint4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
+ return (uint4)(0, 0, 0, 1);
+}
 
 
 ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong* img, const float2 coord) {
@@ -910,6 +1090,11 @@ ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong* img, const flo
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ulong texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (ulong4)( ((convert_ulong(texel))) , 0, 0, 1);
+}
+ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ulong texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (ulong4)( ((convert_ulong(texel))) , 0, 0, 1);
 }
 ulong4 FUNC_OVERLOAD image_read_ulong_linear(global const ulong* img, const float2 coord) {
@@ -947,6 +1132,10 @@ ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong* img, const sampler_t s
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
+ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
+ return (ulong4)(0, 0, 0, 1);
+}
 
 
 ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong2* img, const float2 coord) {
@@ -955,6 +1144,11 @@ ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong2* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ulong2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (ulong4)( ((convert_ulong2(texel))) , 0, 1);
+}
+ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ulong2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (ulong4)( ((convert_ulong2(texel))) , 0, 1);
 }
 ulong4 FUNC_OVERLOAD image_read_ulong_linear(global const ulong2* img, const float2 coord) {
@@ -992,6 +1186,10 @@ ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong2* img, const sampler_t 
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
+ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
+ return (ulong4)(0, 0, 0, 1);
+}
 
 
 ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong3* img, const float2 coord) {
@@ -1000,6 +1198,11 @@ ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong3* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ulong3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (ulong4)( ((convert_ulong3(texel))) , 1);
+}
+ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ulong3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (ulong4)( ((convert_ulong3(texel))) , 1);
 }
 ulong4 FUNC_OVERLOAD image_read_ulong_linear(global const ulong3* img, const float2 coord) {
@@ -1037,6 +1240,10 @@ ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong3* img, const sampler_t 
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
+ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
+ return (ulong4)(0, 0, 0, 1);
+}
 
 
 ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong4* img, const float2 coord) {
@@ -1045,6 +1252,11 @@ ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong4* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const ulong4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (ulong4)( ((convert_ulong4(texel))) );
+}
+ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const ulong4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (ulong4)( ((convert_ulong4(texel))) );
 }
 ulong4 FUNC_OVERLOAD image_read_ulong_linear(global const ulong4* img, const float2 coord) {
@@ -1082,6 +1294,10 @@ ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong4* img, const sampler_t 
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
+ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
+ return (ulong4)(0, 0, 0, 1);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const char* img, const float2 coord) {
@@ -1090,6 +1306,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const char* img, const floa
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const char texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float(texel)+ 128.0f) / 255.0f) * 2.0f - 1.0f , 0.0f, 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const char* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const char texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float(texel)+ 128.0f) / 255.0f) * 2.0f - 1.0f , 0.0f, 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const char* img, const float2 coord) {
@@ -1127,6 +1348,10 @@ float4 FUNC_OVERLOAD image_read(global const char* img, const sampler_t sampler,
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const char* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const char2* img, const float2 coord) {
@@ -1135,6 +1360,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const char2* img, const flo
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const char2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float2(texel)+ 128.0f) / 255.0f) * 2.0f - 1.0f , 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const char2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const char2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float2(texel)+ 128.0f) / 255.0f) * 2.0f - 1.0f , 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const char2* img, const float2 coord) {
@@ -1172,6 +1402,10 @@ float4 FUNC_OVERLOAD image_read(global const char2* img, const sampler_t sampler
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const char2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const char3* img, const float2 coord) {
@@ -1180,6 +1414,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const char3* img, const flo
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const char3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float3(texel)+ 128.0f) / 255.0f) * 2.0f - 1.0f , 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const char3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const char3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float3(texel)+ 128.0f) / 255.0f) * 2.0f - 1.0f , 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const char3* img, const float2 coord) {
@@ -1217,6 +1456,10 @@ float4 FUNC_OVERLOAD image_read(global const char3* img, const sampler_t sampler
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const char3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const char4* img, const float2 coord) {
@@ -1225,6 +1468,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const char4* img, const flo
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const char4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float4(texel)+ 128.0f) / 255.0f) * 2.0f - 1.0f );
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const char4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const char4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float4(texel)+ 128.0f) / 255.0f) * 2.0f - 1.0f );
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const char4* img, const float2 coord) {
@@ -1262,6 +1510,10 @@ float4 FUNC_OVERLOAD image_read(global const char4* img, const sampler_t sampler
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const char4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const char* img, const float2 coord) {
@@ -1270,6 +1522,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const char* img, const float2 c
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const char texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int(texel))) , 0, 0, 1);
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const char* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const char texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int(texel))) , 0, 0, 1);
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const char* img, const float2 coord) {
@@ -1307,6 +1564,10 @@ int4 FUNC_OVERLOAD image_read_int(global const char* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const char* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const char2* img, const float2 coord) {
@@ -1315,6 +1576,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const char2* img, const float2 
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const char2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int2(texel))) , 0, 1);
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const char2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const char2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int2(texel))) , 0, 1);
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const char2* img, const float2 coord) {
@@ -1352,6 +1618,10 @@ int4 FUNC_OVERLOAD image_read_int(global const char2* img, const sampler_t sampl
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const char2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const char3* img, const float2 coord) {
@@ -1360,6 +1630,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const char3* img, const float2 
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const char3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int3(texel))) , 1);
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const char3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const char3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int3(texel))) , 1);
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const char3* img, const float2 coord) {
@@ -1397,6 +1672,10 @@ int4 FUNC_OVERLOAD image_read_int(global const char3* img, const sampler_t sampl
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const char3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const char4* img, const float2 coord) {
@@ -1405,6 +1684,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const char4* img, const float2 
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const char4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int4(texel))) );
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const char4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const char4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int4(texel))) );
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const char4* img, const float2 coord) {
@@ -1442,6 +1726,10 @@ int4 FUNC_OVERLOAD image_read_int(global const char4* img, const sampler_t sampl
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const char4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const short* img, const float2 coord) {
@@ -1450,6 +1738,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const short* img, const flo
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const short texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float(texel)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f , 0.0f, 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const short* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const short texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float(texel)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f , 0.0f, 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const short* img, const float2 coord) {
@@ -1487,6 +1780,10 @@ float4 FUNC_OVERLOAD image_read(global const short* img, const sampler_t sampler
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const short* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const short2* img, const float2 coord) {
@@ -1495,6 +1792,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const short2* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const short2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float2(texel)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f , 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const short2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const short2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float2(texel)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f , 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const short2* img, const float2 coord) {
@@ -1532,6 +1834,10 @@ float4 FUNC_OVERLOAD image_read(global const short2* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const short2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const short3* img, const float2 coord) {
@@ -1540,6 +1846,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const short3* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const short3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float3(texel)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f , 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const short3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const short3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float3(texel)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f , 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const short3* img, const float2 coord) {
@@ -1577,6 +1888,10 @@ float4 FUNC_OVERLOAD image_read(global const short3* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const short3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const short4* img, const float2 coord) {
@@ -1585,6 +1900,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const short4* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const short4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float4(texel)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f );
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const short4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const short4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float4(texel)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f );
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const short4* img, const float2 coord) {
@@ -1622,6 +1942,10 @@ float4 FUNC_OVERLOAD image_read(global const short4* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const short4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const short* img, const float2 coord) {
@@ -1630,6 +1954,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const short* img, const float2 
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const short texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int(texel))) , 0, 0, 1);
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const short* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const short texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int(texel))) , 0, 0, 1);
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const short* img, const float2 coord) {
@@ -1667,6 +1996,10 @@ int4 FUNC_OVERLOAD image_read_int(global const short* img, const sampler_t sampl
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const short* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const short2* img, const float2 coord) {
@@ -1675,6 +2008,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const short2* img, const float2
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const short2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int2(texel))) , 0, 1);
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const short2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const short2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int2(texel))) , 0, 1);
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const short2* img, const float2 coord) {
@@ -1712,6 +2050,10 @@ int4 FUNC_OVERLOAD image_read_int(global const short2* img, const sampler_t samp
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const short2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const short3* img, const float2 coord) {
@@ -1720,6 +2062,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const short3* img, const float2
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const short3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int3(texel))) , 1);
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const short3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const short3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int3(texel))) , 1);
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const short3* img, const float2 coord) {
@@ -1757,6 +2104,10 @@ int4 FUNC_OVERLOAD image_read_int(global const short3* img, const sampler_t samp
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const short3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const short4* img, const float2 coord) {
@@ -1765,6 +2116,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const short4* img, const float2
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const short4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int4(texel))) );
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const short4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const short4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int4(texel))) );
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const short4* img, const float2 coord) {
@@ -1802,6 +2158,10 @@ int4 FUNC_OVERLOAD image_read_int(global const short4* img, const sampler_t samp
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const short4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const int* img, const float2 coord) {
@@ -1810,6 +2170,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const int* img, const float2 co
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const int texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int(texel))) , 0, 0, 1);
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const int* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const int texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int(texel))) , 0, 0, 1);
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const int* img, const float2 coord) {
@@ -1847,6 +2212,10 @@ int4 FUNC_OVERLOAD image_read_int(global const int* img, const sampler_t sampler
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const int* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const int2* img, const float2 coord) {
@@ -1855,6 +2224,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const int2* img, const float2 c
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const int2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int2(texel))) , 0, 1);
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const int2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const int2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int2(texel))) , 0, 1);
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const int2* img, const float2 coord) {
@@ -1892,6 +2266,10 @@ int4 FUNC_OVERLOAD image_read_int(global const int2* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const int2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const int3* img, const float2 coord) {
@@ -1900,6 +2278,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const int3* img, const float2 c
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const int3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int3(texel))) , 1);
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const int3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const int3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int3(texel))) , 1);
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const int3* img, const float2 coord) {
@@ -1937,6 +2320,10 @@ int4 FUNC_OVERLOAD image_read_int(global const int3* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const int3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const int4* img, const float2 coord) {
@@ -1945,6 +2332,11 @@ int4 FUNC_OVERLOAD image_read_int_nearest(global const int4* img, const float2 c
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const int4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (int4)( ((convert_int4(texel))) );
+}
+int4 FUNC_OVERLOAD image_read_int_nearest(global const int4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const int4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (int4)( ((convert_int4(texel))) );
 }
 int4 FUNC_OVERLOAD image_read_int_linear(global const int4* img, const float2 coord) {
@@ -1982,6 +2374,10 @@ int4 FUNC_OVERLOAD image_read_int(global const int4* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+int4 FUNC_OVERLOAD image_read_int(global const int4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
+ return (int4)(0, 0, 0, 1);
+}
 
 
 long4 FUNC_OVERLOAD image_read_long_nearest(global const long* img, const float2 coord) {
@@ -1990,6 +2386,11 @@ long4 FUNC_OVERLOAD image_read_long_nearest(global const long* img, const float2
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const long texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (long4)( ((convert_long(texel))) , 0, 0, 1);
+}
+long4 FUNC_OVERLOAD image_read_long_nearest(global const long* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const long texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (long4)( ((convert_long(texel))) , 0, 0, 1);
 }
 long4 FUNC_OVERLOAD image_read_long_linear(global const long* img, const float2 coord) {
@@ -2027,6 +2428,10 @@ long4 FUNC_OVERLOAD image_read_long(global const long* img, const sampler_t samp
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
+long4 FUNC_OVERLOAD image_read_long(global const long* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
+ return (long4)(0, 0, 0, 1);
+}
 
 
 long4 FUNC_OVERLOAD image_read_long_nearest(global const long2* img, const float2 coord) {
@@ -2035,6 +2440,11 @@ long4 FUNC_OVERLOAD image_read_long_nearest(global const long2* img, const float
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const long2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (long4)( ((convert_long2(texel))) , 0, 1);
+}
+long4 FUNC_OVERLOAD image_read_long_nearest(global const long2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const long2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (long4)( ((convert_long2(texel))) , 0, 1);
 }
 long4 FUNC_OVERLOAD image_read_long_linear(global const long2* img, const float2 coord) {
@@ -2072,6 +2482,10 @@ long4 FUNC_OVERLOAD image_read_long(global const long2* img, const sampler_t sam
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
+long4 FUNC_OVERLOAD image_read_long(global const long2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
+ return (long4)(0, 0, 0, 1);
+}
 
 
 long4 FUNC_OVERLOAD image_read_long_nearest(global const long3* img, const float2 coord) {
@@ -2080,6 +2494,11 @@ long4 FUNC_OVERLOAD image_read_long_nearest(global const long3* img, const float
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const long3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (long4)( ((convert_long3(texel))) , 1);
+}
+long4 FUNC_OVERLOAD image_read_long_nearest(global const long3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const long3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (long4)( ((convert_long3(texel))) , 1);
 }
 long4 FUNC_OVERLOAD image_read_long_linear(global const long3* img, const float2 coord) {
@@ -2117,6 +2536,10 @@ long4 FUNC_OVERLOAD image_read_long(global const long3* img, const sampler_t sam
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
+long4 FUNC_OVERLOAD image_read_long(global const long3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
+ return (long4)(0, 0, 0, 1);
+}
 
 
 long4 FUNC_OVERLOAD image_read_long_nearest(global const long4* img, const float2 coord) {
@@ -2125,6 +2548,11 @@ long4 FUNC_OVERLOAD image_read_long_nearest(global const long4* img, const float
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const long4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (long4)( ((convert_long4(texel))) );
+}
+long4 FUNC_OVERLOAD image_read_long_nearest(global const long4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const long4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (long4)( ((convert_long4(texel))) );
 }
 long4 FUNC_OVERLOAD image_read_long_linear(global const long4* img, const float2 coord) {
@@ -2162,6 +2590,10 @@ long4 FUNC_OVERLOAD image_read_long(global const long4* img, const sampler_t sam
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
+long4 FUNC_OVERLOAD image_read_long(global const long4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
+ return (long4)(0, 0, 0, 1);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half* img, const float2 coord) {
@@ -2170,6 +2602,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half* img, const
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const oclr_half texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float(texel))) , 0.0f, 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const oclr_half texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float(texel))) , 0.0f, 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half* img, const float2 coord) {
@@ -2207,6 +2644,10 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half* img, const sampler_t sam
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const oclr_half* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half2* img, const float2 coord) {
@@ -2215,6 +2656,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half2* img, cons
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const oclr_half2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float2(texel))) , 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const oclr_half2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float2(texel))) , 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half2* img, const float2 coord) {
@@ -2252,6 +2698,10 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half2* img, const sampler_t sa
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const oclr_half2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half3* img, const float2 coord) {
@@ -2260,6 +2710,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half3* img, cons
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const oclr_half3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float3(texel))) , 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const oclr_half3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float3(texel))) , 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half3* img, const float2 coord) {
@@ -2297,6 +2752,10 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half3* img, const sampler_t sa
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const oclr_half3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half4* img, const float2 coord) {
@@ -2305,6 +2764,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half4* img, cons
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const oclr_half4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float4(texel))) );
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const oclr_half4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float4(texel))) );
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half4* img, const float2 coord) {
@@ -2342,6 +2806,10 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half4* img, const sampler_t sa
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const oclr_half4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const float* img, const float2 coord) {
@@ -2350,6 +2818,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const float* img, const flo
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const float texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float(texel))) , 0.0f, 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const float* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const float texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float(texel))) , 0.0f, 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const float* img, const float2 coord) {
@@ -2387,6 +2860,10 @@ float4 FUNC_OVERLOAD image_read(global const float* img, const sampler_t sampler
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const float* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const float2* img, const float2 coord) {
@@ -2395,6 +2872,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const float2* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const float2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float2(texel))) , 0.0f, 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const float2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const float2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float2(texel))) , 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const float2* img, const float2 coord) {
@@ -2432,6 +2914,10 @@ float4 FUNC_OVERLOAD image_read(global const float2* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const float2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const float3* img, const float2 coord) {
@@ -2440,6 +2926,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const float3* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const float3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float3(texel))) , 1.0f);
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const float3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const float3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float3(texel))) , 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const float3* img, const float2 coord) {
@@ -2477,6 +2968,10 @@ float4 FUNC_OVERLOAD image_read(global const float3* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const float3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const float4* img, const float2 coord) {
@@ -2485,6 +2980,11 @@ float4 FUNC_OVERLOAD image_read_float_nearest(global const float4* img, const fl
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const float4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (float4)( ((convert_float4(texel))) );
+}
+float4 FUNC_OVERLOAD image_read_float_nearest(global const float4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const float4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (float4)( ((convert_float4(texel))) );
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const float4* img, const float2 coord) {
@@ -2522,6 +3022,10 @@ float4 FUNC_OVERLOAD image_read(global const float4* img, const sampler_t sample
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+float4 FUNC_OVERLOAD image_read(global const float4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
+ return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 
 double4 FUNC_OVERLOAD image_read_double_nearest(global const double* img, const float2 coord) {
@@ -2530,6 +3034,11 @@ double4 FUNC_OVERLOAD image_read_double_nearest(global const double* img, const 
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const double texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (double4)( ((convert_double(texel))) , 0.0, 0.0, 1.0);
+}
+double4 FUNC_OVERLOAD image_read_double_nearest(global const double* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const double texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (double4)( ((convert_double(texel))) , 0.0, 0.0, 1.0);
 }
 double4 FUNC_OVERLOAD image_read_double_linear(global const double* img, const float2 coord) {
@@ -2567,6 +3076,10 @@ double4 FUNC_OVERLOAD image_read_double(global const double* img, const sampler_
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
+double4 FUNC_OVERLOAD image_read_double(global const double* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
+ return (double4)(0.0, 0.0, 0.0, 1.0);
+}
 
 
 double4 FUNC_OVERLOAD image_read_double_nearest(global const double2* img, const float2 coord) {
@@ -2575,6 +3088,11 @@ double4 FUNC_OVERLOAD image_read_double_nearest(global const double2* img, const
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const double2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (double4)( ((convert_double2(texel))) , 0.0, 1.0);
+}
+double4 FUNC_OVERLOAD image_read_double_nearest(global const double2* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const double2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (double4)( ((convert_double2(texel))) , 0.0, 1.0);
 }
 double4 FUNC_OVERLOAD image_read_double_linear(global const double2* img, const float2 coord) {
@@ -2612,6 +3130,10 @@ double4 FUNC_OVERLOAD image_read_double(global const double2* img, const sampler
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
+double4 FUNC_OVERLOAD image_read_double(global const double2* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
+ return (double4)(0.0, 0.0, 0.0, 1.0);
+}
 
 
 double4 FUNC_OVERLOAD image_read_double_nearest(global const double3* img, const float2 coord) {
@@ -2620,6 +3142,11 @@ double4 FUNC_OVERLOAD image_read_double_nearest(global const double3* img, const
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const double3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (double4)( ((convert_double3(texel))) , 1.0);
+}
+double4 FUNC_OVERLOAD image_read_double_nearest(global const double3* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const double3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (double4)( ((convert_double3(texel))) , 1.0);
 }
 double4 FUNC_OVERLOAD image_read_double_linear(global const double3* img, const float2 coord) {
@@ -2657,6 +3184,10 @@ double4 FUNC_OVERLOAD image_read_double(global const double3* img, const sampler
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
+double4 FUNC_OVERLOAD image_read_double(global const double3* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
+ return (double4)(0.0, 0.0, 0.0, 1.0);
+}
 
 
 double4 FUNC_OVERLOAD image_read_double_nearest(global const double4* img, const float2 coord) {
@@ -2665,6 +3196,11 @@ double4 FUNC_OVERLOAD image_read_double_nearest(global const double4* img, const
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
  const double4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
+ return (double4)( ((convert_double4(texel))) );
+}
+double4 FUNC_OVERLOAD image_read_double_nearest(global const double4* img, const uint2 coord) {
+ const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+ const double4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
  return (double4)( ((convert_double4(texel))) );
 }
 double4 FUNC_OVERLOAD image_read_double_linear(global const double4* img, const float2 coord) {
@@ -2700,6 +3236,10 @@ double4 FUNC_OVERLOAD image_read_double_linear(global const double4* img, const 
 double4 FUNC_OVERLOAD image_read_double(global const double4* img, const sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_double_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
+ return (double4)(0.0, 0.0, 0.0, 1.0);
+}
+double4 FUNC_OVERLOAD image_read_double(global const double4* img, const sampler_t sampler, const uint2 coord) {
+ if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
 

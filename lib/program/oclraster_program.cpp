@@ -34,12 +34,13 @@ oclraster_program::~oclraster_program() {
 }
 
 void oclraster_program::process_program(const string& code) {
-	static const array<const pair<const char*, const STRUCT_TYPE>, 4> oclraster_struct_types {
+	static const array<const pair<const char*, const STRUCT_TYPE>, 5> oclraster_struct_types {
 		{
 			{ u8"oclraster_in", STRUCT_TYPE::INPUT },
 			{ u8"oclraster_out", STRUCT_TYPE::OUTPUT },
 			{ u8"oclraster_uniforms", STRUCT_TYPE::UNIFORMS },
 			{ u8"oclraster_images", STRUCT_TYPE::IMAGES },
+			{ u8"oclraster_framebuffer", STRUCT_TYPE::FRAMEBUFFER }
 		}
 	};
 	
@@ -153,7 +154,8 @@ void oclraster_program::process_program(const string& code) {
 				}
 				
 				// create info struct
-				if(type.second != STRUCT_TYPE::IMAGES) {
+				if(type.second != STRUCT_TYPE::IMAGES &&
+				   type.second != STRUCT_TYPE::FRAMEBUFFER) {
 					structs.push_back({
 						type.second,
 						size2(struct_pos, end_semicolon_pos+1),
@@ -167,7 +169,8 @@ void oclraster_program::process_program(const string& code) {
 				}
 				else {
 					image_struct_positions.emplace_back(size2 { struct_pos, end_semicolon_pos+1 });
-					process_image_struct(variable_names, variable_types, variable_specifiers);
+					process_image_struct(variable_names, variable_types, variable_specifiers,
+										 (type.second == STRUCT_TYPE::FRAMEBUFFER));
 				}
 				
 				// continue
@@ -191,6 +194,22 @@ void oclraster_program::process_program(const string& code) {
 		processed_code = regex_replace(code, rx_entry_function,
 									   "_oclraster_user_"+entry_function+"("+entry_function_params+")");
 		
+		// write framebuffer struct
+		bool has_framebuffer = false;
+		string framebuffer_code = "typedef struct __attribute__((packed)) {\n";
+		for(size_t i = 0, fb_img_idx = 0, image_count = images.image_names.size(); i < image_count; i++) {
+			if(!images.is_framebuffer[i]) continue;
+			has_framebuffer = true;
+			// TODO: for now, let the access always be read/write, so "const data" (depth) can be modified
+			// between user program calls (downside: user has also read/write access -> create 2 structs?)
+			/*if(images.image_specifiers[i] == ACCESS_TYPE::READ) {
+				framebuffer_code += "const ";
+			}*/
+			framebuffer_code += "###OCLRASTER_FRAMEBUFFER_IMAGE_" + size_t2string(fb_img_idx) + "### " + images.image_names[i] + ";\n";
+			fb_img_idx++;
+		}
+		framebuffer_code += "} oclraster_framebuffer;\n";
+		
 		// recreate structs (in reverse, so that the offsets stay valid)
 		const size_t struct_count = structs.size() + image_struct_positions.size();
 		for(size_t i = 0, cur_struct = structs.size(), cur_image = image_struct_positions.size();
@@ -205,6 +224,11 @@ void oclraster_program::process_program(const string& code) {
 				cur_image--;
 				processed_code.erase(image_struct_positions[cur_image].x,
 									 image_struct_positions[cur_image].y - image_struct_positions[cur_image].x);
+				
+				// insert framebuffer struct code at the last image or framebuffer struct position
+				if(has_framebuffer && cur_image == (image_struct_positions.size()-1)) {
+					processed_code.insert(image_struct_positions[cur_image].x, framebuffer_code);
+				}
 			}
 			// struct
 			else {
@@ -224,7 +248,8 @@ void oclraster_program::process_program(const string& code) {
 					case STRUCT_TYPE::UNIFORMS:
 						struct_code += "oclraster_uniforms";
 						break;
-					case STRUCT_TYPE::IMAGES: oclr_unreachable();
+					case STRUCT_TYPE::IMAGES:
+					case STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
 				}
 				struct_code += " {\n";
 				for(size_t var_index = 0; var_index < oclr_struct.variables.size(); var_index++) {
@@ -265,6 +290,7 @@ opencl::kernel_object* oclraster_program::build_kernel(const kernel_image_spec& 
 	
 	const string identifier = "USER_PROGRAM."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter());
 	opencl::kernel_object* kernel = ocl->add_kernel_src(identifier, program_code, "_oclraster_program");
+	//oclr_msg("%s:\n%s\n", identifier, program_code);
 #if defined(OCLRASTER_DEBUG)
 	if(kernel == nullptr) {
 		oclr_debug("kernel source: %s", program_code);
@@ -283,6 +309,9 @@ string oclraster_program::create_entry_function_parameters() const {
 		entry_function_params += structs[i].name + "* " + structs[i].object_name + ", ";
 	}
 	for(size_t i = 0, image_count = images.image_names.size(); i < image_count; i++) {
+		// framebuffer is passed in separately
+		if(images.is_framebuffer[i]) continue;
+		
 		// for images: only add a placeholder (will be replaced by the actual image type later on)
 		entry_function_params += "###OCLRASTER_IMAGE_"+size_t2string(i)+"###, ";
 	}
@@ -305,16 +334,22 @@ string oclraster_program::create_user_kernel_parameters(const kernel_image_spec&
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
 				kernel_parameters += "constant ";
 				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES: oclr_unreachable();
+			case oclraster_program::STRUCT_TYPE::IMAGES:
+			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
 		}
 		kernel_parameters += oclr_struct.name + "* user_buffer_"+size_t2string(user_buffer_count)+",\n";
 		user_buffer_count++;
 	}
 	for(size_t i = 0, img_count = images.image_names.size(); i < img_count; i++) {
 		string type_str = "global ";
-		if(images.image_specifiers[i] == ACCESS_TYPE::READ) type_str += "const ";
+		if(images.image_specifiers[i] == ACCESS_TYPE::READ &&
+		   !images.is_framebuffer[i]) {
+			type_str += "const ";
+		}
 		type_str += image_type_to_string(image_spec[i]);
-		type_str += "* "+images.image_names[i];
+		type_str += "* ";
+		if(images.is_framebuffer[i]) type_str += "oclr_framebuffer_";
+		type_str += images.image_names[i];
 		kernel_parameters += type_str+",\n";
 		image_decls.emplace_back(type_str);
 	}
@@ -323,14 +358,18 @@ string oclraster_program::create_user_kernel_parameters(const kernel_image_spec&
 
 void oclraster_program::process_image_struct(const vector<string>& variable_names,
 											 const vector<string>& variable_types,
-											 const vector<string>& variable_specifiers) {
+											 const vector<string>& variable_specifiers,
+											 const bool is_framebuffer) {
 	//
 	vector<IMAGE_VAR_TYPE> image_types;
 	vector<ACCESS_TYPE> image_specifiers;
 	kernel_image_spec image_hints;
 	
 	//
-	for(const auto& var_type : variable_types) {
+	for(size_t i = 0, image_count = variable_types.size(); i < image_count; i++) {
+		const auto& var_type = variable_types[i];
+		const auto& var_spec = variable_specifiers[i];
+		
 		const auto hint_start = var_type.find("<");
 		const auto hint_end = var_type.find(">", hint_start);
 		const bool has_hint = (hint_start != string::npos && hint_end != string::npos);
@@ -339,13 +378,28 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 			throw oclraster_exception("invalid image declaration: \""+var_type+"\"");
 		}
 		
+		// figure out the image var type of this image
 		const string image_type = (has_hint ? var_type.substr(0, hint_start) : var_type);
-		if(image_type == "image1d") image_types.emplace_back(IMAGE_VAR_TYPE::IMAGE_1D);
-		else if(image_type == "image2d") image_types.emplace_back(IMAGE_VAR_TYPE::IMAGE_2D);
-		else if(image_type == "image3d") image_types.emplace_back(IMAGE_VAR_TYPE::IMAGE_3D);
-		else if(image_type == "framebuffer") image_types.emplace_back(IMAGE_VAR_TYPE::FRAMEBUFFER);
-		else throw oclraster_exception("invalid image declaration: \""+var_type+"\"");
+		IMAGE_VAR_TYPE image_var_type = IMAGE_VAR_TYPE::IMAGE_2D;
+		if(!is_framebuffer) {
+			// image
+			if(image_type == "image1d") image_var_type = IMAGE_VAR_TYPE::IMAGE_1D;
+			else if(image_type == "image2d") image_var_type = IMAGE_VAR_TYPE::IMAGE_2D;
+			else if(image_type == "image3d") image_var_type = IMAGE_VAR_TYPE::IMAGE_3D;
+			else throw oclraster_exception("invalid image declaration: \""+var_type+"\"");
+		}
+		else {
+			// framebuffer
+			if(image_type == "image2d") image_var_type = IMAGE_VAR_TYPE::IMAGE_2D;
+			else if(image_type == "depth_image") image_var_type = IMAGE_VAR_TYPE::DEPTH_IMAGE;
+			else if(image_type == "stencil_image") image_var_type = IMAGE_VAR_TYPE::STENCIL_IMAGE;
+			else throw oclraster_exception("invalid framebuffer image declaration: \""+var_type+"\"");
+		}
+		image_types.emplace_back(image_var_type);
 		
+		//
+		IMAGE_TYPE img_data_type = IMAGE_TYPE::NONE;
+		IMAGE_CHANNEL img_channel_type = IMAGE_CHANNEL::NONE;
 		if(has_hint) {
 			const string hint = var_type.substr(hint_start+1, hint_end-hint_start-1);
 			const auto comma_pos = hint.find(",");
@@ -354,8 +408,6 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 			const string data_type = hint.substr(0, comma_pos);
 			const string channel_type = hint.substr(comma_pos+1, hint.length()-comma_pos-1);
 			
-			IMAGE_TYPE img_data_type = IMAGE_TYPE::UINT_8;
-			IMAGE_CHANNEL img_channel_type = IMAGE_CHANNEL::RGBA;
 			if(data_type == "INT_8") img_data_type = IMAGE_TYPE::INT_8;
 			else if(data_type == "INT_16") img_data_type = IMAGE_TYPE::INT_16;
 			else if(data_type == "INT_32") img_data_type = IMAGE_TYPE::INT_32;
@@ -377,16 +429,59 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 			
 			image_hints.emplace_back(make_image_type(img_data_type, img_channel_type));
 		}
-		else image_hints.emplace_back(0);
-	}
-	for(const auto& var_spec : variable_specifiers) {
-		if(var_spec == "read_only") image_specifiers.emplace_back(ACCESS_TYPE::READ);
-		else if(var_spec == "write_only") image_specifiers.emplace_back(ACCESS_TYPE::WRITE);
-		else if(var_spec == "read_write" ||
-				var_spec == "") {
-			image_specifiers.emplace_back(ACCESS_TYPE::READ_WRITE);
+		else {
+			if(image_var_type == IMAGE_VAR_TYPE::DEPTH_IMAGE) {
+				image_hints.emplace_back(make_image_type(IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R));
+			}
+			else if(image_var_type == IMAGE_VAR_TYPE::STENCIL_IMAGE) {
+				image_hints.emplace_back(make_image_type(IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::R));
+			}
+			else image_hints.emplace_back(0); // will default to UINT_8/RGBA later on
 		}
-		else throw oclraster_exception("invalid image access specifier: \""+var_spec+"\"");
+		
+		// check hints of framebuffer image types
+		if(has_hint) {
+			if(image_var_type == IMAGE_VAR_TYPE::DEPTH_IMAGE) {
+				throw oclraster_exception("depth_image hint is not allowed!");
+			}
+			else if(image_var_type == IMAGE_VAR_TYPE::STENCIL_IMAGE) {
+				if(img_data_type != IMAGE_TYPE::UINT_8 &&
+				   img_data_type != IMAGE_TYPE::UINT_16 &&
+				   img_data_type != IMAGE_TYPE::UINT_32 &&
+				   img_data_type != IMAGE_TYPE::UINT_64) {
+					throw oclraster_exception("stencil_image hint: data type must be UINT_* (not " + image_type_to_string(image_hints.back())+")!");
+				}
+				else if(img_channel_type != IMAGE_CHANNEL::R) {
+					throw oclraster_exception("stencil_image hint: channel type must be R (not " + image_type_to_string(image_hints.back())+")!");
+				}
+			}
+		}
+		
+		// specifier handling
+		if(!is_framebuffer) {
+			// image (-> empty specifier is implicitly read/write)
+			if(var_spec == "read_only") image_specifiers.emplace_back(ACCESS_TYPE::READ);
+			else if(var_spec == "write_only") image_specifiers.emplace_back(ACCESS_TYPE::WRITE);
+			else if(var_spec == "read_write" || var_spec == "") {
+				image_specifiers.emplace_back(ACCESS_TYPE::READ_WRITE);
+			}
+			else throw oclraster_exception("invalid image access specifier: \""+var_spec+"\"");
+		}
+		else {
+			// framebuffer
+			// -> empty image specifier is implicitly read/write
+			// -> empty depth image specifier is implicitly read only
+			// -> empty stencil image specifier is implicitly read only
+			if(var_spec == "read_only") image_specifiers.emplace_back(ACCESS_TYPE::READ);
+			else if(var_spec == "write_only") image_specifiers.emplace_back(ACCESS_TYPE::WRITE);
+			else if(var_spec == "read_write") image_specifiers.emplace_back(ACCESS_TYPE::READ_WRITE);
+			else if(var_spec == "") {
+				image_specifiers.emplace_back((image_var_type == IMAGE_VAR_TYPE::DEPTH_IMAGE ||
+											   image_var_type == IMAGE_VAR_TYPE::STENCIL_IMAGE) ?
+											  ACCESS_TYPE::READ : ACCESS_TYPE::READ_WRITE);
+			}
+			else throw oclraster_exception("invalid framebuffer image access specifier: \""+var_spec+"\"");
+		}
 	}
 	
 	// append to kernel image container (there is no need to store each image struct separately,
@@ -396,6 +491,7 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 	images.image_types.insert(images.image_types.end(), image_types.begin(), image_types.end());
 	images.image_specifiers.insert(images.image_specifiers.end(), image_specifiers.begin(), image_specifiers.end());
 	images.image_hints.insert(images.image_hints.end(), image_hints.begin(), image_hints.end());
+	images.is_framebuffer.insert(images.is_framebuffer.end(), variable_names.size(), is_framebuffer);
 }
 
 void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& struct_info) {
