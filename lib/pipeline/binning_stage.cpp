@@ -54,7 +54,7 @@ unsigned int binning_stage::bin(draw_state& state) {
 	// TODO: on os x: clEnqueueFillBuffer spams the console on every call (unusable as of 10.8.3)
 	// also: insanely slow (slower than copying a zero buffer)
 #if defined(CL_VERSION_1_2) && !defined(__APPLE__)
-	if(ocl->get_platform_cl_version() < opencl::PLATFORM_CL_VERSION::CL_1_2) {
+	if(ocl->get_platform_cl_version() < opencl::CL_VERSION::CL_1_2) {
 #endif
 		ocl->write_buffer(state.queue_sizes_buffer, state.queue_sizes_buffer_zero); // this however must be cleared!
 #if defined(CL_VERSION_1_2) && !defined(__APPLE__)

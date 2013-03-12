@@ -14,6 +14,11 @@ oclraster_uniforms rasterize_uniforms {
 	float4 light_color;
 } rp_uniforms;
 
+oclraster_framebuffer {
+	image2d color;
+	depth_image depth;
+};
+
 void rasterize_main() {
 	// check if lit by light (compute attenuation)
 	float3 light_dir = rp_uniforms->light_position.xyz - output_attributes->vertex.xyz;
@@ -36,6 +41,6 @@ void rasterize_main() {
 			spec_color = rp_uniforms->light_color.xyz * attenuation * specular;
 		}
 		
-		*fragment_color = (float4)(diff_color + spec_color, 1.0f);
+		framebuffer->color = (float4)(diff_color + spec_color, 1.0f);
 	}
 }

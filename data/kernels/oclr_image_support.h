@@ -2595,19 +2595,18 @@ long4 FUNC_OVERLOAD image_read_long(global const long4* img, const sampler_t sam
  return (long4)(0, 0, 0, 1);
 }
 
-
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half* img, const float2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
  const float2 fimg_size = convert_float2(img_size) - 1.0f;
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
- const oclr_half texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
- return (float4)( ((convert_float(texel))) , 0.0f, 0.0f, 1.0f);
+ const float texel = vload_half(ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
+ return (float4)(texel , 0.0f, 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half* img, const uint2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
- const oclr_half texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
- return (float4)( ((convert_float(texel))) , 0.0f, 0.0f, 1.0f);
+ const float texel = vload_half(coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
+ return (float4)(texel , 0.0f, 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half* img, const float2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
@@ -2622,22 +2621,16 @@ float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half* img, const 
  img_size.x * (uint)fcoords.y,
  (uint)fcoords.z,
  img_size.x * (uint)fcoords.w);
- const oclr_half native_texels[4] = {
- img[coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE]
- };
  const float texels[4] = {
- convert_float(native_texels[0]),
- convert_float(native_texels[1]),
- convert_float(native_texels[2]),
- convert_float(native_texels[3]),
+ vload_half(coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half(coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half(coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half(coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
  };
  return (float4)(
- ((texel_mix(texel_mix(texels[0], texels[1], weights.x),
+ texel_mix(texel_mix(texels[0], texels[1], weights.x),
  texel_mix(texels[2], texels[3], weights.x),
- weights.y))) , 0.0f, 0.0f, 1.0f);
+ weights.y) , 0.0f, 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read(global const oclr_half* img, const sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
@@ -2649,19 +2642,18 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half* img, const sampler_t sam
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half2* img, const float2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
  const float2 fimg_size = convert_float2(img_size) - 1.0f;
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
- const oclr_half2 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
- return (float4)( ((convert_float2(texel))) , 0.0f, 1.0f);
+ const float2 texel = vload_half2(ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
+ return (float4)(texel , 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half2* img, const uint2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
- const oclr_half2 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
- return (float4)( ((convert_float2(texel))) , 0.0f, 1.0f);
+ const float2 texel = vload_half2(coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
+ return (float4)(texel , 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half2* img, const float2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
@@ -2676,22 +2668,16 @@ float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half2* img, const
  img_size.x * (uint)fcoords.y,
  (uint)fcoords.z,
  img_size.x * (uint)fcoords.w);
- const oclr_half2 native_texels[4] = {
- img[coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE]
- };
  const float2 texels[4] = {
- convert_float2(native_texels[0]),
- convert_float2(native_texels[1]),
- convert_float2(native_texels[2]),
- convert_float2(native_texels[3]),
+ vload_half2(coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half2(coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half2(coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half2(coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
  };
  return (float4)(
- ((texel_mix(texel_mix(texels[0], texels[1], weights.x),
+ texel_mix(texel_mix(texels[0], texels[1], weights.x),
  texel_mix(texels[2], texels[3], weights.x),
- weights.y))) , 0.0f, 1.0f);
+ weights.y) , 0.0f, 1.0f);
 }
 float4 FUNC_OVERLOAD image_read(global const oclr_half2* img, const sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
@@ -2703,19 +2689,18 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half2* img, const sampler_t sa
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half3* img, const float2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
  const float2 fimg_size = convert_float2(img_size) - 1.0f;
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
- const oclr_half3 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
- return (float4)( ((convert_float3(texel))) , 1.0f);
+ const float3 texel = vload_half3(ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
+ return (float4)(texel , 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half3* img, const uint2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
- const oclr_half3 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
- return (float4)( ((convert_float3(texel))) , 1.0f);
+ const float3 texel = vload_half3(coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
+ return (float4)(texel , 1.0f);
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half3* img, const float2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
@@ -2730,22 +2715,16 @@ float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half3* img, const
  img_size.x * (uint)fcoords.y,
  (uint)fcoords.z,
  img_size.x * (uint)fcoords.w);
- const oclr_half3 native_texels[4] = {
- img[coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE]
- };
  const float3 texels[4] = {
- convert_float3(native_texels[0]),
- convert_float3(native_texels[1]),
- convert_float3(native_texels[2]),
- convert_float3(native_texels[3]),
+ vload_half3(coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half3(coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half3(coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half3(coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
  };
  return (float4)(
- ((texel_mix(texel_mix(texels[0], texels[1], weights.x),
+ texel_mix(texel_mix(texels[0], texels[1], weights.x),
  texel_mix(texels[2], texels[3], weights.x),
- weights.y))) , 1.0f);
+ weights.y) , 1.0f);
 }
 float4 FUNC_OVERLOAD image_read(global const oclr_half3* img, const sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
@@ -2757,19 +2736,18 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half3* img, const sampler_t sa
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half4* img, const float2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
  const float2 fimg_size = convert_float2(img_size) - 1.0f;
  const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
  const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
- const oclr_half4 texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
- return (float4)( ((convert_float4(texel))) );
+ const float4 texel = vload_half4(ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
+ return (float4)(texel );
 }
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half4* img, const uint2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
- const oclr_half4 texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
- return (float4)( ((convert_float4(texel))) );
+ const float4 texel = vload_half4(coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
+ return (float4)(texel );
 }
 float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half4* img, const float2 coord) {
  const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
@@ -2784,22 +2762,16 @@ float4 FUNC_OVERLOAD image_read_float_linear(global const oclr_half4* img, const
  img_size.x * (uint)fcoords.y,
  (uint)fcoords.z,
  img_size.x * (uint)fcoords.w);
- const oclr_half4 native_texels[4] = {
- img[coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE],
- img[coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE]
- };
  const float4 texels[4] = {
- convert_float4(native_texels[0]),
- convert_float4(native_texels[1]),
- convert_float4(native_texels[2]),
- convert_float4(native_texels[3]),
+ vload_half4(coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half4(coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half4(coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+ vload_half4(coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
  };
  return (float4)(
- ((texel_mix(texel_mix(texels[0], texels[1], weights.x),
+ texel_mix(texel_mix(texels[0], texels[1], weights.x),
  texel_mix(texels[2], texels[3], weights.x),
- weights.y))) );
+ weights.y) );
 }
 float4 FUNC_OVERLOAD image_read(global const oclr_half4* img, const sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);

@@ -51,9 +51,9 @@ case $( uname | tr [:upper:] [:lower:] ) in
 		cp ./../bin/liboclrasterd.a ${OCLR_LIB_PATH}/ 2>/dev/null
 		;;
 	"mingw"*)
-		OCLR_MINGW_ROOT="/c/mingw/"
+		OCLR_MINGW_ROOT="/c/mingw"
 		if [[ $OCLR_PLATFORM == "x64" ]]; then
-			OCLR_MINGW_ROOT="/c/mingw64/"
+			OCLR_MINGW_ROOT="/c/mingw64"
 			if [[ $MINGW_ROOT ]]; then
 				OCLR_MINGW_ROOT=$MINGW_ROOT
 			fi

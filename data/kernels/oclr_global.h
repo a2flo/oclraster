@@ -43,43 +43,29 @@
 #endif
 #endif
 
+// these are part of OpenCL 1.2 core now
+#if (!defined(CL_VERSION_1_2) || \
+	 __OPENCL_C_VERSION__ < CL_VERSION_1_2)
 #pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable
-#pragma OPENCL EXTENSION cl_khr_fp16 : enable
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
+#pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics : enable
+#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
+#pragma OPENCL EXTENSION cl_khr_local_int32_extended_atomics : enable
+#endif
 
 //
 #if !defined(cl_khr_fp16)
-
-#if defined(__clang__)
-typedef half oclr_half;
-typedef __attribute__(( ext_vector_type(2) ))  half oclr_half2;
-typedef __attribute__(( ext_vector_type(3) ))  half oclr_half3;
-typedef __attribute__(( ext_vector_type(4) ))  half oclr_half4;
-typedef __attribute__(( ext_vector_type(8) ))  half oclr_half8;
-typedef __attribute__(( ext_vector_type(16) )) half oclr_half16;
+typedef struct __attribute__((aligned(sizeof(half)))) { ushort _; } oclr_half;
+typedef struct __attribute__((aligned(sizeof(half) * 2))) { ushort _; } oclr_half2;
+typedef struct __attribute__((aligned(sizeof(half) * 4))) { ushort _; } oclr_half3;
+typedef struct __attribute__((aligned(sizeof(half) * 4))) { ushort _; } oclr_half4;
 #else
-// TODO: define correct half types on platforms without fp16/half support
+#pragma OPENCL EXTENSION cl_khr_fp16 : enable
 typedef half oclr_half;
 typedef half2 oclr_half2;
 typedef half3 oclr_half3;
 typedef half4 oclr_half4;
-typedef half8 oclr_half8;
-typedef half16 oclr_half16;
-#endif
-
-#if !defined(PLATFORM_APPLE) || \
-	(defined(PLATFORM_APPLE) && defined(CPU))
-float2 FUNC_OVERLOAD convert_float2(oclr_half2 vec) {
-	return (float2)(convert_float(vec.x), convert_float(vec.y));
-}
-float3 FUNC_OVERLOAD convert_float3(oclr_half3 vec) {
-	return (float3)(convert_float(vec.x), convert_float(vec.y), convert_float(vec.z));
-}
-float4 FUNC_OVERLOAD convert_float4(oclr_half4 vec) {
-	return (float4)(convert_float(vec.x), convert_float(vec.y), convert_float(vec.z), convert_float(vec.w));
-}
-#endif
-
 #endif
 
 //

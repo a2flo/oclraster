@@ -233,10 +233,18 @@ string rasterization_program::specialized_processing(const string& code,
 			core::find_and_replace(program_code, "###OCLRASTER_FRAMEBUFFER_IMAGE_"+size_t2string(fb_img_idx)+"###", type_in_kernel);
 			
 			// framebuffer read/write code
-			framebuffer_read_code += "framebuffer."+images.image_names[i]+" = (("+input_convert+"(";
-			framebuffer_read_code += "oclr_framebuffer_"+images.image_names[i]+"[framebuffer_offset])"+input_normalization+";\n";
-			framebuffer_write_code += "oclr_framebuffer_"+images.image_names[i]+"[framebuffer_offset] = ";
-			framebuffer_write_code += output_convert+"(((framebuffer."+images.image_names[i]+output_normalization+");\n";
+			framebuffer_read_code += "framebuffer."+images.image_names[i]+" = ";
+			if(data_type != IMAGE_TYPE::FLOAT_16) {
+				framebuffer_read_code += "(("+input_convert+"(oclr_framebuffer_"+images.image_names[i]+"[framebuffer_offset])"+input_normalization+";\n";
+				framebuffer_write_code += "oclr_framebuffer_"+images.image_names[i]+"[framebuffer_offset] = ";
+				framebuffer_write_code += output_convert+"(((framebuffer."+images.image_names[i]+output_normalization+");\n";
+			}
+			else {
+				// look! it's a three-headed monkey!
+				framebuffer_read_code += "vload_half"+native_channel_type_str+"(framebuffer_offset, (global const half*)oclr_framebuffer_"+images.image_names[i]+");\n";
+				framebuffer_write_code += "vstore_half"+native_channel_type_str+"(framebuffer."+images.image_names[i]+", ";
+				framebuffer_write_code += "framebuffer_offset, (global half*)oclr_framebuffer_"+images.image_names[i]+");\n";
+			}
 			if(images.image_types[i] == IMAGE_VAR_TYPE::DEPTH_IMAGE) {
 				framebuffer_read_code += "float* fragment_depth = &framebuffer."+images.image_names[i]+";\n";
 				framebuffer_read_code += "const float input_depth = *fragment_depth;\n";

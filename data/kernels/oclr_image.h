@@ -21,13 +21,13 @@ typedef struct __attribute__((packed, aligned(8))) {
 typedef global const image_header* image_header_ptr;
 
 //
-const uint2 oclr_get_image_size(global const image_header* img) {
+uint2 oclr_get_image_size(global const image_header* img) {
 	return (uint2)(img->width, img->height);
 }
-const unsigned int oclr_get_image_type(global const image_header* img) {
+unsigned int oclr_get_image_type(global const image_header* img) {
 	return img->type;
 }
-const unsigned int oclr_get_image_channel_order(global const image_header* img) {
+unsigned int oclr_get_image_channel_order(global const image_header* img) {
 	return img->channel_order;
 }
 

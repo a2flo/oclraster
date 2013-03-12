@@ -82,7 +82,7 @@ opencl_base::PLATFORM_VENDOR opencl_base::get_platform_vendor() const {
 	return platform_vendor;
 }
 
-opencl_base::PLATFORM_CL_VERSION opencl_base::get_platform_cl_version() const {
+opencl_base::CL_VERSION opencl_base::get_platform_cl_version() const {
 	return platform_cl_version;
 }
 
@@ -432,7 +432,6 @@ opencl::opencl(const char* kernel_path, SDL_Window* wnd, const bool clear_cache)
 	// TODO: this currently doesn't work if there are spaces inside the path and surrounding
 	// the path by "" doesn't work either, probably a bug in the apple implementation -- or clang?
 	build_options = "-I" + kernel_path_str.substr(0, kernel_path_str.length()-1);
-	build_options += " -cl-std=CL1.1";
 	build_options += " -cl-mad-enable";
 	build_options += " -cl-no-signed-zeros";
 	build_options += " -cl-fast-relaxed-math";
@@ -586,33 +585,43 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			platform_vendor = PLATFORM_VENDOR::INTEL;
 		}
 #endif
+		
+		//
+		const auto extract_cl_version = [](const string& cl_version_str, const string str_start) -> pair<bool, CL_VERSION> {
+			// "OpenCL X.Y" or "OpenCL C X.Y" required by spec (str_start must be either)
+			const size_t start_len = str_start.length();
+			if(cl_version_str.length() >= (start_len + 3) && cl_version_str.substr(0, start_len) == str_start) {
+				const string version_str = cl_version_str.substr(start_len, cl_version_str.find(" ", start_len) - start_len);
+				const size_t dot_pos = version_str.find(".");
+				if(string2size_t(version_str.substr(0, dot_pos)) > 1) {
+					// major version is higher than 1 -> pretend we're running on CL 1.2
+					return { true, CL_VERSION::CL_1_2 };
+				}
+				else {
+					switch(string2size_t(version_str.substr(dot_pos+1, version_str.length()-dot_pos-1))) {
+						case 0: return { true, CL_VERSION::CL_1_0 };
+						case 1: return { true, CL_VERSION::CL_1_1 };
+						case 2:
+						default: // default to CL 1.2
+							return { true, CL_VERSION::CL_1_2 };
+					}
+				}
+			}
+			return { false, CL_VERSION::CL_1_0 };
+		};
 
 		// get platform cl version
 		const string cl_version_str = platforms[platform_index].getInfo<CL_PLATFORM_VERSION>();
-		if(cl_version_str.length() >= 10 && cl_version_str.substr(0, 7) == "OpenCL ") { // "OpenCL X.Y" required by spec
-			const string version_str = cl_version_str.substr(7, cl_version_str.find(" ", 7) - 7);
-			const size_t dot_pos = version_str.find(".");
-			if(string2size_t(version_str.substr(0, dot_pos)) > 1) {
-				// major version is higher than 1 -> pretend we're running on CL 1.2
-				platform_cl_version = PLATFORM_CL_VERSION::CL_1_2;
-			}
-			else {
-				switch(string2size_t(version_str.substr(dot_pos+1, version_str.length()-dot_pos-1))) {
-					case 0: platform_cl_version = PLATFORM_CL_VERSION::CL_1_0; break;
-					case 1: platform_cl_version = PLATFORM_CL_VERSION::CL_1_1; break;
-					case 2:
-					default: // default to CL 1.2
-						platform_cl_version = PLATFORM_CL_VERSION::CL_1_2;
-						break;
-				}
-			}
+		const auto extracted_cl_version = extract_cl_version(cl_version_str, "OpenCL "); // "OpenCL X.Y" required by spec
+		if(!extracted_cl_version.first) {
+			oclr_error("invalid opencl platform version string: %s", cl_version_str);
 		}
-		else oclr_error("invalid opencl platform version string: %s", cl_version_str);
+		platform_cl_version = extracted_cl_version.second;
 
 		//
 		oclr_debug("opencl platform #%u vendor: %s (version CL%s)",
 				   platform_index, platform_vendor_to_str(platform_vendor),
-				   (platform_cl_version == PLATFORM_CL_VERSION::CL_1_0 ? "1.0" : (platform_cl_version == PLATFORM_CL_VERSION::CL_1_1 ? "1.1" : "1.2")));
+				   (platform_cl_version == CL_VERSION::CL_1_0 ? "1.0" : (platform_cl_version == CL_VERSION::CL_1_1 ? "1.1" : "1.2")));
 		
 		internal_devices.clear();
 		internal_devices = context->getInfo<CL_CONTEXT_DEVICES>();
@@ -658,23 +667,6 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			device->driver_version = internal_device.getInfo<CL_DRIVER_VERSION>();
 			device->extensions = internal_device.getInfo<CL_DEVICE_EXTENSIONS>();
 			
-			oclr_msg("address space size: %u", internal_device.getInfo<CL_DEVICE_ADDRESS_BITS>());
-			oclr_msg("max mem alloc: %u bytes / %u MB",
-					 internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(),
-					 internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>() / 1024 / 1024);
-			oclr_msg("mem base address alignment: %u", internal_device.getInfo<CL_DEVICE_MEM_BASE_ADDR_ALIGN>());
-			oclr_msg("min data type alignment size: %u", internal_device.getInfo<CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE>());
-			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());
-#if defined(CL_VERSION_1_2)
-			if(platform_cl_version >= PLATFORM_CL_VERSION::CL_1_2) {
-				oclr_msg("printf buffer size: %u bytes / %u MB",
-						 internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>(),
-						 internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>() / 1024 / 1024);
-				oclr_msg("max sub-devices: %u", internal_device.getInfo<CL_DEVICE_PARTITION_MAX_SUB_DEVICES>());
-				oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
-			}
-#endif
-			
 			device->max_alloc = internal_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
 			device->max_wg_size = internal_device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
 			const auto max_wi_sizes = internal_device.getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>();
@@ -686,7 +678,24 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 								   internal_device.getInfo<CL_DEVICE_IMAGE3D_MAX_HEIGHT>(),
 								   internal_device.getInfo<CL_DEVICE_IMAGE3D_MAX_DEPTH>());
 			
+			oclr_msg("address space size: %u", internal_device.getInfo<CL_DEVICE_ADDRESS_BITS>());
+			oclr_msg("max mem alloc: %u bytes / %u MB",
+					 device->max_alloc,
+					 device->max_alloc / 1024ULL / 1024ULL);
+			oclr_msg("mem base address alignment: %u", internal_device.getInfo<CL_DEVICE_MEM_BASE_ADDR_ALIGN>());
+			oclr_msg("min data type alignment size: %u", internal_device.getInfo<CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE>());
+			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());
 			oclr_msg("max_wi_sizes: %v", device->max_wi_sizes);
+#if defined(CL_VERSION_1_2)
+			if(platform_cl_version >= CL_VERSION::CL_1_2) {
+				const unsigned long long int printf_buffer_size = internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>();
+				oclr_msg("printf buffer size: %u bytes / %u MB",
+						 printf_buffer_size,
+						 printf_buffer_size / 1024ULL / 1024ULL);
+				oclr_msg("max sub-devices: %u", internal_device.getInfo<CL_DEVICE_PARTITION_MAX_SUB_DEVICES>());
+				oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
+			}
+#endif
 
 			device->vendor_type = VENDOR::UNKNOWN;
 			string vendor_str = core::str_to_lower(device->vendor);
@@ -745,6 +754,13 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 				dev_type_str += "Default ";
 			}
 			
+			const string cl_c_version_str = internal_device.getInfo<CL_DEVICE_OPENCL_C_VERSION>();
+			const auto extracted_cl_c_version = extract_cl_version(cl_c_version_str, "OpenCL C "); // "OpenCL C X.Y" required by spec
+			if(!extracted_cl_c_version.first) {
+				oclr_error("invalid opencl c version string: %s", cl_c_version_str);
+			}
+			device->cl_c_version = extracted_cl_c_version.second;
+			
 			// cl_khr_byte_addressable_store support is mandatory
 			if(device->extensions.find("cl_khr_byte_addressable_store") == string::npos) {
 				oclr_msg("opencl device \"%s %s\" does not support \"cl_khr_byte_addressable_store\"!", device->vendor, device->name);
@@ -754,15 +770,16 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			devices.push_back(device);
 			
 			// TYPE (Units: %, Clock: %): Name, Vendor, Version, Driver Version
-			oclr_debug("%s(Units: %u, Clock: %u MHz, Memory: %u MB): %s %s, %s / %s",
-					 dev_type_str,
-					 device->units,
-					 device->clock,
-					 (unsigned int)(device->mem_size / 1024ul / 1024ul),
-					 device->vendor,
-					 device->name,
-					 device->version,
-					 device->driver_version);
+			oclr_debug("%s(Units: %u, Clock: %u MHz, Memory: %u MB): %s %s, %s / %s / %s",
+					   dev_type_str,
+					   device->units,
+					   device->clock,
+					   (unsigned int)(device->mem_size / 1024ul / 1024ul),
+					   device->vendor,
+					   device->name,
+					   device->version,
+					   device->driver_version,
+					   cl_c_version_str);
 		}
 		
 		// no supported devices found
@@ -1571,7 +1588,7 @@ void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buf
 		}
 		if((access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
 #if defined(CL_VERSION_1_2)
-			if(get_platform_cl_version() >= PLATFORM_CL_VERSION::CL_1_2) {
+			if(get_platform_cl_version() >= CL_VERSION::CL_1_2) {
 				map_flags |= CL_MAP_WRITE_INVALIDATE_REGION;
 			}
 			else {

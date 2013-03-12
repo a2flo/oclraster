@@ -918,6 +918,7 @@ struct GetInfoHelper<Func, CPP_TYPE> \
     F(cl_device_info, CL_DEVICE_DOUBLE_FP_CONFIG, cl_device_fp_config) \
     F(cl_device_info, CL_DEVICE_HALF_FP_CONFIG, cl_device_fp_config) \
     F(cl_device_info, CL_DEVICE_HOST_UNIFIED_MEMORY, cl_bool) \
+	F(cl_device_info, CL_DEVICE_OPENCL_C_VERSION, STRING_CLASS) \
     \
     F(cl_mem_info, CL_MEM_ASSOCIATED_MEMOBJECT, cl::Memory) \
     F(cl_mem_info, CL_MEM_OFFSET, ::size_t) \

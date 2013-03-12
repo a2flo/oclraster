@@ -346,6 +346,12 @@ string oclraster_program::create_user_kernel_parameters(const kernel_image_spec&
 		   !images.is_framebuffer[i]) {
 			type_str += "const ";
 		}
+		if(get_image_data_type(image_spec[i]) == IMAGE_TYPE::FLOAT_16) {
+			// if cl_khr_fp16 is not supported (-> all implementations ...), half vector types are not supported
+			// and structs containing halfs (the workaround) are not allowed as kernel function parameter types
+			// -> use custom half pointer type for distinction and later type-casting (note: type is correctly aligned)
+			type_str += "oclr_";
+		}
 		type_str += image_type_to_string(image_spec[i]);
 		type_str += "* ";
 		if(images.is_framebuffer[i]) type_str += "oclr_framebuffer_";

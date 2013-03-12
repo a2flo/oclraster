@@ -62,9 +62,14 @@ for type in "${defs[@]}"; do
 				func_return_name=""
 			fi
 			
+			template_file="image_support_template.h"
+			if [[ ${img_type} == "oclr_half" ]]; then
+				template_file="image_support_template_fp16.h"
+			fi
+			
 			CODE+=$(clang -E -DRETURN_TYPE=${return_type} -DRETURN_TYPE_VEC=${return_type_vec} -DRETURN_TYPE_VEC4=${return_type_vec4} -DIMG_TYPE=${img_type_vec} \
 					-DIMG_CONVERT_FUNC=convert_${return_type_vec} -DIMG_NORMALIZATION="${img_normalization}" -DIMG_ZERO=${img_zero} -DIMG_ONE=${img_one} \
-					-DFUNC_RETURN_NAME=${func_return_name} -DVEC4_FILL=${vec4_fill} image_support_template.h | grep -v "#")
+					-DFUNC_RETURN_NAME=${func_return_name} -DVEC4_FILL=${vec4_fill} ${template_file} -DVECN=${channels[$i]} | grep -v "#")
 			CODE+="\n\n"
 		done
 		IFS=" "

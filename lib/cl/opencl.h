@@ -117,7 +117,7 @@ public:
 		APPLE,
 		UNKNOWN
 	};
-	enum class PLATFORM_CL_VERSION {
+	enum class CL_VERSION {
 		CL_1_0,
 		CL_1_1,
 		CL_1_2
@@ -126,7 +126,7 @@ public:
 	static vector<pair<PLATFORM_VENDOR, string>> get_platforms();
 	static string platform_vendor_to_str(const PLATFORM_VENDOR& pvendor);
 	PLATFORM_VENDOR get_platform_vendor() const;
-	PLATFORM_CL_VERSION get_platform_cl_version() const;
+	CL_VERSION get_platform_cl_version() const;
 	
 	enum class VENDOR {
 		NVIDIA,
@@ -270,6 +270,7 @@ public:
 		const cl::Device* device = nullptr;
 		opencl_base::DEVICE_TYPE type = DEVICE_TYPE::NONE;
 		opencl_base::VENDOR vendor_type = VENDOR::UNKNOWN;
+		opencl_base::CL_VERSION cl_c_version = CL_VERSION::CL_1_0;
 		unsigned int units = 0;
 		unsigned int clock = 0;
 		cl_ulong mem_size = 0;
@@ -316,7 +317,7 @@ protected:
 	cl::Context* context;
 	cl::Platform* platform;
 	PLATFORM_VENDOR platform_vendor = PLATFORM_VENDOR::UNKNOWN;
-	PLATFORM_CL_VERSION platform_cl_version = PLATFORM_CL_VERSION::CL_1_0;
+	CL_VERSION platform_cl_version = CL_VERSION::CL_1_0;
 	vector<cl::Platform> platforms;
 	vector<cl::Device> internal_devices;
 	vector<device_object*> devices;

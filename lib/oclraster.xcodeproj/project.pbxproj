@@ -240,6 +240,10 @@
 		5CDC19EF142F8A4A00FE031C /* vector4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vector4.cpp; sourceTree = "<group>"; };
 		5CE34280168D57FB0071068E /* camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = camera.cpp; sourceTree = "<group>"; };
 		5CE34281168D57FB0071068E /* camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
+		5CE91CE916EE2F0C0044C264 /* premake.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = premake.sh; path = ../premake.sh; sourceTree = "<group>"; };
+		5CE91CEA16EE2F0C0044C264 /* premake4.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = premake4.lua; path = ../premake4.lua; sourceTree = "<group>"; };
+		5CE91CEB16EE2F0C0044C264 /* README.textile */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.textile; path = ../README.textile; sourceTree = "<group>"; };
+		5CE91CEC16EE2F240044C264 /* install.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = install.sh; sourceTree = "<group>"; };
 		5CE9722D16D682D600271278 /* liboclrasterd.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = liboclrasterd.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CE9722E16D682D600271278 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		5CE9725916D683CD00271278 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/System/Library/Frameworks/QuartzCore.framework; sourceTree = DEVELOPER_DIR; };
@@ -312,6 +316,7 @@
 			isa = PBXGroup;
 			children = (
 				5C05F789123171DA00D122BF /* Source */,
+				5CE91CE816EE2EE90044C264 /* Supporting Files */,
 				5C05F78B123171DA00D122BF /* Frameworks */,
 				5CE9727116D6842F00271278 /* iOS Frameworks */,
 				5C05F791123171DA00D122BF /* Products */,
@@ -477,6 +482,17 @@
 			);
 			path = program;
 			sourceTree = SOURCE_ROOT;
+		};
+		5CE91CE816EE2EE90044C264 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				5CE91CE916EE2F0C0044C264 /* premake.sh */,
+				5CE91CEA16EE2F0C0044C264 /* premake4.lua */,
+				5CE91CEB16EE2F0C0044C264 /* README.textile */,
+				5CE91CEC16EE2F240044C264 /* install.sh */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
 		};
 		5CE9727116D6842F00271278 /* iOS Frameworks */ = {
 			isa = PBXGroup;

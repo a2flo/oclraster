@@ -152,7 +152,7 @@ void pipeline::stop() {
 #endif
 	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer_size.x, framebuffer_size.y,
-					GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
+					GL_RGBA, GL_UNSIGNED_BYTE, ((const unsigned char*)fbo_data) + image::header_size());
 	ocl->unmap_buffer(default_framebuffer->get_image(0)->get_buffer(), fbo_data);
 	
 #if !defined(OCLRASTER_IOS)
@@ -296,7 +296,6 @@ void pipeline::bind_image(const string& name, const image& img) {
 }
 
 void pipeline::bind_framebuffer(framebuffer* fb) {
-	// TODO: implement this!
 	if(fb == nullptr) {
 		state.active_framebuffer = default_framebuffer;
 	}
