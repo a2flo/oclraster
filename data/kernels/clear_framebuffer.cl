@@ -34,7 +34,7 @@ kernel void clear_framebuffer(const uint2 framebuffer_size,
 	const unsigned int y = get_global_id(1);
 	if(x >= framebuffer_size.x) return;
 	if(y >= framebuffer_size.y) return;
-	const unsigned int offset = y * framebuffer_size.x + x + OCLRASTER_IMAGE_HEADER_SIZE;
+	const unsigned int offset = y * framebuffer_size.x + x + (OCLRASTER_IMAGE_HEADER_SIZE / 4);
 	color_framebuffer[offset] = (uchar4)(0u, 0u, 0u, 0u);
 #if defined(DEPTH_FRAMEBUFFER)
 	depth_framebuffer[offset] = FLT_MAX;

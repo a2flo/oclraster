@@ -28,9 +28,9 @@ struct __attribute__((packed, aligned(16))) info_buffer_struct {
 };
 
 pipeline::pipeline() :
-window_handler(this, &pipeline::window_event_handler) {
+event_handler_fnctr(this, &pipeline::event_handler) {
 	create_framebuffers(size2(oclraster::get_width(), oclraster::get_height()));
-	oclraster::get_event()->add_internal_event_handler(window_handler, EVENT_TYPE::WINDOW_RESIZE);
+	oclraster::get_event()->add_internal_event_handler(event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
 
 	info_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 									 opencl::BUFFER_FLAG::BLOCK_ON_READ |
@@ -47,7 +47,7 @@ window_handler(this, &pipeline::window_event_handler) {
 }
 
 pipeline::~pipeline() {
-	oclraster::get_event()->remove_event_handler(window_handler);
+	oclraster::get_event()->remove_event_handler(event_handler_fnctr);
 	
 	destroy_framebuffers();
 	if(triangle_queues_buffer != nullptr) ocl->delete_buffer(triangle_queues_buffer);
@@ -64,10 +64,15 @@ pipeline::~pipeline() {
 #endif
 }
 
-bool pipeline::window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
+bool pipeline::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	if(type == EVENT_TYPE::WINDOW_RESIZE) {
 		const window_resize_event& evt = (const window_resize_event&)*obj;
 		create_framebuffers(evt.size);
+	}
+	else if(type == EVENT_TYPE::KERNEL_RELOAD) {
+		// unbind user programs, since those are invalid now
+		state.transform_prog = nullptr;
+		state.rasterize_prog = nullptr;
 	}
 	return true;
 }

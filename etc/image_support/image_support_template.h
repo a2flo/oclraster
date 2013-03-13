@@ -6,28 +6,31 @@
 #define IMG_FUNC_EVAL(return_name) IMG_FUNC_CONCAT(return_name)
 #define IMG_FUNC_NAME() IMG_FUNC_EVAL(FUNC_RETURN_NAME)
 
+RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const uint offset) {
+	global const IMG_TYPE* img_data_ptr = (global const IMG_TYPE*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
+	const IMG_TYPE texel = img_data_ptr[offset];
+	// double "(" is intended to make things easier with more complex normalization
+	return (RETURN_TYPE_VEC4)( ((IMG_CONVERT_FUNC(texel)IMG_NORMALIZATION VEC4_FILL);
+}
+
 RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const float2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
 	const float2 fimg_size = convert_float2(img_size) - 1.0f;
 	
 	// normalize input texture coordinate to [0, 1]
 	const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
-	
 	const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
-	const IMG_TYPE texel = img[ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE];
-	// double "(" is intended to make things easier with more complex normalization
-	return (RETURN_TYPE_VEC4)( ((IMG_CONVERT_FUNC(texel)IMG_NORMALIZATION VEC4_FILL);
+	return IMG_FUNC_FILTER_NAME(nearest)(img, ui_tc.y * img_size.x + ui_tc.x);
 }
 
 RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const uint2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
-	const IMG_TYPE texel = img[coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE];
-	// double "(" is intended to make things easier with more complex normalization
-	return (RETURN_TYPE_VEC4)( ((IMG_CONVERT_FUNC(texel)IMG_NORMALIZATION VEC4_FILL);
+	return IMG_FUNC_FILTER_NAME(nearest)(img, coord.y * img_size.x + coord.x);
 }
 
 RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(linear)(global const IMG_TYPE* img, const float2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+	global const IMG_TYPE* img_data_ptr = (global const IMG_TYPE*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
 	const float2 fimg_size = convert_float2(img_size) - 1.0f;
 	
 	// normalize input texture coordinate to [0, 1]
@@ -47,10 +50,10 @@ RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(linear)(global const IMG_TYP
 	
 	// finally: read texels and interpolate according to weights
 	const IMG_TYPE native_texels[4] = {
-		img[coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE], // bilinear coords
-		img[coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE],
-		img[coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE],
-		img[coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE]
+		img_data_ptr[coords.y + coords.x], // bilinear coords
+		img_data_ptr[coords.y + coords.z],
+		img_data_ptr[coords.w + coords.x],
+		img_data_ptr[coords.w + coords.z]
 	};
 	const RETURN_TYPE_VEC texels[4] = {
 		IMG_CONVERT_FUNC(native_texels[0]),

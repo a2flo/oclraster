@@ -66,7 +66,7 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
 		const unsigned int queue_entries = queue_sizes_buffer[bin_index];
 		const unsigned int queue_offset = (queue_size * bin_index);
-		//if(queue_entries > 0) fragment_color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
+		//if(queue_entries > 0) framebuffer.color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
 		for(unsigned int queue_entry = 0; queue_entry < queue_entries; queue_entry++) {
 			const unsigned int triangle_id = triangle_queues_buffer[queue_offset + queue_entry];
 			const float3 VV0 = (float3)(transformed_buffer[triangle_id].data[0],
@@ -89,8 +89,9 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 			// simplified:
 			barycentric /= barycentric.x + barycentric.y + barycentric.z;
 			
-			// depth test:
-			if(barycentric.w >= *fragment_depth) continue;
+			// depth test + ignore negative depth:
+			if(barycentric.w < 0.0f ||
+			   barycentric.w >= *fragment_depth) continue;
 			
 			// reset depth (note: fragment_color will contain the last valid color)
 			*fragment_depth = barycentric.w;
@@ -100,7 +101,7 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 		
 		// write framebuffer output (if depth has changed)
-		if(*fragment_depth < input_depth /*|| fragment_depth == *input_depth*/) {
+		if(*fragment_depth < input_depth /*|| *fragment_depth == input_depth*/) {
 			//###OCLRASTER_FRAMEBUFFER_WRITE###
 		}
 	}
@@ -178,7 +179,7 @@ string rasterization_program::specialized_processing(const string& code,
 	// image and framebuffer handling
 	string framebuffer_read_code = "", framebuffer_write_code = "";
 	framebuffer_read_code += "oclraster_framebuffer framebuffer;\n";
-	framebuffer_read_code += "const unsigned int framebuffer_offset = (y * framebuffer_size.x) + x + OCLRASTER_IMAGE_HEADER_SIZE;\n";
+	framebuffer_read_code += "const unsigned int framebuffer_offset = (y * framebuffer_size.x) + x;\n";
 	for(size_t i = 0, fb_img_idx = 0, img_count = image_decls.size(); i < img_count; i++) {
 		if(images.is_framebuffer[i]) {
 			// framebuffer type handling
@@ -190,7 +191,7 @@ string rasterization_program::specialized_processing(const string& code,
 			const auto channel_type = get_image_channel_type(image_spec[i]);
 			const string native_data_type_str = image_data_type_to_string(data_type);
 			const string native_channel_type_str = image_channel_type_to_string(channel_type);
-			const string native_type = native_data_type_str + native_channel_type_str;
+			string native_type = native_data_type_str + native_channel_type_str;
 			string type_in_kernel = native_type;
 			string input_convert = "";
 			string output_convert = "";
@@ -206,6 +207,7 @@ string rasterization_program::specialized_processing(const string& code,
 					input_convert = "convert_"+type_in_kernel;
 					output_convert = "convert_" + native_type;
 					if(data_type != IMAGE_TYPE::FLOAT_16) output_convert += "_sat"; // only allowed for integer formats
+					else native_type = "half";
 					break;
 				default: break;
 			}
@@ -233,17 +235,26 @@ string rasterization_program::specialized_processing(const string& code,
 			core::find_and_replace(program_code, "###OCLRASTER_FRAMEBUFFER_IMAGE_"+size_t2string(fb_img_idx)+"###", type_in_kernel);
 			
 			// framebuffer read/write code
+			const string fb_data_ptr_name = "oclr_framebuffer_ptr_"+images.image_names[i];
+			const string const_str = (images.image_specifiers[i] == ACCESS_TYPE::READ &&
+									  images.image_types[i] == IMAGE_VAR_TYPE::IMAGE_2D ?
+									  " const" : "");
+			framebuffer_read_code += ("global"+const_str+" "+native_type+"* "+fb_data_ptr_name+
+									  " = (global"+const_str+" "+native_type+
+									  "*)((global"+const_str+" uchar*)oclr_framebuffer_"+images.image_names[i]+
+									  " + OCLRASTER_IMAGE_HEADER_SIZE);\n");
+			
 			framebuffer_read_code += "framebuffer."+images.image_names[i]+" = ";
 			if(data_type != IMAGE_TYPE::FLOAT_16) {
-				framebuffer_read_code += "(("+input_convert+"(oclr_framebuffer_"+images.image_names[i]+"[framebuffer_offset])"+input_normalization+";\n";
-				framebuffer_write_code += "oclr_framebuffer_"+images.image_names[i]+"[framebuffer_offset] = ";
+				framebuffer_read_code += "(("+input_convert+"("+fb_data_ptr_name+"[framebuffer_offset])"+input_normalization+";\n";
+				framebuffer_write_code += fb_data_ptr_name+"[framebuffer_offset] = ";
 				framebuffer_write_code += output_convert+"(((framebuffer."+images.image_names[i]+output_normalization+");\n";
 			}
 			else {
 				// look! it's a three-headed monkey!
-				framebuffer_read_code += "vload_half"+native_channel_type_str+"(framebuffer_offset, (global const half*)oclr_framebuffer_"+images.image_names[i]+");\n";
+				framebuffer_read_code += "vload_half"+native_channel_type_str+"(framebuffer_offset, "+fb_data_ptr_name+");\n";
 				framebuffer_write_code += "vstore_half"+native_channel_type_str+"(framebuffer."+images.image_names[i]+", ";
-				framebuffer_write_code += "framebuffer_offset, (global half*)oclr_framebuffer_"+images.image_names[i]+");\n";
+				framebuffer_write_code += "framebuffer_offset, (global half*)"+fb_data_ptr_name+");\n";
 			}
 			if(images.image_types[i] == IMAGE_VAR_TYPE::DEPTH_IMAGE) {
 				framebuffer_read_code += "float* fragment_depth = &framebuffer."+images.image_names[i]+";\n";

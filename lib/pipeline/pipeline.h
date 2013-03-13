@@ -134,9 +134,9 @@ protected:
 	
 	opencl::buffer_object* info_buffer = nullptr;
 	
-	// window event handlers
-	event::handler window_handler;
-	bool window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
+	// event handler
+	event::handler event_handler_fnctr;
+	bool event_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
 	
 };
 

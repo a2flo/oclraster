@@ -17,6 +17,8 @@
  */
 
 #include "opencl.h"
+#include "pipeline/image.h"
+#include "oclraster.h"
 
 #if defined(OCLRASTER_IOS)
 #include "ios/ios_helper.h"
@@ -167,6 +169,9 @@ void opencl_base::reload_kernels() {
 						get<2>(ext_kernel.second).c_str());
 	}
 	if(!external_kernels.empty()) oclr_debug("external kernels loaded successfully!");
+	
+	// emit kernel reload event
+	oclraster::get_event()->add_event(EVENT_TYPE::KERNEL_RELOAD, make_shared<kernel_reload_event>(SDL_GetTicks()));
 }
 
 void opencl_base::load_internal_kernels() {
@@ -940,6 +945,11 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 opencl::kernel_object* opencl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {
 	oclr_debug("compiling \"%s\" kernel!", identifier);
 	string options = build_options;
+	
+	// just define this everywhere to make using image support
+	// easier without having to specify this every time
+	options += " -DOCLRASTER_IMAGE_HEADER_SIZE="+size_t2string(image::header_size());
+	
 	try {
 		if(kernels.count(identifier) != 0) {
 			oclr_error("kernel \"%s\" already exists!", identifier);

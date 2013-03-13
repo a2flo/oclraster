@@ -11,13 +11,13 @@
 #endif
 
 //
-typedef struct __attribute__((packed, aligned(8))) {
+typedef struct __attribute__((packed, aligned(32))) {
 	const ushort type;
 	const ushort channel_order;
 	const ushort width;
 	const ushort height;
+	const unsigned char _unused[24];
 } image_header;
-#define OCLRASTER_IMAGE_HEADER_SIZE (sizeof(image_header))
 typedef global const image_header* image_header_ptr;
 
 //

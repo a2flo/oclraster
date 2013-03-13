@@ -22,7 +22,7 @@ oclraster_images {
 	read_only image2d<UINT_8, RGBA> diffuse_texture;
 	read_only image2d normal_texture;
 	read_only image2d height_texture;
-	read_only image2d fp_noise;
+	read_only image2d<FLOAT_32, R> fp_noise;
 };
 oclraster_framebuffer {
 	image2d color;

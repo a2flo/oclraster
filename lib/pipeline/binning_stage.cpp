@@ -30,7 +30,7 @@ unsigned int binning_stage::bin(draw_state& state) {
 	//
 	unsigned int triangle_count = 0;
 	ocl->read_buffer(&triangle_count, state.info_buffer, sizeof(unsigned int));
-	oclr_msg("remaining triangles: %u", triangle_count);
+	//oclr_msg("remaining triangles: %u", triangle_count);
 	if(triangle_count == 0) {
 #if defined(OCLRASTER_DEBUG)
 		//oclr_debug("no triangles prior to binning!");

@@ -9,26 +9,30 @@
 #define HALF_VEC_LOAD_EVAL(vecn) HALF_VEC_LOAD_CONCAT(vecn)
 #define HALF_VEC_LOAD HALF_VEC_LOAD_EVAL(VECN)
 
+RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const uint offset) {
+	global const half* img_data_ptr = (global const half*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
+	const RETURN_TYPE_VEC texel = HALF_VEC_LOAD(offset, img_data_ptr);
+	return (RETURN_TYPE_VEC4)(texel VEC4_FILL);
+}
+
 RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const float2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
 	const float2 fimg_size = convert_float2(img_size) - 1.0f;
-	
+
 	// normalize input texture coordinate to [0, 1]
 	const float2 norm_coord = fmod(coord + fabs(floor(coord)), (float2)(1.0f, 1.0f));
-	
 	const uint2 ui_tc = clamp(convert_uint2(norm_coord * fimg_size), (uint2)(0u, 0u), img_size - 1u);
-	const RETURN_TYPE_VEC texel = HALF_VEC_LOAD(ui_tc.y * img_size.x + ui_tc.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
-	return (RETURN_TYPE_VEC4)(texel VEC4_FILL);
+	return IMG_FUNC_FILTER_NAME(nearest)(img, ui_tc.y * img_size.x + ui_tc.x);
 }
 
 RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const uint2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
-	const RETURN_TYPE_VEC texel = HALF_VEC_LOAD(coord.y * img_size.x + coord.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img);
-	return (RETURN_TYPE_VEC4)(texel VEC4_FILL);
+	return IMG_FUNC_FILTER_NAME(nearest)(img, coord.y * img_size.x + coord.x);
 }
 
 RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(linear)(global const IMG_TYPE* img, const float2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
+	global const half* img_data_ptr = (global const half*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
 	const float2 fimg_size = convert_float2(img_size) - 1.0f;
 	
 	// normalize input texture coordinate to [0, 1]
@@ -49,10 +53,10 @@ RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_FUNC_FILTER_NAME(linear)(global const IMG_TYP
 	// finally: read texels and interpolate according to weights
 	const RETURN_TYPE_VEC texels[4] = {
 		// bilinear coords
-		HALF_VEC_LOAD(coords.y + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
-		HALF_VEC_LOAD(coords.y + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
-		HALF_VEC_LOAD(coords.w + coords.x + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
-		HALF_VEC_LOAD(coords.w + coords.z + OCLRASTER_IMAGE_HEADER_SIZE, (global const half*)img),
+		HALF_VEC_LOAD(coords.y + coords.x, img_data_ptr),
+		HALF_VEC_LOAD(coords.y + coords.z, img_data_ptr),
+		HALF_VEC_LOAD(coords.w + coords.x, img_data_ptr),
+		HALF_VEC_LOAD(coords.w + coords.z, img_data_ptr),
 	};
 	return (RETURN_TYPE_VEC4)(
 		texel_mix(texel_mix(texels[0], texels[1], weights.x),

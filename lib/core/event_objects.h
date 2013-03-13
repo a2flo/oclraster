@@ -68,7 +68,7 @@ enum class EVENT_TYPE : unsigned int {
 	
 	QUIT = __OTHER_EVENT + 1,
 	WINDOW_RESIZE,
-	SHADER_RELOAD,
+	KERNEL_RELOAD,
 	CLIPBOARD_UPDATE,
 	
 	__USER_EVENT_START = __USER_EVENT + 1,
@@ -184,7 +184,7 @@ typedef touch_move_event_base<EVENT_TYPE::FINGER_MOVE> finger_move_event;
 
 // misc
 typedef event_object_base<EVENT_TYPE::QUIT> quit_event;
-typedef event_object_base<EVENT_TYPE::SHADER_RELOAD> shader_reload_event;
+typedef event_object_base<EVENT_TYPE::KERNEL_RELOAD> kernel_reload_event;
 
 struct clipboard_update_event : public event_object_base<EVENT_TYPE::CLIPBOARD_UPDATE> {
 	const string text;

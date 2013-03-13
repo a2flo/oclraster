@@ -43,6 +43,9 @@ void oclraster_program::process_program(const string& code) {
 			{ u8"oclraster_framebuffer", STRUCT_TYPE::FRAMEBUFFER }
 		}
 	};
+	static const set<const string> specifiers {
+		"read_only", "write_only", "read_write"
+	};
 	
 	// current oclraster_struct grammar limitation/requirements:
 	// * no preprocessor (this would require a compiler)
@@ -132,7 +135,8 @@ void oclraster_program::process_program(const string& code) {
 					
 					// check if type has an additional specifier (for images: read_only, write_only, read_write)
 					const size_t type_start_pos = var_decl.find(" ");
-					if(type_start_pos != name_start_pos) {
+					const string start_token = var_decl.substr(0, type_start_pos);
+					if(specifiers.find(start_token) != specifiers.end()) {
 						const string var_type = regex_replace(var_decl.substr(type_start_pos+1, name_start_pos-type_start_pos-1),
 															  rx_space, ""); // need to strip any whitespace
 						//oclr_msg("type (s): >%s<", var_type);
@@ -143,7 +147,7 @@ void oclraster_program::process_program(const string& code) {
 						variable_specifiers.emplace_back(var_spec);
 					}
 					else {
-						const string var_type = var_decl.substr(0, name_start_pos);
+						const string var_type = regex_replace(var_decl.substr(0, name_start_pos), rx_space, "");
 						//oclr_msg("type: >%s<", var_type);
 						variable_types.emplace_back(var_type);
 						variable_specifiers.emplace_back("");

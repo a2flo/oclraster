@@ -27,6 +27,9 @@ static atomic<unsigned int> update_model { false };
 static atomic<unsigned int> update_light { true };
 static atomic<unsigned int> update_light_color { true };
 static atomic<unsigned int> selected_material { 0 };
+static transform_program* transform_prog { nullptr };
+static rasterization_program* rasterization_prog { nullptr };
+static pipeline* p { nullptr };
 
 int main(int argc oclr_unused, char* argv[]) {
 	// initialize oclraster
@@ -64,7 +67,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	oclraster::set_camera(cam);
 	
 	//
-	pipeline* p = new pipeline();
+	p = new pipeline();
 	
 	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
 	
@@ -77,40 +80,15 @@ int main(int argc oclr_unused, char* argv[]) {
 	evt->add_internal_event_handler(mouse_handler_fnctr, EVENT_TYPE::MOUSE_RIGHT_CLICK, EVENT_TYPE::MOUSE_MOVE);
 	event::handler quit_handler_fnctr(&quit_handler);
 	evt->add_event_handler(quit_handler_fnctr, EVENT_TYPE::QUIT);
+	event::handler kernel_reload_handler_fnctr(&kernel_reload_handler);
+	evt->add_internal_event_handler(kernel_reload_handler_fnctr, EVENT_TYPE::KERNEL_RELOAD);
 #if defined(OCLRASTER_IOS)
 	event::handler touch_handler_fnctr(&touch_handler);
 	evt->add_event_handler(touch_handler_fnctr, EVENT_TYPE::FINGER_UP, EVENT_TYPE::FINGER_DOWN, EVENT_TYPE::FINGER_MOVE);
 #endif
 	
 	// load, compile and bind user shaders
-	string vs_str, fs_str;
-#if 0
-	if(!file_io::file_to_string(oclraster::kernel_path("user/simple_shader_vs.cl"), vs_str)) {
-		oclr_error("couldn't open vs program!");
-		return -1;
-	}
-	if(!file_io::file_to_string(oclraster::kernel_path("user/simple_shader_fs.cl"), fs_str)) {
-		oclr_error("couldn't open fs program!");
-		return -1;
-	}
-	transform_program simple_vs(vs_str, "transform_main");
-	rasterization_program simple_fs(fs_str, "rasterize_main");
-	p->bind_program(simple_vs);
-	p->bind_program(simple_fs);
-#else
-	if(!file_io::file_to_string(oclraster::kernel_path("user/simple_texturing_vs.cl"), vs_str)) {
-		oclr_error("couldn't open vs program!");
-		return -1;
-	}
-	if(!file_io::file_to_string(oclraster::kernel_path("user/simple_texturing_fs.cl"), fs_str)) {
-		oclr_error("couldn't open fs program!");
-		return -1;
-	}
-	transform_program texturing_vs(vs_str, "transform_main");
-	rasterization_program texturing_fs(fs_str, "rasterize_main");
-	p->bind_program(texturing_vs);
-	p->bind_program(texturing_fs);
-#endif
+	if(!load_programs()) return -1;
 	
 	// create / ref buffers
 	const opencl::buffer_object& index_buffer = model->get_index_buffer(0);
@@ -307,6 +285,51 @@ int main(int argc oclr_unused, char* argv[]) {
 	oclraster::destroy();
 	
 	return 0;
+}
+
+bool load_programs() {
+	if(transform_prog != nullptr) {
+		delete transform_prog;
+		transform_prog = nullptr;
+	}
+	if(rasterization_prog != nullptr) {
+		delete rasterization_prog;
+		rasterization_prog = nullptr;
+	}
+	
+	string vs_str, fs_str;
+	static const array<string, 2> shader_filenames {
+#if 1
+		{ "simple_texturing_vs.cl", "simple_texturing_fs.cl" }
+#elif 1
+		{ "debug_vs.cl", "debug_fs.cl" }
+#else
+		{ "simple_shader_vs.cl", "simple_shader_fs.cl" }
+#endif
+	};
+	
+
+	if(!file_io::file_to_string(oclraster::kernel_path("user/"+shader_filenames[0]), vs_str)) {
+		oclr_error("couldn't open vs program!");
+		return false;
+	}
+	if(!file_io::file_to_string(oclraster::kernel_path("user/"+shader_filenames[1]), fs_str)) {
+		oclr_error("couldn't open fs program!");
+		return false;
+	}
+	transform_prog = new transform_program(vs_str, "transform_main");
+	rasterization_prog = new rasterization_program(fs_str, "rasterize_main");
+	p->bind_program(*transform_prog);
+	p->bind_program(*rasterization_prog);
+	return true;
+}
+
+bool kernel_reload_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+	if(type == EVENT_TYPE::KERNEL_RELOAD) {
+		load_programs();
+		return true;
+	}
+	return false;
 }
 
 bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {

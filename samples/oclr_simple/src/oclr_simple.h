@@ -35,6 +35,9 @@
 bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
 bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
 bool quit_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
+bool kernel_reload_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
+
+bool load_programs();
 
 #if defined(OCLRASTER_IOS)
 bool touch_handler(EVENT_TYPE type, shared_ptr<event_object> obj);

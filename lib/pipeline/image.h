@@ -55,14 +55,19 @@ public:
 	};
 	
 	// image header when a buffer is used
-	struct __attribute__((packed, aligned(8))) header {
+	struct __attribute__((packed, aligned(32))) header {
 		IMAGE_TYPE type;
 		IMAGE_CHANNEL channel_order;
 		unsigned short int width;
 		unsigned short int height;
+		unsigned char _unused[24];
 	};
-	static_assert(sizeof(header) == 8, "invalid image header size!");
-	static constexpr size_t header_size() { return sizeof(header); }
+	static constexpr size_t header_size() {
+		// max allowed size: 4 (channels) * 8 (sizeof(double))
+		// this is necessary to guarantee correct alignment
+		static_assert(sizeof(header) == (4*8), "invalid image header size!");
+		return (4*8);
+	}
 	
 	//
 	const opencl::buffer_object* get_buffer() const;
