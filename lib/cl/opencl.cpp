@@ -24,6 +24,8 @@
 #include "ios/ios_helper.h"
 #endif
 
+shared_ptr<opencl::kernel_object> opencl_base::null_kernel_object { nullptr };
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // common in all opencl implementations:
 
@@ -89,11 +91,16 @@ opencl_base::CL_VERSION opencl_base::get_platform_cl_version() const {
 }
 
 void opencl_base::destroy_kernels() {
-	for(const auto& k : kernels) {
-		delete k.second;
+	cur_kernel = nullptr;
+	for(auto& k : kernels) {
+		kernel_object::unassociate_buffers(k.second);
+		if(k.second.use_count() > 1) {
+			oclr_error("kernel object (%X) use count > 1 (%u) - kernel object is still used somewhere!",
+					   k.second.get(), k.second.use_count());
+		}
+		k.second = nullptr; // implicit delete
 	}
 	kernels.clear();
-	cur_kernel = nullptr;
 }
 
 bool opencl_base::is_cpu_support() {
@@ -106,7 +113,7 @@ bool opencl_base::is_gpu_support() {
 	return (fastest_gpu != nullptr);
 }
 
-opencl_base::kernel_object* opencl_base::add_kernel_file(const string& identifier, const string& file_name, const string& func_name, const string additional_options) {
+weak_ptr<opencl_base::kernel_object> opencl_base::add_kernel_file(const string& identifier, const string& file_name, const string& func_name, const string additional_options) {
 	if(kernels.count(identifier) != 0) {
 		oclr_error("kernel \"%s\" already exists!", identifier);
 		return kernels[identifier];
@@ -114,7 +121,7 @@ opencl_base::kernel_object* opencl_base::add_kernel_file(const string& identifie
 	
 	stringstream buffer(stringstream::in | stringstream::out);
 	if(!file_io::file_to_buffer(file_name, buffer)) {
-		return nullptr;
+		return null_kernel_object;
 	}
 	string kernel_data(buffer.str());
 	
@@ -151,7 +158,7 @@ void opencl_base::reload_kernels() {
 		check_compilation(add_kernel_file(get<0>(int_kernel),
 										  make_kernel_path(get<1>(int_kernel)),
 										  get<2>(int_kernel),
-										  get<3>(int_kernel)) != nullptr,
+										  get<3>(int_kernel)).use_count() > 0,
 						  get<1>(int_kernel));
 	}
 	
@@ -190,8 +197,8 @@ void opencl_base::use_kernel(const string& identifier) {
 	cur_kernel = kernels[identifier];
 }
 
-void opencl_base::use_kernel(opencl_base::kernel_object* kernel_obj) {
-	cur_kernel = kernel_obj;
+void opencl_base::use_kernel(weak_ptr<opencl_base::kernel_object> kernel_obj) {
+	cur_kernel = kernel_obj.lock();
 }
 
 void opencl_base::run_kernel() {
@@ -942,7 +949,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 #endif
 }
 
-opencl::kernel_object* opencl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {
+weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {
 	oclr_debug("compiling \"%s\" kernel!", identifier);
 	string options = build_options;
 	
@@ -979,10 +986,11 @@ opencl::kernel_object* opencl::add_kernel_src(const string& identifier, const st
 		}
 		
 		// add kernel
-		kernels[identifier] = new opencl::kernel_object();
-		kernels[identifier]->name = identifier;
+		auto kernel_ptr = make_shared<opencl::kernel_object>();
+		kernels[identifier] = kernel_ptr;
+		kernel_ptr->name = identifier;
 		cl::Program::Sources source(1, make_pair(src.c_str(), src.length()));
-		kernels[identifier]->program = new cl::Program(*context, source);
+		kernel_ptr->program = new cl::Program(*context, source);
 		
 		// compile for each device independently to add device-specific defines
 		for(const auto& device : devices) {
@@ -1017,58 +1025,79 @@ opencl::kernel_object* opencl::add_kernel_src(const string& identifier, const st
 			
 			device_options += " -DPLATFORM_"+platform_vendor_to_str(platform_vendor);
 			
-			kernels[identifier]->program->build(cur_device, (options+device_options).c_str());
+			kernel_ptr->program->build(cur_device, (options+device_options).c_str());
 		}
 		
-		kernels[identifier]->kernel = new cl::Kernel(*kernels[identifier]->program, func_name.c_str(), &ierr);
+		kernel_ptr->kernel = new cl::Kernel(*kernel_ptr->program, func_name.c_str(), &ierr);
 		
-		kernels[identifier]->arg_count = kernels[identifier]->kernel->getInfo<CL_KERNEL_NUM_ARGS>();
-		kernels[identifier]->args_passed.insert(kernels[identifier]->args_passed.begin(), kernels[identifier]->arg_count, false);
+		kernel_ptr->arg_count = kernel_ptr->kernel->getInfo<CL_KERNEL_NUM_ARGS>();
+		kernel_ptr->args_passed.insert(kernel_ptr->args_passed.begin(), kernel_ptr->arg_count, false);
+		kernel_ptr->buffer_args.insert(kernel_ptr->buffer_args.begin(), kernel_ptr->arg_count, nullptr);
 
 		// print out build log
 		/*for(const auto& internal_device : internal_devices) {
 			char build_log[CLINFO_STR_SIZE];
 			memset(build_log, 0, CLINFO_STR_SIZE);
-			kernels[identifier]->program->getBuildInfo(internal_device, CL_PROGRAM_BUILD_LOG, &build_log);
+			kernel_ptr->program->getBuildInfo(internal_device, CL_PROGRAM_BUILD_LOG, &build_log);
 			oclr_debug("build log: %s", build_log);
 		}*/
 		
 		/*size_t device_num = 0;
 		for(const auto& device : internal_devices) {
 			oclr_log("%s (dev #%u): kernel local memory: %u", identifier, device_num,
-					kernels[identifier]->kernel->getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device));
+					kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device));
 			oclr_log("%s (dev #%u): work group size: %u", identifier, device_num,
-					kernels[identifier]->kernel->getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device));
+					kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device));
 			device_num++;
 		}*/
 	}
 	__HANDLE_CL_EXCEPTION_START("add_kernel")
+		//
+		const auto kernel_iter = kernels.find(identifier);
+		if(kernel_iter == kernels.end()) {
+			// complete failure ...
+			return null_kernel_object;
+		}
+		
+		auto kernel_ptr = kernel_iter->second;
+		if(kernel_ptr == nullptr) {
+			// again: complete failure
+			return null_kernel_object;
+		}
+
 		// print out build log and build options
 		for(const auto& internal_device : internal_devices) {
 			char build_log[CLINFO_STR_SIZE];
 			memset(build_log, 0, CLINFO_STR_SIZE);
-			kernels[identifier]->program->getBuildInfo(internal_device, CL_PROGRAM_BUILD_LOG, &build_log);
+			kernel_ptr->program->getBuildInfo(internal_device, CL_PROGRAM_BUILD_LOG, &build_log);
 			oclr_error("build log (%s): %s", identifier, build_log);
 			
 			// print out current build options
 			char buildoptions[CLINFO_STR_SIZE];
 			memset(buildoptions, 0, CLINFO_STR_SIZE);
-			kernels[identifier]->program->getBuildInfo(internal_device, CL_PROGRAM_BUILD_OPTIONS, &buildoptions);
+			kernel_ptr->program->getBuildInfo(internal_device, CL_PROGRAM_BUILD_OPTIONS, &buildoptions);
 			oclr_debug("build options: %s", buildoptions);
 		}
 		
-		delete kernels[identifier];
-		kernels.erase(identifier);
+		weak_ptr<opencl::kernel_object> delete_ptr = kernel_ptr;
+		kernel_ptr = nullptr;
+		delete_kernel(delete_ptr);
 		
 		//log_program_binary(kernels[identifier], options);
-		return nullptr;
+		return null_kernel_object;
 	__HANDLE_CL_EXCEPTION_END
 	//log_program_binary(kernels[identifier], options);
 	return kernels[identifier];
 }
 
-void opencl::delete_kernel(kernel_object* obj) {
-	if(cur_kernel == obj) {
+void opencl::delete_kernel(weak_ptr<opencl::kernel_object> kernel_obj) {
+	auto kernel_ptr = kernel_obj.lock();
+	if(kernel_ptr == nullptr) {
+		// already deleted
+		return;
+	}
+	
+	if(cur_kernel == kernel_ptr) {
 		// if the currently active kernel is being deleted, flush+finish the queue
 		flush();
 		finish();
@@ -1076,17 +1105,21 @@ void opencl::delete_kernel(kernel_object* obj) {
 	}
 	
 	for(const auto& kernel : kernels) {
-		if(kernel.second == obj) {
+		if(kernel.second == kernel_ptr) {
+			kernel_object::unassociate_buffers(kernel_ptr);
 			kernels.erase(kernel.first);
-			delete obj;
-			return;
+			if(kernel_ptr.use_count() > 1) {
+				oclr_error("kernel object (%X) use count > 1 (%u) - kernel object is still used somewhere!",
+						   kernel_ptr.get(), kernel_ptr.use_count());
+			}
+			return; // implicit delete of kernel_ptr and the kernel_object
 		}
 	}
 	
 	oclr_error("couldn't find kernel object!");
 }
 
-void opencl::log_program_binary(const kernel_object* kernel) {
+void opencl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) {
 	if(kernel == nullptr) return;
 	
 	try {
@@ -1393,7 +1426,7 @@ void opencl::delete_buffer(opencl::buffer_object* buffer_obj) {
 	for(const auto& associated_kernel : buffer_obj->associated_kernels) {
 		for(const auto& arg_num : associated_kernel.second) {
 			associated_kernel.first->args_passed[arg_num] = false;
-			associated_kernel.first->buffer_args.erase(arg_num);
+			associated_kernel.first->buffer_args[arg_num] = nullptr;
 		}
 	}
 	buffer_obj->associated_kernels.clear();
@@ -1421,7 +1454,7 @@ void opencl::write_buffer(opencl::buffer_object* buffer_obj, const void* src, co
 	}
 	if(write_offset+write_size > buffer_obj->size) {
 		oclr_error("write offset (%d) or write size (%d) is too big - using write size of (%d) instead!",
-				 write_offset, write_size, (buffer_obj->size - write_offset));
+				   write_offset, write_size, (buffer_obj->size - write_offset));
 		write_size = buffer_obj->size - write_offset;
 	}
 	
@@ -1463,11 +1496,18 @@ void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj, const siz
 	__HANDLE_CL_EXCEPTION("read_buffer")
 }
 
-void opencl::run_kernel(kernel_object* kernel_obj) {
+void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
+	auto kernel_ptr = kernel_obj.lock();
+	if(kernel_ptr == nullptr) {
+		oclr_error("invalid kernel object (nullptr)!");
+		return;
+	}
+	
 	try {
+		
 		bool all_set = true;
-		for(unsigned int i = 0; i < kernel_obj->args_passed.size(); i++) {
-			if(!kernel_obj->args_passed[i]) {
+		for(unsigned int i = 0; i < kernel_ptr->args_passed.size(); i++) {
+			if(!kernel_ptr->args_passed[i]) {
 				oclr_error("argument #%u not set!", i);
 				all_set = false;
 			}
@@ -1477,16 +1517,17 @@ void opencl::run_kernel(kernel_object* kernel_obj) {
 		cl::CommandQueue* cmd_queue = queues[active_device->device];
 		
 		vector<cl::Memory> gl_objects;
-		for(const auto& buffer_arg : kernel_obj->buffer_args) {
-			if((buffer_arg.second->type & BUFFER_FLAG::COPY_ON_USE) != BUFFER_FLAG::NONE) {
-				write_buffer(buffer_arg.second, buffer_arg.second->data);
+		for(const auto& buffer_arg : kernel_ptr->buffer_args) {
+			if(buffer_arg == nullptr) continue;
+			if((buffer_arg->type & BUFFER_FLAG::COPY_ON_USE) != BUFFER_FLAG::NONE) {
+				write_buffer(buffer_arg, buffer_arg->data);
 			}
-			if((buffer_arg.second->type & BUFFER_FLAG::OPENGL_BUFFER) != BUFFER_FLAG::NONE &&
-			   !buffer_arg.second->manual_gl_sharing) {
-				gl_objects.push_back(*(buffer_arg.second->buffer != nullptr ?
-									   (cl::Memory*)buffer_arg.second->buffer :
-									   (cl::Memory*)buffer_arg.second->image_buffer));
-				kernel_obj->has_ogl_buffers = true;
+			if((buffer_arg->type & BUFFER_FLAG::OPENGL_BUFFER) != BUFFER_FLAG::NONE &&
+			   !buffer_arg->manual_gl_sharing) {
+				gl_objects.push_back(*(buffer_arg->buffer != nullptr ?
+									   (cl::Memory*)buffer_arg->buffer :
+									   (cl::Memory*)buffer_arg->image_buffer));
+				kernel_ptr->has_ogl_buffers = true;
 			}
 		}
 		if(!gl_objects.empty()) {
@@ -1494,41 +1535,43 @@ void opencl::run_kernel(kernel_object* kernel_obj) {
 		}
 		
 		// TODO: write my own opencl kernel functor (this is rather ugly right now ...)
-		auto functor = kernel_obj->functors.find(cmd_queue);
-		if(functor == kernel_obj->functors.end()) {
-			functor = kernel_obj->functors.insert({
+		auto functor = kernel_ptr->functors.find(cmd_queue);
+		if(functor == kernel_ptr->functors.end()) {
+			functor = kernel_ptr->functors.insert({
 				cmd_queue,
-				kernel_obj->kernel->bind(*cmd_queue,
-										 kernel_obj->global,
-										 kernel_obj->local)
+				kernel_ptr->kernel->bind(*cmd_queue,
+										 kernel_ptr->global,
+										 kernel_ptr->local)
 			}).first;
 		}
 		else {
-			functor->second.global_ = kernel_obj->global;
-			functor->second.local_ = kernel_obj->local;
+			functor->second.global_ = kernel_ptr->global;
+			functor->second.local_ = kernel_ptr->local;
 		}
 		
 		functor->second();
 		//functor->second().wait();
 		
-		for(const auto& buffer_arg : kernel_obj->buffer_args) {
-			if((buffer_arg.second->type & BUFFER_FLAG::READ_BACK_RESULT) != BUFFER_FLAG::NONE) {
-				read_buffer(buffer_arg.second->data, buffer_arg.second);
+		for(const auto& buffer_arg : kernel_ptr->buffer_args) {
+			if(buffer_arg == nullptr) continue;
+			if((buffer_arg->type & BUFFER_FLAG::READ_BACK_RESULT) != BUFFER_FLAG::NONE) {
+				read_buffer(buffer_arg->data, buffer_arg);
 			}
 		}
 		
-		for_each(begin(kernel_obj->buffer_args), end(kernel_obj->buffer_args),
-				 [this](const pair<const unsigned int, buffer_object*>& buffer_arg) {
-					 if((buffer_arg.second->type & BUFFER_FLAG::DELETE_AFTER_USE) != BUFFER_FLAG::NONE) {
-						 this->delete_buffer(buffer_arg.second);
+		for_each(begin(kernel_ptr->buffer_args), end(kernel_ptr->buffer_args),
+				 [this](buffer_object* buffer_arg) {
+					 if(buffer_arg == nullptr) return;
+					 if((buffer_arg->type & BUFFER_FLAG::DELETE_AFTER_USE) != BUFFER_FLAG::NONE) {
+						 this->delete_buffer(buffer_arg);
 					 }
 				 });
 		
-		if(kernel_obj->has_ogl_buffers && !gl_objects.empty()) {
+		if(kernel_ptr->has_ogl_buffers && !gl_objects.empty()) {
 			cmd_queue->enqueueReleaseGLObjects(&gl_objects);
 		}
 	}
-	__HANDLE_CL_EXCEPTION_EXT("run_kernel", (" - in kernel: "+kernel_obj->name).c_str())
+	__HANDLE_CL_EXCEPTION_EXT("run_kernel", (" - in kernel: "+kernel_ptr->name).c_str())
 }
 
 void opencl::finish() {

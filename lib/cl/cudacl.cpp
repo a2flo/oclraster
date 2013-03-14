@@ -530,7 +530,7 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 	}
 }
 
-opencl_base::kernel_object* cudacl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {
+weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {
 	oclr_debug("compiling \"%s\" kernel!", identifier);
 	string options = build_options;
 	string nvcc_log = "";
@@ -543,7 +543,7 @@ opencl_base::kernel_object* cudacl::add_kernel_src(const string& identifier, con
 		}
 		
 		// add kernel
-		opencl_base::kernel_object* kernel = new opencl_base::kernel_object();
+		auto kernel = make_shared<opencl::kernel_object>();
 		kernels[identifier] = kernel;
 		kernel->name = identifier;
 		kernel->kernel = nullptr;
@@ -672,15 +672,21 @@ opencl_base::kernel_object* cudacl::add_kernel_src(const string& identifier, con
 	return kernels[identifier];
 }
 
-void cudacl::delete_kernel(kernel_object* obj) {
-	if(cur_kernel == obj) {
+void cudacl::delete_kernel(weak_ptr<opencl::kernel_object> kernel_obj) {
+	auto kernel_ptr = kernel_obj.lock();
+	if(kernel_ptr == nullptr) {
+		// already deleted
+		return;
+	}
+	
+	if(cur_kernel == kernel_ptr) {
 		// if the currently active kernel is being deleted, flush+finish the queue
 		flush();
 		finish();
 		cur_kernel = nullptr;
 	}
 	
-	const auto iter = cuda_kernels.find(obj);
+	const auto iter = cuda_kernels.find(kernel_ptr);
 	if(iter == cuda_kernels.end()) {
 		oclr_error("couldn't find cuda kernel object!");
 		return;
@@ -689,17 +695,21 @@ void cudacl::delete_kernel(kernel_object* obj) {
 	cuda_kernels.erase(iter);
 	
 	for(const auto& kernel : kernels) {
-		if(kernel.second == obj) {
+		if(kernel.second == kernel_ptr) {
+			kernel_object::unassociate_buffers(kernel_ptr);
 			kernels.erase(kernel.first);
-			delete obj;
-			return;
+			if(kernel_ptr.use_count() > 1) {
+				oclr_error("kernel object (%X) use count > 1 (%u) - kernel object is still used somewhere!",
+						   kernel_ptr.get(), kernel_ptr.use_count());
+			}
+			return; // implicit delete of kernel_ptr and the kernel_object
 		}
 	}
 	
 	oclr_error("couldn't find kernel object!");
 }
 
-void cudacl::log_program_binary(const kernel_object* kernel) {
+void cudacl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) {
 	if(kernel == nullptr) return;
 }
 
@@ -979,7 +989,7 @@ void cudacl::delete_buffer(opencl_base::buffer_object* buffer_obj) {
 	for(const auto& associated_kernel : buffer_obj->associated_kernels) {
 		for(const auto& arg_num : associated_kernel.second) {
 			associated_kernel.first->args_passed[arg_num] = false;
-			associated_kernel.first->buffer_args.erase(arg_num);
+			associated_kernel.first->buffer_args[arg_num] = nullptr;
 		}
 	}
 	buffer_obj->associated_kernels.clear();
@@ -1108,11 +1118,17 @@ void cudacl::read_buffer(void* dst oclr_unused, opencl_base::buffer_object* buff
 	__HANDLE_CL_EXCEPTION("read_buffer")*/
 }
 
-void cudacl::run_kernel(kernel_object* kernel_obj) {
+void cudacl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
+	auto kernel_ptr = kernel_obj.lock();
+	if(kernel_ptr == nullptr) {
+		oclr_error("invalid kernel object (nullptr)!");
+		return;
+	}
+	
 	try {
 		bool all_set = true;
-		for(unsigned int i = 0; i < kernel_obj->args_passed.size(); i++) {
-			if(!kernel_obj->args_passed[i]) {
+		for(unsigned int i = 0; i < kernel_ptr->args_passed.size(); i++) {
+			if(!kernel_ptr->args_passed[i]) {
 				oclr_error("argument #%u not set!", i);
 				all_set = false;
 			}
@@ -1120,7 +1136,7 @@ void cudacl::run_kernel(kernel_object* kernel_obj) {
 		if(!all_set) return;
 		
 		//
-		cuda_kernel_object* kernel = cuda_kernels[kernel_obj];
+		cuda_kernel_object* kernel = cuda_kernels[kernel_ptr];
 		CUfunction* cuda_function = kernel->function;
 		CUstream* stream = cuda_queues[device_map[active_device]];
 		
@@ -1131,14 +1147,14 @@ void cudacl::run_kernel(kernel_object* kernel_obj) {
 		
 		// pre kernel-launch stuff:
 		vector<opencl_base::buffer_object*> gl_objects;
-		for(const auto& buffer_arg : kernel_obj->buffer_args) {
-			if((buffer_arg.second->type & BUFFER_FLAG::COPY_ON_USE) != BUFFER_FLAG::NONE) {
-				write_buffer(buffer_arg.second, buffer_arg.second->data);
+		for(const auto& buffer_arg : kernel_ptr->buffer_args) {
+			if((buffer_arg->type & BUFFER_FLAG::COPY_ON_USE) != BUFFER_FLAG::NONE) {
+				write_buffer(buffer_arg, buffer_arg->data);
 			}
-			if((buffer_arg.second->type & BUFFER_FLAG::OPENGL_BUFFER) != BUFFER_FLAG::NONE &&
-			   !buffer_arg.second->manual_gl_sharing) {
-				gl_objects.push_back(buffer_arg.second);
-				kernel_obj->has_ogl_buffers = true;
+			if((buffer_arg->type & BUFFER_FLAG::OPENGL_BUFFER) != BUFFER_FLAG::NONE &&
+			   !buffer_arg->manual_gl_sharing) {
+				gl_objects.push_back(buffer_arg);
+				kernel_ptr->has_ogl_buffers = true;
 			}
 		}
 		if(!gl_objects.empty()) {
@@ -1174,26 +1190,26 @@ void cudacl::run_kernel(kernel_object* kernel_obj) {
 		delete [] kernel_arguments;
 		
 		// post kernel-run stuff:
-		for(const auto& buffer_arg : kernel_obj->buffer_args) {
-			if((buffer_arg.second->type & BUFFER_FLAG::READ_BACK_RESULT) != BUFFER_FLAG::NONE) {
-				read_buffer(buffer_arg.second->data, buffer_arg.second);
+		for(const auto& buffer_arg : kernel_ptr->buffer_args) {
+			if((buffer_arg->type & BUFFER_FLAG::READ_BACK_RESULT) != BUFFER_FLAG::NONE) {
+				read_buffer(buffer_arg->data, buffer_arg);
 			}
 		}
 		
-		for_each(begin(kernel_obj->buffer_args), end(kernel_obj->buffer_args),
-				 [this](const pair<const unsigned int, buffer_object*>& buffer_arg) {
-					 if((buffer_arg.second->type & BUFFER_FLAG::DELETE_AFTER_USE) != BUFFER_FLAG::NONE) {
-						 this->delete_buffer(buffer_arg.second);
+		for_each(begin(kernel_ptr->buffer_args), end(kernel_ptr->buffer_args),
+				 [this](buffer_object* buffer_arg) {
+					 if((buffer_arg->type & BUFFER_FLAG::DELETE_AFTER_USE) != BUFFER_FLAG::NONE) {
+						 this->delete_buffer(buffer_arg);
 					 }
 				 });
 		
-		if(kernel_obj->has_ogl_buffers && !gl_objects.empty()) {
+		if(kernel_ptr->has_ogl_buffers && !gl_objects.empty()) {
 			for(const auto& obj : gl_objects) {
 				release_gl_object(obj);
 			}
 		}
 	}
-	__HANDLE_CL_EXCEPTION_EXT("run_kernel", (" - in kernel: "+kernel_obj->name).c_str())
+	__HANDLE_CL_EXCEPTION_EXT("run_kernel", (" - in kernel: "+kernel_ptr->name).c_str())
 }
 
 void cudacl::finish() {

@@ -280,7 +280,7 @@ void oclraster_program::process_program(const string& code) {
 	}
 }
 
-opencl::kernel_object* oclraster_program::build_kernel(const kernel_image_spec& spec) {
+weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_image_spec& spec) {
 	compiled_image_kernels.emplace_back(spec);
 	
 	// finally: call the specialized processing function of inheriting classes/programs
@@ -293,10 +293,10 @@ opencl::kernel_object* oclraster_program::build_kernel(const kernel_image_spec& 
 	}
 	
 	const string identifier = "USER_PROGRAM."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter());
-	opencl::kernel_object* kernel = ocl->add_kernel_src(identifier, program_code, "_oclraster_program");
+	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, "_oclraster_program");
 	//oclr_msg("%s:\n%s\n", identifier, program_code);
 #if defined(OCLRASTER_DEBUG)
-	if(kernel == nullptr) {
+	if(kernel.use_count() == 0) {
 		oclr_debug("kernel source: %s", program_code);
 	}
 #endif
@@ -532,7 +532,12 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	
 	// and compile
 	const string unique_identifier = "STRUCT_INFO."+ull2string(SDL_GetPerformanceCounter());
-	opencl::kernel_object* kernel_obj = ocl->add_kernel_src(unique_identifier, kernel_code, "struct_info");
+	weak_ptr<opencl::kernel_object> kernel_obj = ocl->add_kernel_src(unique_identifier, kernel_code, "struct_info");
+	auto kernel_ptr = kernel_obj.lock();
+	if(kernel_ptr == nullptr) {
+		oclr_error("failed to create STRUCT_INFO kernel!");
+		return;
+	}
 	
 	const size_t info_buffer_size = 1 + struct_info.variables.size() * 2;
 	int* info_buffer_results = new int[info_buffer_size];
@@ -575,6 +580,7 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	
 	// cleanup
 	delete [] info_buffer_results;
+	kernel_ptr = nullptr;
 	ocl->delete_kernel(kernel_obj);
 }
 
@@ -596,16 +602,16 @@ const oclraster_program::oclraster_image_info& oclraster_program::get_images() c
 	return images;
 }
 
-opencl::kernel_object* oclraster_program::get_kernel(const kernel_image_spec spec) {
+weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_image_spec spec) {
 	//
 	if(kernels.empty()) {
 		oclr_error("no kernel has been compiled for this program!");
-		return nullptr;
+		return opencl::null_kernel_object;
 	}
 	if(spec.size() != compiled_image_kernels[0].size()) {
 		oclr_error("invalid kernel image spec size (%u) - should be (%u)!",
 				   spec.size(), compiled_image_kernels[0].size());
-		return nullptr;
+		return opencl::null_kernel_object;
 	}
 	
 	//

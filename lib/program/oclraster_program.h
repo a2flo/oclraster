@@ -75,7 +75,7 @@ public:
 	const oclraster_image_info& get_images() const;
 	
 	bool is_valid() const;
-	opencl::kernel_object* get_kernel(const kernel_image_spec spec = kernel_image_spec {});
+	weak_ptr<opencl::kernel_object> get_kernel(const kernel_image_spec spec = kernel_image_spec {});
 
 protected:
 	string entry_function = "main";
@@ -83,8 +83,8 @@ protected:
 	//
 	string processed_code = ""; // created once on program creation (pre-specialized processing)
 	vector<kernel_image_spec> compiled_image_kernels;
-	unordered_map<kernel_image_spec*, opencl::kernel_object*> kernels;
-	opencl::kernel_object* build_kernel(const kernel_image_spec& spec);
+	unordered_map<kernel_image_spec*, weak_ptr<opencl::kernel_object>> kernels;
+	weak_ptr<opencl::kernel_object> build_kernel(const kernel_image_spec& spec);
 	
 	//
 	void process_program(const string& code);

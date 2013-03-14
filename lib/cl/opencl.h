@@ -172,21 +172,21 @@ public:
 	void reload_kernels();
 	
 	void use_kernel(const string& identifier);
-	void use_kernel(kernel_object* kernel_obj);
+	void use_kernel(weak_ptr<kernel_object> kernel_obj);
 	void run_kernel();
 	void run_kernel(const string& identifier);
-	virtual void run_kernel(kernel_object* kernel_obj) = 0;
-	kernel_object* get_cur_kernel() { return cur_kernel; }
+	virtual void run_kernel(weak_ptr<kernel_object> kernel_obj) = 0;
+	weak_ptr<kernel_object> get_cur_kernel() { return cur_kernel; }
 	virtual void finish() = 0;
 	virtual void flush() = 0;
 	virtual void barrier() = 0;
 	virtual void activate_context() = 0;
 	virtual void deactivate_context() = 0;
 	
-	kernel_object* add_kernel_file(const string& identifier, const string& file_name, const string& func_name, const string additional_options = "");
-	virtual kernel_object* add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "") = 0;
+	weak_ptr<kernel_object> add_kernel_file(const string& identifier, const string& file_name, const string& func_name, const string additional_options = "");
+	virtual weak_ptr<kernel_object> add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "") = 0;
 	void delete_kernel(const string& identifier);
-	virtual void delete_kernel(kernel_object* kernel_obj) = 0;
+	virtual void delete_kernel(weak_ptr<kernel_object> kernel_obj) = 0;
 	
 	virtual buffer_object* create_buffer(BUFFER_FLAG type, size_t size, void* data = nullptr) = 0;
 	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data = nullptr) = 0;
@@ -234,19 +234,23 @@ public:
 		unsigned int arg_count = 0;
 		bool has_ogl_buffers = false;
 		vector<bool> args_passed;
-		unordered_map<unsigned int, buffer_object*> buffer_args;
+		vector<buffer_object*> buffer_args;
 		string name = "";
 		unordered_map<cl::CommandQueue*, cl::KernelFunctor> functors;
 		
-		kernel_object() : args_passed(), buffer_args() {}
+		kernel_object() {}
 		~kernel_object() {
-			for(const auto& ba : buffer_args) {
-				ba.second->associated_kernels.erase(this);
-			}
 			if(program != nullptr) delete program;
 			if(kernel != nullptr) delete kernel;
 		}
+		static void unassociate_buffers(shared_ptr<kernel_object> kernel_ptr) {
+			for(auto& buffer : kernel_ptr->buffer_args) {
+				if(buffer == nullptr) continue;
+				buffer->associated_kernels.erase(kernel_ptr);
+			}
+		}
 	};
+	static shared_ptr<kernel_object> null_kernel_object;
 	
 	struct buffer_object {
 		cl::Buffer* buffer = nullptr;
@@ -260,9 +264,10 @@ public:
 		cl::ImageFormat format = cl::ImageFormat(0, 0);
 		size3 origin = size3(size_t(0));
 		size3 region = size3(size_t(0));
-		unordered_map<kernel_object*, vector<unsigned int>> associated_kernels; // kernels + argument numbers
+		// kernels + argument numbers
+		unordered_map<shared_ptr<kernel_object>, vector<unsigned int>> associated_kernels;
 		
-		buffer_object() : associated_kernels() {}
+		buffer_object() {}
 		~buffer_object() {}
 	};
 	
@@ -308,7 +313,7 @@ protected:
 	void load_internal_kernels();
 	void destroy_kernels();
 	void check_compilation(const bool ret, const string& filename);
-	virtual void log_program_binary(const kernel_object* kernel) = 0;
+	virtual void log_program_binary(const shared_ptr<kernel_object> kernel) = 0;
 	
 	bool has_vendor_device(VENDOR vendor_type);
 	
@@ -331,8 +336,8 @@ protected:
 	bool successful_internal_compilation;
 	
 	vector<buffer_object*> buffers;
-	unordered_map<string, kernel_object*> kernels;
-	kernel_object* cur_kernel;
+	unordered_map<string, shared_ptr<kernel_object>> kernels;
+	shared_ptr<kernel_object> cur_kernel;
 	
 	unordered_map<const cl::Device*, cl::CommandQueue*> queues;
 	
@@ -356,10 +361,12 @@ template<typename T> bool opencl_base::set_kernel_argument(const unsigned int& i
 	}
 	
 	// remove "references" of the last used buffer for this kernel and argument index (if there is one)
-	if(cur_kernel->buffer_args.count(index) > 0) {
-		auto& associated_kernels = cur_kernel->buffer_args[index]->associated_kernels[cur_kernel];
-		associated_kernels.erase(remove(begin(associated_kernels), end(associated_kernels), index), end(associated_kernels));
-		cur_kernel->buffer_args.erase(index);
+	auto& buffer = cur_kernel->buffer_args[index];
+	if(buffer != nullptr) {
+		auto& kernel_args = buffer->associated_kernels[cur_kernel];
+		kernel_args.erase(remove(begin(kernel_args), end(kernel_args), index),
+						  end(kernel_args));
+		buffer = nullptr;
 	}
 	return true;
 }
@@ -377,7 +384,7 @@ public:
 					  const set<string> device_restriction = set<string> {},
 					  const bool gl_sharing = true);
 	
-	virtual void run_kernel(kernel_object* kernel_obj);
+	virtual void run_kernel(weak_ptr<kernel_object> kernel_obj);
 	
 	virtual void finish();
 	virtual void flush();
@@ -385,8 +392,8 @@ public:
 	virtual void activate_context();
 	virtual void deactivate_context();
 	
-	virtual kernel_object* add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "");
-	virtual void delete_kernel(kernel_object* kernel_obj);
+	virtual weak_ptr<kernel_object> add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "");
+	virtual void delete_kernel(weak_ptr<kernel_object> kernel_obj);
 	
 	virtual buffer_object* create_buffer(BUFFER_FLAG type, size_t size, void* data = nullptr);
 	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data = nullptr);
@@ -419,7 +426,7 @@ public:
 	
 protected:
 	virtual buffer_object* create_buffer_object(BUFFER_FLAG type, void* data = nullptr);
-	virtual void log_program_binary(const kernel_object* kernel);
+	virtual void log_program_binary(const shared_ptr<kernel_object> kernel);
 	virtual const char* error_code_to_string(cl_int error_code) const;
 	
 };
@@ -439,7 +446,7 @@ public:
 					  const set<string> device_restriction = set<string> {},
 					  const bool gl_sharing = true);
 	
-	virtual void run_kernel(kernel_object* kernel_obj);
+	virtual void run_kernel(weak_ptr<kernel_object> kernel_obj);
 	
 	virtual void finish();
 	virtual void flush();
@@ -447,8 +454,8 @@ public:
 	virtual void activate_context();
 	virtual void deactivate_context();
 	
-	virtual kernel_object* add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "");
-	virtual void delete_kernel(kernel_object* kernel_obj);
+	virtual weak_ptr<kernel_object> add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "");
+	virtual void delete_kernel(weak_ptr<kernel_object> kernel_obj);
 	
 	virtual buffer_object* create_buffer(BUFFER_FLAG type, size_t size, void* data = nullptr);
 	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data = nullptr);
@@ -492,11 +499,11 @@ protected:
 	unordered_map<opencl_base::buffer_object*, CUdeviceptr*> cuda_buffers;
 	unordered_map<opencl_base::buffer_object*, CUgraphicsResource*> cuda_gl_buffers;
 	unordered_map<CUgraphicsResource*, CUdeviceptr*> cuda_mapped_gl_buffers;
-	unordered_map<opencl_base::kernel_object*, cuda_kernel_object*> cuda_kernels;
+	unordered_map<shared_ptr<opencl_base::kernel_object>, cuda_kernel_object*> cuda_kernels;
 	
 	//
 	virtual buffer_object* create_buffer_object(BUFFER_FLAG type, void* data = nullptr);
-	virtual void log_program_binary(const kernel_object* kernel);
+	virtual void log_program_binary(const shared_ptr<kernel_object> kernel);
 	virtual const char* error_code_to_string(cl_int error_code) const;
 	
 };
