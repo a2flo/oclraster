@@ -51,6 +51,7 @@ public:
 	
 	static bool file_to_buffer(const string& filename, stringstream& buffer);
 	static bool file_to_string(const string& filename, string& str);
+	static string file_to_string(const string& filename);
 
 	bool open(const string& filename, OPEN_TYPE open_type);
 	void close();

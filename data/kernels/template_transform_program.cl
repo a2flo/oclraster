@@ -1,29 +1,3 @@
-/*
- *  Flexible OpenCL Rasterizer (oclraster)
- *  Copyright (C) 2012 - 2013 Florian Ziesche
- *  
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; version 2 of the License only.
- *  
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *  
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-
-#include "transform_program.h"
-#include "image.h"
-
-#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
-string template_transform_program { "" };
-#else
-// awesome raw string literals are awesome
-static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 	#include "oclr_global.h"
 	#include "oclr_math.h"
 	#include "oclr_matrix.h"
@@ -116,7 +90,7 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		float4 fc_dot = (float4)(0.0f, 0.0f, 0.0f, 0.0f);
 		for(unsigned int i = 0; i < 3; i++) {
 			const float4 plane_normal = cdata->frustum_normals[i];
-			const uint4 plane_sign = *(const uint4*)&plane_normal & (uint4)(0x80000000, 0x80000000, 0x80000000, 0x80000000);
+			const uint4 plane_sign = *(const uint4*)&plane_normal & (uint4)(0x80000000);
 			const uint4 flipped_extent = (uint4)(((const uint*)&aabb_extent)[i]) ^ plane_sign;
 			const float4 dot_param = (float4)(((const float*)&aabb_center)[i]) + *(const float4*)&flipped_extent;
 			fc_dot += dot_param * plane_normal;
@@ -236,96 +210,3 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		// multiple dependent memory lookups (-> faster in the end)
 		//###OCLRASTER_USER_OUTPUT_COPY###
 	}
-)OCLRASTER_RAWSTR"};
-#endif
-
-transform_program::transform_program(const string& code, const string entry_function_) :
-oclraster_program(code, entry_function_) {
-	process_program(code);
-}
-
-transform_program::~transform_program() {
-}
-
-string transform_program::specialized_processing(const string& code,
-												 const kernel_image_spec& image_spec) {
-	// insert (processed) user code into template program
-	string program_code = template_transform_program;
-	core::find_and_replace(program_code, "//###OCLRASTER_USER_CODE###", code);
-	
-	//
-	vector<string> image_decls;
-	const string kernel_parameters { create_user_kernel_parameters(image_spec, image_decls) };
-	core::find_and_replace(program_code, "//###OCLRASTER_USER_STRUCTS###", kernel_parameters);
-	
-	// insert main call + prior buffer handling
-	string buffer_handling_code = "";
-	string pre_buffer_handling_code = "";
-	string output_handling_code = "";
-	string main_call_parameters = "";
-	size_t cur_user_buffer = 0;
-	for(const auto& oclr_struct : structs) {
-		const string cur_user_buffer_str = size_t2string(cur_user_buffer);
-		switch (oclr_struct.type) {
-			case oclraster_program::STRUCT_TYPE::INPUT:
-				buffer_handling_code += oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str +
-										 " = user_buffer_"+cur_user_buffer_str+"[indices[i]];\n";
-				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
-				break;
-			case oclraster_program::STRUCT_TYPE::OUTPUT:
-				pre_buffer_handling_code += oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str + "[3];\n";
-				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + "[i], ";
-				output_handling_code += "for(unsigned int i = 0; i < 3; i++) {\n";
-				output_handling_code += "const unsigned int idx = (triangle_index * 3) + i;\n";
-				for(const auto& var : oclr_struct.variables) {
-					output_handling_code += "user_buffer_" + cur_user_buffer_str + "[idx]." + var + " = ";
-					output_handling_code += "user_buffer_element_" + cur_user_buffer_str + "[i]." + var + ";\n";
-				}
-				output_handling_code += "}\n";
-				break;
-			case oclraster_program::STRUCT_TYPE::UNIFORMS:
-				pre_buffer_handling_code += ("const " + oclr_struct.name + " user_buffer_element_" +
-											 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
-				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
-				break;
-			case oclraster_program::STRUCT_TYPE::IMAGES:
-			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
-		}
-		cur_user_buffer++;
-	}
-	for(const auto& img : images.image_names) {
-		main_call_parameters += img + ", ";
-	}
-	main_call_parameters += "i, &VE, &vertices[i]"; // the same for all transform programs
-	core::find_and_replace(program_code, "//###OCLRASTER_USER_PRE_MAIN_CALL###", pre_buffer_handling_code);
-	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
-						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
-	core::find_and_replace(program_code, "//###OCLRASTER_USER_OUTPUT_COPY###", output_handling_code);
-	
-	// replace remaining image placeholders
-	for(size_t i = 0, img_count = image_decls.size(); i < img_count; i++) {
-		core::find_and_replace(program_code, "//###OCLRASTER_IMAGE_"+size_t2string(i)+"###", image_decls[i]);
-	}
-	
-	// done
-	//oclr_msg("generated transform user program: %s", program_code);
-	return program_code;
-}
-
-string transform_program::get_fixed_entry_function_parameters() const {
-	return "const int index, const float3* VE, float3* transformed_vertex";
-}
-
-string transform_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type) const {
-	switch(type) {
-		case STRUCT_TYPE::INPUT:
-		case STRUCT_TYPE::UNIFORMS:
-			return "const";
-		case STRUCT_TYPE::OUTPUT:
-			// private memory
-			return "";
-		case oclraster_program::STRUCT_TYPE::IMAGES:
-		case oclraster_program::STRUCT_TYPE::FRAMEBUFFER:
-			return "";
-	}
-}

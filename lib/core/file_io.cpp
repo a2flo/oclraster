@@ -121,6 +121,12 @@ bool file_io::file_to_string(const string& filename, string& str) {
 	return true;
 }
 
+string file_io::file_to_string(const string& filename) {
+	string ret = "";
+	file_to_string(filename, ret);
+	return ret;
+}
+
 /*! reads a line from the current input stream (senseless if we have a binary file)
  *  @param finput a pointer to a char where the line is written to
  */

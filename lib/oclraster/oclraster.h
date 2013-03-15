@@ -217,8 +217,8 @@ protected:
 	static bool cursor_visible;
 	
 	// window event handlers
-	static event::handler* window_handler;
-	static bool window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
+	static event::handler* event_handler_fnctr;
+	static bool event_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
 	
 	// misc
 	static atomic<bool> reload_kernels_flag;

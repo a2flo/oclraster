@@ -18,6 +18,9 @@
 
 #include "rasterization_program.h"
 
+#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+string template_rasterization_program { "" };
+#else
 static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 	#include "oclr_global.h"
 	#include "oclr_math.h"
@@ -106,6 +109,7 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 		}
 	}
 )OCLRASTER_RAWSTR"};
+#endif
 
 rasterization_program::rasterization_program(const string& code, const string entry_function_) :
 oclraster_program(code, entry_function_) {

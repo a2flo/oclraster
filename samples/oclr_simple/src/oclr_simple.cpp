@@ -26,10 +26,11 @@ static constexpr float3 cam_speeds { 0.01f, 0.1f, 0.001f };
 static atomic<unsigned int> update_model { false };
 static atomic<unsigned int> update_light { true };
 static atomic<unsigned int> update_light_color { true };
-static atomic<unsigned int> selected_material { 0 };
 static transform_program* transform_prog { nullptr };
 static rasterization_program* rasterization_prog { nullptr };
 static pipeline* p { nullptr };
+static atomic<unsigned int> selected_material { 0 };
+static constexpr size_t material_count { 5 };
 
 int main(int argc oclr_unused, char* argv[]) {
 	// initialize oclraster
@@ -124,7 +125,7 @@ int main(int argc oclr_unused, char* argv[]) {
 																   (void*)&rasterize_uniforms);
 	
 	// textures
-	static const array<string, 12> texture_names {
+	static const array<string, material_count*3> texture_names {
 		{
 			"light_512",
 			"light_normal_512",
@@ -138,10 +139,13 @@ int main(int argc oclr_unused, char* argv[]) {
 			"acid_512",
 			"acid_normal_512",
 			"acid_height_512",
+			"blend_test_512",
+			"light_normal_512",
+			"scale_gray",
 		}
 	};
 	
-	array<array<image, 3>, 4> materials {{ // excessive braces are excessive
+	array<array<image, 3>, material_count> materials {{ // excessive braces are excessive
 		{{
 			image::from_file(oclraster::data_path(texture_names[0]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
 			image::from_file(oclraster::data_path(texture_names[1]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
@@ -159,8 +163,13 @@ int main(int argc oclr_unused, char* argv[]) {
 		}},
 		{{
 			image::from_file(oclraster::data_path(texture_names[9]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[10]+".png"),IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[10]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
 			image::from_file(oclraster::data_path(texture_names[11]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
+		}},
+		{{
+			image::from_file(oclraster::data_path(texture_names[12]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[13]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[14]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}}
 	}};
 	
@@ -216,7 +225,7 @@ int main(int argc oclr_unused, char* argv[]) {
 			transform_uniforms.modelview = matrix4f().rotate_y(model_rotation);
 			model_rotation += 1.0f;
 			if(model_rotation >= 360.0f) {
-				selected_material = (selected_material + 1) % 4;
+				selected_material = (selected_material + 1) % material_count;
 				model_rotation = core::wrap(model_rotation, 360.0f);
 			}
 			
@@ -380,6 +389,9 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 			case SDLK_4:
 				selected_material = 3;
 				break;
+			case SDLK_5:
+				selected_material = 4;
+				break;
 			default: return false;
 		}
 	}
@@ -405,7 +417,7 @@ bool touch_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
 	if(type == EVENT_TYPE::FINGER_UP) {
 		//const shared_ptr<finger_up_event>& touch_evt = (shared_ptr<finger_up_event>&)obj;
 		//oclr_msg("finger up: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
-		selected_material = (selected_material + 1) % 4;
+		selected_material = (selected_material + 1) % material_count;
 	}
 	/*else if(type == EVENT_TYPE::FINGER_DOWN) {
 		const shared_ptr<finger_down_event>& touch_evt = (shared_ptr<finger_down_event>&)obj;

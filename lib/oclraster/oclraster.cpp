@@ -65,9 +65,15 @@ bool oclraster::new_fps_count = false;
 
 bool oclraster::cursor_visible = true;
 
-event::handler* oclraster::window_handler = nullptr;
+event::handler* oclraster::event_handler_fnctr = nullptr;
 
 atomic<bool> oclraster::reload_kernels_flag { false };
+
+#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+// from transform_program.cpp and rasterization_program.cpp for debugging purposes:
+extern string template_transform_program;
+extern string template_rasterization_program;
+#endif
 
 // dll main for windows dll export
 #if defined(__WINDOWS__)
@@ -182,8 +188,8 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 	x = new xml();
 	evt = new event();
 	
-	window_handler = new event::handler(&oclraster::window_event_handler);
-	evt->add_internal_event_handler(*window_handler, EVENT_TYPE::WINDOW_RESIZE);
+	event_handler_fnctr = new event::handler(&oclraster::event_handler);
+	evt->add_internal_event_handler(*event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
 	
 	// print out oclraster info
 	oclr_debug("%s", (OCLRASTER_VERSION_STRING).c_str());
@@ -228,8 +234,8 @@ void oclraster::destroy() {
 	
 	acquire_context();
 	
-	evt->remove_event_handler(*window_handler);
-	delete window_handler;
+	evt->remove_event_handler(*event_handler_fnctr);
+	delete event_handler_fnctr;
 	
 	rtt::destroy();
 	if(x != nullptr) delete x;
@@ -1014,14 +1020,28 @@ void oclraster::release_context() {
 	config.ctx_lock.unlock();
 }
 
-bool oclraster::window_event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
+bool oclraster::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	if(type == EVENT_TYPE::WINDOW_RESIZE) {
 		const window_resize_event& wnd_evt = (const window_resize_event&)*obj;
 		config.width = wnd_evt.size.x;
 		config.height = wnd_evt.size.y;
 		resize_window();
+		return true;
 	}
-	return true;
+#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+	else if(type == EVENT_TYPE::KERNEL_RELOAD) {
+		template_transform_program = file_io::file_to_string(data_path("kernels/template_transform_program.cl"));
+		if(template_transform_program == "") {
+			oclr_error("failed to load template_transform_program!");
+		}
+		template_rasterization_program = file_io::file_to_string(data_path("kernels/template_rasterization_program.cl"));
+		if(template_rasterization_program == "") {
+			oclr_error("failed to load template_rasterization_program!");
+		}
+		return true;
+	}
+#endif
+	return false;
 }
 
 void oclraster::run_camera() {

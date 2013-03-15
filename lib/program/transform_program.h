@@ -34,4 +34,9 @@ protected:
 
 };
 
+// only used for debugging purposes
+#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+extern string template_transform_program;
+#endif
+
 #endif

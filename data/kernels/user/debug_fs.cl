@@ -14,6 +14,10 @@ oclraster_uniforms rasterize_uniforms {
 	float4 light_color;
 } rp_uniforms;
 
+oclraster_images {
+	// NOTE: hints are optional (will default to <UINT_8, RGBA>)
+	read_only image2d<UINT_8, RGBA> diffuse_texture;
+};
 oclraster_framebuffer {
 	image2d color;
 	depth_image depth;
@@ -26,14 +30,16 @@ void rasterize_main() {
 	const float depth_mantissa = frexp(framebuffer->depth, &depth_exp);
 	framebuffer->color = (float4)(log((float)depth_exp),
 								  depth_mantissa, 0.0f, 1.0f);
-#elif 1
+#elif 0
 	//if(framebuffer->depth < 0.0f) return;
-	
 	framebuffer->color = (float4)(framebuffer->depth / 8.0f,
 								  framebuffer->depth / 4.0f,
 								  framebuffer->depth / 2.0f, 1.0f);
 	if(framebuffer->depth < 0.0f) {
 		framebuffer->color = (float4)(1.0f, 0.0f, 1.0f, 1.0f);
 	}
+#elif 1
+	float4 color = image_read_float_nearest(diffuse_texture, output_attributes->tex_coord);
+	framebuffer->color = mix(color, framebuffer->color, 0.5f);
 #endif
 }

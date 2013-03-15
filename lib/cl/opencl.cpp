@@ -1123,7 +1123,7 @@ void opencl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) 
 	if(kernel == nullptr) return;
 	
 	try {
-		// if the device is a nvidia gpu (and we are using the nvidia driver), log the ptx data
+		//
 		size_t device_num = 0;
 		vector<size_t> program_sizes = kernel->program->getInfo<CL_PROGRAM_BINARY_SIZES>();
 		if(program_sizes.size() == 0) return;
