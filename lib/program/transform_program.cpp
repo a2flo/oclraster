@@ -19,7 +19,7 @@
 #include "transform_program.h"
 #include "image.h"
 
-#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+#if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 string template_transform_program { "" };
 #else
 // awesome raw string literals are awesome

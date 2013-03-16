@@ -69,7 +69,7 @@ event::handler* oclraster::event_handler_fnctr = nullptr;
 
 atomic<bool> oclraster::reload_kernels_flag { false };
 
-#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+#if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 // from transform_program.cpp and rasterization_program.cpp for debugging purposes:
 extern string template_transform_program;
 extern string template_rasterization_program;
@@ -1028,7 +1028,7 @@ bool oclraster::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 		resize_window();
 		return true;
 	}
-#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+#if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 	else if(type == EVENT_TYPE::KERNEL_RELOAD) {
 		template_transform_program = file_io::file_to_string(data_path("kernels/template_transform_program.cl"));
 		if(template_transform_program == "") {

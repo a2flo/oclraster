@@ -18,7 +18,7 @@
 
 #include "rasterization_program.h"
 
-#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+#if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 string template_rasterization_program { "" };
 #else
 static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
