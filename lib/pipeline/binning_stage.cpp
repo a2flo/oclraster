@@ -28,12 +28,13 @@ binning_stage::~binning_stage() {
 
 unsigned int binning_stage::bin(draw_state& state) {
 	//
-	unsigned int triangle_count = 0;
-	ocl->read_buffer(&triangle_count, state.info_buffer, sizeof(unsigned int));
+	unsigned int triangle_count = state.triangle_count;
+	//unsigned int triangle_count = 0;
+	//ocl->read_buffer(&triangle_count, state.info_buffer, sizeof(unsigned int));
 	//oclr_msg("remaining triangles: %u", triangle_count);
 	if(triangle_count == 0) {
 #if defined(OCLRASTER_DEBUG)
-		//oclr_debug("no triangles prior to binning!");
+		oclr_debug("no triangles prior to binning!");
 #endif
 		return 0;
 	}
@@ -90,9 +91,11 @@ unsigned int binning_stage::bin(draw_state& state) {
 	ocl->set_kernel_argument(argc++, (unsigned int)triangles_per_group);
 	ocl->set_kernel_argument(argc++, (unsigned int)triangle_count); // computed previously
 	//cout << "binning: " << (bin_global_size * bin_local_size) << " -> " << bin_local_size << endl;
-	ocl->set_kernel_range({
+	/*ocl->set_kernel_range({
 		cl::NDRange(bin_global_size * bin_local_size),
-		cl::NDRange(bin_local_size)});
+		cl::NDRange(bin_local_size)});*/
+	oclr_msg("binning: %u :: %u", ocl->get_active_device()->units, bin_local_size);
+	ocl->set_kernel_range({ ocl->get_active_device()->units * bin_local_size, bin_local_size });
 	ocl->run_kernel();
 	
 	return triangle_count;

@@ -673,6 +673,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			device->units = internal_device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
 			device->clock = internal_device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>();
 			device->mem_size = internal_device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
+			device->local_mem_size = internal_device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>();
 			device->name = internal_device.getInfo<CL_DEVICE_NAME>();
 			device->vendor = internal_device.getInfo<CL_DEVICE_VENDOR>();
 			device->version = internal_device.getInfo<CL_DEVICE_VERSION>();
@@ -694,10 +695,14 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			oclr_msg("max mem alloc: %u bytes / %u MB",
 					 device->max_alloc,
 					 device->max_alloc / 1024ULL / 1024ULL);
+			oclr_msg("mem size: %u MB (global), %u KB (local)",
+					 device->mem_size / 1024ULL / 1024ULL,
+					 device->local_mem_size / 1024ULL);
 			oclr_msg("mem base address alignment: %u", internal_device.getInfo<CL_DEVICE_MEM_BASE_ADDR_ALIGN>());
 			oclr_msg("min data type alignment size: %u", internal_device.getInfo<CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE>());
 			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());
 			oclr_msg("max_wi_sizes: %v", device->max_wi_sizes);
+			oclr_msg("max_wg_size: %u", device->max_wg_size);
 #if defined(CL_VERSION_1_2)
 			if(platform_cl_version >= CL_VERSION::CL_1_2) {
 				const unsigned long long int printf_buffer_size = internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>();
@@ -1042,14 +1047,18 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 			oclr_debug("build log: %s", build_log);
 		}*/
 		
-		/*size_t device_num = 0;
+		size_t device_num = 0;
 		for(const auto& device : internal_devices) {
-			oclr_log("%s (dev #%u): kernel local memory: %u", identifier, device_num,
-					kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device));
 			oclr_log("%s (dev #%u): work group size: %u", identifier, device_num,
-					kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device));
+					 kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device));
+			oclr_log("%s (dev #%u): kernel preferred wg size multiple: %u", identifier, device_num,
+					 kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(device));
+			oclr_log("%s (dev #%u): kernel local memory: %u", identifier, device_num,
+					 kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device));
+			oclr_log("%s (dev #%u): kernel private memory: %u", identifier, device_num,
+					 kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_PRIVATE_MEM_SIZE>(device));
 			device_num++;
-		}*/
+		}
 	}
 	__HANDLE_CL_EXCEPTION_START("add_kernel")
 		//

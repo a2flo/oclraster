@@ -201,10 +201,8 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	
 	// initialize draw state
 	state.depth_test = 1;
-	state.transformed_primitive_size = 16 * sizeof(float); // NOTE: this is just for the internal transformed buffer
 	state.framebuffer_size = framebuffer_size;
 	state.active_framebuffer = default_framebuffer;
-	//state.tile_size = tile_size; // TODO: dynamic?
 	state.triangle_queues_buffer = triangle_queues_buffer;
 	state.queue_sizes_buffer = queue_sizes_buffer;
 	state.triangle_queues_buffer_zero = triangle_queues_buffer_zero;
@@ -214,13 +212,14 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	
 	const auto index_count = (element_range.second - element_range.first + 1) * 3;
 	const auto num_elements = element_range.second - element_range.first + 1;
+	state.triangle_count = num_elements;
 	/*const auto num_elements = (element_range.first != ~0u ?
 							   element_range.second - element_range.first + 1 :
 							   ib.index_count / 3);*/
 	
 	// TODO: this should be static!
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-												  state.transformed_primitive_size * num_elements);
+												  state.transformed_primitive_size * state.triangle_count);
 	
 	// clear info buffer
 	const info_buffer_struct empty_info_buffer { 0 };
@@ -239,7 +238,7 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	}
 	
 	// pipeline
-	transform.transform(state, num_elements);
+	transform.transform(state, state.triangle_count);
 	const unsigned int post_transform_triangle_count = binning.bin(state);
 	if(post_transform_triangle_count > 0) {
 		// TODO: pipelining/splitting
@@ -261,8 +260,8 @@ void pipeline::_reserve_memory(const unsigned int triangle_count) {
 	reserved_triangle_count = triangle_count;
 	
 	// NOTE: this must be called again if the screen size changes!
-	const uint2 bin_count_xy(framebuffer_size.x / tile_size.x + ((framebuffer_size.x % tile_size.x) != 0 ? 1 : 0),
-							 framebuffer_size.y / tile_size.y + ((framebuffer_size.y % tile_size.y) != 0 ? 1 : 0));
+	const uint2 bin_count_xy(framebuffer_size.x / state.tile_size.x + ((framebuffer_size.x % state.tile_size.x) != 0 ? 1 : 0),
+							 framebuffer_size.y / state.tile_size.y + ((framebuffer_size.y % state.tile_size.y) != 0 ? 1 : 0));
 	const size_t bin_count = bin_count_xy.x * bin_count_xy.y;
 	
 	triangle_queues_buffer_zero = new unsigned int[triangle_count * bin_count];

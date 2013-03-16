@@ -12,8 +12,10 @@ typedef struct __attribute__((packed, aligned(16))) {
 	// VV2: 6 - 8
 	// depth: 9
 	// cam relation: 10 - 12
-	// unused: 13 - 15
-	float data[16];
+	// unused: 13 - 14
+	// 15: culled flag (0: valid; 1: culled)
+	float data[15];
+	unsigned int culled;
 } transformed_data;
 
 //
@@ -28,6 +30,15 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	const unsigned int triangle_id = get_global_id(0);
 	if(triangle_id >= get_global_size(0)) return;
 	if(triangle_id >= triangle_count) return;
+	if(transformed_buffer[triangle_id].culled == 1) return;
+	
+	/*#if defined(GPU)
+	local unsigned int _queues[12288];
+	_queues[triangle_id % 12288] = triangle_id;
+	#else
+	local unsigned int _queues[8192];
+	_queues[triangle_id] = triangle_id;
+	#endif*/
 	
 	const float3 VV[3] = {
 		(float3)(transformed_buffer[triangle_id].data[0],
@@ -181,22 +192,6 @@ kernel void bin_rasterize(global const transformed_data* transformed_buffer,
 	printf("[%d] passing: %u // %u // %u %u %u\n",
 		   triangle_id, passing_direct, clipped_count,
 		   passing_indices[0], passing_indices[1], passing_indices[2]);*/
-	
-	/*float area = 0.0f;
-	if(passing_indices[0] > 0 && passing_indices[1] > 0 && passing_indices[2] > 0) {
-		// TODO: actually: if any edge must be clipped -> triangle area has to be big enough
-		// otherwise, there wouldn't be any clipping necessary
-		// -> only compute area if all 3 edges/vertices pass directly
-		// however: all edges must be valid in the first place! (check precision?)
-		const float2 e0 = clipping_coords[1] - clipping_coords[0];
-		const float2 e1 = clipping_coords[2] - clipping_coords[0];
-		area = 0.5f * (e0.x * e1.y - e0.y * e1.x);
-		//printf("[%d] %f %f -> %f %f\n", triangle_id, e0.x, e0.y, e1.x, e1.y);
-		if(area < 0.5f) { // half sample size (TODO: -> check if between sample points)
-			//discard();
-		}
-		//printf("[%d] area: %f\n", triangle_id, area);
-	}*/
 	
 	// TODO: determine triangle backside
 	

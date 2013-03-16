@@ -46,8 +46,8 @@ struct draw_state {
 		unsigned int flags;
 	};
 	
-	// set this to the required size (transformed primitive + attribute data)
-	unsigned int transformed_primitive_size = 3 * sizeof(float3);
+	// NOTE: this is just for the internal transformed buffer
+	const unsigned int transformed_primitive_size = 16 * sizeof(float);
 	
 	// framebuffers
 	uint2 framebuffer_size { 1280, 720 };
@@ -65,12 +65,13 @@ struct draw_state {
 	rasterization_program* rasterize_prog = nullptr;
 	
 	//
-	const uint2 tile_size { 32, 32 };
+	const uint2 tile_size { 128, 128 };
 	opencl_base::buffer_object* triangle_queues_buffer = nullptr;
 	opencl_base::buffer_object* queue_sizes_buffer = nullptr;
 	unsigned int* triangle_queues_buffer_zero = nullptr; // TODO: better method?
 	unsigned int* queue_sizes_buffer_zero = nullptr;
 	unsigned int reserved_triangle_count = 512;
+	unsigned int triangle_count = 0;
 	uint2 bin_count_xy { 0, 0 };
 	unsigned int bin_count = 0;
 };
@@ -125,7 +126,6 @@ protected:
 #endif
 	
 	//
-	const uint2 tile_size { 16, 16 };
 	opencl_base::buffer_object* triangle_queues_buffer = nullptr;
 	opencl_base::buffer_object* queue_sizes_buffer = nullptr;
 	unsigned int* triangle_queues_buffer_zero = nullptr;

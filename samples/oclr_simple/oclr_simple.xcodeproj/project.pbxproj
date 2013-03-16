@@ -100,6 +100,8 @@
 		5CCCDD7216BF023800C14D3C /* simple_texturing_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_texturing_vs.cl; sourceTree = "<group>"; };
 		5CE91CED16F00F050044C264 /* debug_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_fs.cl; sourceTree = "<group>"; };
 		5CE91CEE16F00F050044C264 /* debug_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_vs.cl; sourceTree = "<group>"; };
+		5CEF6CC616F4FA440044E2DF /* template_rasterization_program.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_rasterization_program.cl; sourceTree = "<group>"; };
+		5CEF6CC716F4FA440044E2DF /* template_transform_program.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_transform_program.cl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -236,6 +238,8 @@
 				5CCC967B1641BF72005C3DE4 /* cutil_math.h */,
 				5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */,
 				5C9165111666946B00626436 /* bin_rasterize.cl */,
+				5CEF6CC616F4FA440044E2DF /* template_rasterization_program.cl */,
+				5CEF6CC716F4FA440044E2DF /* template_transform_program.cl */,
 				5C38554E1670AE26003380CA /* clear_framebuffer.cl */,
 				5CEC5B641699719F00C464D5 /* user */,
 			);

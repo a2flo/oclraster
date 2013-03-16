@@ -19,8 +19,10 @@
 		// VV2: 6 - 8
 		// depth: 9
 		// cam relation: 10 - 12
-		// unused: 13 - 15
-		float data[16];
+		// unused: 13 - 14
+		// 15: culled flag (0: valid; 1: culled)
+		float data[15];
+		unsigned int culled;
 	} transformed_data;
 	
 	typedef struct __attribute__((packed, aligned(16))) {
@@ -36,6 +38,7 @@
 	//###OCLRASTER_USER_CODE###
 	
 	//
+	#define discard() { tf_ptr->culled = 1; return; }
 	kernel void _oclraster_program(//###OCLRASTER_USER_STRUCTS###
 								   global const unsigned int* index_buffer,
 								   global transformed_data* transformed_buffer,
@@ -46,6 +49,8 @@
 		// global work size is greater than the actual triangle count
 		// -> check for triangle_count instead of get_global_size(0)
 		if(triangle_id >= triangle_count) return;
+		global transformed_data* tf_ptr = &transformed_buffer[triangle_id];
+		global float* tf_data_ptr = tf_ptr->data;
 		
 		const unsigned int indices[3] = {
 			index_buffer[triangle_id*3],
@@ -78,7 +83,7 @@
 		   triangle_cam_relation[1] < 0.0f &&
 		   triangle_cam_relation[2] < 0.0f) {
 			// all vertices are behind the camera
-			return;
+			discard();
 		}
 		
 		// frustum culling using the "p/n-test"
@@ -97,7 +102,7 @@
 		}
 		// if any dot product is less than 0 (aabb is completely outside any plane) -> cull
 		if(any(signbit(fc_dot))) {
-			return;
+			discard();
 		}
 		
 		// since VE0 can be interpreted as (0, 0, 0, 1) after it has been substracted from the vertices,
@@ -176,7 +181,7 @@
 			const float area = -0.5f * (e0.x * e1.y - e0.y * e1.x);
 			// half sample size (TODO: -> check if between sample points; <=1/2^8 sample size seems to be a good threshold?)
 			if(area < 0.00390625f) {
-				return; // cull
+				discard(); // cull
 			}
 		}
 		
@@ -189,21 +194,22 @@
 		   (coord_ys[1] == 0.0f || coord_ys[1] == -1.0f) &&
 		   (coord_ys[2] == 0.0f || coord_ys[2] == -1.0f)) {
 			//printf("imprecision culled (tp2): %d\n", triangle_id);
-			return;
+			discard();
 		}
 		
 		// output:
-		const unsigned int triangle_index = atomic_inc(&info_buffer->triangle_count);
-		global float* data = transformed_buffer[triangle_index].data;
+		//const unsigned int triangle_index = atomic_inc(&info_buffer->triangle_count);
+		#define triangle_index triangle_id
 		for(unsigned int i = 0u; i < 3u; i++) {
-			*data++ = VV[i].x;
-			*data++ = VV[i].y;
-			*data++ = VV[i].z;
+			*tf_data_ptr++ = VV[i].x;
+			*tf_data_ptr++ = VV[i].y;
+			*tf_data_ptr++ = VV[i].z;
 		}
-		*data++ = VV_depth;
-		*data++ = triangle_cam_relation[0];
-		*data++ = triangle_cam_relation[1];
-		*data++ = triangle_cam_relation[2];
+		*tf_data_ptr++ = VV_depth;
+		*tf_data_ptr++ = triangle_cam_relation[0];
+		*tf_data_ptr++ = triangle_cam_relation[1];
+		*tf_data_ptr++ = triangle_cam_relation[2];
+		tf_ptr->culled = 0;
 		
 		// note: this is isn't the most space efficient way to do this,
 		// but it doesn't require any index -> triangle id mapping or

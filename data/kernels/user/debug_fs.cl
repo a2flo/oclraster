@@ -40,6 +40,6 @@ void rasterize_main() {
 	}
 #elif 1
 	float4 color = image_read_float_nearest(diffuse_texture, output_attributes->tex_coord);
-	framebuffer->color = mix(color, framebuffer->color, 0.5f);
+	framebuffer->color = mix(color, framebuffer->color, 0.75f);
 #endif
 }

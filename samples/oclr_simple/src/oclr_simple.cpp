@@ -29,7 +29,7 @@ static atomic<unsigned int> update_light_color { true };
 static transform_program* transform_prog { nullptr };
 static rasterization_program* rasterization_prog { nullptr };
 static pipeline* p { nullptr };
-static atomic<unsigned int> selected_material { 0 };
+static atomic<unsigned int> selected_material { 4 };
 static constexpr size_t material_count { 5 };
 
 int main(int argc oclr_unused, char* argv[]) {
@@ -46,8 +46,8 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	// init class pointers
 	evt = oclraster::get_event();
-	ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_CPU);
-	//ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_GPU);
+	//ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_CPU);
+	ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_GPU);
 	
 	//
 	cam = new camera();
@@ -70,7 +70,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	//
 	p = new pipeline();
 	
-	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
+	a2m* model = new a2m(oclraster::data_path("blend_test.a2m"));
 	
 	p->_reserve_memory(std::max(8192u, model->get_index_count(0)));
 	
@@ -193,7 +193,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		// event handling
 		evt->handle_events();
 		
-#if !defined(OCLRASTER_DEBUG) && 0
+#if !defined(OCLRASTER_DEBUG) && 1
 		// stop drawing if window is inactive
 		if(!(SDL_GetWindowFlags(oclraster::get_window()) & SDL_WINDOW_INPUT_FOCUS)) {
 			SDL_Delay(20);
@@ -308,7 +308,7 @@ bool load_programs() {
 	
 	string vs_str, fs_str;
 	static const array<string, 2> shader_filenames {
-#if 1
+#if 0
 		{ "simple_texturing_vs.cl", "simple_texturing_fs.cl" }
 #elif 1
 		{ "debug_vs.cl", "debug_fs.cl" }
