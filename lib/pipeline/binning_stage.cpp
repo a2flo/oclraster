@@ -94,7 +94,10 @@ unsigned int binning_stage::bin(draw_state& state) {
 	/*ocl->set_kernel_range({
 		cl::NDRange(bin_global_size * bin_local_size),
 		cl::NDRange(bin_local_size)});*/
-	oclr_msg("binning: %u :: %u", ocl->get_active_device()->units, bin_local_size);
+	oclr_msg("binning: %u (%u) :: %u",
+			 ocl->get_active_device()->units,
+			 ocl->get_active_device()->units * bin_local_size,
+			 bin_local_size);
 	ocl->set_kernel_range({ ocl->get_active_device()->units * bin_local_size, bin_local_size });
 	ocl->run_kernel();
 	

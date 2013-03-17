@@ -11,12 +11,11 @@
 		// VV0: 0 - 2
 		// VV1: 3 - 5
 		// VV2: 6 - 8
-		// depth: 9
-		// cam relation: 10 - 12
-		// unused: 13 - 14
-		// 15: culled flag (0: valid; 1: culled)
-		float data[15];
-		unsigned int culled;
+		// depth: 9 (INFINITY if culled)
+		// x_bounds: 10 - 11
+		// y_bounds: 12 - 13
+		// unused: 14 - 15
+		float data[16];
 	} transformed_data;
 	
 	//###OCLRASTER_USER_CODE###
