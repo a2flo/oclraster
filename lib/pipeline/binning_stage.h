@@ -20,6 +20,7 @@
 #define __OCLRASTER_BINNING_STAGE_H__
 
 #include "oclraster/global.h"
+#include "cl/opencl.h"
 
 struct draw_state;
 class binning_stage {
@@ -27,9 +28,10 @@ public:
 	binning_stage();
 	~binning_stage();
 	
-	unsigned int bin(draw_state& state);
+	void bin(draw_state& state);
 
 protected:
+	opencl::buffer_object* bin_distribution_counter = nullptr;
 
 };
 

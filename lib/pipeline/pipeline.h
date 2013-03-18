@@ -66,14 +66,7 @@ struct draw_state {
 	
 	//
 	const uint2 tile_size { 128, 128 };
-	opencl_base::buffer_object* triangle_queues_buffer = nullptr;
-	opencl_base::buffer_object* queue_sizes_buffer = nullptr;
-	unsigned int* triangle_queues_buffer_zero = nullptr; // TODO: better method?
-	unsigned int* queue_sizes_buffer_zero = nullptr;
-	unsigned int reserved_triangle_count = 512;
 	unsigned int triangle_count = 0;
-	uint2 bin_count_xy { 0, 0 };
-	unsigned int bin_count = 0;
 };
 
 class pipeline {
@@ -104,9 +97,6 @@ public:
 			  const pair<unsigned int, unsigned int> element_range = { ~0u, ~0u });*/
 	void draw(const pair<unsigned int, unsigned int> element_range);
 	
-	// for debugging and initial development purposes:
-	void _reserve_memory(const unsigned int triangle_count);
-	
 protected:
 	draw_state state;
 	transform_stage transform;
@@ -126,12 +116,6 @@ protected:
 #endif
 	
 	//
-	opencl_base::buffer_object* triangle_queues_buffer = nullptr;
-	opencl_base::buffer_object* queue_sizes_buffer = nullptr;
-	unsigned int* triangle_queues_buffer_zero = nullptr;
-	unsigned int* queue_sizes_buffer_zero = nullptr;
-	unsigned int reserved_triangle_count = 512;
-	
 	opencl::buffer_object* info_buffer = nullptr;
 	
 	// event handler

@@ -54,10 +54,10 @@ void rasterization_stage::rasterize(draw_state& state,
 	unsigned int argc = 0;
 	if(!bind_user_buffers(state, *state.rasterize_prog, argc)) return;
 	ocl->set_kernel_argument(argc++, state.transformed_buffer);
-	ocl->set_kernel_argument(argc++, state.triangle_queues_buffer);
-	ocl->set_kernel_argument(argc++, state.queue_sizes_buffer);
+	//ocl->set_kernel_argument(argc++, state.triangle_queues_buffer);
+	//ocl->set_kernel_argument(argc++, state.queue_sizes_buffer);
 	ocl->set_kernel_argument(argc++, state.tile_size);
-	ocl->set_kernel_argument(argc++, uint2(state.bin_count_xy));
+	//ocl->set_kernel_argument(argc++, uint2(state.bin_count_xy));
 	ocl->set_kernel_argument(argc++, (unsigned int)triangle_count); // "queue size" for now, TODO: actual one
 	ocl->set_kernel_argument(argc++, const_buffer_rp);
 	ocl->set_kernel_argument(argc++, state.framebuffer_size);

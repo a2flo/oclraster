@@ -161,8 +161,8 @@
 #define viewport_test(coord, axis) ((coord < 0.0f || coord >= fscreen_size[axis]) ? -1.0f : coord)
 			float coord_xs[9];
 			float coord_ys[9];
-			float2 clipping_coords[3] = { (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f) };
-			unsigned int passing_indices[3] = { 0, 0, 0 };
+			//float2 clipping_coords[3] = { (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f) };
+			//unsigned int passing_indices[3] = { 0, 0, 0 };
 			unsigned int valid_coords = 0;
 			//unsigned int clipped_count = 0;
 			for(unsigned int i = 0u; i < 3u; i++) {
@@ -185,8 +185,8 @@
 					x_bounds.y = max(x_bounds.y, coord_xs[i]);
 					y_bounds.x = min(y_bounds.x, coord_ys[i]);
 					y_bounds.y = max(y_bounds.y, coord_ys[i]);
-					passing_indices[i]++;
-					clipping_coords[i] = (float2)(coord_xs[i], coord_ys[i]);
+					//passing_indices[i]++;
+					//clipping_coords[i] = (float2)(coord_xs[i], coord_ys[i]);
 				}
 				
 				//
@@ -245,9 +245,9 @@
 						x_bounds.x = min(x_bounds.x, cx);
 						x_bounds.y = max(x_bounds.y, cx);
 						y_bounds.x = 0.0f;
-						passing_indices[i]++;
+						//passing_indices[i]++;
 						//clipped_count++;
-						clipping_coords[i] = (float2)(cx, 0.0f);
+						//clipping_coords[i] = (float2)(cx, 0.0f);
 					}
 				}
 				if(cy >= 0.0f) {
@@ -257,9 +257,9 @@
 						y_bounds.x = min(y_bounds.x, cy);
 						y_bounds.y = max(y_bounds.y, cy);
 						x_bounds.x = 0.0f;
-						passing_indices[i]++;
+						//passing_indices[i]++;
 						//clipped_count++;
-						clipping_coords[i] = (float2)(0.0f, cy);
+						//clipping_coords[i] = (float2)(0.0f, cy);
 					}
 				}
 				if(cmx >= 0.0f) {
@@ -269,9 +269,9 @@
 						x_bounds.x = min(x_bounds.x, cmx);
 						x_bounds.y = max(x_bounds.y, cmx);
 						y_bounds.y = fscreen_size[1];
-						passing_indices[i]++;
+						//passing_indices[i]++;
 						//clipped_count++;
-						clipping_coords[i] = (float2)(cmx, 0.0f);
+						//clipping_coords[i] = (float2)(cmx, 0.0f);
 					}
 				}
 				if(cmy >= 0.0f) {
@@ -281,9 +281,9 @@
 						y_bounds.x = min(y_bounds.x, cmy);
 						y_bounds.y = max(y_bounds.y, cmy);
 						x_bounds.y = fscreen_size[0];
-						passing_indices[i]++;
+						//passing_indices[i]++;
 						//clipped_count++;
-						clipping_coords[i] = (float2)(0.0f, cmy);
+						//clipping_coords[i] = (float2)(0.0f, cmy);
 					}
 				}
 			}

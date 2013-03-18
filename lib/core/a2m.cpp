@@ -118,14 +118,14 @@ void a2m::load(const string& filename) {
 		indices[i] = new index3[index_count[i]];
 		tex_indices[i] = new index3[index_count[i]];
 		for(unsigned int j = 0; j < index_count[i]; j++) {
-			indices[i][j].z = file.get_uint();
-			indices[i][j].y = file.get_uint();
 			indices[i][j].x = file.get_uint();
+			indices[i][j].y = file.get_uint();
+			indices[i][j].z = file.get_uint();
 		}
 		for(unsigned int j = 0; j < index_count[i]; j++) {
-			tex_indices[i][j].z = file.get_uint();
-			tex_indices[i][j].y = file.get_uint();
 			tex_indices[i][j].x = file.get_uint();
+			tex_indices[i][j].y = file.get_uint();
+			tex_indices[i][j].z = file.get_uint();
 		}
 	}
 	

@@ -1095,7 +1095,7 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 		//log_program_binary(kernels[identifier], options);
 		return null_kernel_object;
 	__HANDLE_CL_EXCEPTION_END
-	//log_program_binary(kernels[identifier], options);
+	//log_program_binary(kernels[identifier]);
 	return kernels[identifier];
 }
 
@@ -1149,7 +1149,7 @@ void opencl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) 
 				if(device->vendor_type != VENDOR::UNKNOWN) {
 					string file_name = kernel_name + string("_") + size_t2string(device_num);
 					if(device->vendor_type == VENDOR::NVIDIA) {
-						file_name += ".ptx";
+						file_name += ".cubin";
 					}
 					else if(device->vendor_type == VENDOR::INTEL || device->vendor_type == VENDOR::AMD) {
 						file_name += ".asm";
@@ -1169,8 +1169,13 @@ void opencl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) 
 					bin_file.close();
 					
 #if defined(__APPLE__)
-					// this is a real elf binary on 10.7 now ...
-					//system(("plutil -convert xml1 "+file_name).c_str());
+					// on os x 10.7+, the kernel binary is packed inside a binary plist
+					// -> convert to text
+					system(("plutil -convert xml1 "+file_name).c_str());
+					// TODO: extract binary base64 string and convert
+					// -> base64 -D -i infile -o outfile
+					// TODO: for x86: otool -tvVQ outfile
+					// TODO: for nvidia: strip first 12 bytes and cuobjdump -elf -sort -sass outfile
 #endif
 				}
 			}

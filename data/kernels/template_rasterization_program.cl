@@ -46,10 +46,10 @@
 		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
 		const unsigned int queue_entries = queue_sizes_buffer[bin_index];
 		const unsigned int queue_offset = (queue_size * bin_index);
-		unsigned int next_id = 0xFFFFFFu, last_id = 0xFFFFFFu;
+		//unsigned int next_id = 0xFFFFFFu, last_id = 0xFFFFFFu;
 		//if(queue_entries > 0) framebuffer.color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
 		for(unsigned int queue_entry = 0; queue_entry < queue_entries; queue_entry++) {
-			for(unsigned int idx = 0; idx < queue_entries; idx++) {
+			/*for(unsigned int idx = 0; idx < queue_entries; idx++) {
 				const unsigned int qidx = triangle_queues_buffer[queue_offset + idx];
 				if(qidx < next_id && (qidx > last_id || last_id == 0xFFFFFFu)) {
 					next_id = qidx;
@@ -57,9 +57,9 @@
 			}
 			const unsigned int triangle_id = next_id;
 			last_id = next_id;
-			next_id = 0xFFFFFFu;
+			next_id = 0xFFFFFFu;*/
 			
-			//const unsigned int triangle_id = triangle_queues_buffer[queue_offset + queue_entry];
+			const unsigned int triangle_id = triangle_queues_buffer[queue_offset + queue_entry];
 			const float3 VV0 = (float3)(transformed_buffer[triangle_id].data[0],
 										transformed_buffer[triangle_id].data[1],
 										transformed_buffer[triangle_id].data[2]);

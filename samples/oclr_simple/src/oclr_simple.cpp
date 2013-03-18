@@ -70,9 +70,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	//
 	p = new pipeline();
 	
-	a2m* model = new a2m(oclraster::data_path("blend_test.a2m"));
-	
-	p->_reserve_memory(std::max(8192u, model->get_index_count(0)));
+	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
 	
 	// add event handlers
 	event::handler key_handler_fnctr(&key_handler);
