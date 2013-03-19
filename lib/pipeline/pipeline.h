@@ -65,7 +65,7 @@ struct draw_state {
 	rasterization_program* rasterize_prog = nullptr;
 	
 	//
-	const uint2 tile_size { 128, 128 };
+	const uint2 tile_size { 64, 64 };
 	unsigned int triangle_count = 0;
 };
 

@@ -299,10 +299,12 @@
 		}
 		//printf("[%d] bounds: %f %f -> %f %f\n", triangle_id, x_bounds.x, y_bounds.x, x_bounds.y, y_bounds.y);
 		*tf_data_ptr++ = VV_depth;
-		*tf_data_ptr++ = x_bounds.x;
-		*tf_data_ptr++ = x_bounds.y;
-		*tf_data_ptr++ = y_bounds.x;
-		*tf_data_ptr++ = y_bounds.y;
+		
+		// TODO: rounding should depend on sampling mode (more samples -> use floor/ceil again)
+		*tf_data_ptr++ = round(x_bounds.x);
+		*tf_data_ptr++ = round(x_bounds.y);
+		*tf_data_ptr++ = round(y_bounds.x);
+		*tf_data_ptr++ = round(y_bounds.y);
 		
 		// note: this is isn't the most space efficient way to do this,
 		// but it doesn't require any index -> triangle id mapping or

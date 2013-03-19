@@ -71,7 +71,7 @@ void binning_stage::bin(draw_state& state) {
 		(state.framebuffer_size.y / state.tile_size.y) + ((state.framebuffer_size.y % state.tile_size.y) != 0 ? 1 : 0)
 	};
 	
-	const size_t batch_size = std::max(bin_local_size, (size_t)128);
+	const size_t batch_size = 256; // -> triangles indices within a batch can be stored as uchars
 	const size_t batch_count = ((state.triangle_count / batch_size) +
 								((state.triangle_count % batch_size) != 0 ? 1 : 0));
 	
@@ -82,6 +82,7 @@ void binning_stage::bin(draw_state& state) {
 	
 	
 	ocl->set_kernel_argument(argc++, bin_distribution_counter);
+	ocl->set_kernel_argument(argc++, (uint2)bin_count);
 	ocl->set_kernel_argument(argc++, (unsigned int)batch_count);
 	ocl->set_kernel_argument(argc++, (unsigned int)batch_size);
 	ocl->set_kernel_argument(argc++, (unsigned int)state.triangle_count);

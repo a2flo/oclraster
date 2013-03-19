@@ -21,6 +21,7 @@ typedef struct __attribute__((packed, aligned(16))) {
 // TODO: compile time define
 #define BIN_SIZE 128u
 kernel void bin_rasterize(global unsigned int* bin_distribution_counter,
+						  const uint2 bin_count,
 						  const unsigned int batch_count,
 						  const unsigned int batch_size,
 						  const unsigned int triangle_count,
@@ -29,9 +30,20 @@ kernel void bin_rasterize(global unsigned int* bin_distribution_counter,
 						  const uint2 framebuffer_size
 						  ) {
 	const unsigned int local_id = get_local_id(0);
-	const unsigned int local_size = get_local_size(0);
+	//const unsigned int local_size = get_local_size(0);
+	const uint2 bin_location = (uint2)(local_id % bin_count.x, local_id / bin_count.x);
+	
+	// TODO: -> read input triangles into shared memory (across work-group)
+	
+	// -> each work-item: 1 bin + private mem queue
+	// -> iterate over 256 triangles (batch size: 256)
+	// -> store loop index in priv mem queue (-> only one byte per triangle)
+	// -> 2 vstore16 calls with 2 ulong16s (256 bytes)
+	uchar triangle_queue[256];
+	unsigned int triangles_in_queue = 0;
 	
 	local unsigned int batch_idx;
+	const uint2 framebuffer_clamp_size = framebuffer_size - 1u;
 	for(;;) {
 		// get next batch index
 		if(local_id == 0) {
@@ -41,53 +53,43 @@ kernel void bin_rasterize(global unsigned int* bin_distribution_counter,
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
 		// check if all batches have been processed
-		if(batch_idx >= batch_count) return;
+		if(batch_idx >= batch_count) {
+			//printf("[%u] %u\n", local_id, triangles_in_queue);
+			return;
+		}
 		
-		//const unsigned int tri_idx = batch_idx * batch_size + local_id;
-		for(unsigned int tri_idx = local_id; tri_idx < batch_size; tri_idx += local_size) {
-			const unsigned int triangle_id = batch_idx * batch_size + tri_idx;
+		for(unsigned int triangle_id = batch_idx * batch_size,
+			last_triangle_id = min(triangle_id + batch_size, triangle_count);
+			triangle_id < last_triangle_id; triangle_id++) {
 			//printf("\ttri: %u\n", triangle_id);
-			if(triangle_id >= triangle_count) return;
 			
 			// cull:
-			//if(transformed_buffer[triangle_id].data[9] == INFINITY) continue;
+			if(transformed_buffer[triangle_id].data[9] == INFINITY) continue;
 			
-			const float2 x_bounds = (float2)(transformed_buffer[triangle_id].data[10], transformed_buffer[triangle_id].data[11]);
-			const float2 y_bounds = (float2)(transformed_buffer[triangle_id].data[12], transformed_buffer[triangle_id].data[13]);
+			// TODO: read triangle data into local mem across work-items (less global mem reads)
+			const uint2 x_bounds = (uint2)(convert_uint(transformed_buffer[triangle_id].data[10]),
+										   convert_uint(transformed_buffer[triangle_id].data[11]));
+			const uint2 y_bounds = (uint2)(convert_uint(transformed_buffer[triangle_id].data[12]),
+										   convert_uint(transformed_buffer[triangle_id].data[13]));
 			
-			// TODO: rounding should depend on sampling mode (more samples -> use floor/ceil again)
-#if !defined(APPLE_ARM) && 0
-			const uint2 x_bounds_u = convert_uint2(clamp((int2)(round(x_bounds.x), round(x_bounds.y)),
-														 0, framebuffer_size.x - 1)); // valid pixel pos: [0, screen_size.x-1]
-			const uint2 y_bounds_u = convert_uint2(clamp((int2)(round(y_bounds.x), round(y_bounds.y)),
-														 0, framebuffer_size.y - 1));
-#else
-			// valid pixel pos: [0, screen_size.x-1]
-			const uint2 x_bounds_u = convert_uint2((int2)(clamp((int)round(x_bounds.x), 0, (int)framebuffer_size.x - 1),
-														  clamp((int)round(x_bounds.y), 0, (int)framebuffer_size.x - 1)));
-			const uint2 y_bounds_u = convert_uint2((int2)(clamp((int)round(y_bounds.x), 0, (int)framebuffer_size.y - 1),
-														  clamp((int)round(y_bounds.y), 0, (int)framebuffer_size.y - 1)));
-#endif
+			// valid pixel pos: [0, framebuffer_size - 1]
+			const uint2 x_bounds_u = (uint2)(clamp(x_bounds.x, 0u, framebuffer_clamp_size.x),
+											 clamp(x_bounds.y, 0u, framebuffer_clamp_size.x));
+			const uint2 y_bounds_u = (uint2)(clamp(y_bounds.x, 0u, framebuffer_clamp_size.y),
+											 clamp(y_bounds.y, 0u, framebuffer_clamp_size.y));
 			
 			// TODO: already read depth from framebuffer in here -> cull if greater depth
 			
 			// insert triangle id intro appropriate queues/bins
 			const uint2 x_bins = x_bounds_u / BIN_SIZE;
 			const uint2 y_bins = y_bounds_u / BIN_SIZE;
-			const unsigned int queue_size = triangle_count; // TODO: only true for now
 			
-			for(unsigned int y_bin = y_bins.x; y_bin <= y_bins.y; y_bin++) {
-				for(unsigned int x_bin = x_bins.x; x_bin <= x_bins.y; x_bin++) {
-					//const unsigned int bin_index = y_bin * bin_count.x + x_bin;
-					//const unsigned int queue_index = atomic_inc(&queue_sizes_buffer[bin_index]);
-					//const unsigned int queue_offset = (queue_size * bin_index) + queue_index;
-					//triangle_queues_buffer[queue_offset] = triangle_id;
-				}
+			if(bin_location.y >= y_bins.x && bin_location.y <= y_bins.y &&
+			   bin_location.x >= x_bins.x && bin_location.x <= x_bins.y) {
+				//triangle_queue[triangles_in_queue] = triangle_id;
+				triangles_in_queue++;
 			}
 		}
-		
-		//
-		//printf("batch idx: %u\n", batch_idx);
 	}
 }
 
