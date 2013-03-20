@@ -806,7 +806,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		
 		// create a (single) command queue for each device
 		for(const auto& device : devices) {
-			queues[device->device] = new cl::CommandQueue(*context, *device->device, 0, &ierr);
+			queues[device->device] = new cl::CommandQueue(*context, *device->device, CL_QUEUE_PROFILING_ENABLE, &ierr);
 		}
 		
 		if(fastest_cpu != nullptr) oclr_debug("fastest CPU device: %s %s (score: %u)", fastest_cpu->vendor.c_str(), fastest_cpu->name.c_str(), fastest_cpu_score);
@@ -1095,7 +1095,9 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 		//log_program_binary(kernels[identifier], options);
 		return null_kernel_object;
 	__HANDLE_CL_EXCEPTION_END
-	//log_program_binary(kernels[identifier]);
+	if(oclraster::get_log_binaries()) {
+		log_program_binary(kernels[identifier]);
+	}
 	return kernels[identifier];
 }
 
@@ -1152,13 +1154,13 @@ void opencl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) 
 						file_name += ".cubin";
 					}
 					else if(device->vendor_type == VENDOR::INTEL || device->vendor_type == VENDOR::AMD) {
-						file_name += ".asm";
+						file_name += ".bin";
 					}
 					else {
 						file_name += ".bin";
 					}
 					
-					fstream bin_file(file_name.c_str(), fstream::out | fstream::binary);
+					fstream bin_file(file_name.c_str(), fstream::out | fstream::binary | fstream::trunc);
 					if(!bin_file.is_open()) {
 						oclr_error("couldn't save cl-binary file \"%s\"!", file_name.c_str());
 						return;
@@ -1170,12 +1172,40 @@ void opencl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) 
 					
 #if defined(__APPLE__)
 					// on os x 10.7+, the kernel binary is packed inside a binary plist
-					// -> convert to text
-					system(("plutil -convert xml1 "+file_name).c_str());
-					// TODO: extract binary base64 string and convert
-					// -> base64 -D -i infile -o outfile
-					// TODO: for x86: otool -tvVQ outfile
-					// TODO: for nvidia: strip first 12 bytes and cuobjdump -elf -sort -sass outfile
+					// -> convert to text (xml)
+					// -> extract binary base64 string and convert
+					core::system("plutil -convert xml1 "+file_name);
+					const string binary_xml { file_io::file_to_string(file_name) };
+					const char xml_binary_start[] { "<key>clBinaryData</key>\n\t<data>" };
+					const char xml_binary_end[] { "</data>" };
+					const auto start_pos = binary_xml.find(xml_binary_start);
+					const auto end_pos = binary_xml.find(xml_binary_end, start_pos);
+					if(start_pos != string::npos && end_pos != string::npos) {
+						const auto base64_binary_start = start_pos + sizeof(xml_binary_start);
+						const string base64_binary { binary_xml.substr(base64_binary_start,
+																	   end_pos - base64_binary_start) };
+						fstream base64_file(file_name+".b64", fstream::out | fstream::binary | fstream::trunc);
+						base64_file.write(base64_binary.c_str(), base64_binary.size());
+						base64_file.flush();
+						base64_file.close();
+						core::system("base64 -D -i "+file_name+".b64 -o "+file_name);
+						core::system("rm "+file_name+".b64");
+					}
+					
+					// for x86: otool -tvVQ outfile
+					if((device->vendor_type == VENDOR::INTEL || device->vendor_type == VENDOR::AMD) &&
+					   device->type >= DEVICE_TYPE::CPU0 && device->type <= DEVICE_TYPE::CPU255) {
+						core::system("otool -tvVQch "+file_name+" > "+file_name+".asm");
+					}
+					// for nvidia: strip first 12 bytes and cuobjdump -elf -sort -sass outfile
+					else if(device->vendor_type == VENDOR::NVIDIA) {
+						const string elf_data { file_io::file_to_string(file_name) };
+						fstream elf_file(file_name, fstream::out | fstream::binary | fstream::trunc);
+						elf_file.write(elf_data.c_str()+12, elf_data.size()-12);
+						elf_file.flush();
+						elf_file.close();
+						core::system("cuobjdump -elf -sort -sass "+file_name+" > "+file_name+".asm");
+					}
 #endif
 				}
 			}
@@ -1563,8 +1593,31 @@ void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 			functor->second.local_ = kernel_ptr->local;
 		}
 		
+#if 0
 		functor->second();
-		//functor->second().wait();
+#else
+		auto evt = functor->second();
+		evt.wait();
+		const auto prof_queued = evt.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+		const auto prof_submit = evt.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>();
+		const auto prof_start = evt.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+		const auto prof_end = evt.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+		const auto ns_to_ms = [](const unsigned long long int& t) {
+			return ((double)t) / 1000000.0;
+		};
+		oclr_msg("profiling %s:\n"
+				 "\t%u (queued->submit), %u (submit->start), %u (start->end), %u (submit->end)\n"
+				 "\t%ums (queued->submit), %ums (submit->start), %ums (start->end), %ums (submit->end)",
+				 kernel_ptr->name,
+				 prof_submit - prof_queued,
+				 prof_start - prof_submit,
+				 prof_end - prof_start,
+				 prof_end - prof_submit,
+				 ns_to_ms(prof_submit - prof_queued),
+				 ns_to_ms(prof_start - prof_submit),
+				 ns_to_ms(prof_end - prof_start),
+				 ns_to_ms(prof_end - prof_submit));
+#endif
 		
 		for(const auto& buffer_arg : kernel_ptr->buffer_args) {
 			if(buffer_arg == nullptr) continue;
@@ -1708,6 +1761,8 @@ void opencl::_fill_buffer(buffer_object* buffer_obj,
 						  const size_t& pattern_size,
 						  const size_t offset,
 						  const size_t size_) {
+	// TODO: on os x: clEnqueueFillBuffer spams the console on every call (unusable as of 10.8.3)
+	// also: insanely slow (slower than copying a zero buffer)
 	try {
 		// TODO: get 1.2 cl.hpp
 		const size_t size = (size_ == 0 ? (buffer_obj->size / pattern_size) : size_);

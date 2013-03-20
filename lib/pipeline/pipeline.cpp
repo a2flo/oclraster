@@ -197,8 +197,11 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 							   ib.index_count / 3);*/
 	
 	// TODO: this should be static!
+	// note: internal transformed buffer size must be a multiple of 256 triangles (necessary for the binner)
+	const unsigned int tc_mod_256 = (state.triangle_count % 256);
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-												  state.transformed_primitive_size * state.triangle_count);
+												  state.transformed_primitive_size *
+												  (state.triangle_count + (tc_mod_256 == 0 ? 0 : 256-tc_mod_256)));
 	
 	// clear info buffer
 	const info_buffer_struct empty_info_buffer { 0 };

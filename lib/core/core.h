@@ -102,6 +102,7 @@ public:
 	static string strip_path(const string& in_path);
 	
 	// system functions
+	static void system(const string& cmd);
 	static void system(const string& cmd, string& output);
 	
 protected:

@@ -27,5 +27,6 @@
 	platform CDATA #REQUIRED
 	clear_cache CDATA #REQUIRED
 	gl_sharing CDATA #REQUIRED
+	log_binaries CDATA #REQUIRED
 	restrict CDATA #REQUIRED
 >

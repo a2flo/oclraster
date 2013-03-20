@@ -32,6 +32,7 @@ public:
 
 protected:
 	opencl::buffer_object* bin_distribution_counter = nullptr;
+	opencl::buffer_object* queue_buffer = nullptr;
 
 };
 

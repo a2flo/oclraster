@@ -191,7 +191,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		// event handling
 		evt->handle_events();
 		
-#if !defined(OCLRASTER_DEBUG) && 1
+#if !defined(OCLRASTER_DEBUG) && 0
 		// stop drawing if window is inactive
 		if(!(SDL_GetWindowFlags(oclraster::get_window()) & SDL_WINDOW_INPUT_FOCUS)) {
 			SDL_Delay(20);

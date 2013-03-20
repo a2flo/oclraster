@@ -11,10 +11,10 @@
 		// VV0: 0 - 2
 		// VV1: 3 - 5
 		// VV2: 6 - 8
-		// depth: 9 (INFINITY if culled)
-		// x_bounds: 10 - 11
-		// y_bounds: 12 - 13
-		// unused: 14 - 15
+		// depth: 9
+		// unused: 10 - 11
+		// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
+		// y_bounds: 14 - 15
 		float data[16];
 	} transformed_data;
 	

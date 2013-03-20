@@ -17,10 +17,10 @@
 		// VV0: 0 - 2
 		// VV1: 3 - 5
 		// VV2: 6 - 8
-		// depth: 9 (INFINITY if culled)
-		// x_bounds: 10 - 11
-		// y_bounds: 12 - 13
-		// unused: 14 - 15
+		// depth: 9
+		// unused: 10 - 11
+		// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
+		// y_bounds: 14 - 15
 		float data[16];
 	} transformed_data;
 	
@@ -37,7 +37,7 @@
 	//###OCLRASTER_USER_CODE###
 	
 	//
-	#define discard() { tf_ptr->data[9] = INFINITY; return; }
+	#define discard() { tf_ptr->data[12] = INFINITY; return; }
 	kernel void _oclraster_program(//###OCLRASTER_USER_STRUCTS###
 								   global const unsigned int* index_buffer,
 								   global transformed_data* transformed_buffer,
@@ -299,6 +299,8 @@
 		}
 		//printf("[%d] bounds: %f %f -> %f %f\n", triangle_id, x_bounds.x, y_bounds.x, x_bounds.y, y_bounds.y);
 		*tf_data_ptr++ = VV_depth;
+		tf_data_ptr++; // unused
+		tf_data_ptr++; // unused
 		
 		// TODO: rounding should depend on sampling mode (more samples -> use floor/ceil again)
 		*tf_data_ptr++ = round(x_bounds.x);
