@@ -65,8 +65,11 @@ struct draw_state {
 	rasterization_program* rasterize_prog = nullptr;
 	
 	//
-	const uint2 tile_size { 64, 64 };
-	unsigned int triangle_count = 0;
+	const uint2 bin_size { 64, 64 };
+	uint2 bin_count { 1, 1 };
+	const unsigned int batch_size { 256 };
+	unsigned int batch_count { 0 };
+	unsigned int triangle_count { 0 };
 };
 
 class pipeline {

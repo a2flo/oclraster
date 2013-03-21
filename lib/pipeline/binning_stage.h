@@ -28,7 +28,7 @@ public:
 	binning_stage();
 	~binning_stage();
 	
-	void bin(draw_state& state);
+	const opencl::buffer_object* bin(draw_state& state);
 
 protected:
 	opencl::buffer_object* bin_distribution_counter = nullptr;

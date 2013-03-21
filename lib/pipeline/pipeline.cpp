@@ -188,6 +188,12 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	state.framebuffer_size = framebuffer_size;
 	state.active_framebuffer = default_framebuffer;
 	state.info_buffer = info_buffer;
+	state.bin_count = {
+		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
+		(state.framebuffer_size.y / state.bin_size.y) + ((state.framebuffer_size.y % state.bin_size.y) != 0 ? 1 : 0)
+	};
+	state.batch_count = ((state.triangle_count / state.batch_size) +
+						 ((state.triangle_count % state.batch_size) != 0 ? 1 : 0));
 	
 	const auto index_count = (element_range.second - element_range.first + 1) * 3;
 	const auto num_elements = element_range.second - element_range.first + 1;
@@ -221,10 +227,9 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	
 	// pipeline
 	transform.transform(state, state.triangle_count);
-	binning.bin(state);
+	const auto queue_buffer = binning.bin(state);
 	// TODO: pipelining/splitting
-	// TODO: actual triangle count (queue size?)
-	//rasterization.rasterize(state, post_transform_triangle_count);
+	rasterization.rasterize(state, queue_buffer);
 	
 	//
 	ocl->delete_buffer(state.transformed_buffer);

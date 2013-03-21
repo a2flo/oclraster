@@ -29,10 +29,10 @@ public:
 	virtual ~rasterization_stage();
 	
 	void rasterize(draw_state& state,
-				   const unsigned int& triangle_count);
+				   const opencl_base::buffer_object* queue_buffer);
 
 protected:
-	opencl_base::buffer_object* const_buffer_rp = nullptr;
+	opencl::buffer_object* bin_distribution_counter = nullptr;
 
 };
 

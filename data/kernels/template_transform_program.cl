@@ -38,12 +38,12 @@
 	
 	//
 	#define discard() { tf_ptr->data[12] = INFINITY; return; }
-	kernel void _oclraster_program(//###OCLRASTER_USER_STRUCTS###
-								   global const unsigned int* index_buffer,
-								   global transformed_data* transformed_buffer,
-								   global info_buffer_data* info_buffer,
-								   constant constant_data* cdata,
-								   const unsigned int triangle_count) {
+	kernel void oclraster_program(//###OCLRASTER_USER_STRUCTS###
+								  global const unsigned int* index_buffer,
+								  global transformed_data* transformed_buffer,
+								  global info_buffer_data* info_buffer,
+								  constant constant_data* cdata,
+								  const unsigned int triangle_count) {
 		const unsigned int triangle_id = get_global_id(0);
 		// global work size is greater than the actual triangle count
 		// -> check for triangle_count instead of get_global_size(0)

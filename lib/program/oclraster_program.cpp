@@ -293,7 +293,7 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_ima
 	}
 	
 	const string identifier = "USER_PROGRAM."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter());
-	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, "_oclraster_program");
+	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, "oclraster_program");
 	//oclr_msg("%s:\n%s\n", identifier, program_code);
 #if defined(OCLRASTER_DEBUG)
 	if(kernel.use_count() == 0) {

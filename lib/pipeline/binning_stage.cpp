@@ -40,47 +40,32 @@ binning_stage::~binning_stage() {
 	}
 }
 
-void binning_stage::bin(draw_state& state) {
+const opencl::buffer_object* binning_stage::bin(draw_state& state) {
 	////
 	// bin rasterizer
-	
-	// clear counter
-	auto mapped_ptr = ocl->map_buffer(bin_distribution_counter);
-	*(unsigned int*)mapped_ptr = 0;
-	ocl->unmap_buffer(bin_distribution_counter, mapped_ptr);
-	
-	//
 	unsigned int argc = 0;
 	ocl->use_kernel("BIN_RASTERIZE");
 	
 	//
 	const size_t unit_count = ocl->get_active_device()->units;
-	const size2 bin_count {
-		(state.framebuffer_size.x / state.tile_size.x) + ((state.framebuffer_size.x % state.tile_size.x) != 0 ? 1 : 0),
-		(state.framebuffer_size.y / state.tile_size.y) + ((state.framebuffer_size.y % state.tile_size.y) != 0 ? 1 : 0)
-	};
-	const size_t bin_count_lin = bin_count.x * bin_count.y;
+	const size_t bin_count_lin = state.bin_count.x * state.bin_count.y;
 	
 	const size_t bin_local_size = std::min(ocl->get_kernel_work_group_size(), bin_count_lin);
 	// TODO: num_elements -> actual/remaining/batch triangle count
 	
-	const size_t batch_size = 256; // -> triangles indices within a batch can be stored as uchars
-	const size_t batch_count = ((state.triangle_count / batch_size) +
-								((state.triangle_count % batch_size) != 0 ? 1 : 0));
-	
 	cout << "###### binning ######" << endl;
-	cout << "batch_size: " << batch_size << endl;
-	cout << "batch_count: " << batch_count << endl;
+	cout << "batch_size: " << state.batch_size << endl;
+	cout << "batch_count: " << state.batch_count << endl;
 	cout << "triangle_count: " << state.triangle_count << endl;
-	cout << "bin_count: " << bin_count << " (" << bin_count_lin << ")" << endl;
+	cout << "bin_count: " << state.bin_count << " (" << bin_count_lin << ")" << endl;
 	
 	
 	ocl->set_kernel_argument(argc++, bin_distribution_counter);
 	ocl->set_kernel_argument(argc++, queue_buffer);
-	ocl->set_kernel_argument(argc++, (uint2)bin_count);
+	ocl->set_kernel_argument(argc++, (uint2)state.bin_count);
 	ocl->set_kernel_argument(argc++, (unsigned int)bin_count_lin);
-	ocl->set_kernel_argument(argc++, (unsigned int)batch_count);
-	ocl->set_kernel_argument(argc++, (unsigned int)batch_size);
+	ocl->set_kernel_argument(argc++, state.batch_count);
+	ocl->set_kernel_argument(argc++, state.batch_size);
 	ocl->set_kernel_argument(argc++, (unsigned int)state.triangle_count);
 	
 	ocl->set_kernel_argument(argc++, state.transformed_buffer);
@@ -92,4 +77,6 @@ void binning_stage::bin(draw_state& state) {
 			 bin_local_size);
 	ocl->set_kernel_range({ unit_count * bin_local_size, bin_local_size });
 	ocl->run_kernel();
+	
+	return queue_buffer;
 }

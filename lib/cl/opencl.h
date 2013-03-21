@@ -272,7 +272,7 @@ public:
 	};
 	
 	struct device_object {
-		const cl::Device* device = nullptr;
+		cl::Device device;
 		opencl_base::DEVICE_TYPE type = DEVICE_TYPE::NONE;
 		opencl_base::VENDOR vendor_type = VENDOR::UNKNOWN;
 		opencl_base::CL_VERSION cl_c_version = CL_VERSION::CL_1_0;
@@ -325,7 +325,6 @@ protected:
 	PLATFORM_VENDOR platform_vendor = PLATFORM_VENDOR::UNKNOWN;
 	CL_VERSION platform_cl_version = CL_VERSION::CL_1_0;
 	vector<cl::Platform> platforms;
-	vector<cl::Device> internal_devices;
 	vector<device_object*> devices;
 	device_object* active_device;
 	device_object* fastest_cpu;
@@ -504,7 +503,7 @@ protected:
 	
 	//
 	virtual buffer_object* create_buffer_object(BUFFER_FLAG type, void* data = nullptr);
-	virtual void log_program_binary(const shared_ptr<kernel_object> kernel);
+	virtual void log_program_binary(shared_ptr<kernel_object> kernel);
 	virtual const char* error_code_to_string(cl_int error_code) const;
 	
 };

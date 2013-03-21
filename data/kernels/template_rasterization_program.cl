@@ -3,10 +3,6 @@
 	#include "oclr_matrix.h"
 	#include "oclr_image.h"
 	
-	typedef struct __attribute__((packed)) {
-		unsigned int triangle_count;
-	} constant_data;
-	
 	typedef struct __attribute__((packed, aligned(16))) {
 		// VV0: 0 - 2
 		// VV1: 3 - 5
@@ -15,27 +11,67 @@
 		// unused: 10 - 11
 		// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
 		// y_bounds: 14 - 15
-		float data[16];
+		const float data[16];
 	} transformed_data;
 	
 	//###OCLRASTER_USER_CODE###
 	
 	//
-	kernel void _oclraster_program(//###OCLRASTER_USER_STRUCTS###
-								   
-								   global const transformed_data* transformed_buffer,
-								   global const unsigned int* triangle_queues_buffer,
-								   global const unsigned int* queue_sizes_buffer,
-								   const uint2 tile_size,
-								   const uint2 bin_count,
-								   const unsigned int queue_size,
-								   constant constant_data* cdata,
-								   const uint2 framebuffer_size) {
-		const unsigned int x = get_global_id(0);
+	#define BIN_SIZE 64u
+	#define BATCH_SIZE 256u
+	kernel void oclraster_program(//###OCLRASTER_USER_STRUCTS###
+								  
+								  global unsigned int* bin_distribution_counter,
+								  global const transformed_data* transformed_buffer,
+								  global const ulong16* bin_queues,
+								  
+								  const uint2 bin_count,
+								  const unsigned int bin_count_lin,
+								  const unsigned int batch_count,
+								  const unsigned int batch_size,
+								  
+								  const uint2 framebuffer_size) {
+		/*const unsigned int x = get_global_id(0);
 		const unsigned int y = get_global_id(1);
 		if(x >= framebuffer_size.x) return;
-		if(y >= framebuffer_size.y) return;
+		if(y >= framebuffer_size.y) return;*/
 		
+		const unsigned int global_id = get_global_id(0);
+		const unsigned int local_id = get_local_id(0);
+		
+		// init counter
+		if(global_id == 0) {
+			*bin_distribution_counter = 0;
+		}
+		barrier(CLK_GLOBAL_MEM_FENCE);
+		
+		//
+		local unsigned int bin_idx;
+		local uchar triangle_queue[BATCH_SIZE] __attribute__((aligned(8)));
+		for(;;) {
+			// get next bin index
+			if(local_id == 0) {
+				// only done once per work-group (-> only work-item #0)
+				bin_idx = atomic_inc(bin_distribution_counter);
+			}
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// check if all bins have been processed
+			if(bin_idx >= bin_count_lin) {
+				return;
+			}
+			
+			//
+			for(unsigned int batch_idx = 0; batch_idx < batch_count; batch_idx++) {
+				const size_t offset = (bin_count_lin * batch_idx + bin_idx) * (BATCH_SIZE / 128u);
+				event_t event = async_work_group_copy(&triangle_queue[0],
+													  (global const uchar*)(bin_queues + offset),
+													  BATCH_SIZE, 0);
+				wait_group_events(1, &event);
+			}
+		}
+		
+#if 0
 		// TODO: handling if there is no depth buffer / depth testing
 		// TODO: stencil testing
 		// TODO: scissor testing
@@ -46,18 +82,8 @@
 		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
 		const unsigned int queue_entries = queue_sizes_buffer[bin_index];
 		const unsigned int queue_offset = (queue_size * bin_index);
-		//unsigned int next_id = 0xFFFFFFu, last_id = 0xFFFFFFu;
 		//if(queue_entries > 0) framebuffer.color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
 		for(unsigned int queue_entry = 0; queue_entry < queue_entries; queue_entry++) {
-			/*for(unsigned int idx = 0; idx < queue_entries; idx++) {
-				const unsigned int qidx = triangle_queues_buffer[queue_offset + idx];
-				if(qidx < next_id && (qidx > last_id || last_id == 0xFFFFFFu)) {
-					next_id = qidx;
-				}
-			}
-			const unsigned int triangle_id = next_id;
-			last_id = next_id;
-			next_id = 0xFFFFFFu;*/
 			
 			const unsigned int triangle_id = triangle_queues_buffer[queue_offset + queue_entry];
 			const float3 VV0 = (float3)(transformed_buffer[triangle_id].data[0],
@@ -95,4 +121,5 @@
 		if(*fragment_depth < input_depth /*|| *fragment_depth == input_depth*/) {
 			//###OCLRASTER_FRAMEBUFFER_WRITE###
 		}
+#endif
 	}

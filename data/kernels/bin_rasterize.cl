@@ -3,10 +3,6 @@
 #include "oclr_math.h"
 
 typedef struct __attribute__((packed, aligned(16))) {
-	unsigned int triangle_count;
-} constant_data;
-
-typedef struct __attribute__((packed, aligned(16))) {
 	// VV0: 0 - 2
 	// VV1: 3 - 5
 	// VV2: 6 - 8
@@ -14,14 +10,14 @@ typedef struct __attribute__((packed, aligned(16))) {
 	// unused: 10 - 11
 	// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
 	// y_bounds: 14 - 15
-	float data[16];
+	const float data[16];
 } transformed_data;
 
 //
 // TODO: compile time define
 #define BIN_SIZE 64u
 #define BATCH_SIZE 256u
-kernel void bin_rasterize(global unsigned int* bin_distribution_counter,
+kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 						  global ulong* bin_queues,
 						  const uint2 bin_count,
 						  const unsigned int bin_count_lin,
@@ -32,9 +28,16 @@ kernel void bin_rasterize(global unsigned int* bin_distribution_counter,
 						  global const transformed_data* transformed_buffer,
 						  const uint2 framebuffer_size
 						  ) {
+	const unsigned int global_id = get_global_id(0);
 	const unsigned int local_id = get_local_id(0);
 	//const unsigned int local_size = get_local_size(0);
 	const uint2 bin_location = (uint2)(local_id % bin_count.x, local_id / bin_count.x);
+	
+	// init counter
+	if(global_id == 0) {
+		*bin_distribution_counter = 0;
+	}
+	barrier(CLK_GLOBAL_MEM_FENCE);
 	
 	// -> each work-item: 1 bin + private mem queue
 	// -> iterate over 256 triangles (batch size: 256)
@@ -83,7 +86,6 @@ kernel void bin_rasterize(global unsigned int* bin_distribution_counter,
 			// cull:
 			if(triangle_bounds[idx].x == INFINITY) continue;
 			
-			// TODO: read triangle data into local mem across work-items (less global mem reads)
 			const uint2 x_bounds = (uint2)(convert_uint(triangle_bounds[idx].x),
 										   convert_uint(triangle_bounds[idx].y));
 			const uint2 y_bounds = (uint2)(convert_uint(triangle_bounds[idx].z),
@@ -92,7 +94,6 @@ kernel void bin_rasterize(global unsigned int* bin_distribution_counter,
 			// cull:
 			if(transformed_buffer[triangle_id_offset].data[12] == INFINITY) continue;
 			
-			// TODO: read triangle data into local mem across work-items (less global mem reads)
 			const uint2 x_bounds = (uint2)(convert_uint(transformed_buffer[triangle_id_offset].data[12]),
 										   convert_uint(transformed_buffer[triangle_id_offset].data[13]));
 			const uint2 y_bounds = (uint2)(convert_uint(transformed_buffer[triangle_id_offset].data[14]),
@@ -119,8 +120,9 @@ kernel void bin_rasterize(global unsigned int* bin_distribution_counter,
 		}
 		
 		if(triangles_in_queue > 0) {
+			// TODO: store batches for each bin sequentially
 			const ulong16* __attribute__((aligned(8))) queue_data_ptr = (const ulong16*)&triangle_queue[0];
-			const size_t offset = ((bin_count.x * bin_count.y) * batch_idx + local_id) * (BATCH_SIZE / 128u);
+			const size_t offset = (bin_count_lin * batch_idx + local_id) * (BATCH_SIZE / 128u);
 			vstore16(*queue_data_ptr, offset, bin_queues);
 			if(triangles_in_queue > 128u) {
 				// only necessary, if there are more than 128 triangles in the bin queue
@@ -130,15 +132,3 @@ kernel void bin_rasterize(global unsigned int* bin_distribution_counter,
 		// TODO: store triangle count
 	}
 }
-
-/*kernel void coarse_rasterize(global const transformed_data* transformed_buffer,
-							 global unsigned int* triangle_queues_buffer,
-							 global unsigned int* queue_sizes_buffer,
-							 const uint2 screen_size,
-							 const uint2 tile_size,
-							 const uint2 bin_count,
-							 const unsigned int triangles_per_group,
-							 const unsigned int triangle_count) {
-	// TODO
-	return;
-}*/
