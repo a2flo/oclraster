@@ -228,6 +228,20 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	// pipeline
 	transform.transform(state, state.triangle_count);
 	const auto queue_buffer = binning.bin(state);
+	
+	if(do_queue_dump) {
+		ocl->flush();
+		ocl->finish();
+		do_queue_dump = false;
+		fstream queue_file("queue.bin", ios::out | ios::binary | ios::trunc);
+		const auto mapped_ptr = ocl->map_buffer((opencl::buffer_object*)queue_buffer,
+												opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
+		queue_file.write((const char*)mapped_ptr, 64*1024*1024);
+		queue_file.flush();
+		queue_file.close();
+		ocl->unmap_buffer((opencl::buffer_object*)queue_buffer, mapped_ptr);
+	}
+	
 	// TODO: pipelining/splitting
 	rasterization.rasterize(state, queue_buffer);
 	

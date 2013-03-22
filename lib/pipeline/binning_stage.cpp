@@ -65,7 +65,6 @@ const opencl::buffer_object* binning_stage::bin(draw_state& state) {
 	ocl->set_kernel_argument(argc++, (uint2)state.bin_count);
 	ocl->set_kernel_argument(argc++, (unsigned int)bin_count_lin);
 	ocl->set_kernel_argument(argc++, state.batch_count);
-	ocl->set_kernel_argument(argc++, state.batch_size);
 	ocl->set_kernel_argument(argc++, (unsigned int)state.triangle_count);
 	
 	ocl->set_kernel_argument(argc++, state.transformed_buffer);

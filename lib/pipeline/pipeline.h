@@ -100,6 +100,9 @@ public:
 			  const pair<unsigned int, unsigned int> element_range = { ~0u, ~0u });*/
 	void draw(const pair<unsigned int, unsigned int> element_range);
 	
+	atomic<bool> do_queue_dump { false };
+	void _queue_dump() { do_queue_dump = true; }
+	
 protected:
 	draw_state state;
 	transform_stage transform;

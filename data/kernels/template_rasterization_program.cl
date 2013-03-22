@@ -23,21 +23,16 @@
 								  
 								  global unsigned int* bin_distribution_counter,
 								  global const transformed_data* transformed_buffer,
-								  global const ulong16* bin_queues,
+								  global const uchar* bin_queues,
 								  
 								  const uint2 bin_count,
 								  const unsigned int bin_count_lin,
 								  const unsigned int batch_count,
-								  const unsigned int batch_size,
 								  
 								  const uint2 framebuffer_size) {
-		/*const unsigned int x = get_global_id(0);
-		const unsigned int y = get_global_id(1);
-		if(x >= framebuffer_size.x) return;
-		if(y >= framebuffer_size.y) return;*/
-		
 		const unsigned int global_id = get_global_id(0);
 		const unsigned int local_id = get_local_id(0);
+		const uint2 local_xy = (uint2)(local_id % BIN_SIZE, local_id / BIN_SIZE);
 		
 		// init counter
 		if(global_id == 0) {
@@ -46,10 +41,12 @@
 		barrier(CLK_GLOBAL_MEM_FENCE);
 		
 		//
+		local uchar triangle_queue[BATCH_SIZE] __attribute__((aligned(16)));
 		local unsigned int bin_idx;
-		local uchar triangle_queue[BATCH_SIZE] __attribute__((aligned(8)));
 		for(;;) {
 			// get next bin index
+			// note that this barrier is necessary, because not all work-items are running this kernel synchronously
+			barrier(CLK_LOCAL_MEM_FENCE);
 			if(local_id == 0) {
 				// only done once per work-group (-> only work-item #0)
 				bin_idx = atomic_inc(bin_distribution_counter);
@@ -62,64 +59,81 @@
 			}
 			
 			//
-			for(unsigned int batch_idx = 0; batch_idx < batch_count; batch_idx++) {
-				const size_t offset = (bin_count_lin * batch_idx + bin_idx) * (BATCH_SIZE / 128u);
+			const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x);
+			const unsigned int x = bin_location.x * BIN_SIZE + local_xy.x;
+			const unsigned int y = bin_location.y * BIN_SIZE + local_xy.y;
+			const float2 fragment_coord = (float2)(x, y);
+			
+			// TODO: handling if there is no depth buffer / depth testing
+			// TODO: stencil testing
+			// TODO: scissor testing
+			
+			//###OCLRASTER_FRAMEBUFFER_READ###
+			
+			//if(queue_entries > 0) framebuffer.color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
+			
+			//
+			for(unsigned int batch_idx = 0, triangle_id_offset = 0;
+				batch_idx < batch_count;
+				batch_idx++, triangle_id_offset += BATCH_SIZE) {
+				barrier(CLK_LOCAL_MEM_FENCE); // necessary for now, since multiple work-items might go the continue-on-empty route
+				// TODO: read _all_ batches into local memory at once
+				const size_t offset = (bin_idx * batch_count + batch_idx) * BATCH_SIZE;
 				event_t event = async_work_group_copy(&triangle_queue[0],
 													  (global const uchar*)(bin_queues + offset),
 													  BATCH_SIZE, 0);
 				wait_group_events(1, &event);
+				
+				// check if queue is empty
+				if(triangle_queue[0] == 0xFF && triangle_queue[1] == 0xFF) {
+					continue;
+				}
+				
+				//
+				unsigned int last_id = 0;
+				for(unsigned int idx = 0; idx < BATCH_SIZE; idx++) {
+					const unsigned int triangle_id = triangle_id_offset + triangle_queue[idx];
+					if(triangle_id < last_id) break; // end of queue
+					last_id = triangle_id;
+					
+					//
+					{
+						const float3 VV0 = (float3)(transformed_buffer[triangle_id].data[0],
+													transformed_buffer[triangle_id].data[1],
+													transformed_buffer[triangle_id].data[2]);
+						const float3 VV1 = (float3)(transformed_buffer[triangle_id].data[3],
+													transformed_buffer[triangle_id].data[4],
+													transformed_buffer[triangle_id].data[5]);
+						const float3 VV2 = (float3)(transformed_buffer[triangle_id].data[6],
+													transformed_buffer[triangle_id].data[7],
+													transformed_buffer[triangle_id].data[8]);
+						
+						//
+						float4 barycentric = (float4)(mad(fragment_coord.x, VV0.x, mad(fragment_coord.y, VV0.y, VV0.z)),
+													  mad(fragment_coord.x, VV1.x, mad(fragment_coord.y, VV1.y, VV1.z)),
+													  mad(fragment_coord.x, VV2.x, mad(fragment_coord.y, VV2.y, VV2.z)),
+													  transformed_buffer[triangle_id].data[9]); // .w = computed depth
+						if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
+						
+						// simplified:
+						barycentric /= barycentric.x + barycentric.y + barycentric.z;
+						
+						// depth test + ignore negative depth:
+						if(barycentric.w < 0.0f ||
+						   barycentric.w >= *fragment_depth) continue;
+						
+						// reset depth (note: fragment_color will contain the last valid color)
+						*fragment_depth = barycentric.w;
+						
+						//
+						//###OCLRASTER_USER_MAIN_CALL###
+					}
+				}
+			}
+			
+			// write framebuffer output (if depth has changed)
+			if(*fragment_depth < input_depth || false) {
+				//###OCLRASTER_FRAMEBUFFER_WRITE###
 			}
 		}
-		
-#if 0
-		// TODO: handling if there is no depth buffer / depth testing
-		// TODO: stencil testing
-		// TODO: scissor testing
-		
-		//###OCLRASTER_FRAMEBUFFER_READ###
-		
-		const float2 fragment_coord = (float2)(x, y);
-		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
-		const unsigned int queue_entries = queue_sizes_buffer[bin_index];
-		const unsigned int queue_offset = (queue_size * bin_index);
-		//if(queue_entries > 0) framebuffer.color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
-		for(unsigned int queue_entry = 0; queue_entry < queue_entries; queue_entry++) {
-			
-			const unsigned int triangle_id = triangle_queues_buffer[queue_offset + queue_entry];
-			const float3 VV0 = (float3)(transformed_buffer[triangle_id].data[0],
-										transformed_buffer[triangle_id].data[1],
-										transformed_buffer[triangle_id].data[2]);
-			const float3 VV1 = (float3)(transformed_buffer[triangle_id].data[3],
-										transformed_buffer[triangle_id].data[4],
-										transformed_buffer[triangle_id].data[5]);
-			const float3 VV2 = (float3)(transformed_buffer[triangle_id].data[6],
-										transformed_buffer[triangle_id].data[7],
-										transformed_buffer[triangle_id].data[8]);
-			
-			//
-			float4 barycentric = (float4)(mad(fragment_coord.x, VV0.x, mad(fragment_coord.y, VV0.y, VV0.z)),
-										  mad(fragment_coord.x, VV1.x, mad(fragment_coord.y, VV1.y, VV1.z)),
-										  mad(fragment_coord.x, VV2.x, mad(fragment_coord.y, VV2.y, VV2.z)),
-										  transformed_buffer[triangle_id].data[9]); // .w = computed depth
-			if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
-			
-			// simplified:
-			barycentric /= barycentric.x + barycentric.y + barycentric.z;
-			
-			// depth test + ignore negative depth:
-			if(barycentric.w < 0.0f ||
-			   barycentric.w >= *fragment_depth) continue;
-			
-			// reset depth (note: fragment_color will contain the last valid color)
-			*fragment_depth = barycentric.w;
-			
-			//
-			//###OCLRASTER_USER_MAIN_CALL###
-		}
-		
-		// write framebuffer output (if depth has changed)
-		if(*fragment_depth < input_depth /*|| *fragment_depth == input_depth*/) {
-			//###OCLRASTER_FRAMEBUFFER_WRITE###
-		}
-#endif
 	}

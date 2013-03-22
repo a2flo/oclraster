@@ -65,7 +65,6 @@ void rasterization_stage::rasterize(draw_state& state,
 	ocl->set_kernel_argument(argc++, state.bin_count);
 	ocl->set_kernel_argument(argc++, (unsigned int)(state.bin_count.x * state.bin_count.y));
 	ocl->set_kernel_argument(argc++, state.batch_count);
-	ocl->set_kernel_argument(argc++, state.batch_size);
 	ocl->set_kernel_argument(argc++, state.framebuffer_size);
 	
 	const size_t unit_count = ocl->get_active_device()->units;
