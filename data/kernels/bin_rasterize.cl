@@ -27,10 +27,22 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 						  global const transformed_data* transformed_buffer,
 						  const uint2 framebuffer_size
 						  ) {
+	const unsigned int local_id = get_local_id(0);
+	
+	// TODO: already read depth from framebuffer in here -> cull if greater depth
+	
+	
+	// -> each work-item: 1 bin + private mem queue (gpu version) or 1 batch + private mem queue (cpu version)
+	// -> iterate over 256 triangles (batch size: 256)
+	// -> store loop index in priv mem queue (-> only one byte per triangle)
+	// -> 2 vstore16 calls with 2 ulong16s (256 bytes)
+	
+#if !defined(CPU)
+	// GPU version
+	
 	const unsigned int global_id = get_global_id(0);
-	const unsigned int local_id = get_local_id(0); // bin index
-	//const unsigned int local_size = get_local_size(0);
-	const uint2 bin_location = (uint2)(local_id % bin_count.x, local_id / bin_count.x);
+	const unsigned int bin_idx = local_id;
+	const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x);
 	
 	// init counter
 	if(global_id == 0) {
@@ -38,18 +50,9 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	}
 	barrier(CLK_GLOBAL_MEM_FENCE);
 	
-	// -> each work-item: 1 bin + private mem queue
-	// -> iterate over 256 triangles (batch size: 256)
-	// -> store loop index in priv mem queue (-> only one byte per triangle)
-	// -> 2 vstore16 calls with 2 ulong16s (256 bytes)
-	
 	// note: opencl does not require this to be aligned, but certain implementations do
 	uchar triangle_queue[BATCH_SIZE] __attribute__((aligned(8)));
-	
-#define ASYNC_COPY 1
-#if defined(ASYNC_COPY)
 	local float4 triangle_bounds[BATCH_SIZE] __attribute__((aligned(16))); // correctly align, so async copy will work
-#endif
 	local unsigned int batch_idx;
 	const uint2 framebuffer_clamp_size = framebuffer_size - 1u;
 	for(;;) {
@@ -70,19 +73,14 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 		unsigned int triangles_in_queue = 0;
 		// read input triangle bounds into shared memory (across work-group)
 		const unsigned int triangle_id_offset = batch_idx * BATCH_SIZE;
-#if defined(ASYNC_COPY)
 		event_t event = async_work_group_strided_copy(&triangle_bounds[0],
 													  (global const float4*)&transformed_buffer[triangle_id_offset].data[12],
 													  BATCH_SIZE, 4, 0);
 		wait_group_events(1, &event);
-#endif
 		
 		for(unsigned int triangle_id = triangle_id_offset, idx = 0,
 			last_triangle_id = min(triangle_id_offset + BATCH_SIZE, triangle_count);
 			triangle_id < last_triangle_id; triangle_id++, idx++) {
-			//printf("\ttri: %u\n", triangle_id);
-			
-#if defined(ASYNC_COPY)
 			// cull:
 			if(triangle_bounds[idx].x == INFINITY) continue;
 			
@@ -91,6 +89,21 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 			const uint2 y_bounds = (uint2)(convert_uint(triangle_bounds[idx].z),
 										   convert_uint(triangle_bounds[idx].w));
 #else
+	// CPU version (no barriers, no group-waiting, no local-mem)
+	
+	const unsigned int local_size = get_local_size(0);
+	const unsigned int bin_idx = get_group_id(0);
+	const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x);
+	
+	// note: opencl does not require this to be aligned, but certain implementations do
+	uchar triangle_queue[BATCH_SIZE] __attribute__((aligned(8)));
+	const uint2 framebuffer_clamp_size = framebuffer_size - 1u;
+	for(unsigned int batch_idx = local_id; batch_idx < batch_count; batch_idx += local_size) {
+		unsigned int triangles_in_queue = 0;
+		const unsigned int triangle_id_offset = batch_idx * BATCH_SIZE;
+		for(unsigned int triangle_id = triangle_id_offset, idx = 0,
+			last_triangle_id = min(triangle_id_offset + BATCH_SIZE, triangle_count);
+			triangle_id < last_triangle_id; triangle_id++, idx++) {
 			// cull:
 			if(transformed_buffer[triangle_id].data[12] == INFINITY) continue;
 			
@@ -98,6 +111,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 										   convert_uint(transformed_buffer[triangle_id].data[13]));
 			const uint2 y_bounds = (uint2)(convert_uint(transformed_buffer[triangle_id].data[14]),
 										   convert_uint(transformed_buffer[triangle_id].data[15]));
+			
 #endif
 			
 			// valid pixel pos: [0, framebuffer_size - 1]
@@ -105,8 +119,6 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 											 clamp(x_bounds.y, 0u, framebuffer_clamp_size.x));
 			const uint2 y_bounds_u = (uint2)(clamp(y_bounds.x, 0u, framebuffer_clamp_size.y),
 											 clamp(y_bounds.y, 0u, framebuffer_clamp_size.y));
-			
-			// TODO: already read depth from framebuffer in here -> cull if greater depth
 			
 			// insert triangle id intro appropriate queues/bins
 			const uint2 x_bins = x_bounds_u / BIN_SIZE;
@@ -132,7 +144,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 		
 		// this stores batches for each bin sequentially
 		const ulong16* __attribute__((aligned(8))) queue_data_ptr = (const ulong16*)&triangle_queue[0];
-		const size_t offset = (local_id * batch_count + batch_idx) * (BATCH_SIZE / 128u);
+		const size_t offset = (bin_idx * batch_count + batch_idx) * (BATCH_SIZE / 128u);
 		vstore16(*queue_data_ptr, offset, bin_queues);
 		if(triangles_in_queue > 128u) {
 			// only necessary, if there are more than 128 triangles in the bin queue

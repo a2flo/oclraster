@@ -51,10 +51,10 @@ void rasterization_stage::rasterize(draw_state& state,
 	const size_t bin_size = state.bin_size.x * state.bin_size.y;
 	const size_t local_size = std::min(ocl->get_kernel_work_group_size(), bin_size);
 	const size_t intra_bin_groups = (bin_size / local_size) + (bin_size % local_size != 0 ? 1 : 0);
-	cout << "###### rasterization ######" << endl;
+	/*cout << "###### rasterization ######" << endl;
 	cout << "bin_size: " << bin_size << endl;
 	cout << "local_size: " << local_size << endl;
-	cout << "intra_bin_groups: " << intra_bin_groups << endl;
+	cout << "intra_bin_groups: " << intra_bin_groups << endl;*/
 	
 	//
 	unsigned int argc = 0;
@@ -65,13 +65,14 @@ void rasterization_stage::rasterize(draw_state& state,
 	ocl->set_kernel_argument(argc++, state.bin_count);
 	ocl->set_kernel_argument(argc++, (unsigned int)(state.bin_count.x * state.bin_count.y));
 	ocl->set_kernel_argument(argc++, state.batch_count);
+	ocl->set_kernel_argument(argc++, intra_bin_groups);
 	ocl->set_kernel_argument(argc++, state.framebuffer_size);
 	
 	const size_t unit_count = ocl->get_active_device()->units;
-	oclr_msg("rasterization: %u (%u) :: %u",
+	/*oclr_msg("rasterization: %u (%u) :: %u",
 			 unit_count,
 			 unit_count * local_size,
-			 local_size);
+			 local_size);*/
 	ocl->set_kernel_range({ unit_count * local_size, local_size });
 	ocl->run_kernel();
 }

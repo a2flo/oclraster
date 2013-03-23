@@ -23,6 +23,9 @@ for arg in "$@"; do
 		"internal-debug")
 			BUILD_ARGS+=" --internal-debug"
 			;;
+		"cl-profiling")
+			BUILD_ARGS+=" --cl-profiling"
+			;;
 		*)
 			;;
 	esac

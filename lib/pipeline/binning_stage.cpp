@@ -50,14 +50,15 @@ const opencl::buffer_object* binning_stage::bin(draw_state& state) {
 	const size_t unit_count = ocl->get_active_device()->units;
 	const size_t bin_count_lin = state.bin_count.x * state.bin_count.y;
 	
-	const size_t bin_local_size = std::min(ocl->get_kernel_work_group_size(), bin_count_lin);
+	const size_t wg_size = ocl->get_kernel_work_group_size();
+	const size_t bin_local_size = std::min(wg_size, bin_count_lin);
 	// TODO: num_elements -> actual/remaining/batch triangle count
 	
-	cout << "###### binning ######" << endl;
+	/*cout << "###### binning ######" << endl;
 	cout << "batch_size: " << state.batch_size << endl;
 	cout << "batch_count: " << state.batch_count << endl;
 	cout << "triangle_count: " << state.triangle_count << endl;
-	cout << "bin_count: " << state.bin_count << " (" << bin_count_lin << ")" << endl;
+	cout << "bin_count: " << state.bin_count << " (" << bin_count_lin << ")" << endl;*/
 	
 	
 	ocl->set_kernel_argument(argc++, bin_distribution_counter);
@@ -70,11 +71,19 @@ const opencl::buffer_object* binning_stage::bin(draw_state& state) {
 	ocl->set_kernel_argument(argc++, state.transformed_buffer);
 	ocl->set_kernel_argument(argc++, state.framebuffer_size);
 	
-	oclr_msg("binning: %u (%u) :: %u",
+	/*oclr_msg("binning: %u (%u) :: %u",
 			 unit_count,
 			 unit_count * bin_local_size,
-			 bin_local_size);
-	ocl->set_kernel_range({ unit_count * bin_local_size, bin_local_size });
+			 bin_local_size);*/
+	if(ocl->get_active_device()->type >= opencl::DEVICE_TYPE::CPU0 ||
+	   ocl->get_active_device()->type <= opencl::DEVICE_TYPE::CPU255) {
+		// cpu
+		ocl->set_kernel_range({ bin_count_lin * wg_size, wg_size });
+	}
+	else {
+		// gpu
+		ocl->set_kernel_range({ unit_count * bin_local_size, bin_local_size });
+	}
 	ocl->run_kernel();
 	
 	return queue_buffer;

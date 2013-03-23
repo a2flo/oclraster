@@ -817,7 +817,13 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		
 		// create a (single) command queue for each device
 		for(const auto& device : devices) {
-			queues[&device->device] = new cl::CommandQueue(*context, device->device, CL_QUEUE_PROFILING_ENABLE, &ierr);
+			queues[&device->device] = new cl::CommandQueue(*context, device->device,
+#if !defined(OCLRASTER_PROFILING)
+														   0,
+#else
+														   CL_QUEUE_PROFILING_ENABLE,
+#endif
+														   &ierr);
 		}
 		
 		if(fastest_cpu != nullptr) oclr_debug("fastest CPU device: %s %s (score: %u)", fastest_cpu->vendor.c_str(), fastest_cpu->name.c_str(), fastest_cpu_score);
@@ -1037,6 +1043,7 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 			if((device->internal_type & CL_DEVICE_TYPE_ACCELERATOR) != 0) device_options += " -DACCELERATOR";
 			
 			device_options += " -DPLATFORM_"+platform_vendor_to_str(platform_vendor);
+			device_options += " -DLOCAL_MEM_SIZE="+ull2string(device->local_mem_size);
 			
 			kernel_ptr->program->build({ device->device }, (options+device_options).c_str());
 		}
@@ -1601,7 +1608,7 @@ void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 			functor->second.local_ = kernel_ptr->local;
 		}
 		
-#if 0
+#if !defined(OCLRASTER_PROFILING)
 		functor->second();
 #else
 		auto evt = functor->second();

@@ -76,6 +76,9 @@ solution "oclraster"
 		if(_ARGS[argc] == "--internal-debug") then
 			defines { "OCLRASTER_INTERNAL_PROGRAM_DEBUG=1" }
 		end
+		if(_ARGS[argc] == "--cl-profiling") then
+			defines { "OCLRASTER_PROFILING=1" }
+		end
 		argc=argc+1
 	end
 	
