@@ -65,9 +65,9 @@ struct draw_state {
 	rasterization_program* rasterize_prog = nullptr;
 	
 	//
-	const uint2 bin_size { 64, 64 };
+	const uint2 bin_size { OCLRASTER_BIN_SIZE };
 	uint2 bin_count { 1, 1 };
-	const unsigned int batch_size { 256 };
+	const unsigned int batch_size { OCLRASTER_BATCH_SIZE };
 	unsigned int batch_count { 0 };
 	unsigned int triangle_count { 0 };
 };
@@ -99,9 +99,6 @@ public:
 	/*void draw(// default element range: draw all
 			  const pair<unsigned int, unsigned int> element_range = { ~0u, ~0u });*/
 	void draw(const pair<unsigned int, unsigned int> element_range);
-	
-	atomic<bool> do_queue_dump { false };
-	void _queue_dump() { do_queue_dump = true; }
 	
 protected:
 	draw_state state;

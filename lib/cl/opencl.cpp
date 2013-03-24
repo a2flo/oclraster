@@ -846,11 +846,16 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		//const string lsl_str = " -DLOCAL_SIZE_LIMIT="+size_t2string(local_size_limit);
 		
 		internal_kernels = { // first time init:
-			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "oclraster_bin", ""),
+			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "oclraster_bin",
+					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)),
 			make_tuple("CLEAR_COLOR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
-			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DDEPTH_FRAMEBUFFER=1"),
-			make_tuple("CLEAR_COLOR_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DIMAGE_FRAMEBUFFERS=1"),
-			make_tuple("CLEAR_COLOR_DEPTH_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DIMAGE_FRAMEBUFFERS=1 -DDEPTH_FRAMEBUFFER=1"),
+			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
+					   " -DDEPTH_FRAMEBUFFER=1"),
+			make_tuple("CLEAR_COLOR_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
+					   " -DIMAGE_FRAMEBUFFERS=1"),
+			make_tuple("CLEAR_COLOR_DEPTH_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
+					   " -DIMAGE_FRAMEBUFFERS=1 -DDEPTH_FRAMEBUFFER=1"),
 		};
 		
 		load_internal_kernels();

@@ -17,9 +17,6 @@
 	//###OCLRASTER_USER_CODE###
 	
 	//
-	// TODO: compile time define
-	#define BIN_SIZE 64u
-	#define BATCH_SIZE 256u
 	kernel void oclraster_program(//###OCLRASTER_USER_STRUCTS###
 								  
 								  global unsigned int* bin_distribution_counter,

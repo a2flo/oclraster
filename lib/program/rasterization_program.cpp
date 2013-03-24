@@ -27,85 +27,167 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 	#include "oclr_matrix.h"
 	#include "oclr_image.h"
 	
-	typedef struct __attribute__((packed)) {
-		unsigned int triangle_count;
-	} constant_data;
-	
 	typedef struct __attribute__((packed, aligned(16))) {
 		// VV0: 0 - 2
 		// VV1: 3 - 5
 		// VV2: 6 - 8
 		// depth: 9
-		// cam relation: 10 - 12
-		// unused: 13 - 15
-		float data[16];
+		// unused: 10 - 11
+		// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
+		// y_bounds: 14 - 15
+		const float data[16];
 	} transformed_data;
 	
 	//###OCLRASTER_USER_CODE###
 	
 	//
-	kernel void _oclraster_program(//###OCLRASTER_USER_STRUCTS###
-								   
-								   global const transformed_data* transformed_buffer,
-								   global const unsigned int* triangle_queues_buffer,
-								   global const unsigned int* queue_sizes_buffer,
-								   const uint2 tile_size,
-								   const uint2 bin_count,
-								   const unsigned int queue_size,
-								   constant constant_data* cdata,
-								   const uint2 framebuffer_size) {
-		const unsigned int x = get_global_id(0);
-		const unsigned int y = get_global_id(1);
-		if(x >= framebuffer_size.x) return;
-		if(y >= framebuffer_size.y) return;
+	kernel void oclraster_program(//###OCLRASTER_USER_STRUCTS###
+								  
+								  global unsigned int* bin_distribution_counter,
+								  global const transformed_data* transformed_buffer,
+								  global const uchar* bin_queues,
+								  
+								  const uint2 bin_count,
+								  const unsigned int bin_count_lin,
+								  const unsigned int batch_count,
+								  const unsigned int intra_bin_groups,
+								  
+								  const uint2 framebuffer_size) {
+		const unsigned int local_id = get_local_id(0);
+		const unsigned int local_size = get_local_size(0);
 		
-		// TODO: handling if there is no depth buffer / depth testing
-		// TODO: stencil testing
-		// TODO: scissor testing
+#if defined(CPU)
+#define NO_BARRIER 1
+#else
+#define LOCAL_MEM_COPY 1
+#endif
 		
-		//###OCLRASTER_FRAMEBUFFER_READ###
-		
-		const float2 fragment_coord = (float2)(x, y);
-		const unsigned int bin_index = (y / tile_size.y) * bin_count.x + (x / tile_size.x);
-		const unsigned int queue_entries = queue_sizes_buffer[bin_index];
-		const unsigned int queue_offset = (queue_size * bin_index);
-		//if(queue_entries > 0) framebuffer.color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
-		for(unsigned int queue_entry = 0; queue_entry < queue_entries; queue_entry++) {
-			const unsigned int triangle_id = triangle_queues_buffer[queue_offset + queue_entry];
-			const float3 VV0 = (float3)(transformed_buffer[triangle_id].data[0],
-										transformed_buffer[triangle_id].data[1],
-										transformed_buffer[triangle_id].data[2]);
-			const float3 VV1 = (float3)(transformed_buffer[triangle_id].data[3],
-										transformed_buffer[triangle_id].data[4],
-										transformed_buffer[triangle_id].data[5]);
-			const float3 VV2 = (float3)(transformed_buffer[triangle_id].data[6],
-										transformed_buffer[triangle_id].data[7],
-										transformed_buffer[triangle_id].data[8]);
-			
-			//
-			float4 barycentric = (float4)(mad(fragment_coord.x, VV0.x, mad(fragment_coord.y, VV0.y, VV0.z)),
-										  mad(fragment_coord.x, VV1.x, mad(fragment_coord.y, VV1.y, VV1.z)),
-										  mad(fragment_coord.x, VV2.x, mad(fragment_coord.y, VV2.y, VV2.z)),
-										  transformed_buffer[triangle_id].data[9]); // .w = computed depth
-			if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
-			
-			// simplified:
-			barycentric /= barycentric.x + barycentric.y + barycentric.z;
-			
-			// depth test + ignore negative depth:
-			if(barycentric.w < 0.0f ||
-			   barycentric.w >= *fragment_depth) continue;
-			
-			// reset depth (note: fragment_color will contain the last valid color)
-			*fragment_depth = barycentric.w;
-			
-			//
-			//###OCLRASTER_USER_MAIN_CALL###
+#if !defined(NO_BARRIER)
+		const unsigned int global_id = get_global_id(0);
+		// init counter
+		if(global_id == 0) {
+			*bin_distribution_counter = 0;
 		}
+		barrier(CLK_GLOBAL_MEM_FENCE);
+#endif
 		
-		// write framebuffer output (if depth has changed)
-		if(*fragment_depth < input_depth /*|| *fragment_depth == input_depth*/) {
-			//###OCLRASTER_FRAMEBUFFER_WRITE###
+#if defined(LOCAL_MEM_COPY)
+		// -1 b/c the local memory is also used for other things
+		//#define LOCAL_MEM_BATCH_COUNT ((LOCAL_MEM_SIZE / BATCH_SIZE) - 1)
+		#define LOCAL_MEM_BATCH_COUNT 32u
+		local uchar triangle_queue[LOCAL_MEM_BATCH_COUNT * BATCH_SIZE] __attribute__((aligned(16)));
+#endif
+		
+#if !defined(NO_BARRIER)
+		local unsigned int bin_idx;
+		for(;;) {
+			// get next bin index
+			// note that this barrier is necessary, because not all work-items are running this kernel synchronously
+			barrier(CLK_LOCAL_MEM_FENCE);
+			if(local_id == 0) {
+				// only done once per work-group (-> only work-item #0)
+				bin_idx = atomic_inc(bin_distribution_counter);
+			}
+			barrier(CLK_LOCAL_MEM_FENCE);
+			
+			// check if all bins have been processed
+			if(bin_idx >= bin_count_lin) {
+				return;
+			}
+#else
+		const unsigned int bin_idx = get_group_id(0);
+		{
+#endif
+			
+#if defined(LOCAL_MEM_COPY)
+			// read all batches into local memory at once
+			const size_t offset = (bin_idx * batch_count) * BATCH_SIZE;
+			event_t event = async_work_group_copy(&triangle_queue[0],
+												  (global const uchar*)(bin_queues + offset),
+												  batch_count * BATCH_SIZE, 0);
+			wait_group_events(1, &event);
+#else
+			const size_t global_queue_offset = (bin_idx * batch_count) * BATCH_SIZE;
+#endif
+			
+			//
+			const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x);
+			for(unsigned int i = 0; i < intra_bin_groups; i++) {
+				const unsigned int fragment_idx = (i * local_size) + local_id;
+				const uint2 local_xy = (uint2)(fragment_idx % BIN_SIZE, fragment_idx / BIN_SIZE);
+				const unsigned int x = bin_location.x * BIN_SIZE + local_xy.x;
+				const unsigned int y = bin_location.y * BIN_SIZE + local_xy.y;
+				const float2 fragment_coord = (float2)(x, y);
+				if(x >= framebuffer_size.x || y >= framebuffer_size.y) continue;
+				
+				// TODO: handling if there is no depth buffer / depth testing
+				// TODO: stencil testing
+				// TODO: scissor testing
+				
+				//###OCLRASTER_FRAMEBUFFER_READ###
+				
+				//if(queue_entries > 0) framebuffer.color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
+				
+				//
+				for(unsigned int batch_idx = 0, queue_offset = 0;
+					batch_idx < batch_count;
+					batch_idx++, queue_offset += BATCH_SIZE) {
+#if defined(LOCAL_MEM_COPY)
+					local const uchar* queue_ptr = &triangle_queue[queue_offset];
+#else
+					global const uchar* queue_ptr = &bin_queues[global_queue_offset + queue_offset];
+#endif
+					// check if queue is empty
+					if(queue_ptr[0] == 0xFF && queue_ptr[1] == 0xFF) {
+						continue;
+					}
+					
+					//
+					unsigned int last_id = 0;
+					for(unsigned int idx = 0; idx < BATCH_SIZE; idx++) {
+						const unsigned int triangle_id = queue_offset + queue_ptr[idx];
+						if(triangle_id < last_id) break; // end of queue
+						last_id = triangle_id;
+						
+						//
+						{
+							const float3 VV0 = (float3)(transformed_buffer[triangle_id].data[0],
+														transformed_buffer[triangle_id].data[1],
+														transformed_buffer[triangle_id].data[2]);
+							const float3 VV1 = (float3)(transformed_buffer[triangle_id].data[3],
+														transformed_buffer[triangle_id].data[4],
+														transformed_buffer[triangle_id].data[5]);
+							const float3 VV2 = (float3)(transformed_buffer[triangle_id].data[6],
+														transformed_buffer[triangle_id].data[7],
+														transformed_buffer[triangle_id].data[8]);
+							
+							//
+							float4 barycentric = (float4)(mad(fragment_coord.x, VV0.x, mad(fragment_coord.y, VV0.y, VV0.z)),
+														  mad(fragment_coord.x, VV1.x, mad(fragment_coord.y, VV1.y, VV1.z)),
+														  mad(fragment_coord.x, VV2.x, mad(fragment_coord.y, VV2.y, VV2.z)),
+														  transformed_buffer[triangle_id].data[9]); // .w = computed depth
+							if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
+							
+							// simplified:
+							barycentric /= barycentric.x + barycentric.y + barycentric.z;
+							
+							// depth test + ignore negative depth:
+							if(barycentric.w < 0.0f || barycentric.w >= *fragment_depth) continue;
+							
+							// reset depth (note: fragment_color will contain the last valid color)
+							*fragment_depth = barycentric.w;
+							
+							//
+							//###OCLRASTER_USER_MAIN_CALL###
+						}
+					}
+					
+					// write framebuffer output (if depth has changed)
+					if(*fragment_depth < input_depth || false) {
+						//###OCLRASTER_FRAMEBUFFER_WRITE###
+					}
+				}
+			}
 		}
 	}
 )OCLRASTER_RAWSTR"};
@@ -141,19 +223,12 @@ string rasterization_program::specialized_processing(const string& code,
 				// there are no input structs
 				continue;
 			case oclraster_program::STRUCT_TYPE::OUTPUT: {
-				buffer_handling_code += "const " + oclr_struct.name + " user_buffer_outputs_" + cur_user_buffer_str + "[3] = { ";
-				for(size_t i = 0; i < 3; i++) {
-					buffer_handling_code += "user_buffer_" + cur_user_buffer_str + "[(triangle_id * 3) + " + size_t2string(i) + "]";
-					if(i < 2) buffer_handling_code += ", ";
-				}
-				buffer_handling_code += " };\n";
-				
 				const string interp_var_name = "interpolated_user_buffer_element_" + cur_user_buffer_str;
 				buffer_handling_code += oclr_struct.name + " " + interp_var_name +";\n";
 				for(const auto& var : oclr_struct.variables) {
 					buffer_handling_code += interp_var_name + "." + var + " = interpolate(";
 					for(size_t i = 0; i < 3; i++) {
-						buffer_handling_code += "user_buffer_outputs_" + cur_user_buffer_str + "[" + size_t2string(i) + "]." + var;
+						buffer_handling_code += "user_buffer_" + cur_user_buffer_str + "[(triangle_id * 3) + " + size_t2string(i) + "]." + var;
 						if(i < 2) buffer_handling_code += ", ";
 					}
 					buffer_handling_code += ", barycentric.xyz);\n";

@@ -203,11 +203,12 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 							   ib.index_count / 3);*/
 	
 	// TODO: this should be static!
-	// note: internal transformed buffer size must be a multiple of 256 triangles (necessary for the binner)
-	const unsigned int tc_mod_256 = (state.triangle_count % 256);
+	// note: internal transformed buffer size must be a multiple of "batch size" triangles (necessary for the binner)
+	const unsigned int tc_mod_batch_size = (state.triangle_count % OCLRASTER_BATCH_SIZE);
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 												  state.transformed_primitive_size *
-												  (state.triangle_count + (tc_mod_256 == 0 ? 0 : 256-tc_mod_256)));
+												  (state.triangle_count + (tc_mod_batch_size == 0 ? 0 :
+																		   OCLRASTER_BATCH_SIZE - tc_mod_batch_size)));
 	
 	// clear info buffer
 	const info_buffer_struct empty_info_buffer { 0 };
@@ -228,19 +229,6 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	// pipeline
 	transform.transform(state, state.triangle_count);
 	const auto queue_buffer = binning.bin(state);
-	
-	if(do_queue_dump) {
-		ocl->flush();
-		ocl->finish();
-		do_queue_dump = false;
-		fstream queue_file("queue.bin", ios::out | ios::binary | ios::trunc);
-		const auto mapped_ptr = ocl->map_buffer((opencl::buffer_object*)queue_buffer,
-												opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
-		queue_file.write((const char*)mapped_ptr, 64*1024*1024);
-		queue_file.flush();
-		queue_file.close();
-		ocl->unmap_buffer((opencl::buffer_object*)queue_buffer, mapped_ptr);
-	}
 	
 	// TODO: pipelining/splitting
 	rasterization.rasterize(state, queue_buffer);

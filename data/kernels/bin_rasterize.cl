@@ -14,9 +14,6 @@ typedef struct __attribute__((packed, aligned(16))) {
 } transformed_data;
 
 //
-// TODO: compile time define
-#define BIN_SIZE 64u
-#define BATCH_SIZE 256u
 kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 						  global ulong* bin_queues,
 						  const uint2 bin_count,

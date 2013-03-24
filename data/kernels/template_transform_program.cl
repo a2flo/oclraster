@@ -290,7 +290,6 @@
 		}
 		
 		// output:
-		//const unsigned int triangle_index = atomic_inc(&info_buffer->triangle_count);
 		#define triangle_index triangle_id
 		for(unsigned int i = 0u; i < 3u; i++) {
 			*tf_data_ptr++ = VV[i][0];

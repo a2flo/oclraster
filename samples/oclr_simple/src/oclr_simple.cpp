@@ -70,8 +70,8 @@ int main(int argc oclr_unused, char* argv[]) {
 	//
 	p = new pipeline();
 	
-	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
-	//model->flip_faces();
+	a2m* model = new a2m(oclraster::data_path("blend_test.a2m"));
+	model->flip_faces();
 	
 	// add event handlers
 	event::handler key_handler_fnctr(&key_handler);
@@ -390,9 +390,6 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 				break;
 			case SDLK_5:
 				selected_material = 4;
-				break;
-			case SDLK_u:
-				p->_queue_dump();
 				break;
 			default: return false;
 		}
