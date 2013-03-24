@@ -323,7 +323,9 @@ string oclraster_program::create_entry_function_parameters() const {
 	return entry_function_params;
 }
 
-string oclraster_program::create_user_kernel_parameters(const kernel_image_spec& image_spec, vector<string>& image_decls) const {
+string oclraster_program::create_user_kernel_parameters(const kernel_image_spec& image_spec,
+														vector<string>& image_decls,
+														const bool const_output) const {
 	// creates user buffer dependent kernel parameters string (buffers will be called "user_buffer_#")
 	string kernel_parameters = "";
 	size_t user_buffer_count = 0;
@@ -334,6 +336,7 @@ string oclraster_program::create_user_kernel_parameters(const kernel_image_spec&
 				break;
 			case oclraster_program::STRUCT_TYPE::OUTPUT:
 				kernel_parameters += "global ";
+				if(const_output) kernel_parameters += "const ";
 				break;
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
 				kernel_parameters += "constant ";

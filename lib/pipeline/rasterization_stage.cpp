@@ -49,7 +49,14 @@ void rasterization_stage::rasterize(draw_state& state,
 	
 	// determine per-bin work-group size and how many iterations/splits are necessary per bin
 	const size_t bin_size = state.bin_size.x * state.bin_size.y;
-	const size_t local_size = std::min(ocl->get_kernel_work_group_size(), bin_size);
+	size_t wg_size = ocl->get_kernel_work_group_size();;
+	if(ocl->get_active_device()->type >= opencl::DEVICE_TYPE::CPU0 &&
+	   ocl->get_active_device()->type <= opencl::DEVICE_TYPE::CPU255) {
+		// for whatever reason, using a work-group size of 1 runs a lot faster than using 128 (most cpu implementations)
+		wg_size = 1;
+	}
+	
+	const size_t local_size = std::min(wg_size, bin_size);
 	const size_t intra_bin_groups = (bin_size / local_size) + (bin_size % local_size != 0 ? 1 : 0);
 	/*cout << "###### rasterization ######" << endl;
 	cout << "bin_size: " << bin_size << endl;
@@ -73,6 +80,16 @@ void rasterization_stage::rasterize(draw_state& state,
 			 unit_count,
 			 unit_count * local_size,
 			 local_size);*/
-	ocl->set_kernel_range({ unit_count * local_size, local_size });
+	
+	if(ocl->get_active_device()->type >= opencl::DEVICE_TYPE::CPU0 &&
+	   ocl->get_active_device()->type <= opencl::DEVICE_TYPE::CPU255) {
+		// cpu
+		const size_t bin_count_lin = state.bin_count.x * state.bin_count.y;
+		ocl->set_kernel_range({ bin_count_lin * wg_size, wg_size });
+	}
+	else {
+		// gpu
+		ocl->set_kernel_range({ unit_count * local_size, local_size });
+	}
 	ocl->run_kernel();
 }

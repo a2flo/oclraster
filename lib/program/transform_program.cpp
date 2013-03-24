@@ -255,7 +255,7 @@ string transform_program::specialized_processing(const string& code,
 	
 	//
 	vector<string> image_decls;
-	const string kernel_parameters { create_user_kernel_parameters(image_spec, image_decls) };
+	const string kernel_parameters { create_user_kernel_parameters(image_spec, image_decls, false) };
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_STRUCTS###", kernel_parameters);
 	
 	// insert main call + prior buffer handling

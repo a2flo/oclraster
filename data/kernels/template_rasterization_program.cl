@@ -17,6 +17,7 @@
 	//###OCLRASTER_USER_CODE###
 	
 	//
+	// TODO: compile time define
 	#define BIN_SIZE 64u
 	#define BATCH_SIZE 256u
 	kernel void oclraster_program(//###OCLRASTER_USER_STRUCTS###
@@ -31,18 +32,22 @@
 								  const unsigned int intra_bin_groups,
 								  
 								  const uint2 framebuffer_size) {
-		const unsigned int global_id = get_global_id(0);
 		const unsigned int local_id = get_local_id(0);
 		const unsigned int local_size = get_local_size(0);
 		
+#if defined(CPU)
+#define NO_BARRIER 1
+#else
+#define LOCAL_MEM_COPY 1
+#endif
+		
+#if !defined(NO_BARRIER)
+		const unsigned int global_id = get_global_id(0);
 		// init counter
 		if(global_id == 0) {
 			*bin_distribution_counter = 0;
 		}
 		barrier(CLK_GLOBAL_MEM_FENCE);
-		
-#if !defined(CPU)
-#define LOCAL_MEM_COPY 1
 #endif
 		
 #if defined(LOCAL_MEM_COPY)
@@ -52,6 +57,7 @@
 		local uchar triangle_queue[LOCAL_MEM_BATCH_COUNT * BATCH_SIZE] __attribute__((aligned(16)));
 #endif
 		
+#if !defined(NO_BARRIER)
 		local unsigned int bin_idx;
 		for(;;) {
 			// get next bin index
@@ -67,6 +73,10 @@
 			if(bin_idx >= bin_count_lin) {
 				return;
 			}
+#else
+		const unsigned int bin_idx = get_group_id(0);
+		{
+#endif
 			
 #if defined(LOCAL_MEM_COPY)
 			// read all batches into local memory at once
@@ -141,8 +151,7 @@
 							barycentric /= barycentric.x + barycentric.y + barycentric.z;
 							
 							// depth test + ignore negative depth:
-							if(barycentric.w < 0.0f ||
-							   barycentric.w >= *fragment_depth) continue;
+							if(barycentric.w < 0.0f || barycentric.w >= *fragment_depth) continue;
 							
 							// reset depth (note: fragment_color will contain the last valid color)
 							*fragment_depth = barycentric.w;

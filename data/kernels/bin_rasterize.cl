@@ -31,7 +31,6 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	
 	// TODO: already read depth from framebuffer in here -> cull if greater depth
 	
-	
 	// -> each work-item: 1 bin + private mem queue (gpu version) or 1 batch + private mem queue (cpu version)
 	// -> iterate over 256 triangles (batch size: 256)
 	// -> store loop index in priv mem queue (-> only one byte per triangle)

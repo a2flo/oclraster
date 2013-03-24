@@ -75,7 +75,7 @@ const opencl::buffer_object* binning_stage::bin(draw_state& state) {
 			 unit_count,
 			 unit_count * bin_local_size,
 			 bin_local_size);*/
-	if(ocl->get_active_device()->type >= opencl::DEVICE_TYPE::CPU0 ||
+	if(ocl->get_active_device()->type >= opencl::DEVICE_TYPE::CPU0 &&
 	   ocl->get_active_device()->type <= opencl::DEVICE_TYPE::CPU255) {
 		// cpu
 		ocl->set_kernel_range({ bin_count_lin * wg_size, wg_size });

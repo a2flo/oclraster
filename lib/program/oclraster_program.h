@@ -94,7 +94,8 @@ protected:
 							  const bool is_framebuffer);
 	string create_entry_function_parameters() const;
 	string create_user_kernel_parameters(const kernel_image_spec& image_spec,
-										 vector<string>& image_decls) const;
+										 vector<string>& image_decls,
+										 const bool const_output) const;
 	virtual string specialized_processing(const string& code,
 										  const kernel_image_spec& image_spec) = 0;
 	virtual string get_fixed_entry_function_parameters() const = 0;
