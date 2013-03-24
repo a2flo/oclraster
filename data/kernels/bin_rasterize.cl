@@ -3,216 +3,148 @@
 #include "oclr_math.h"
 
 typedef struct __attribute__((packed, aligned(16))) {
-	unsigned int triangle_count;
-} constant_data;
-
-typedef struct __attribute__((packed, aligned(16))) {
 	// VV0: 0 - 2
 	// VV1: 3 - 5
 	// VV2: 6 - 8
 	// depth: 9
-	// cam relation: 10 - 12
-	// unused: 13 - 15
-	float data[16];
+	// unused: 10 - 11
+	// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
+	// y_bounds: 14 - 15
+	const float data[16];
 } transformed_data;
 
 //
-kernel void bin_rasterize(global const transformed_data* transformed_buffer,
-						  global unsigned int* triangle_queues_buffer,
-						  global unsigned int* queue_sizes_buffer,
-						  const uint2 screen_size,
-						  const uint2 tile_size,
+kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
+						  global ulong* bin_queues,
 						  const uint2 bin_count,
-						  const unsigned int triangles_per_group,
-						  const unsigned int triangle_count) {
-	const unsigned int triangle_id = get_global_id(0);
-	if(triangle_id >= get_global_size(0)) return;
-	if(triangle_id >= triangle_count) return;
-	
-	const float3 VV[3] = {
-		(float3)(transformed_buffer[triangle_id].data[0],
-				 transformed_buffer[triangle_id].data[1],
-				 transformed_buffer[triangle_id].data[2]),
-		(float3)(transformed_buffer[triangle_id].data[3],
-				 transformed_buffer[triangle_id].data[4],
-				 transformed_buffer[triangle_id].data[5]),
-		(float3)(transformed_buffer[triangle_id].data[6],
-				 transformed_buffer[triangle_id].data[7],
-				 transformed_buffer[triangle_id].data[8])
-	};
-	
-	// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
-	const float triangle_cam_relation[3] = {
-		transformed_buffer[triangle_id].data[10],
-		transformed_buffer[triangle_id].data[11],
-		transformed_buffer[triangle_id].data[12]
-	};
-	
-	unsigned int passing_indices[3] = { 0, 0, 0 };
-	float2 clipping_coords[3] = { (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f), (float2)(0.0f, 0.0f) };
-	unsigned int passing_direct = 0;
-	unsigned int clipped_count = 0;
-	
-	// compute x/y bounds
-	// valid clip and vertex positions: 0 <= x < screen_size.x && 0 <= y < screen_size.y
-	const float fscreen_size[2] = { convert_float(screen_size.x), convert_float(screen_size.y) };
-	float2 x_bounds = (float2)(fscreen_size[0], 0.0f);
-	float2 y_bounds = (float2)(fscreen_size[1], 0.0f);
-	
-#define viewport_test(coord, axis) ((coord < 0.0f || coord >= fscreen_size[axis]) ? -1.0f : coord)
-#define discard() printf("[%d] -> discard\n", triangle_id); return;
-	
-	float clipxs[9];
-	float clipys[9];
-	for(unsigned int i = 0u; i < 3u; i++) {
-		// { 1, 2 }, { 0, 2 }, { 0, 1 }
-		const unsigned int i0 = (i == 0u ? 1u : 0u);
-		const unsigned int i1 = (i == 2u ? 1u : 2u);
-		
-		const float d = 1.0f / (VV[i0].x * VV[i1].y - VV[i0].y * VV[i1].x);
-		clipxs[i] = (triangle_cam_relation[i] < 0.0f ? -1.0f :
-					 (VV[i0].y * VV[i1].z - VV[i0].z * VV[i1].y) * d);
-		clipys[i] = (triangle_cam_relation[i] < 0.0f ? -1.0f :
-					 (VV[i0].z * VV[i1].x - VV[i0].x * VV[i1].z) * d);
-		clipxs[i] = viewport_test(clipxs[i], 0);
-		clipys[i] = viewport_test(clipys[i], 1);
-		
-		if(clipxs[i] >= 0.0f && clipys[i] >= 0.0f) {
-			x_bounds.x = min(x_bounds.x, clipxs[i]);
-			x_bounds.y = max(x_bounds.y, clipxs[i]);
-			y_bounds.x = min(y_bounds.x, clipys[i]);
-			y_bounds.y = max(y_bounds.y, clipys[i]);
-			passing_indices[i]++;
-			passing_direct++;
-			clipping_coords[i] = (float2)(clipxs[i], clipys[i]);
-		}
-		
-		//
-		clipxs[i+3] = -VV[i].z / VV[i].x;
-		clipys[i+3] = -VV[i].z / VV[i].y;
-		clipxs[i+3] = viewport_test(clipxs[i+3], 0);
-		clipys[i+3] = viewport_test(clipys[i+3], 1);
-		
-		clipxs[i+6] = -(VV[i].z + VV[i].y * fscreen_size[1]) / VV[i].x;
-		clipys[i+6] = -(VV[i].z + VV[i].x * fscreen_size[0]) / VV[i].y;
-		clipxs[i+6] = viewport_test(clipxs[i+6], 0);
-		clipys[i+6] = viewport_test(clipys[i+6], 1);
-	}
-	
-	// check remaining clip coordinates
-	for(unsigned int i = 0; i < 3; i++) {
-		const float cx = clipxs[i + 3];
-		const float cy = clipys[i + 3];
-		const float cmx = clipxs[i + 6];
-		const float cmy = clipys[i + 6];
-		
-		const unsigned int edge_0 = (i + 1) % 3;
-		const unsigned int edge_1 = (i + 2) % 3;
-		
-		if(cx >= 0.0f) {
-			float val1 = cx * VV[edge_0].x + VV[edge_0].z;
-			float val2 = cx * VV[edge_1].x + VV[edge_1].z;
-			if(val1 < 0.0f && val2 < 0.0f) {
-				x_bounds.x = min(x_bounds.x, cx);
-				x_bounds.y = max(x_bounds.y, cx);
-				y_bounds.x = 0.0f;
-				passing_indices[i]++;
-				clipped_count++;
-				clipping_coords[i] = (float2)(cx, 0.0f);
-			}
-		}
-		if(cy >= 0.0f) {
-			float val1 = cy * VV[edge_0].y + VV[edge_0].z;
-			float val2 = cy * VV[edge_1].y + VV[edge_1].z;
-			if(val1 < 0.0f && val2 < 0.0f) {
-				y_bounds.x = min(y_bounds.x, cy);
-				y_bounds.y = max(y_bounds.y, cy);
-				x_bounds.x = 0.0f;
-				passing_indices[i]++;
-				clipped_count++;
-				clipping_coords[i] = (float2)(0.0f, cy);
-			}
-		}
-		if(cmx >= 0.0f) {
-			float val1 = cmx * VV[edge_0].x + fscreen_size[1] * VV[edge_0].y + VV[edge_0].z;
-			float val2 = cmx * VV[edge_1].x + fscreen_size[1] * VV[edge_1].y + VV[edge_1].z;
-			if(val1 < 0.0f && val2 < 0.0f) {
-				x_bounds.x = min(x_bounds.x, cmx);
-				x_bounds.y = max(x_bounds.y, cmx);
-				y_bounds.y = fscreen_size[1];
-				passing_indices[i]++;
-				clipped_count++;
-				clipping_coords[i] = (float2)(cmx, 0.0f);
-			}
-		}
-		if(cmy >= 0.0f) {
-			float val1 = fscreen_size[0] * VV[edge_0].x + cmy * VV[edge_0].y + VV[edge_0].z;
-			float val2 = fscreen_size[0] * VV[edge_1].x + cmy * VV[edge_1].y + VV[edge_1].z;
-			if(val1 < 0.0f && val2 < 0.0f) {
-				y_bounds.x = min(y_bounds.x, cmy);
-				y_bounds.y = max(y_bounds.y, cmy);
-				x_bounds.y = fscreen_size[0];
-				passing_indices[i]++;
-				clipped_count++;
-				clipping_coords[i] = (float2)(0.0f, cmy);
-			}
-		}
-	}
-	
-	// TODO: rounding should depend on sampling mode (more samples -> use floor/ceil again)
-#if !defined(APPLE_ARM) && 0
-	const uint2 x_bounds_u = convert_uint2(clamp((int2)(round(x_bounds.x), round(x_bounds.y)),
-												 0, screen_size.x - 1)); // valid pixel pos: [0, screen_size.x-1]
-	const uint2 y_bounds_u = convert_uint2(clamp((int2)(round(y_bounds.x), round(y_bounds.y)),
-												 0, screen_size.y - 1));
-#else
-	// valid pixel pos: [0, screen_size.x-1]
-	const uint2 x_bounds_u = convert_uint2((int2)(clamp((int)round(x_bounds.x), 0, (int)screen_size.x - 1),
-												  clamp((int)round(x_bounds.y), 0, (int)screen_size.x - 1)));
-	const uint2 y_bounds_u = convert_uint2((int2)(clamp((int)round(y_bounds.x), 0, (int)screen_size.y - 1),
-												  clamp((int)round(y_bounds.y), 0, (int)screen_size.y - 1)));
-#endif
-	
-	/*printf("[%d] (%u %u) (%u %u)\n",
-		   triangle_id,
-		   x_bounds_u.x, x_bounds_u.y,
-		   y_bounds_u.x, y_bounds_u.y);
-	
-	printf("[%d] passing: %u // %u // %u %u %u\n",
-		   triangle_id, passing_direct, clipped_count,
-		   passing_indices[0], passing_indices[1], passing_indices[2]);*/
-	
-	/*float area = 0.0f;
-	if(passing_indices[0] > 0 && passing_indices[1] > 0 && passing_indices[2] > 0) {
-		// TODO: actually: if any edge must be clipped -> triangle area has to be big enough
-		// otherwise, there wouldn't be any clipping necessary
-		// -> only compute area if all 3 edges/vertices pass directly
-		// however: all edges must be valid in the first place! (check precision?)
-		const float2 e0 = clipping_coords[1] - clipping_coords[0];
-		const float2 e1 = clipping_coords[2] - clipping_coords[0];
-		area = 0.5f * (e0.x * e1.y - e0.y * e1.x);
-		//printf("[%d] %f %f -> %f %f\n", triangle_id, e0.x, e0.y, e1.x, e1.y);
-		if(area < 0.5f) { // half sample size (TODO: -> check if between sample points)
-			//discard();
-		}
-		//printf("[%d] area: %f\n", triangle_id, area);
-	}*/
-	
-	// TODO: determine triangle backside
+						  const unsigned int bin_count_lin,
+						  const unsigned int batch_count,
+						  const unsigned int triangle_count,
+						  
+						  global const transformed_data* transformed_buffer,
+						  const uint2 framebuffer_size
+						  ) {
+	const unsigned int local_id = get_local_id(0);
 	
 	// TODO: already read depth from framebuffer in here -> cull if greater depth
 	
-	// insert triangle id intro appropriate queues/bins
-	const uint2 x_bins = x_bounds_u / tile_size.x;
-	const uint2 y_bins = y_bounds_u / tile_size.y;
-	const unsigned int queue_size = triangle_count; // TODO: only true for now
+	// -> each work-item: 1 bin + private mem queue (gpu version) or 1 batch + private mem queue (cpu version)
+	// -> iterate over 256 triangles (batch size: 256)
+	// -> store loop index in priv mem queue (-> only one byte per triangle)
+	// -> 2 vstore16 calls with 2 ulong16s (256 bytes)
 	
-	for(unsigned int y_bin = y_bins.x; y_bin <= y_bins.y; y_bin++) {
-		for(unsigned int x_bin = x_bins.x; x_bin <= x_bins.y; x_bin++) {
-			const unsigned int bin_index = y_bin * bin_count.x + x_bin;
-			const unsigned int queue_index = atomic_inc(&queue_sizes_buffer[bin_index]);
-			const unsigned int queue_offset = (queue_size * bin_index) + queue_index;
-			triangle_queues_buffer[queue_offset] = triangle_id;
+#if !defined(CPU)
+	// GPU version
+	
+	const unsigned int global_id = get_global_id(0);
+	const unsigned int bin_idx = local_id;
+	const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x);
+	
+	// init counter
+	if(global_id == 0) {
+		*bin_distribution_counter = 0;
+	}
+	barrier(CLK_GLOBAL_MEM_FENCE);
+	
+	// note: opencl does not require this to be aligned, but certain implementations do
+	uchar triangle_queue[BATCH_SIZE] __attribute__((aligned(8)));
+	local float4 triangle_bounds[BATCH_SIZE] __attribute__((aligned(16))); // correctly align, so async copy will work
+	local unsigned int batch_idx;
+	const uint2 framebuffer_clamp_size = framebuffer_size - 1u;
+	for(;;) {
+		// get next batch index
+		// note that this barrier is necessary, because not all work-items are running this kernel synchronously
+		barrier(CLK_LOCAL_MEM_FENCE);
+		if(local_id == 0) {
+			// only done once per work-group (-> only work-item #0)
+			batch_idx = atomic_inc(bin_distribution_counter);
+		}
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
+		// check if all batches have been processed
+		if(batch_idx >= batch_count) {
+			return;
+		}
+		
+		unsigned int triangles_in_queue = 0;
+		// read input triangle bounds into shared memory (across work-group)
+		const unsigned int triangle_id_offset = batch_idx * BATCH_SIZE;
+		event_t event = async_work_group_strided_copy(&triangle_bounds[0],
+													  (global const float4*)&transformed_buffer[triangle_id_offset].data[12],
+													  BATCH_SIZE, 4, 0);
+		wait_group_events(1, &event);
+		
+		for(unsigned int triangle_id = triangle_id_offset, idx = 0,
+			last_triangle_id = min(triangle_id_offset + BATCH_SIZE, triangle_count);
+			triangle_id < last_triangle_id; triangle_id++, idx++) {
+			// cull:
+			if(triangle_bounds[idx].x == INFINITY) continue;
+			
+			const uint2 x_bounds = (uint2)(convert_uint(triangle_bounds[idx].x),
+										   convert_uint(triangle_bounds[idx].y));
+			const uint2 y_bounds = (uint2)(convert_uint(triangle_bounds[idx].z),
+										   convert_uint(triangle_bounds[idx].w));
+#else
+	// CPU version (no barriers, no group-waiting, no local-mem)
+	
+	const unsigned int local_size = get_local_size(0);
+	const unsigned int bin_idx = get_group_id(0);
+	const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x);
+	
+	// note: opencl does not require this to be aligned, but certain implementations do
+	uchar triangle_queue[BATCH_SIZE] __attribute__((aligned(8)));
+	const uint2 framebuffer_clamp_size = framebuffer_size - 1u;
+	for(unsigned int batch_idx = local_id; batch_idx < batch_count; batch_idx += local_size) {
+		unsigned int triangles_in_queue = 0;
+		const unsigned int triangle_id_offset = batch_idx * BATCH_SIZE;
+		for(unsigned int triangle_id = triangle_id_offset, idx = 0,
+			last_triangle_id = min(triangle_id_offset + BATCH_SIZE, triangle_count);
+			triangle_id < last_triangle_id; triangle_id++, idx++) {
+			// cull:
+			if(transformed_buffer[triangle_id].data[12] == INFINITY) continue;
+			
+			const uint2 x_bounds = (uint2)(convert_uint(transformed_buffer[triangle_id].data[12]),
+										   convert_uint(transformed_buffer[triangle_id].data[13]));
+			const uint2 y_bounds = (uint2)(convert_uint(transformed_buffer[triangle_id].data[14]),
+										   convert_uint(transformed_buffer[triangle_id].data[15]));
+			
+#endif
+			
+			// valid pixel pos: [0, framebuffer_size - 1]
+			const uint2 x_bounds_u = (uint2)(clamp(x_bounds.x, 0u, framebuffer_clamp_size.x),
+											 clamp(x_bounds.y, 0u, framebuffer_clamp_size.x));
+			const uint2 y_bounds_u = (uint2)(clamp(y_bounds.x, 0u, framebuffer_clamp_size.y),
+											 clamp(y_bounds.y, 0u, framebuffer_clamp_size.y));
+			
+			// insert triangle id intro appropriate queues/bins
+			const uint2 x_bins = x_bounds_u / BIN_SIZE;
+			const uint2 y_bins = y_bounds_u / BIN_SIZE;
+			
+			if(bin_location.y >= y_bins.x && bin_location.y <= y_bins.y &&
+			   bin_location.x >= x_bins.x && bin_location.x <= x_bins.y) {
+				triangle_queue[triangles_in_queue] = idx;
+				triangles_in_queue++;
+			}
+		}
+		
+		if(triangles_in_queue == 0) {
+			// flag empty queue with 0xFFFF
+			triangle_queue[0] = 0xFF;
+			triangle_queue[1] = 0xFF;
+		}
+		else if(triangles_in_queue != 256) {
+			// set end of queue byte (0x00)
+			triangle_queue[triangles_in_queue] = 0x00;
+			triangles_in_queue++;
+		}
+		
+		// this stores batches for each bin sequentially
+		const ulong16* __attribute__((aligned(8))) queue_data_ptr = (const ulong16*)&triangle_queue[0];
+		const size_t offset = (bin_idx * batch_count + batch_idx) * (BATCH_SIZE / 128u);
+		vstore16(*queue_data_ptr, offset, bin_queues);
+		if(triangles_in_queue > 128u) {
+			// only necessary, if there are more than 128 triangles in the bin queue
+			vstore16(*(queue_data_ptr+1), offset+1, bin_queues);
 		}
 	}
 }

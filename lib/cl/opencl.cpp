@@ -490,7 +490,6 @@ opencl::~opencl() {
 		delete cl_device;
 	}
 	devices.clear();
-	internal_devices.clear();
 	
 	if(context != nullptr) delete context;
 	
@@ -503,6 +502,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		platform = new cl::Platform();
 		platform->get(&platforms);
 		
+		vector<cl::Device> internal_devices;
 		if(platforms.size() > platform_index) {
 			platforms[platform_index].getDevices(CL_DEVICE_TYPE_ALL, &internal_devices);
 		}
@@ -518,13 +518,21 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 #if defined(__APPLE__)
 		platform_vendor = PLATFORM_VENDOR::APPLE;
 		
+		// if gl sharing is enabled, but a device restriction is specified that doesn't contain "GPU",
+		// an opengl sharegroup (gl sharing) may not be used, since this would add gpu devices to the context
+		bool apple_gl_sharing = gl_sharing;
+		if(!device_restriction.empty() && device_restriction.count("GPU") == 0) {
+			oclr_error("opencl device restriction set to disallow GPUs, but gl sharing is enabled - disabling gl sharing!");
+			apple_gl_sharing = false;
+		}
+		
 		cl_context_properties cl_properties[] {
 			CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[platform_index](),
-			gl_sharing ? CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE : 0,
+			apple_gl_sharing ? CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE : 0,
 #if !defined(OCLRASTER_IOS)
-			gl_sharing ? (cl_context_properties)CGLGetShareGroup(CGLGetCurrentContext()) : 0,
+			apple_gl_sharing ? (cl_context_properties)CGLGetShareGroup(CGLGetCurrentContext()) : 0,
 #else
-			gl_sharing ? (cl_context_properties)ios_helper::get_eagl_sharegroup() : 0,
+			apple_gl_sharing ? (cl_context_properties)ios_helper::get_eagl_sharegroup() : 0,
 #endif
 			0
 		};
@@ -539,9 +547,11 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		// Otherwise CL_INVALID_DEVICE will be returned."
 		// -> create a vector of all cpu devices and create the context
 		vector<cl::Device> cpu_devices;
-		for(const auto& device : internal_devices) {
-			if(device.getInfo<CL_DEVICE_TYPE>() == CL_DEVICE_TYPE_CPU) {
-				cpu_devices.emplace_back(device);
+		if(device_restriction.empty() || device_restriction.count("CPU") > 0) {
+			for(const auto& device : internal_devices) {
+				if(device.getInfo<CL_DEVICE_TYPE>() == CL_DEVICE_TYPE_CPU) {
+					cpu_devices.emplace_back(device);
+				}
 			}
 		}
 		context = new cl::Context(cpu_devices, cl_properties, clLogMessagesToStdoutAPPLE, nullptr, &ierr);
@@ -668,11 +678,12 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			}
 			
 			opencl::device_object* device = new opencl::device_object();
-			device->device = &internal_device;
+			device->device = internal_device;
 			device->internal_type = internal_device.getInfo<CL_DEVICE_TYPE>();
 			device->units = internal_device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
 			device->clock = internal_device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>();
 			device->mem_size = internal_device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
+			device->local_mem_size = internal_device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>();
 			device->name = internal_device.getInfo<CL_DEVICE_NAME>();
 			device->vendor = internal_device.getInfo<CL_DEVICE_VENDOR>();
 			device->version = internal_device.getInfo<CL_DEVICE_VERSION>();
@@ -694,10 +705,14 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			oclr_msg("max mem alloc: %u bytes / %u MB",
 					 device->max_alloc,
 					 device->max_alloc / 1024ULL / 1024ULL);
+			oclr_msg("mem size: %u MB (global), %u KB (local)",
+					 device->mem_size / 1024ULL / 1024ULL,
+					 device->local_mem_size / 1024ULL);
 			oclr_msg("mem base address alignment: %u", internal_device.getInfo<CL_DEVICE_MEM_BASE_ADDR_ALIGN>());
 			oclr_msg("min data type alignment size: %u", internal_device.getInfo<CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE>());
 			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());
 			oclr_msg("max_wi_sizes: %v", device->max_wi_sizes);
+			oclr_msg("max_wg_size: %u", device->max_wg_size);
 #if defined(CL_VERSION_1_2)
 			if(platform_cl_version >= CL_VERSION::CL_1_2) {
 				const unsigned long long int printf_buffer_size = internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>();
@@ -793,6 +808,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 					   device->driver_version,
 					   cl_c_version_str);
 		}
+		internal_devices.clear();
 		
 		// no supported devices found
 		if(devices.empty()) {
@@ -801,7 +817,13 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		
 		// create a (single) command queue for each device
 		for(const auto& device : devices) {
-			queues[device->device] = new cl::CommandQueue(*context, *device->device, 0, &ierr);
+			queues[&device->device] = new cl::CommandQueue(*context, device->device,
+#if !defined(OCLRASTER_PROFILING)
+														   0,
+#else
+														   CL_QUEUE_PROFILING_ENABLE,
+#endif
+														   &ierr);
 		}
 		
 		if(fastest_cpu != nullptr) oclr_debug("fastest CPU device: %s %s (score: %u)", fastest_cpu->vendor.c_str(), fastest_cpu->name.c_str(), fastest_cpu_score);
@@ -824,11 +846,16 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		//const string lsl_str = " -DLOCAL_SIZE_LIMIT="+size_t2string(local_size_limit);
 		
 		internal_kernels = { // first time init:
-			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "bin_rasterize", ""),
+			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "oclraster_bin",
+					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)),
 			make_tuple("CLEAR_COLOR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
-			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DDEPTH_FRAMEBUFFER=1"),
-			make_tuple("CLEAR_COLOR_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DIMAGE_FRAMEBUFFERS=1"),
-			make_tuple("CLEAR_COLOR_DEPTH_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", " -DIMAGE_FRAMEBUFFERS=1 -DDEPTH_FRAMEBUFFER=1"),
+			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
+					   " -DDEPTH_FRAMEBUFFER=1"),
+			make_tuple("CLEAR_COLOR_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
+					   " -DIMAGE_FRAMEBUFFERS=1"),
+			make_tuple("CLEAR_COLOR_DEPTH_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
+					   " -DIMAGE_FRAMEBUFFERS=1 -DDEPTH_FRAMEBUFFER=1"),
 		};
 		
 		load_internal_kernels();
@@ -950,6 +977,11 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 }
 
 weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {
+	if(kernels.count(identifier) != 0) {
+		oclr_error("kernel \"%s\" already exists!", identifier);
+		return kernels[identifier];
+	}
+	
 	oclr_debug("compiling \"%s\" kernel!", identifier);
 	string options = build_options;
 	
@@ -958,11 +990,6 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 	options += " -DOCLRASTER_IMAGE_HEADER_SIZE="+size_t2string(image::header_size());
 	
 	try {
-		if(kernels.count(identifier) != 0) {
-			oclr_error("kernel \"%s\" already exists!", identifier);
-			return kernels[identifier];
-		}
-		
 		if(!additional_options.empty()) {
 			options += (additional_options[0] != ' ' ? " " : "") + additional_options;
 		}
@@ -987,16 +1014,13 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 		
 		// add kernel
 		auto kernel_ptr = make_shared<opencl::kernel_object>();
-		kernels[identifier] = kernel_ptr;
+		kernels.emplace(identifier, kernel_ptr);
 		kernel_ptr->name = identifier;
 		cl::Program::Sources source(1, make_pair(src.c_str(), src.length()));
 		kernel_ptr->program = new cl::Program(*context, source);
 		
 		// compile for each device independently to add device-specific defines
 		for(const auto& device : devices) {
-			vector<cl::Device> cur_device;
-			cur_device.push_back(*device->device);
-			
 			string device_options = "";
 			switch(device->vendor_type) {
 				case VENDOR::NVIDIA:
@@ -1024,8 +1048,9 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 			if((device->internal_type & CL_DEVICE_TYPE_ACCELERATOR) != 0) device_options += " -DACCELERATOR";
 			
 			device_options += " -DPLATFORM_"+platform_vendor_to_str(platform_vendor);
+			device_options += " -DLOCAL_MEM_SIZE="+ull2string(device->local_mem_size);
 			
-			kernel_ptr->program->build(cur_device, (options+device_options).c_str());
+			kernel_ptr->program->build({ device->device }, (options+device_options).c_str());
 		}
 		
 		kernel_ptr->kernel = new cl::Kernel(*kernel_ptr->program, func_name.c_str(), &ierr);
@@ -1042,14 +1067,18 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 			oclr_debug("build log: %s", build_log);
 		}*/
 		
-		/*size_t device_num = 0;
-		for(const auto& device : internal_devices) {
-			oclr_log("%s (dev #%u): kernel local memory: %u", identifier, device_num,
-					kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device));
+		size_t device_num = 0;
+		for(const auto& device : devices) {
 			oclr_log("%s (dev #%u): work group size: %u", identifier, device_num,
-					kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device));
+					 kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device->device));
+			oclr_log("%s (dev #%u): kernel preferred wg size multiple: %u", identifier, device_num,
+					 kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(device->device));
+			oclr_log("%s (dev #%u): kernel local memory: %u", identifier, device_num,
+					 kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device->device));
+			oclr_log("%s (dev #%u): kernel private memory: %u", identifier, device_num,
+					 kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_PRIVATE_MEM_SIZE>(device->device));
 			device_num++;
-		}*/
+		}
 	}
 	__HANDLE_CL_EXCEPTION_START("add_kernel")
 		//
@@ -1066,16 +1095,16 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 		}
 
 		// print out build log and build options
-		for(const auto& internal_device : internal_devices) {
+		for(const auto& device : devices) {
 			char build_log[CLINFO_STR_SIZE];
 			memset(build_log, 0, CLINFO_STR_SIZE);
-			kernel_ptr->program->getBuildInfo(internal_device, CL_PROGRAM_BUILD_LOG, &build_log);
+			kernel_ptr->program->getBuildInfo(device->device, CL_PROGRAM_BUILD_LOG, &build_log);
 			oclr_error("build log (%s): %s", identifier, build_log);
 			
 			// print out current build options
 			char buildoptions[CLINFO_STR_SIZE];
 			memset(buildoptions, 0, CLINFO_STR_SIZE);
-			kernel_ptr->program->getBuildInfo(internal_device, CL_PROGRAM_BUILD_OPTIONS, &buildoptions);
+			kernel_ptr->program->getBuildInfo(device->device, CL_PROGRAM_BUILD_OPTIONS, &buildoptions);
 			oclr_debug("build options: %s", buildoptions);
 		}
 		
@@ -1086,7 +1115,9 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 		//log_program_binary(kernels[identifier], options);
 		return null_kernel_object;
 	__HANDLE_CL_EXCEPTION_END
-	//log_program_binary(kernels[identifier], options);
+	if(oclraster::get_log_binaries()) {
+		log_program_binary(kernels.at(identifier));
+	}
 	return kernels[identifier];
 }
 
@@ -1140,16 +1171,16 @@ void opencl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) 
 				if(device->vendor_type != VENDOR::UNKNOWN) {
 					string file_name = kernel_name + string("_") + size_t2string(device_num);
 					if(device->vendor_type == VENDOR::NVIDIA) {
-						file_name += ".ptx";
+						file_name += ".cubin";
 					}
 					else if(device->vendor_type == VENDOR::INTEL || device->vendor_type == VENDOR::AMD) {
-						file_name += ".asm";
+						file_name += ".bin";
 					}
 					else {
 						file_name += ".bin";
 					}
 					
-					fstream bin_file(file_name.c_str(), fstream::out | fstream::binary);
+					fstream bin_file(file_name.c_str(), fstream::out | fstream::binary | fstream::trunc);
 					if(!bin_file.is_open()) {
 						oclr_error("couldn't save cl-binary file \"%s\"!", file_name.c_str());
 						return;
@@ -1160,8 +1191,41 @@ void opencl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) 
 					bin_file.close();
 					
 #if defined(__APPLE__)
-					// this is a real elf binary on 10.7 now ...
-					//system(("plutil -convert xml1 "+file_name).c_str());
+					// on os x 10.7+, the kernel binary is packed inside a binary plist
+					// -> convert to text (xml)
+					// -> extract binary base64 string and convert
+					core::system("plutil -convert xml1 "+file_name);
+					const string binary_xml { file_io::file_to_string(file_name) };
+					const char xml_binary_start[] { "<key>clBinaryData</key>\n\t<data>" };
+					const char xml_binary_end[] { "</data>" };
+					const auto start_pos = binary_xml.find(xml_binary_start);
+					const auto end_pos = binary_xml.find(xml_binary_end, start_pos);
+					if(start_pos != string::npos && end_pos != string::npos) {
+						const auto base64_binary_start = start_pos + sizeof(xml_binary_start);
+						const string base64_binary { binary_xml.substr(base64_binary_start,
+																	   end_pos - base64_binary_start) };
+						fstream base64_file(file_name+".b64", fstream::out | fstream::binary | fstream::trunc);
+						base64_file.write(base64_binary.c_str(), base64_binary.size());
+						base64_file.flush();
+						base64_file.close();
+						core::system("base64 -D -i "+file_name+".b64 -o "+file_name);
+						core::system("rm "+file_name+".b64");
+					}
+					
+					// for x86: otool -tvVQch outfile
+					if((device->vendor_type == VENDOR::INTEL || device->vendor_type == VENDOR::AMD) &&
+					   device->type >= DEVICE_TYPE::CPU0 && device->type <= DEVICE_TYPE::CPU255) {
+						core::system("otool -tvVQch "+file_name+" > "+file_name+".asm");
+					}
+					// for nvidia: strip first 12 bytes and cuobjdump -elf -sort -sass outfile
+					else if(device->vendor_type == VENDOR::NVIDIA) {
+						const string elf_data { file_io::file_to_string(file_name) };
+						fstream elf_file(file_name, fstream::out | fstream::binary | fstream::trunc);
+						elf_file.write(elf_data.c_str()+12, elf_data.size()-12);
+						elf_file.flush();
+						elf_file.close();
+						core::system("cuobjdump -elf -sort -sass "+file_name+" > "+file_name+".asm");
+					}
 #endif
 				}
 			}
@@ -1459,9 +1523,9 @@ void opencl::write_buffer(opencl::buffer_object* buffer_obj, const void* src, co
 	}
 	
 	try {
-		queues[active_device->device]->enqueueWriteBuffer(*buffer_obj->buffer,
-														  ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) != BUFFER_FLAG::NONE),
-														  write_offset, write_size, src);
+		queues[&active_device->device]->enqueueWriteBuffer(*buffer_obj->buffer,
+														   ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) != BUFFER_FLAG::NONE),
+														   write_offset, write_size, src);
 	}
 	__HANDLE_CL_EXCEPTION("write_buffer")
 }
@@ -1470,18 +1534,18 @@ void opencl::write_image2d(opencl::buffer_object* buffer_obj, const void* src, s
 	try {
 		size3 origin3(origin.x, origin.y, 0); // origin z must be 0 for 2d images
 		size3 region3(region.x, region.y, 1); // depth must be 1 for 2d images
-		queues[active_device->device]->enqueueWriteImage(*buffer_obj->image_buffer,
-														 ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) != BUFFER_FLAG::NONE),
-														 (cl::size_t<3>&)origin3, (cl::size_t<3>&)region3, 0, 0, (void*)src);
+		queues[&active_device->device]->enqueueWriteImage(*buffer_obj->image_buffer,
+														  ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) != BUFFER_FLAG::NONE),
+														  (cl::size_t<3>&)origin3, (cl::size_t<3>&)region3, 0, 0, (void*)src);
 	}
 	__HANDLE_CL_EXCEPTION("write_image2d")
 }
 
 void opencl::write_image3d(opencl::buffer_object* buffer_obj, const void* src, size3 origin, size3 region) {
 	try {
-		queues[active_device->device]->enqueueWriteImage(*buffer_obj->image_buffer,
-														 ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) != BUFFER_FLAG::NONE),
-														 (cl::size_t<3>&)origin, (cl::size_t<3>&)region, 0, 0, (void*)src);
+		queues[&active_device->device]->enqueueWriteImage(*buffer_obj->image_buffer,
+														  ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) != BUFFER_FLAG::NONE),
+														  (cl::size_t<3>&)origin, (cl::size_t<3>&)region, 0, 0, (void*)src);
 	}
 	__HANDLE_CL_EXCEPTION("write_buffer")
 }
@@ -1489,9 +1553,9 @@ void opencl::write_image3d(opencl::buffer_object* buffer_obj, const void* src, s
 void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj, const size_t size_) {
 	try {
 		const size_t size = (size_ == 0 ? buffer_obj->size : size_);
-		queues[active_device->device]->enqueueReadBuffer(*buffer_obj->buffer,
-														 ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) != BUFFER_FLAG::NONE),
-														 0, size, dst);
+		queues[&active_device->device]->enqueueReadBuffer(*buffer_obj->buffer,
+														  ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) != BUFFER_FLAG::NONE),
+														  0, size, dst);
 	}
 	__HANDLE_CL_EXCEPTION("read_buffer")
 }
@@ -1514,7 +1578,7 @@ void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 		}
 		if(!all_set) return;
 		
-		cl::CommandQueue* cmd_queue = queues[active_device->device];
+		cl::CommandQueue* cmd_queue = queues[&active_device->device];
 		
 		vector<cl::Memory> gl_objects;
 		for(const auto& buffer_arg : kernel_ptr->buffer_args) {
@@ -1549,8 +1613,31 @@ void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 			functor->second.local_ = kernel_ptr->local;
 		}
 		
+#if !defined(OCLRASTER_PROFILING)
 		functor->second();
-		//functor->second().wait();
+#else
+		auto evt = functor->second();
+		evt.wait();
+		const auto prof_queued = evt.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+		const auto prof_submit = evt.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>();
+		const auto prof_start = evt.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+		const auto prof_end = evt.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+		const auto ns_to_ms = [](const unsigned long long int& t) {
+			return ((double)t) / 1000000.0;
+		};
+		oclr_msg("profiling %s:\n"
+				 "\t%u (queued->submit), %u (submit->start), %u (start->end), %u (submit->end)\n"
+				 "\t%ums (queued->submit), %ums (submit->start), %ums (start->end), %ums (submit->end)",
+				 kernel_ptr->name,
+				 prof_submit - prof_queued,
+				 prof_start - prof_submit,
+				 prof_end - prof_start,
+				 prof_end - prof_submit,
+				 ns_to_ms(prof_submit - prof_queued),
+				 ns_to_ms(prof_start - prof_submit),
+				 ns_to_ms(prof_end - prof_start),
+				 ns_to_ms(prof_end - prof_submit));
+#endif
 		
 		for(const auto& buffer_arg : kernel_ptr->buffer_args) {
 			if(buffer_arg == nullptr) continue;
@@ -1576,17 +1663,17 @@ void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 
 void opencl::finish() {
 	if(active_device == nullptr) return;
-	queues[active_device->device]->finish();
+	queues[&active_device->device]->finish();
 }
 
 void opencl::flush() {
 	if(active_device == nullptr) return;
-	queues[active_device->device]->flush();
+	queues[&active_device->device]->flush();
 }
 
 void opencl::barrier() {
 	if(active_device == nullptr) return;
-	queues[active_device->device]->enqueueBarrier();
+	queues[&active_device->device]->enqueueBarrier();
 }
 
 void opencl::activate_context() {
@@ -1655,14 +1742,14 @@ void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buf
 		
 		void* __attribute__((aligned(sizeof(cl_long16)))) map_ptr = nullptr;
 		if(buffer_obj->buffer != nullptr) {
-			map_ptr = queues[active_device->device]->enqueueMapBuffer(*buffer_obj->buffer, blocking, map_flags, 0, buffer_obj->size);
+			map_ptr = queues[&active_device->device]->enqueueMapBuffer(*buffer_obj->buffer, blocking, map_flags, 0, buffer_obj->size);
 		}
 		else if(buffer_obj->image_buffer != nullptr) {
 			size_t row_pitch = 0, slice_pitch = 0;
-			map_ptr = queues[active_device->device]->enqueueMapImage(*buffer_obj->image_buffer, blocking, map_flags,
-																	 (cl::size_t<3>&)buffer_obj->origin,
-																	 (cl::size_t<3>&)buffer_obj->region,
-																	 &row_pitch, &slice_pitch);
+			map_ptr = queues[&active_device->device]->enqueueMapImage(*buffer_obj->image_buffer, blocking, map_flags,
+																	  (cl::size_t<3>&)buffer_obj->origin,
+																	  (cl::size_t<3>&)buffer_obj->region,
+																	  &row_pitch, &slice_pitch);
 		}
 		else {
 			oclr_error("unknown buffer object!");
@@ -1683,7 +1770,7 @@ void opencl::unmap_buffer(opencl::buffer_object* buffer_obj, void* map_ptr) {
 			oclr_error("unknown buffer object!");
 			return;
 		}
-		queues[active_device->device]->enqueueUnmapMemObject(*(cl::Memory*)buffer_ptr, map_ptr);
+		queues[&active_device->device]->enqueueUnmapMemObject(*(cl::Memory*)buffer_ptr, map_ptr);
 	}
 	__HANDLE_CL_EXCEPTION("unmap_buffer")
 }
@@ -1694,10 +1781,12 @@ void opencl::_fill_buffer(buffer_object* buffer_obj,
 						  const size_t& pattern_size,
 						  const size_t offset,
 						  const size_t size_) {
+	// TODO: on os x: clEnqueueFillBuffer spams the console on every call (unusable as of 10.8.3)
+	// also: insanely slow (slower than copying a zero buffer)
 	try {
 		// TODO: get 1.2 cl.hpp
 		const size_t size = (size_ == 0 ? (buffer_obj->size / pattern_size) : size_);
-		cl::CommandQueue* cmd_queue = queues[active_device->device];
+		cl::CommandQueue* cmd_queue = queues[&active_device->device];
 		const cl_int err = clEnqueueFillBuffer((*cmd_queue)(), (*buffer_obj->buffer)(),
 											   pattern, pattern_size, offset, size, 0, nullptr, nullptr);
 		if(err != CL_SUCCESS) {
@@ -1719,7 +1808,7 @@ size_t opencl::get_kernel_work_group_size() const {
 	if(cur_kernel == nullptr || active_device == nullptr) return 0;
 	
 	try {
-		return cur_kernel->kernel->getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(*active_device->device);
+		return cur_kernel->kernel->getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(active_device->device);
 	}
 	__HANDLE_CL_EXCEPTION("get_kernel_work_group_size")
 	return 0;
@@ -1730,7 +1819,7 @@ void opencl::acquire_gl_object(buffer_object* gl_buffer_obj) {
 	gl_objects.push_back(*(gl_buffer_obj->buffer != nullptr ?
 						   (cl::Memory*)gl_buffer_obj->buffer :
 						   (cl::Memory*)gl_buffer_obj->image_buffer));
-	queues[active_device->device]->enqueueAcquireGLObjects(&gl_objects);
+	queues[&active_device->device]->enqueueAcquireGLObjects(&gl_objects);
 }
 
 void opencl::release_gl_object(buffer_object* gl_buffer_obj) {
@@ -1738,7 +1827,7 @@ void opencl::release_gl_object(buffer_object* gl_buffer_obj) {
 	gl_objects.push_back(*(gl_buffer_obj->buffer != nullptr ?
 						   (cl::Memory*)gl_buffer_obj->buffer :
 						   (cl::Memory*)gl_buffer_obj->image_buffer));
-	queues[active_device->device]->enqueueReleaseGLObjects(&gl_objects);
+	queues[&active_device->device]->enqueueReleaseGLObjects(&gl_objects);
 }
 
 void opencl::set_active_device(const opencl_base::DEVICE_TYPE& dev) {

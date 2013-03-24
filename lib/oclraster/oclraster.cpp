@@ -69,7 +69,7 @@ event::handler* oclraster::event_handler_fnctr = nullptr;
 
 atomic<bool> oclraster::reload_kernels_flag { false };
 
-#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+#if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 // from transform_program.cpp and rasterization_program.cpp for debugging purposes:
 extern string template_transform_program;
 extern string template_rasterization_program;
@@ -218,6 +218,7 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 		config.opencl_platform = config_doc.get<string>("config.opencl.platform", "0");
 		config.clear_cache = config_doc.get<bool>("config.opencl.clear_cache", false);
 		config.gl_sharing = config_doc.get<bool>("config.opencl.gl_sharing", true);
+		config.log_binaries = config_doc.get<bool>("config.opencl.log_binaries", false);
 		const auto cl_dev_tokens(core::tokenize(config_doc.get<string>("config.opencl.restrict", ""), ','));
 		for(const auto& dev_token : cl_dev_tokens) {
 			if(dev_token == "") continue;
@@ -1028,7 +1029,7 @@ bool oclraster::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 		resize_window();
 		return true;
 	}
-#if defined(DEBUG) && defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+#if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 	else if(type == EVENT_TYPE::KERNEL_RELOAD) {
 		template_transform_program = file_io::file_to_string(data_path("kernels/template_transform_program.cl"));
 		if(template_transform_program == "") {
@@ -1140,4 +1141,8 @@ const float& oclraster::get_upscaling() {
 
 bool oclraster::get_gl_sharing() {
 	return config.gl_sharing;
+}
+
+bool oclraster::get_log_binaries() {
+	return config.log_binaries;
 }

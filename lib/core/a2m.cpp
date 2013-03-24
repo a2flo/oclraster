@@ -253,3 +253,36 @@ const opencl::buffer_object& a2m::get_index_buffer(const size_t& sub_object) con
 unsigned int a2m::get_index_count(const unsigned int& sub_object) const {
 	return index_count[sub_object];
 }
+
+void a2m::flip_faces() {
+	for(unsigned int i = 0; i < object_count; i++) {
+		for(unsigned int j = 0; j < index_count[i]; j++) {
+			indices[i][j].set(indices[i][j].z, indices[i][j].y, indices[i][j].x);
+		}
+	}
+	for(unsigned int i = 0; i < vertex_count; i++) {
+		normals[i] *= -1.0f;
+		binormals[i] *= -1.0f;
+		tangents[i] *= -1.0f;
+	}
+	
+	// update opencl buffers
+	vertex_data* vdata = new vertex_data[vertex_count];
+	for(unsigned int i = 0; i < vertex_count; i++) {
+		vdata[i].vertex = vertices[i];
+		vdata[i].normal = normals[i];
+		vdata[i].binormal = binormals[i];
+		vdata[i].tangent = tangents[i];
+		vdata[i].vertex.w = 1.0f;
+		vdata[i].normal.w = 1.0f;
+		vdata[i].binormal.w = 1.0f;
+		vdata[i].tangent.w = 1.0f;
+		vdata[i].tex_coord = tex_coords[i];
+	}
+	ocl->write_buffer(cl_vertex_buffer, vdata);
+	delete [] vdata;
+	
+	for(unsigned int i = 0; i < object_count; i++) {
+		ocl->write_buffer(cl_index_buffers[i], indices[i]);
+	}
+}

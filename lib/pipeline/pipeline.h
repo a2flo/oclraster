@@ -46,8 +46,8 @@ struct draw_state {
 		unsigned int flags;
 	};
 	
-	// set this to the required size (transformed primitive + attribute data)
-	unsigned int transformed_primitive_size = 3 * sizeof(float3);
+	// NOTE: this is just for the internal transformed buffer
+	const unsigned int transformed_primitive_size = 16 * sizeof(float);
 	
 	// framebuffers
 	uint2 framebuffer_size { 1280, 720 };
@@ -65,14 +65,11 @@ struct draw_state {
 	rasterization_program* rasterize_prog = nullptr;
 	
 	//
-	const uint2 tile_size { 32, 32 };
-	opencl_base::buffer_object* triangle_queues_buffer = nullptr;
-	opencl_base::buffer_object* queue_sizes_buffer = nullptr;
-	unsigned int* triangle_queues_buffer_zero = nullptr; // TODO: better method?
-	unsigned int* queue_sizes_buffer_zero = nullptr;
-	unsigned int reserved_triangle_count = 512;
-	uint2 bin_count_xy { 0, 0 };
-	unsigned int bin_count = 0;
+	const uint2 bin_size { OCLRASTER_BIN_SIZE };
+	uint2 bin_count { 1, 1 };
+	const unsigned int batch_size { OCLRASTER_BATCH_SIZE };
+	unsigned int batch_count { 0 };
+	unsigned int triangle_count { 0 };
 };
 
 class pipeline {
@@ -103,9 +100,6 @@ public:
 			  const pair<unsigned int, unsigned int> element_range = { ~0u, ~0u });*/
 	void draw(const pair<unsigned int, unsigned int> element_range);
 	
-	// for debugging and initial development purposes:
-	void _reserve_memory(const unsigned int triangle_count);
-	
 protected:
 	draw_state state;
 	transform_stage transform;
@@ -125,13 +119,6 @@ protected:
 #endif
 	
 	//
-	const uint2 tile_size { 16, 16 };
-	opencl_base::buffer_object* triangle_queues_buffer = nullptr;
-	opencl_base::buffer_object* queue_sizes_buffer = nullptr;
-	unsigned int* triangle_queues_buffer_zero = nullptr;
-	unsigned int* queue_sizes_buffer_zero = nullptr;
-	unsigned int reserved_triangle_count = 512;
-	
 	opencl::buffer_object* info_buffer = nullptr;
 	
 	// event handler

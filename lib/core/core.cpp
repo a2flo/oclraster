@@ -331,6 +331,11 @@ void core::compute_normal_tangent_binormal(const float3& v1, const float3& v2, c
 	(normal * txb > 0.0f) ? tangent *= -1.0f : binormal *= -1.0f;
 }
 
+void core::system(const string& cmd) {
+	string str_dump;
+	core::system(cmd, str_dump);
+}
+
 void core::system(const string& cmd, string& output) {
 	static constexpr size_t buffer_size = 8192;
 	char buffer[buffer_size+1];

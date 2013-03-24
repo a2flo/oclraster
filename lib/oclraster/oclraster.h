@@ -140,6 +140,7 @@ public:
 	
 	// opencl
 	static bool get_gl_sharing();
+	static bool get_log_binaries();
 
 protected:
 	oclraster(const char* callpath_, const char* datapath_) = delete;
@@ -171,6 +172,7 @@ protected:
 		string opencl_platform = "0";
 		bool clear_cache = false;
 		bool gl_sharing = true;
+		bool log_binaries = false;
 		set<string> cl_device_restriction;
 
 		// sdl

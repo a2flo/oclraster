@@ -293,7 +293,9 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_ima
 	}
 	
 	const string identifier = "USER_PROGRAM."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter());
-	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, "_oclraster_program");
+	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, "oclraster_program",
+																 " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+																 " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE));
 	//oclr_msg("%s:\n%s\n", identifier, program_code);
 #if defined(OCLRASTER_DEBUG)
 	if(kernel.use_count() == 0) {
@@ -323,7 +325,9 @@ string oclraster_program::create_entry_function_parameters() const {
 	return entry_function_params;
 }
 
-string oclraster_program::create_user_kernel_parameters(const kernel_image_spec& image_spec, vector<string>& image_decls) const {
+string oclraster_program::create_user_kernel_parameters(const kernel_image_spec& image_spec,
+														vector<string>& image_decls,
+														const bool const_output) const {
 	// creates user buffer dependent kernel parameters string (buffers will be called "user_buffer_#")
 	string kernel_parameters = "";
 	size_t user_buffer_count = 0;
@@ -334,6 +338,7 @@ string oclraster_program::create_user_kernel_parameters(const kernel_image_spec&
 				break;
 			case oclraster_program::STRUCT_TYPE::OUTPUT:
 				kernel_parameters += "global ";
+				if(const_output) kernel_parameters += "const ";
 				break;
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
 				kernel_parameters += "constant ";

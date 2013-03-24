@@ -20,6 +20,12 @@ for arg in "$@"; do
 		"windows")
 			BUILD_ARGS+=" --windows"
 			;;
+		"internal-debug")
+			BUILD_ARGS+=" --internal-debug"
+			;;
+		"cl-profiling")
+			BUILD_ARGS+=" --cl-profiling"
+			;;
 		*)
 			;;
 	esac

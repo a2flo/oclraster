@@ -50,10 +50,6 @@ pipeline::~pipeline() {
 	oclraster::get_event()->remove_event_handler(event_handler_fnctr);
 	
 	destroy_framebuffers();
-	if(triangle_queues_buffer != nullptr) ocl->delete_buffer(triangle_queues_buffer);
-	if(queue_sizes_buffer != nullptr) ocl->delete_buffer(queue_sizes_buffer);
-	if(triangle_queues_buffer_zero != nullptr) delete [] triangle_queues_buffer_zero;
-	if(queue_sizes_buffer_zero != nullptr) delete [] queue_sizes_buffer_zero;
 	
 	if(info_buffer != nullptr) {
 		ocl->delete_buffer(info_buffer);
@@ -106,9 +102,6 @@ void pipeline::create_framebuffers(const uint2& size) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	//
-	_reserve_memory(reserved_triangle_count);
 }
 
 void pipeline::destroy_framebuffers() {
@@ -124,15 +117,6 @@ void pipeline::destroy_framebuffers() {
 }
 
 void pipeline::start() {
-	// TODO: remove this
-	if(triangle_queues_buffer == nullptr ||
-	   queue_sizes_buffer == nullptr ||
-	   triangle_queues_buffer_zero == nullptr ||
-	   queue_sizes_buffer_zero == nullptr) {
-		oclr_error("queue buffers are uninitialized!");
-		return;
-	}
-	
 	// clear framebuffer
 	unsigned int argc = 0;
 	ocl->use_kernel("CLEAR_COLOR_DEPTH_FRAMEBUFFER");
@@ -201,26 +185,30 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	
 	// initialize draw state
 	state.depth_test = 1;
-	state.transformed_primitive_size = 16 * sizeof(float); // NOTE: this is just for the internal transformed buffer
 	state.framebuffer_size = framebuffer_size;
 	state.active_framebuffer = default_framebuffer;
-	//state.tile_size = tile_size; // TODO: dynamic?
-	state.triangle_queues_buffer = triangle_queues_buffer;
-	state.queue_sizes_buffer = queue_sizes_buffer;
-	state.triangle_queues_buffer_zero = triangle_queues_buffer_zero;
-	state.queue_sizes_buffer_zero = queue_sizes_buffer_zero;
-	state.reserved_triangle_count = reserved_triangle_count;
 	state.info_buffer = info_buffer;
+	state.bin_count = {
+		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
+		(state.framebuffer_size.y / state.bin_size.y) + ((state.framebuffer_size.y % state.bin_size.y) != 0 ? 1 : 0)
+	};
+	state.batch_count = ((state.triangle_count / state.batch_size) +
+						 ((state.triangle_count % state.batch_size) != 0 ? 1 : 0));
 	
 	const auto index_count = (element_range.second - element_range.first + 1) * 3;
 	const auto num_elements = element_range.second - element_range.first + 1;
+	state.triangle_count = num_elements;
 	/*const auto num_elements = (element_range.first != ~0u ?
 							   element_range.second - element_range.first + 1 :
 							   ib.index_count / 3);*/
 	
 	// TODO: this should be static!
+	// note: internal transformed buffer size must be a multiple of "batch size" triangles (necessary for the binner)
+	const unsigned int tc_mod_batch_size = (state.triangle_count % OCLRASTER_BATCH_SIZE);
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-												  state.transformed_primitive_size * num_elements);
+												  state.transformed_primitive_size *
+												  (state.triangle_count + (tc_mod_batch_size == 0 ? 0 :
+																		   OCLRASTER_BATCH_SIZE - tc_mod_batch_size)));
 	
 	// clear info buffer
 	const info_buffer_struct empty_info_buffer { 0 };
@@ -239,13 +227,11 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	}
 	
 	// pipeline
-	transform.transform(state, num_elements);
-	const unsigned int post_transform_triangle_count = binning.bin(state);
-	if(post_transform_triangle_count > 0) {
-		// TODO: pipelining/splitting
-		// TODO: actual triangle count (queue size?)
-		rasterization.rasterize(state, post_transform_triangle_count);
-	}
+	transform.transform(state, state.triangle_count);
+	const auto queue_buffer = binning.bin(state);
+	
+	// TODO: pipelining/splitting
+	rasterization.rasterize(state, queue_buffer);
 	
 	//
 	ocl->delete_buffer(state.transformed_buffer);
@@ -255,31 +241,6 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 		ocl->delete_buffer(ut_buffer);
 	}
 	state.user_transformed_buffers.clear();
-}
-
-void pipeline::_reserve_memory(const unsigned int triangle_count) {
-	reserved_triangle_count = triangle_count;
-	
-	// NOTE: this must be called again if the screen size changes!
-	const uint2 bin_count_xy(framebuffer_size.x / tile_size.x + ((framebuffer_size.x % tile_size.x) != 0 ? 1 : 0),
-							 framebuffer_size.y / tile_size.y + ((framebuffer_size.y % tile_size.y) != 0 ? 1 : 0));
-	const size_t bin_count = bin_count_xy.x * bin_count_xy.y;
-	
-	triangle_queues_buffer_zero = new unsigned int[triangle_count * bin_count];
-	queue_sizes_buffer_zero = new unsigned int[bin_count];
-	memset(triangle_queues_buffer_zero, 0, sizeof(unsigned int) * triangle_count * bin_count); // zero init is necessary
-	memset(queue_sizes_buffer_zero, 0, sizeof(unsigned int) * bin_count);
-	// TODO: delete old buffers
-	triangle_queues_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
-												opencl::BUFFER_FLAG::INITIAL_COPY |
-												opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-												sizeof(unsigned int) * triangle_count * bin_count,
-												triangle_queues_buffer_zero);
-	queue_sizes_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
-											opencl::BUFFER_FLAG::INITIAL_COPY |
-											opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-											sizeof(unsigned int) * bin_count,
-											queue_sizes_buffer_zero);
 }
 
 void pipeline::bind_buffer(const string& name, const opencl_base::buffer_object& buffer) {
@@ -306,11 +267,10 @@ void pipeline::bind_framebuffer(framebuffer* fb) {
 	}
 	else state.active_framebuffer = fb;
 	
-	// TODO: handle this differently (better)
+	//
 	const auto new_fb_size = state.active_framebuffer->get_size();
 	if(new_fb_size.x != state.framebuffer_size.x ||
 	   new_fb_size.y != state.framebuffer_size.y) {
-		_reserve_memory(reserved_triangle_count);
 		state.framebuffer_size = new_fb_size;
 	}
 }
