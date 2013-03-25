@@ -146,29 +146,29 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	array<array<image, 3>, material_count> materials {{ // excessive braces are excessive
 		{{
-			image::from_file(oclraster::data_path(texture_names[0]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[1]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[2]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
+			image::from_file(oclraster::data_path(texture_names[0]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[1]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[2]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}},
 		{{
-			image::from_file(oclraster::data_path(texture_names[3]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[4]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[5]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
+			image::from_file(oclraster::data_path(texture_names[3]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[4]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[5]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}},
 		{{
-			image::from_file(oclraster::data_path(texture_names[6]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[7]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[8]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
+			image::from_file(oclraster::data_path(texture_names[6]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[7]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[8]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}},
 		{{
-			image::from_file(oclraster::data_path(texture_names[9]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[10]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[11]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
+			image::from_file(oclraster::data_path(texture_names[9]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[10]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[11]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}},
 		{{
-			image::from_file(oclraster::data_path(texture_names[12]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[13]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[14]+".png"), IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
+			image::from_file(oclraster::data_path(texture_names[12]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[13]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(oclraster::data_path(texture_names[14]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}}
 	}};
 	
@@ -177,7 +177,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	for(size_t i = 0; i < (512*512); i++) {
 		fp_noise_data[i] = core::rand(0.0f, 1.0f);
 	}
-	image* fp_noise = new image(512, 512, IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R, fp_noise_data);
+	image* fp_noise = new image(512, 512, image::BACKING::IMAGE, IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R, fp_noise_data);
 	delete [] fp_noise_data;
 	
 	// init done

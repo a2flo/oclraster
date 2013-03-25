@@ -46,13 +46,13 @@ framebuffer::framebuffer(const unsigned int& width, const unsigned int& height,
 	
 	// create all framebuffer images
 	for(const auto& img_type : image_types) {
-		images.push_back(new image(width, height, img_type.first, img_type.second));
+		images.push_back(new image(width, height, image::BACKING::BUFFER, img_type.first, img_type.second));
 	}
 	if(depth_type.first != IMAGE_TYPE::NONE) {
-		depth_buffer = new image(width, height, depth_type.first, depth_type.second);
+		depth_buffer = new image(width, height, image::BACKING::BUFFER, depth_type.first, depth_type.second);
 	}
 	if(stencil_type.first != IMAGE_TYPE::NONE) {
-		stencil_buffer = new image(width, height, stencil_type.first, stencil_type.second);
+		stencil_buffer = new image(width, height, image::BACKING::BUFFER, stencil_type.first, stencil_type.second);
 	}
 }
 

@@ -26,6 +26,9 @@
 
 shared_ptr<opencl::kernel_object> opencl_base::null_kernel_object { nullptr };
 
+// 2d array: [IMAGE_TYPE][IMAGE_CHANNEL] -> cl::ImageFormat (-> will be (0, 0) if not supported)
+array<array<cl::ImageFormat, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL>, (size_t)IMAGE_TYPE::__MAX_TYPE> internal_image_format_mapping;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // common in all opencl implementations:
 
@@ -337,6 +340,26 @@ void opencl_base::set_manual_gl_sharing(buffer_object* gl_buffer_obj, const bool
 	}
 	
 	gl_buffer_obj->manual_gl_sharing = state;
+}
+
+const vector<cl::ImageFormat>& opencl_base::get_image_formats() const {
+	return img_formats;
+}
+
+cl::ImageFormat opencl_base::get_image_format(const IMAGE_TYPE& data_type, const IMAGE_CHANNEL channel_type) const {
+	const auto data_idx = (typename underlying_type<IMAGE_TYPE>::type)data_type;
+	const auto channel_idx = (typename underlying_type<IMAGE_CHANNEL>::type)channel_type;
+#if defined(OCLRASTER_DEBUG)
+	if(data_idx >= internal_image_format_mapping.size()) {
+		oclr_error("invalid data_type: %u!", data_idx);
+		return cl::ImageFormat(0, 0);
+	}
+	if(channel_idx >= internal_image_format_mapping[data_idx].size()) {
+		oclr_error("invalid channel_type: %u!", channel_idx);
+		return cl::ImageFormat(0, 0);
+	}
+#endif
+	return internal_image_format_mapping[data_idx][channel_idx];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -882,98 +905,138 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		return;
 	}
 	
+	// context has been created, query image format information
+	img_formats.clear();
+	context->getSupportedImageFormats(CL_MEM_READ_WRITE, CL_MEM_OBJECT_IMAGE2D, &img_formats);
+	if(img_formats.empty()) {
+		oclr_error("no supported image formats!");
+	}
+	
 	// un-#if-0 for debug output
 #if 0
-	if(ro_formats.empty() && wo_formats.empty() && rw_formats.empty()) {
-		// context has been created, query image format information
-		context->getSupportedImageFormats(CL_MEM_READ_ONLY, CL_MEM_OBJECT_IMAGE2D, &ro_formats);
-		context->getSupportedImageFormats(CL_MEM_WRITE_ONLY, CL_MEM_OBJECT_IMAGE2D, &wo_formats);
-		context->getSupportedImageFormats(CL_MEM_READ_WRITE, CL_MEM_OBJECT_IMAGE2D, &rw_formats);
-		if(ro_formats.empty() && wo_formats.empty() && rw_formats.empty()) {
-			oclr_error("no supported image formats!");
-		}
-		
-		//
-		array<pair<vector<cl::ImageFormat>&, string>, 3> formats {
-			{
-				{ ro_formats, "read-only" },
-				{ wo_formats, "write-only" },
-				{ rw_formats, "read-write" },
-			}
-		};
-		for(const auto& frmts : formats) {
-			oclr_log("## %s formats:", frmts.second);
-			for(const auto& format : frmts.first) {
-				stringstream img_format;
-				img_format << "\t";
-				switch(format.image_channel_order) {
-					case CL_R: img_format << "CL_R"; break;
-					case CL_A: img_format << "CL_A"; break;
-					case CL_RG: img_format << "CL_RG"; break;
-					case CL_RA: img_format << "CL_RA"; break;
-					case CL_RGB: img_format << "CL_RGB"; break;
-					case CL_RGBA: img_format << "CL_RGBA"; break;
-					case CL_BGRA: img_format << "CL_BGRA"; break;
-					case CL_ARGB: img_format << "CL_ARGB"; break;
-					case CL_INTENSITY: img_format << "CL_INTENSITY"; break;
-					case CL_LUMINANCE: img_format << "CL_LUMINANCE"; break;
-					case CL_Rx: img_format << "CL_Rx"; break;
-					case CL_RGx: img_format << "CL_RGx"; break;
-					case CL_RGBx: img_format << "CL_RGBx"; break;
+	for(const auto& format : img_formats) {
+		stringstream img_format;
+		img_format << "\t";
+		switch(format.image_channel_order) {
+			case CL_R: img_format << "CL_R"; break;
+			case CL_A: img_format << "CL_A"; break;
+			case CL_RG: img_format << "CL_RG"; break;
+			case CL_RA: img_format << "CL_RA"; break;
+			case CL_RGB: img_format << "CL_RGB"; break;
+			case CL_RGBA: img_format << "CL_RGBA"; break;
+			case CL_BGRA: img_format << "CL_BGRA"; break;
+			case CL_ARGB: img_format << "CL_ARGB"; break;
+			case CL_INTENSITY: img_format << "CL_INTENSITY"; break;
+			case CL_LUMINANCE: img_format << "CL_LUMINANCE"; break;
+			case CL_Rx: img_format << "CL_Rx"; break;
+			case CL_RGx: img_format << "CL_RGx"; break;
+			case CL_RGBx: img_format << "CL_RGBx"; break;
 #if defined(CL_DEPTH)
-					case CL_DEPTH: img_format << "CL_DEPTH"; break;
+			case CL_DEPTH: img_format << "CL_DEPTH"; break;
 #endif
 #if defined(CL_DEPTH_STENCIL)
-					case CL_DEPTH_STENCIL: img_format << "CL_DEPTH_STENCIL"; break;
+			case CL_DEPTH_STENCIL: img_format << "CL_DEPTH_STENCIL"; break;
 #endif
 #if defined(CL_1RGB_APPLE)
-					case CL_1RGB_APPLE: img_format << "CL_1RGB_APPLE"; break;
+			case CL_1RGB_APPLE: img_format << "CL_1RGB_APPLE"; break;
 #endif
 #if defined(CL_BGR1_APPLE)
-					case CL_BGR1_APPLE: img_format << "CL_BGR1_APPLE"; break;
+			case CL_BGR1_APPLE: img_format << "CL_BGR1_APPLE"; break;
 #endif
 #if defined(CL_YCbYCr_APPLE)
-					case CL_YCbYCr_APPLE: img_format << "CL_YCbYCr_APPLE"; break;
+			case CL_YCbYCr_APPLE: img_format << "CL_YCbYCr_APPLE"; break;
 #endif
 #if defined(CL_CbYCrY_APPLE)
-					case CL_CbYCrY_APPLE: img_format << "CL_CbYCrY_APPLE"; break;
+			case CL_CbYCrY_APPLE: img_format << "CL_CbYCrY_APPLE"; break;
 #endif
-					default:
-						img_format << format.image_channel_order;
-						break;
-				}
-				img_format << " ";
-				switch(format.image_channel_data_type) {
-					case CL_SNORM_INT8: img_format << "CL_SNORM_INT8"; break;
-					case CL_SNORM_INT16: img_format << "CL_SNORM_INT16"; break;
-					case CL_UNORM_INT8: img_format << "CL_UNORM_INT8"; break;
-					case CL_UNORM_INT16: img_format << "CL_UNORM_INT16"; break;
-					case CL_UNORM_SHORT_565: img_format << "CL_UNORM_SHORT_565"; break;
-					case CL_UNORM_SHORT_555: img_format << "CL_UNORM_SHORT_555"; break;
-					case CL_UNORM_INT_101010: img_format << "CL_UNORM_INT_101010"; break;
-					case CL_SIGNED_INT8: img_format << "CL_SIGNED_INT8"; break;
-					case CL_SIGNED_INT16: img_format << "CL_SIGNED_INT16"; break;
-					case CL_SIGNED_INT32: img_format << "CL_SIGNED_INT32"; break;
-					case CL_UNSIGNED_INT8: img_format << "CL_UNSIGNED_INT8"; break;
-					case CL_UNSIGNED_INT16: img_format << "CL_UNSIGNED_INT16"; break;
-					case CL_UNSIGNED_INT32: img_format << "CL_UNSIGNED_INT32"; break;
-					case CL_HALF_FLOAT: img_format << "CL_HALF_FLOAT"; break;
-					case CL_FLOAT: img_format << "CL_FLOAT"; break;
+			default:
+				img_format << format.image_channel_order;
+				break;
+		}
+		img_format << " ";
+		switch(format.image_channel_data_type) {
+			case CL_SNORM_INT8: img_format << "CL_SNORM_INT8"; break;
+			case CL_SNORM_INT16: img_format << "CL_SNORM_INT16"; break;
+			case CL_UNORM_INT8: img_format << "CL_UNORM_INT8"; break;
+			case CL_UNORM_INT16: img_format << "CL_UNORM_INT16"; break;
+			case CL_UNORM_SHORT_565: img_format << "CL_UNORM_SHORT_565"; break;
+			case CL_UNORM_SHORT_555: img_format << "CL_UNORM_SHORT_555"; break;
+			case CL_UNORM_INT_101010: img_format << "CL_UNORM_INT_101010"; break;
+			case CL_SIGNED_INT8: img_format << "CL_SIGNED_INT8"; break;
+			case CL_SIGNED_INT16: img_format << "CL_SIGNED_INT16"; break;
+			case CL_SIGNED_INT32: img_format << "CL_SIGNED_INT32"; break;
+			case CL_UNSIGNED_INT8: img_format << "CL_UNSIGNED_INT8"; break;
+			case CL_UNSIGNED_INT16: img_format << "CL_UNSIGNED_INT16"; break;
+			case CL_UNSIGNED_INT32: img_format << "CL_UNSIGNED_INT32"; break;
+			case CL_HALF_FLOAT: img_format << "CL_HALF_FLOAT"; break;
+			case CL_FLOAT: img_format << "CL_FLOAT"; break;
 #if defined(CL_SFIXED14_APPLE)
-					case CL_SFIXED14_APPLE: img_format << "CL_SFIXED14_APPLE"; break;
+			case CL_SFIXED14_APPLE: img_format << "CL_SFIXED14_APPLE"; break;
 #endif
 #if defined(CL_BIASED_HALF_APPLE)
-					case CL_BIASED_HALF_APPLE: img_format << "CL_BIASED_HALF_APPLE"; break;
+			case CL_BIASED_HALF_APPLE: img_format << "CL_BIASED_HALF_APPLE"; break;
 #endif
-					default:
-						img_format << format.image_channel_data_type;
-						break;
+			default:
+				img_format << format.image_channel_data_type;
+				break;
+		}
+		oclr_log("%s", img_format.str());
+	}
+#endif
+	
+	// create image type/channel mappings
+	static const array<vector<cl_channel_type>, (size_t)IMAGE_TYPE::__MAX_TYPE> type_mapping {
+		{
+			{}, // NONE
+			{ CL_SNORM_INT8, CL_SIGNED_INT8 }, // INT_8
+			{ CL_SNORM_INT16, CL_SIGNED_INT16 }, // INT_16
+			{ CL_SIGNED_INT32 }, // INT_32
+			{  }, // INT_64 (not supported by opencl)
+			{ CL_UNORM_INT8, CL_UNSIGNED_INT8 }, // UINT_8
+			{ CL_UNORM_INT16, CL_UNSIGNED_INT16 }, // UINT_16
+			{ CL_UNSIGNED_INT32 }, // UINT_32
+			{  }, // UINT_64 (not supported by opencl)
+			{ CL_HALF_FLOAT }, // FLOAT_16
+			{ CL_FLOAT }, // FLOAT_32
+			{  } // FLOAT_64 (not supported by opencl)
+		}
+	};
+	static const array<vector<cl_channel_order>, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL> channel_mapping {
+		{
+			{}, // NONE
+			{ CL_R, CL_Rx, CL_INTENSITY, CL_LUMINANCE }, // R
+			{ CL_RG, CL_RGx }, // RG
+			{ CL_RGB, CL_RGBx }, // RGB
+			{ CL_RGBA, CL_BGRA, CL_ARGB } // RGBA
+		}
+	};
+	
+	// fill internal_image_format_mapping with appropriate info/mappings
+	for(size_t data_idx = 0; data_idx < type_mapping.size(); data_idx++) {
+		if(type_mapping[data_idx].empty()) continue;
+		for(size_t channel_idx = 0; channel_idx < channel_mapping.size(); channel_idx++) {
+			if(channel_mapping[channel_idx].empty()) continue;
+			bool found = false;
+			for(const auto& format : img_formats) {
+				for(const auto& req_data_type : type_mapping[data_idx]) {
+					for(const auto& req_channel_type : channel_mapping[channel_idx]) {
+						if(req_data_type == format.image_channel_data_type &&
+						   req_channel_type == format.image_channel_order) {
+							internal_image_format_mapping[data_idx][channel_idx] = cl::ImageFormat(req_data_type, req_channel_type);
+							found = true;
+#if 0
+							oclr_log("native image support: %s",
+									 image_type_to_string(make_image_type((IMAGE_TYPE)data_idx, (IMAGE_CHANNEL)channel_idx)));
+#endif
+							break;
+						}
+					}
+					if(found) break;
 				}
-				oclr_log("%s", img_format.str());
+				if(found) break;
 			}
 		}
 	}
-#endif
 }
 
 weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {

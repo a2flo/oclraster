@@ -66,6 +66,8 @@
  *  @brief opencl_base interface
  */
 
+enum class IMAGE_TYPE : unsigned short int;
+enum class IMAGE_CHANNEL : unsigned short int;
 class OCLRASTER_API opencl_base {
 public:
 	struct kernel_object;
@@ -203,6 +205,9 @@ public:
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr) = 0;
 	void set_manual_gl_sharing(buffer_object* gl_buffer_obj, const bool state);
 	
+	const vector<cl::ImageFormat>& get_image_formats() const;
+	cl::ImageFormat get_image_format(const IMAGE_TYPE& data_type, const IMAGE_CHANNEL channel_type) const;
+	
 	//! note: this is only available in opencl 1.2
 	virtual void _fill_buffer(buffer_object* buffer_obj,
 							  const void* pattern,
@@ -329,11 +334,10 @@ protected:
 	device_object* active_device;
 	device_object* fastest_cpu;
 	device_object* fastest_gpu;
-	vector<cl::ImageFormat> ro_formats;
-	vector<cl::ImageFormat> wo_formats;
-	vector<cl::ImageFormat> rw_formats;
 	cl_int ierr;
 	bool successful_internal_compilation;
+	
+	vector<cl::ImageFormat> img_formats;
 	
 	vector<buffer_object*> buffers;
 	unordered_map<string, shared_ptr<kernel_object>> kernels;

@@ -25,23 +25,26 @@
 class image {
 public:
 	//
+	enum class BACKING : unsigned int {
+		BUFFER,	//!< backed by a simple opencl buffer
+		IMAGE	//!< backed by an actual opencl image object
+	};
+	
+	//
 	image(const unsigned int& width, const unsigned int& height,
-		  const IMAGE_TYPE& type, const IMAGE_CHANNEL& channel_order,
+		  const BACKING& backing,
+		  const IMAGE_TYPE& type,
+		  const IMAGE_CHANNEL& channel_order,
 		  const void* pixels = nullptr);
 	image(image&& img);
 	~image();
 	
 	// this uses SDL2_image to create an image from a .png file
-	static image from_file(const string& filename,
+	static image from_file(const string& filename, const BACKING& backing,
 						   const IMAGE_TYPE& type, const IMAGE_CHANNEL& channel_order);
 	
 	//
-	enum class BACKING : unsigned int {
-		BUFFER,	//!< backed by a simple opencl buffer
-		IMAGE	//!< backed by an actual opencl image object
-	};
 	BACKING get_backing() const;
-	
 	IMAGE_TYPE get_data_type() const;
 	IMAGE_CHANNEL get_channel_order() const;
 	
@@ -74,10 +77,13 @@ public:
 	opencl::buffer_object* get_buffer();
 	
 protected:
-	const BACKING backing;
+	BACKING backing;
 	const IMAGE_TYPE data_type;
 	const IMAGE_CHANNEL channel_order;
 	opencl::buffer_object* buffer = nullptr;
+	
+	// only used with image based backing
+	cl::ImageFormat native_format;
 	
 };
 
