@@ -45,12 +45,13 @@ public:
 	
 	//
 	BACKING get_backing() const;
+	image_type get_image_type() const;
 	IMAGE_TYPE get_data_type() const;
 	IMAGE_CHANNEL get_channel_order() const;
 	
 	// note: opencl only supports read_only and write_only images
 	// -> if you need read_write access inside your kernel,
-	// buffer based backing will be used
+	// buffer based backing must be used
 	enum class KERNEL_ACCESS_TYPE : unsigned int {
 		READ_ONLY	= (1u << 0u),
 		WRITE_ONLY	= (1u << 1u),
@@ -78,6 +79,7 @@ public:
 	
 protected:
 	BACKING backing;
+	image_type img_type;
 	const IMAGE_TYPE data_type;
 	const IMAGE_CHANNEL channel_order;
 	opencl::buffer_object* buffer = nullptr;

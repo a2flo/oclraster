@@ -45,19 +45,37 @@ enum class IMAGE_CHANNEL : unsigned short int {
 	__MAX_CHANNEL
 };
 
-// joined <IMAGE_CHANNEL, IMAGE_TYPE>
-// note: a value of 0 is reserved for "no/unspecified type"
-typedef unsigned int image_type;
-constexpr image_type make_image_type(const IMAGE_TYPE& type, const IMAGE_CHANNEL& channel) {
-	return (((unsigned int)channel) << 16u) + ((unsigned int)type);
-}
-constexpr IMAGE_TYPE get_image_data_type(const image_type& img_type) {
-	return (IMAGE_TYPE)(img_type & 0xFFFFu);
-}
-constexpr IMAGE_CHANNEL get_image_channel_type(const image_type& img_type) {
-	return (IMAGE_CHANNEL)((img_type >> 16u) & 0xFFFFu);
-}
-extern string image_type_to_string(const image_type& img_type);
+//
+struct __attribute__((packed)) image_type {
+	IMAGE_TYPE data_type;
+	IMAGE_CHANNEL channel_type;
+	bool native;
+	
+	constexpr image_type() noexcept :
+	data_type(IMAGE_TYPE::NONE), channel_type(IMAGE_CHANNEL::NONE), native(false) {}
+	
+	constexpr image_type(const IMAGE_TYPE& data_type_, const IMAGE_CHANNEL& channel_type_, const bool native_ = false) noexcept :
+	data_type(data_type_), channel_type(channel_type_), native(native_) {}
+	
+	bool is_valid() const {
+		return (data_type != IMAGE_TYPE::NONE && channel_type != IMAGE_CHANNEL::NONE);
+	}
+	
+	bool operator==(const image_type& img_type) const {
+		return (data_type == img_type.data_type &&
+				channel_type == img_type.channel_type &&
+				native == img_type.native);
+	}
+	bool operator!=(const image_type& img_type) const {
+		return !(*this == img_type);
+	}
+	
+	string to_string() const;
+	friend ostream& operator<<(ostream& output, const image_type& img_type) {
+		output << img_type.to_string();
+		return output;
+	}
+};
 extern string image_data_type_to_string(const IMAGE_TYPE& img_data_type);
 extern string image_channel_type_to_string(const IMAGE_CHANNEL& img_channel_type);
 

@@ -70,8 +70,9 @@ int main(int argc oclr_unused, char* argv[]) {
 	//
 	p = new pipeline();
 	
-	a2m* model = new a2m(oclraster::data_path("blend_test.a2m"));
-	model->flip_faces();
+	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
+	//a2m* model = new a2m(oclraster::data_path("blend_test.a2m"));
+	//model->flip_faces();
 	
 	// add event handlers
 	event::handler key_handler_fnctr(&key_handler);
@@ -307,7 +308,7 @@ bool load_programs() {
 	
 	string vs_str, fs_str;
 	static const array<string, 2> shader_filenames {
-#if 0
+#if 1
 		{ "simple_texturing_vs.cl", "simple_texturing_fs.cl" }
 #elif 1
 		{ "debug_vs.cl", "debug_fs.cl" }

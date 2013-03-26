@@ -32,9 +32,10 @@ static constexpr array<const char*, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL> channe
 	{ "", "", "2", "3", "4" }
 };
 
-string image_type_to_string(const image_type& img_type) {
-	return (string(data_type_str_table[(size_t)get_image_data_type(img_type)]) +
-			channel_type_str_table[(size_t)get_image_channel_type(img_type)]);
+string image_type::to_string() const {
+	return ((native ? string("native_") : string("")) +
+			data_type_str_table[(size_t)data_type] +
+			channel_type_str_table[(size_t)channel_type]);
 }
 
 string image_data_type_to_string(const IMAGE_TYPE& img_data_type) {

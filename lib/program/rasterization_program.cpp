@@ -266,8 +266,8 @@ string rasterization_program::specialized_processing(const string& code,
 			// -> do the appropriate input/output data conversion
 			// NOTE: 32-bit and 64-bit types (both integer and float) will not be converted to float, since
 			// there is no correct conversion for these types and it probably is not wanted in the first place
-			const auto data_type = get_image_data_type(image_spec[i]);
-			const auto channel_type = get_image_channel_type(image_spec[i]);
+			const auto data_type = image_spec[i].data_type;
+			const auto channel_type = image_spec[i].channel_type;
 			const string native_data_type_str = image_data_type_to_string(data_type);
 			const string native_channel_type_str = image_channel_type_to_string(channel_type);
 			string native_type = native_data_type_str + native_channel_type_str;

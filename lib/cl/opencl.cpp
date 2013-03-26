@@ -1022,7 +1022,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 					for(const auto& req_channel_type : channel_mapping[channel_idx]) {
 						if(req_data_type == format.image_channel_data_type &&
 						   req_channel_type == format.image_channel_order) {
-							internal_image_format_mapping[data_idx][channel_idx] = cl::ImageFormat(req_data_type, req_channel_type);
+							internal_image_format_mapping[data_idx][channel_idx] = cl::ImageFormat(req_channel_type, req_data_type);
 							found = true;
 #if 0
 							oclr_log("native image support: %s",

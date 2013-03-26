@@ -111,7 +111,7 @@ bool stage_base::create_kernel_image_spec(const draw_state& state, const oclrast
 				oclr_error("framebuffer image \"%s\" not bound!", images.image_names[i]);
 				return false;
 			}
-			image_spec.emplace_back(make_image_type(img->get_data_type(), img->get_channel_order()));
+			image_spec.emplace_back(img->get_image_type());
 		}
 		else {
 			// image
@@ -121,7 +121,7 @@ bool stage_base::create_kernel_image_spec(const draw_state& state, const oclrast
 				oclr_error("image \"%s\" not bound!", img_name);
 				return false;
 			}
-			image_spec.emplace_back(make_image_type(img->second.get_data_type(), img->second.get_channel_order()));
+			image_spec.emplace_back(img->second.get_image_type());
 		}
 	}
 	return true;

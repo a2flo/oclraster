@@ -69,6 +69,30 @@ INT_TEXEL_MIX(long, long4, double, 1.0)
 // image_read_uint -> image_read_uint_nearest / image_read_uint_linear
 #include "oclr_image_support.h"
 
+float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+	return read_imagef(img, sampler, coord);
+}
+float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+	return read_imagef(img, sampler, convert_int2(coord));
+}
+int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+	return read_imagei(img, sampler, coord);
+}
+int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+	return read_imagei(img, sampler, convert_int2(coord));
+}
+uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+	return read_imageui(img, sampler, coord);
+}
+uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+	return read_imageui(img, sampler, convert_int2(coord));
+}
+
+float4 FUNC_OVERLOAD image_read_float_nearest(read_only image2d_t img, const float2 coord) {
+	const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+	return read_imagef(img, sampler, coord);
+}
+
 //
 #if defined(__clang__)
 #pragma clang diagnostic pop

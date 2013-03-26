@@ -31,7 +31,7 @@ oclraster_framebuffer {
 
 void rasterize_main() {
 	// parallax mapping
-	const sampler_t sampler = CLK_FILTER_LINEAR;
+	const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
 	const float parallax = 0.03f; // determines the "deepness"
 	const float3 view_vec = normalize(output_attributes->view_vec.xyz);
 	
@@ -45,7 +45,7 @@ void rasterize_main() {
 	}
 	
 	//
-	const sampler_t point_sampler = CLK_FILTER_NEAREST;
+	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	const float noise_offset = image_read(fp_noise, point_sampler, parallax_tex_coord).x;
 	const float noise = image_read(fp_noise, sampler, fragment_coord/100.0f + noise_offset).x;
 	

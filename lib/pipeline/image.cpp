@@ -244,7 +244,7 @@ image::image(const unsigned int& width, const unsigned int& height,
 			 const BACKING& backing_,
 			 const IMAGE_TYPE& type,
 			 const IMAGE_CHANNEL& channel_order_,
-			 const void* pixels) : backing(backing_), data_type(type), channel_order(channel_order_) {
+			 const void* pixels) : backing(backing_), img_type(type, channel_order_), data_type(type), channel_order(channel_order_) {
 #if defined(OCLRASTER_DEBUG)
 	if(type >= IMAGE_TYPE::__MAX_TYPE) {
 		oclr_error("invalid image type: %u!", type);
@@ -262,13 +262,12 @@ image::image(const unsigned int& width, const unsigned int& height,
 		if(native_format.image_channel_data_type == 0 ||
 		   native_format.image_channel_order == 0) {
 			oclr_error("image format \"%s\" is not natively supported - falling back to buffer based image backing!",
-					   image_type_to_string(make_image_type(data_type, channel_order)));
+					   image_type { data_type, channel_order }.to_string());
 			backing = BACKING::BUFFER;
 		}
 	}
 	
 	if(backing == BACKING::BUFFER) {
-		
 		const size_t data_size = (width * height *
 								  image_type_sizes[static_cast<underlying_type<IMAGE_TYPE>::type>(type)] *
 								  image_channel_sizes[static_cast<underlying_type<IMAGE_CHANNEL>::type>(channel_order)]);
@@ -301,15 +300,17 @@ image::image(const unsigned int& width, const unsigned int& height,
 		ocl->unmap_buffer(buffer, mapped_ptr);
 	}
 	else {
+		img_type.native = true;
 		buffer = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 											opencl::BUFFER_FLAG::BLOCK_ON_READ |
-											opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+											opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
+											(pixels != NULL ? opencl::BUFFER_FLAG::INITIAL_COPY : opencl::BUFFER_FLAG::NONE),
 											native_format.image_channel_order, native_format.image_channel_data_type,
 											width, height, (void*)pixels);
 	}
 }
 
-image::image(image&& img) : backing(img.backing), data_type(img.data_type), channel_order(img.channel_order), buffer(img.buffer) {
+image::image(image&& img) : backing(img.backing), img_type(img.img_type), data_type(img.data_type), channel_order(img.channel_order), buffer(img.buffer) {
 	img.buffer = nullptr;
 }
 
@@ -329,6 +330,10 @@ const opencl::buffer_object* image::get_buffer() const {
 
 opencl::buffer_object* image::get_buffer() {
 	return buffer;
+}
+
+image_type image::get_image_type() const {
+	return img_type;
 }
 
 IMAGE_TYPE image::get_data_type() const {

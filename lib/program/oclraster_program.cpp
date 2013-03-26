@@ -269,7 +269,7 @@ void oclraster_program::process_program(const string& code) {
 		if(!images.image_names.empty()) {
 			// create kernel image spec for the hinted or default image specs
 			for(const auto& hint : images.image_hints) {
-				spec.emplace_back(hint == 0 ? make_image_type(IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA) : hint);
+				spec.emplace_back(hint.is_valid() ? hint : image_type { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA });
 			}
 		}
 		// else: no images in kernel/program -> just one kernel / "empty spec"
@@ -289,7 +289,7 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_ima
 	
 	string img_spec_str = "";
 	for(const auto& type : spec) {
-		img_spec_str += "." + image_type_to_string(type);
+		img_spec_str += "." + type.to_string();
 	}
 	
 	const string identifier = "USER_PROGRAM."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter());
@@ -350,20 +350,39 @@ string oclraster_program::create_user_kernel_parameters(const kernel_image_spec&
 		user_buffer_count++;
 	}
 	for(size_t i = 0, img_count = images.image_names.size(); i < img_count; i++) {
-		string type_str = "global ";
-		if(images.image_specifiers[i] == ACCESS_TYPE::READ &&
-		   !images.is_framebuffer[i]) {
-			type_str += "const ";
+		string type_str = "";
+		if(!image_spec[i].native) {
+			// buffer based image
+			type_str = "global ";
+			if(images.image_specifiers[i] == ACCESS_TYPE::READ &&
+			   !images.is_framebuffer[i]) {
+				type_str += "const ";
+			}
+			if(image_spec[i].data_type == IMAGE_TYPE::FLOAT_16) {
+				// if cl_khr_fp16 is not supported (-> all implementations ...), half vector types are not supported
+				// and structs containing halfs (the workaround) are not allowed as kernel function parameter types
+				// -> use custom half pointer type for distinction and later type-casting (note: type is correctly aligned)
+				type_str += "oclr_";
+			}
+			type_str += image_spec[i].to_string();
+			type_str += "* ";
+			if(images.is_framebuffer[i]) type_str += "oclr_framebuffer_";
 		}
-		if(get_image_data_type(image_spec[i]) == IMAGE_TYPE::FLOAT_16) {
-			// if cl_khr_fp16 is not supported (-> all implementations ...), half vector types are not supported
-			// and structs containing halfs (the workaround) are not allowed as kernel function parameter types
-			// -> use custom half pointer type for distinction and later type-casting (note: type is correctly aligned)
-			type_str += "oclr_";
+		else {
+			// native image
+			if(images.image_specifiers[i] == ACCESS_TYPE::READ) {
+				type_str += "read_only ";
+			}
+			else if(images.image_specifiers[i] == ACCESS_TYPE::WRITE) {
+				type_str += "write_only ";
+			}
+			else {
+				// this shouldn't actually happen and be caught much earlier, but you never know ...
+				oclr_error("native images can not have a read_write access qualifier!");
+				type_str += "read_only "; // default to read_only
+			}
+			type_str += "image2d_t ";
 		}
-		type_str += image_type_to_string(image_spec[i]);
-		type_str += "* ";
-		if(images.is_framebuffer[i]) type_str += "oclr_framebuffer_";
 		type_str += images.image_names[i];
 		kernel_parameters += type_str+",\n";
 		image_decls.emplace_back(type_str);
@@ -442,16 +461,16 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 			else if(channel_type == "RGBA") img_channel_type = IMAGE_CHANNEL::RGBA;
 			else throw oclraster_exception("invalid image hint declaration (invalid channel type): \""+hint+"\"");
 			
-			image_hints.emplace_back(make_image_type(img_data_type, img_channel_type));
+			image_hints.emplace_back(img_data_type, img_channel_type);
 		}
 		else {
 			if(image_var_type == IMAGE_VAR_TYPE::DEPTH_IMAGE) {
-				image_hints.emplace_back(make_image_type(IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R));
+				image_hints.emplace_back(IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R);
 			}
 			else if(image_var_type == IMAGE_VAR_TYPE::STENCIL_IMAGE) {
-				image_hints.emplace_back(make_image_type(IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::R));
+				image_hints.emplace_back(IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::R);
 			}
-			else image_hints.emplace_back(0); // will default to UINT_8/RGBA later on
+			else image_hints.emplace_back(); // will default to UINT_8/RGBA later on
 		}
 		
 		// check hints of framebuffer image types
@@ -464,10 +483,10 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 				   img_data_type != IMAGE_TYPE::UINT_16 &&
 				   img_data_type != IMAGE_TYPE::UINT_32 &&
 				   img_data_type != IMAGE_TYPE::UINT_64) {
-					throw oclraster_exception("stencil_image hint: data type must be UINT_* (not " + image_type_to_string(image_hints.back())+")!");
+					throw oclraster_exception("stencil_image hint: data type must be UINT_* (not " + image_hints.back().to_string() + ")!");
 				}
 				else if(img_channel_type != IMAGE_CHANNEL::R) {
-					throw oclraster_exception("stencil_image hint: channel type must be R (not " + image_type_to_string(image_hints.back())+")!");
+					throw oclraster_exception("stencil_image hint: channel type must be R (not " + image_hints.back().to_string() + ")!");
 				}
 			}
 		}
