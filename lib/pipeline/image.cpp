@@ -244,10 +244,24 @@ image::image(const unsigned int& width, const unsigned int& height,
 			 const BACKING& backing_,
 			 const IMAGE_TYPE& type,
 			 const IMAGE_CHANNEL& channel_order_,
-			 const void* pixels) : backing(backing_), img_type(type, channel_order_), data_type(type), channel_order(channel_order_) {
+			 const void* pixels) :
+backing(backing_), img_type(type, channel_order_), data_type(type), channel_order(channel_order_), size(width, height), native_format(0, 0) {
+	create_buffer(pixels);
+}
+
+image::image(const unsigned int& width, const unsigned int& height,
+			 const IMAGE_TYPE& type,
+			 const IMAGE_CHANNEL& channel_order_,
+			 const cl::ImageFormat& native_format_,
+			 const void* pixels) :
+backing(BACKING::IMAGE), img_type(type, channel_order_), data_type(type), channel_order(channel_order_), size(width, height), native_format(native_format_) {
+	create_buffer(pixels);
+}
+
+void image::create_buffer(const void* pixels) {
 #if defined(OCLRASTER_DEBUG)
-	if(type >= IMAGE_TYPE::__MAX_TYPE) {
-		oclr_error("invalid image type: %u!", type);
+	if(data_type >= IMAGE_TYPE::__MAX_TYPE) {
+		oclr_error("invalid image type: %u!", data_type);
 		return;
 	}
 	if(channel_order >= IMAGE_CHANNEL::__MAX_CHANNEL) {
@@ -257,8 +271,31 @@ image::image(const unsigned int& width, const unsigned int& height,
 #endif
 	
 	if(backing == BACKING::IMAGE) {
+		// if constructed with a native format, check if the specified format is supported
+		if(native_format.image_channel_data_type != 0 ||
+		   native_format.image_channel_order != 0) {
+			bool found = false;
+			for(const auto& format : ocl->get_image_formats()) {
+				if(format.image_channel_order == native_format.image_channel_order &&
+				   format.image_channel_data_type == native_format.image_channel_data_type) {
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
+				// not supported, reset and look for a compatible one
+				oclr_error("specified native image format (%X %X) not supported - checking for compatible image format ...",
+						   native_format.image_channel_data_type, native_format.image_channel_order);
+				native_format.image_channel_data_type = 0;
+				native_format.image_channel_order = 0;
+			}
+		}
+		
 		// look for a supported/compatible image format
-		native_format = ocl->get_image_format(data_type, channel_order);
+		if(native_format.image_channel_data_type == 0 ||
+		   native_format.image_channel_order == 0) {
+			native_format = ocl->get_image_format(data_type, channel_order);
+		}
 		if(native_format.image_channel_data_type == 0 ||
 		   native_format.image_channel_order == 0) {
 			oclr_error("image format \"%s\" is not natively supported - falling back to buffer based image backing!",
@@ -268,14 +305,14 @@ image::image(const unsigned int& width, const unsigned int& height,
 	}
 	
 	if(backing == BACKING::BUFFER) {
-		const size_t data_size = (width * height *
-								  image_type_sizes[static_cast<underlying_type<IMAGE_TYPE>::type>(type)] *
+		const size_t data_size = (size.x * size.y *
+								  image_type_sizes[static_cast<underlying_type<IMAGE_TYPE>::type>(data_type)] *
 								  image_channel_sizes[static_cast<underlying_type<IMAGE_CHANNEL>::type>(channel_order)]);
-		const size_t size = header_size() + data_size;
+		const size_t buffer_size = header_size() + data_size;
 		buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 									opencl::BUFFER_FLAG::BLOCK_ON_READ |
 									opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-									size);
+									buffer_size);
 		
 		// init buffer ...
 		auto mapped_ptr = ocl->map_buffer(buffer,
@@ -283,10 +320,10 @@ image::image(const unsigned int& width, const unsigned int& height,
 										  opencl::MAP_BUFFER_FLAG::BLOCK);
 		
 		header* header_ptr = (header*)mapped_ptr;
-		header_ptr->type = type;
+		header_ptr->type = data_type;
 		header_ptr->channel_order = channel_order;
-		header_ptr->width = width;
-		header_ptr->height = height;
+		header_ptr->width = size.x;
+		header_ptr->height = size.y;
 		
 		unsigned char* data_ptr = (unsigned char*)mapped_ptr + header_size();
 		if(pixels == nullptr) {
@@ -306,7 +343,10 @@ image::image(const unsigned int& width, const unsigned int& height,
 											opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
 											(pixels != NULL ? opencl::BUFFER_FLAG::INITIAL_COPY : opencl::BUFFER_FLAG::NONE),
 											native_format.image_channel_order, native_format.image_channel_data_type,
-											width, height, (void*)pixels);
+											size.x, size.y, (void*)pixels);
+		if(buffer->image_buffer == nullptr) {
+			oclr_error("image buffer creation failed!");
+		}
 	}
 }
 
@@ -342,4 +382,12 @@ IMAGE_TYPE image::get_data_type() const {
 
 IMAGE_CHANNEL image::get_channel_order() const {
 	return channel_order;
+}
+
+const uint2& image::get_size() const {
+	return size;
+}
+
+const cl::ImageFormat& image::get_native_format() const {
+	return native_format;
 }

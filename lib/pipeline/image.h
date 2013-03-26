@@ -30,11 +30,17 @@ public:
 		IMAGE	//!< backed by an actual opencl image object
 	};
 	
-	//
+	// constructor for both buffer backed and image backed images
 	image(const unsigned int& width, const unsigned int& height,
 		  const BACKING& backing,
 		  const IMAGE_TYPE& type,
 		  const IMAGE_CHANNEL& channel_order,
+		  const void* pixels = nullptr);
+	// alternate constructor for image backed images (for directly specifying the native format)
+	image(const unsigned int& width, const unsigned int& height,
+		  const IMAGE_TYPE& type,
+		  const IMAGE_CHANNEL& channel_order,
+		  const cl::ImageFormat& native_format,
 		  const void* pixels = nullptr);
 	image(image&& img);
 	~image();
@@ -48,6 +54,8 @@ public:
 	image_type get_image_type() const;
 	IMAGE_TYPE get_data_type() const;
 	IMAGE_CHANNEL get_channel_order() const;
+	const uint2& get_size() const;
+	const cl::ImageFormat& get_native_format() const;
 	
 	// note: opencl only supports read_only and write_only images
 	// -> if you need read_write access inside your kernel,
@@ -82,10 +90,14 @@ protected:
 	image_type img_type;
 	const IMAGE_TYPE data_type;
 	const IMAGE_CHANNEL channel_order;
+	const uint2 size;
 	opencl::buffer_object* buffer = nullptr;
 	
 	// only used with image based backing
 	cl::ImageFormat native_format;
+	
+	//
+	void create_buffer(const void* pixels);
 	
 };
 

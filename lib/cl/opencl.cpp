@@ -914,73 +914,73 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 	
 	// un-#if-0 for debug output
 #if 0
-	for(const auto& format : img_formats) {
-		stringstream img_format;
-		img_format << "\t";
-		switch(format.image_channel_order) {
-			case CL_R: img_format << "CL_R"; break;
-			case CL_A: img_format << "CL_A"; break;
-			case CL_RG: img_format << "CL_RG"; break;
-			case CL_RA: img_format << "CL_RA"; break;
-			case CL_RGB: img_format << "CL_RGB"; break;
-			case CL_RGBA: img_format << "CL_RGBA"; break;
-			case CL_BGRA: img_format << "CL_BGRA"; break;
-			case CL_ARGB: img_format << "CL_ARGB"; break;
-			case CL_INTENSITY: img_format << "CL_INTENSITY"; break;
-			case CL_LUMINANCE: img_format << "CL_LUMINANCE"; break;
-			case CL_Rx: img_format << "CL_Rx"; break;
-			case CL_RGx: img_format << "CL_RGx"; break;
-			case CL_RGBx: img_format << "CL_RGBx"; break;
+	const auto channel_order_to_string = [](const cl_channel_order& channel_order) -> string {
+		switch(channel_order) {
+			case CL_R: return "CL_R";
+			case CL_A: return "CL_A";
+			case CL_RG: return "CL_RG";
+			case CL_RA: return "CL_RA";
+			case CL_RGB: return "CL_RGB";
+			case CL_RGBA: return "CL_RGBA";
+			case CL_BGRA: return "CL_BGRA";
+			case CL_ARGB: return "CL_ARGB";
+			case CL_INTENSITY: return "CL_INTENSITY";
+			case CL_LUMINANCE: return "CL_LUMINANCE";
+			case CL_Rx: return "CL_Rx";
+			case CL_RGx: return "CL_RGx";
+			case CL_RGBx: return "CL_RGBx";
 #if defined(CL_DEPTH)
-			case CL_DEPTH: img_format << "CL_DEPTH"; break;
+			case CL_DEPTH: return "CL_DEPTH";
 #endif
 #if defined(CL_DEPTH_STENCIL)
-			case CL_DEPTH_STENCIL: img_format << "CL_DEPTH_STENCIL"; break;
+			case CL_DEPTH_STENCIL: return "CL_DEPTH_STENCIL";
 #endif
 #if defined(CL_1RGB_APPLE)
-			case CL_1RGB_APPLE: img_format << "CL_1RGB_APPLE"; break;
+			case CL_1RGB_APPLE: return "CL_1RGB_APPLE";
 #endif
 #if defined(CL_BGR1_APPLE)
-			case CL_BGR1_APPLE: img_format << "CL_BGR1_APPLE"; break;
+			case CL_BGR1_APPLE: return "CL_BGR1_APPLE";
 #endif
 #if defined(CL_YCbYCr_APPLE)
-			case CL_YCbYCr_APPLE: img_format << "CL_YCbYCr_APPLE"; break;
+			case CL_YCbYCr_APPLE: return "CL_YCbYCr_APPLE";
 #endif
 #if defined(CL_CbYCrY_APPLE)
-			case CL_CbYCrY_APPLE: img_format << "CL_CbYCrY_APPLE"; break;
+			case CL_CbYCrY_APPLE: return "CL_CbYCrY_APPLE";
 #endif
-			default:
-				img_format << format.image_channel_order;
-				break;
+			default: break;
 		}
-		img_format << " ";
-		switch(format.image_channel_data_type) {
-			case CL_SNORM_INT8: img_format << "CL_SNORM_INT8"; break;
-			case CL_SNORM_INT16: img_format << "CL_SNORM_INT16"; break;
-			case CL_UNORM_INT8: img_format << "CL_UNORM_INT8"; break;
-			case CL_UNORM_INT16: img_format << "CL_UNORM_INT16"; break;
-			case CL_UNORM_SHORT_565: img_format << "CL_UNORM_SHORT_565"; break;
-			case CL_UNORM_SHORT_555: img_format << "CL_UNORM_SHORT_555"; break;
-			case CL_UNORM_INT_101010: img_format << "CL_UNORM_INT_101010"; break;
-			case CL_SIGNED_INT8: img_format << "CL_SIGNED_INT8"; break;
-			case CL_SIGNED_INT16: img_format << "CL_SIGNED_INT16"; break;
-			case CL_SIGNED_INT32: img_format << "CL_SIGNED_INT32"; break;
-			case CL_UNSIGNED_INT8: img_format << "CL_UNSIGNED_INT8"; break;
-			case CL_UNSIGNED_INT16: img_format << "CL_UNSIGNED_INT16"; break;
-			case CL_UNSIGNED_INT32: img_format << "CL_UNSIGNED_INT32"; break;
-			case CL_HALF_FLOAT: img_format << "CL_HALF_FLOAT"; break;
-			case CL_FLOAT: img_format << "CL_FLOAT"; break;
+		return uint2string(channel_order);
+	};
+	const auto channel_type_to_string = [](const cl_channel_type& channel_type) -> string {
+		switch(channel_type) {
+			case CL_SNORM_INT8: return "CL_SNORM_INT8";
+			case CL_SNORM_INT16: return "CL_SNORM_INT16";
+			case CL_UNORM_INT8: return "CL_UNORM_INT8";
+			case CL_UNORM_INT16: return "CL_UNORM_INT16";
+			case CL_UNORM_SHORT_565: return "CL_UNORM_SHORT_565";
+			case CL_UNORM_SHORT_555: return "CL_UNORM_SHORT_555";
+			case CL_UNORM_INT_101010: return "CL_UNORM_INT_101010";
+			case CL_SIGNED_INT8: return "CL_SIGNED_INT8";
+			case CL_SIGNED_INT16: return "CL_SIGNED_INT16";
+			case CL_SIGNED_INT32: return "CL_SIGNED_INT32";
+			case CL_UNSIGNED_INT8: return "CL_UNSIGNED_INT8";
+			case CL_UNSIGNED_INT16: return "CL_UNSIGNED_INT16";
+			case CL_UNSIGNED_INT32: return "CL_UNSIGNED_INT32";
+			case CL_HALF_FLOAT: return "CL_HALF_FLOAT";
+			case CL_FLOAT: return "CL_FLOAT";
 #if defined(CL_SFIXED14_APPLE)
-			case CL_SFIXED14_APPLE: img_format << "CL_SFIXED14_APPLE"; break;
+			case CL_SFIXED14_APPLE: return "CL_SFIXED14_APPLE";
 #endif
 #if defined(CL_BIASED_HALF_APPLE)
-			case CL_BIASED_HALF_APPLE: img_format << "CL_BIASED_HALF_APPLE"; break;
+			case CL_BIASED_HALF_APPLE: return "CL_BIASED_HALF_APPLE";
 #endif
-			default:
-				img_format << format.image_channel_data_type;
-				break;
+			default: break;
 		}
-		oclr_log("%s", img_format.str());
+		return uint2string(channel_type);
+	};
+	
+	for(const auto& format : img_formats) {
+		oclr_log("\t%s %s", channel_order_to_string(format.image_channel_order), channel_type_to_string(format.image_channel_data_type));
 	}
 #endif
 	
@@ -1017,16 +1017,18 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		for(size_t channel_idx = 0; channel_idx < channel_mapping.size(); channel_idx++) {
 			if(channel_mapping[channel_idx].empty()) continue;
 			bool found = false;
-			for(const auto& format : img_formats) {
-				for(const auto& req_data_type : type_mapping[data_idx]) {
-					for(const auto& req_channel_type : channel_mapping[channel_idx]) {
+			for(const auto& req_data_type : type_mapping[data_idx]) {
+				for(const auto& req_channel_type : channel_mapping[channel_idx]) {
+					for(const auto& format : img_formats) {
 						if(req_data_type == format.image_channel_data_type &&
 						   req_channel_type == format.image_channel_order) {
 							internal_image_format_mapping[data_idx][channel_idx] = cl::ImageFormat(req_channel_type, req_data_type);
 							found = true;
 #if 0
-							oclr_log("native image support: %s",
-									 image_type_to_string(make_image_type((IMAGE_TYPE)data_idx, (IMAGE_CHANNEL)channel_idx)));
+							oclr_log("native image support: %s -> %s %s",
+									 image_type { (IMAGE_TYPE)data_idx, (IMAGE_CHANNEL)channel_idx }.to_string(),
+									 channel_type_to_string(format.image_channel_data_type),
+									 channel_order_to_string(format.image_channel_order));
 #endif
 							break;
 						}
@@ -1037,6 +1039,25 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			}
 		}
 	}
+	
+#if defined(__APPLE__)
+	if(fastest_gpu != nullptr) {
+		// workaround: when a shared cpu/gpu context is used, apple falsely advertises CL_Rx, CL_RGx, CL_RGBx in combination with CL_FLOAT
+		// as supported, when they're actually not -> use CL_R, CL_RG, CL_RGB instead, which do work, but are not officially listed
+		auto& r_float_mapping = internal_image_format_mapping[(size_t)IMAGE_TYPE::FLOAT_32][(size_t)IMAGE_CHANNEL::R];
+		auto& rg_float_mapping = internal_image_format_mapping[(size_t)IMAGE_TYPE::FLOAT_32][(size_t)IMAGE_CHANNEL::RG];
+		auto& rgb_float_mapping = internal_image_format_mapping[(size_t)IMAGE_TYPE::FLOAT_32][(size_t)IMAGE_CHANNEL::RGB];
+		if(r_float_mapping.image_channel_data_type != 0 && r_float_mapping.image_channel_order != 0) {
+			r_float_mapping = cl::ImageFormat(CL_R, CL_FLOAT);
+		}
+		if(rg_float_mapping.image_channel_data_type != 0 && rg_float_mapping.image_channel_order != 0) {
+			rg_float_mapping = cl::ImageFormat(CL_RG, CL_FLOAT);
+		}
+		if(rgb_float_mapping.image_channel_data_type != 0 && rgb_float_mapping.image_channel_order != 0) {
+			rgb_float_mapping = cl::ImageFormat(CL_RGB, CL_FLOAT);
+		}
+	}
+#endif
 }
 
 weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {
@@ -1130,6 +1151,7 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 			oclr_debug("build log: %s", build_log);
 		}*/
 		
+#if 0
 		size_t device_num = 0;
 		for(const auto& device : devices) {
 			oclr_log("%s (dev #%u): work group size: %u", identifier, device_num,
@@ -1142,6 +1164,7 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 					 kernel_ptr->kernel->getWorkGroupInfo<CL_KERNEL_PRIVATE_MEM_SIZE>(device->device));
 			device_num++;
 		}
+#endif
 	}
 	__HANDLE_CL_EXCEPTION_START("add_kernel")
 		//
@@ -1678,6 +1701,7 @@ void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 		
 #if !defined(OCLRASTER_PROFILING)
 		functor->second();
+		//functor->second().wait();
 #else
 		auto evt = functor->second();
 		evt.wait();
