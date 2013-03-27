@@ -41,5 +41,9 @@ void rasterize_main() {
 #elif 1
 	float4 color = image_read_float_nearest(diffuse_texture, output_attributes->tex_coord);
 	framebuffer->color = mix(color, framebuffer->color, 0.75f);
+#elif 0
+	const float frag_add = 1.0f/16.0f;
+	framebuffer->color.xyz += frag_add;
+	framebuffer->color.w = 1.0f;
 #endif
 }

@@ -27,7 +27,7 @@
 shared_ptr<opencl::kernel_object> opencl_base::null_kernel_object { nullptr };
 
 // 2d array: [IMAGE_TYPE][IMAGE_CHANNEL] -> cl::ImageFormat (-> will be (0, 0) if not supported)
-array<array<cl::ImageFormat, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL>, (size_t)IMAGE_TYPE::__MAX_TYPE> internal_image_format_mapping;
+static array<array<cl::ImageFormat, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL>, (size_t)IMAGE_TYPE::__MAX_TYPE> internal_image_format_mapping;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // common in all opencl implementations:
@@ -736,6 +736,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());
 			oclr_msg("max_wi_sizes: %v", device->max_wi_sizes);
 			oclr_msg("max_wg_size: %u", device->max_wg_size);
+			oclr_msg("max param size: %u", internal_device.getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>());
 #if defined(CL_VERSION_1_2)
 			if(platform_cl_version >= CL_VERSION::CL_1_2) {
 				const unsigned long long int printf_buffer_size = internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>();

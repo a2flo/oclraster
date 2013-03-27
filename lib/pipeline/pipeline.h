@@ -54,7 +54,6 @@ struct draw_state {
 	framebuffer* active_framebuffer = nullptr;
 	
 	//
-	opencl::buffer_object* info_buffer = nullptr;
 	opencl::buffer_object* transformed_buffer = nullptr;
 	unordered_map<string, const opencl_base::buffer_object&> user_buffers;
 	unordered_map<string, const image&> user_images;
@@ -117,9 +116,6 @@ protected:
 #if defined(OCLRASTER_IOS)
 	GLuint vbo_fullscreen_triangle = 0;
 #endif
-	
-	//
-	opencl::buffer_object* info_buffer = nullptr;
 	
 	// event handler
 	event::handler event_handler_fnctr;

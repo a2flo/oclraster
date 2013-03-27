@@ -77,7 +77,6 @@ void transform_stage::transform(draw_state& state,
 	
 	// internal buffer / kernel parameters
 	ocl->set_kernel_argument(argc++, state.transformed_buffer);
-	ocl->set_kernel_argument(argc++, state.info_buffer);
 	ocl->set_kernel_argument(argc++, const_buffer_tp);
 	ocl->set_kernel_argument(argc++, num_elements);
 	ocl->set_kernel_range(ocl->compute_kernel_ranges(num_elements));

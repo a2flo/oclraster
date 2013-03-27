@@ -50,10 +50,6 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 		float data[16];
 	} transformed_data;
 	
-	typedef struct __attribute__((packed, aligned(16))) {
-		unsigned int triangle_count;
-	} info_buffer_data;
-	
 	// transform rerouting
 	#define transform(vertex) _oclraster_transform(vertex, VE, transformed_vertex)
 	OCLRASTER_FUNC void _oclraster_transform(float4 vertex, const float3* VE, float3* transformed_vertex) {
@@ -67,7 +63,6 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 	kernel void oclraster_program(//###OCLRASTER_USER_STRUCTS###
 								  global const unsigned int* index_buffer,
 								  global transformed_data* transformed_buffer,
-								  global info_buffer_data* info_buffer,
 								  constant constant_data* cdata,
 								  const unsigned int triangle_count) {
 		const unsigned int triangle_id = get_global_id(0);

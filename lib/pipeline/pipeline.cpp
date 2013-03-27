@@ -23,19 +23,10 @@
 #include "ios_helper.h"
 #endif
 
-struct __attribute__((packed, aligned(16))) info_buffer_struct {
-	unsigned int passing_triangles;
-};
-
 pipeline::pipeline() :
 event_handler_fnctr(this, &pipeline::event_handler) {
 	create_framebuffers(size2(oclraster::get_width(), oclraster::get_height()));
 	oclraster::get_event()->add_internal_event_handler(event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
-
-	info_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
-									 opencl::BUFFER_FLAG::BLOCK_ON_READ |
-									 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-									 sizeof(info_buffer_struct));
 	
 #if defined(OCLRASTER_IOS)
 	static const float fullscreen_triangle[6] { 1.0f, 1.0f, 1.0f, -3.0f, -3.0f, 1.0f };
@@ -50,10 +41,6 @@ pipeline::~pipeline() {
 	oclraster::get_event()->remove_event_handler(event_handler_fnctr);
 	
 	destroy_framebuffers();
-	
-	if(info_buffer != nullptr) {
-		ocl->delete_buffer(info_buffer);
-	}
 	
 #if defined(OCLRASTER_IOS)
 	if(glIsBuffer(vbo_fullscreen_triangle)) glDeleteBuffers(1, &vbo_fullscreen_triangle);
@@ -187,7 +174,6 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	state.depth_test = 1;
 	state.framebuffer_size = framebuffer_size;
 	state.active_framebuffer = default_framebuffer;
-	state.info_buffer = info_buffer;
 	state.bin_count = {
 		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
 		(state.framebuffer_size.y / state.bin_size.y) + ((state.framebuffer_size.y % state.bin_size.y) != 0 ? 1 : 0)
@@ -209,10 +195,6 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 												  state.transformed_primitive_size *
 												  (state.triangle_count + (tc_mod_batch_size == 0 ? 0 :
 																		   OCLRASTER_BATCH_SIZE - tc_mod_batch_size)));
-	
-	// clear info buffer
-	const info_buffer_struct empty_info_buffer { 0 };
-	ocl->write_buffer(info_buffer, &empty_info_buffer);
 	
 	// create user transformed buffers (transform program outputs)
 	const auto active_device = ocl->get_active_device();
