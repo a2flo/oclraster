@@ -24,6 +24,7 @@
 #endif
 
 pipeline::pipeline() :
+default_framebuffer(0, 0),
 event_handler_fnctr(this, &pipeline::event_handler) {
 	create_framebuffers(size2(oclraster::get_width(), oclraster::get_height()));
 	oclraster::get_event()->add_internal_event_handler(event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
@@ -69,9 +70,9 @@ void pipeline::create_framebuffers(const uint2& size) {
 	oclr_debug("size: %v -> %v", size, scaled_size);
 	
 	//
-	default_framebuffer = new framebuffer(framebuffer_size.x, framebuffer_size.y,
-										  { { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA } },
-										  { IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R });
+	default_framebuffer = framebuffer::create_with_images(framebuffer_size.x, framebuffer_size.y,
+														  { { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA } },
+														  { IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R });
 	
 	// create a fbo for copying the color framebuffer every frame and displaying it
 	// (there is no other way, unfortunately)
@@ -92,8 +93,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 }
 
 void pipeline::destroy_framebuffers() {
-	if(default_framebuffer != nullptr) delete default_framebuffer;
-	default_framebuffer = nullptr;
+	framebuffer::destroy_images(default_framebuffer);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -108,8 +108,8 @@ void pipeline::start() {
 	unsigned int argc = 0;
 	ocl->use_kernel("CLEAR_COLOR_DEPTH_FRAMEBUFFER");
 	ocl->set_kernel_argument(argc++, framebuffer_size);
-	ocl->set_kernel_argument(argc++, default_framebuffer->get_image(0)->get_buffer());
-	ocl->set_kernel_argument(argc++, default_framebuffer->get_depth_buffer()->get_buffer());
+	ocl->set_kernel_argument(argc++, default_framebuffer.get_image(0)->get_buffer());
+	ocl->set_kernel_argument(argc++, default_framebuffer.get_depth_buffer()->get_buffer());
 	ocl->set_kernel_range(ocl->compute_kernel_ranges(framebuffer_size.x, framebuffer_size.y));
 	ocl->run_kernel();
 }
@@ -122,14 +122,14 @@ void pipeline::stop() {
 	oclraster::start_2d_draw();
 	
 	// copy opencl framebuffer to blit framebuffer/texture
-	void* fbo_data = ocl->map_buffer(default_framebuffer->get_image(0)->get_buffer(), opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
+	void* fbo_data = ocl->map_buffer(default_framebuffer.get_image(0)->get_buffer(), opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
 #if !defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
 #endif
 	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer_size.x, framebuffer_size.y,
 					GL_RGBA, GL_UNSIGNED_BYTE, ((const unsigned char*)fbo_data) + image::header_size());
-	ocl->unmap_buffer(default_framebuffer->get_image(0)->get_buffer(), fbo_data);
+	ocl->unmap_buffer(default_framebuffer.get_image(0)->get_buffer(), fbo_data);
 	
 #if !defined(OCLRASTER_IOS)
 	// blit
@@ -173,7 +173,7 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	// initialize draw state
 	state.depth_test = 1;
 	state.framebuffer_size = framebuffer_size;
-	state.active_framebuffer = default_framebuffer;
+	state.active_framebuffer = &default_framebuffer;
 	state.bin_count = {
 		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
 		(state.framebuffer_size.y / state.bin_size.y) + ((state.framebuffer_size.y % state.bin_size.y) != 0 ? 1 : 0)
@@ -228,7 +228,6 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 void pipeline::bind_buffer(const string& name, const opencl_base::buffer_object& buffer) {
 	const auto existing_buffer = state.user_buffers.find(name);
 	if(existing_buffer != state.user_buffers.cend()) {
-		// TODO: unbind previously bound buffer
 		state.user_buffers.erase(existing_buffer);
 	}
 	state.user_buffers.emplace(name, buffer);
@@ -237,7 +236,6 @@ void pipeline::bind_buffer(const string& name, const opencl_base::buffer_object&
 void pipeline::bind_image(const string& name, const image& img) {
 	const auto existing_image = state.user_images.find(name);
 	if(existing_image != state.user_images.cend()) {
-		// TODO: unbind previously bound buffer
 		state.user_images.erase(existing_image);
 	}
 	state.user_images.emplace(name, img);
@@ -245,7 +243,7 @@ void pipeline::bind_image(const string& name, const image& img) {
 
 void pipeline::bind_framebuffer(framebuffer* fb) {
 	if(fb == nullptr) {
-		state.active_framebuffer = default_framebuffer;
+		state.active_framebuffer = &default_framebuffer;
 	}
 	else state.active_framebuffer = fb;
 	
@@ -258,9 +256,9 @@ void pipeline::bind_framebuffer(framebuffer* fb) {
 }
 
 const framebuffer* pipeline::get_default_framebuffer() const {
-	return default_framebuffer;
+	return &default_framebuffer;
 }
 
 framebuffer* pipeline::get_default_framebuffer() {
-	return default_framebuffer;
+	return &default_framebuffer;
 }

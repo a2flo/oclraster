@@ -24,14 +24,23 @@
 
 class framebuffer {
 public:
+	// in general, the framebuffer does not manage the images memory and is only a container for image pointers
+	// however, for making things easier in some situations, these are two helper functions that will also handle the images memory
 	//! NOTE: depth_type must either be NONE or { IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R }
 	//! NOTE: stencil_type must either be NONE or { IMAGE_TYPE::UINT_*, IMAGE_CHANNEL::R }
-	framebuffer(const unsigned int& width, const unsigned int& height,
-				initializer_list<pair<IMAGE_TYPE, IMAGE_CHANNEL>> image_types,
-				pair<IMAGE_TYPE, IMAGE_CHANNEL> depth_type = { IMAGE_TYPE::NONE, IMAGE_CHANNEL::NONE },
-				pair<IMAGE_TYPE, IMAGE_CHANNEL> stencil_type = { IMAGE_TYPE::NONE, IMAGE_CHANNEL::NONE });
-	~framebuffer();
+	static framebuffer create_with_images(const unsigned int& width, const unsigned int& height,
+										  initializer_list<pair<IMAGE_TYPE, IMAGE_CHANNEL>> image_types,
+										  pair<IMAGE_TYPE, IMAGE_CHANNEL> depth_type = { IMAGE_TYPE::NONE, IMAGE_CHANNEL::NONE },
+										  pair<IMAGE_TYPE, IMAGE_CHANNEL> stencil_type = { IMAGE_TYPE::NONE, IMAGE_CHANNEL::NONE });
+	static void destroy_images(framebuffer& fb);
 	
+	//
+	framebuffer(const unsigned int& width, const unsigned int& height);
+	~framebuffer();
+	framebuffer(framebuffer&& fb);
+	framebuffer& operator=(framebuffer&& fb);
+	
+	void set_size(const uint2& size);
 	const uint2& get_size() const;
 	
 	const image* get_image(const size_t& index) const;
@@ -43,8 +52,21 @@ public:
 	const image* get_stencil_buffer() const;
 	image* get_stencil_buffer();
 	
+	//
+	void attach(const size_t& index, image& img);
+	void detach(const size_t& index);
+	
+	void attach_depth_buffer(image& img);
+	void detach_depth_buffer();
+	
+	void attach_stencil_buffer(image& img);
+	void detach_stencil_buffer();
+	
+	// does not include depth and stencil buffers
+	size_t get_attachment_count() const;
+	
 protected:
-	const uint2 size;
+	uint2 size;
 	vector<image*> images;
 	image* depth_buffer = nullptr;
 	image* stencil_buffer = nullptr;
