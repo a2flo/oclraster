@@ -1112,7 +1112,7 @@ void cudacl::write_image3d(opencl_base::buffer_object* buffer_obj oclr_unused, c
 	__HANDLE_CL_EXCEPTION("write_buffer")*/
 }
 
-void cudacl::read_buffer(void* dst oclr_unused, opencl_base::buffer_object* buffer_obj oclr_unused, const size_t size oclr_unused) {
+void cudacl::read_buffer(void* dst oclr_unused, opencl_base::buffer_object* buffer_obj oclr_unused, const size_t offset oclr_unused, const size_t size oclr_unused) {
 	// TODO
 	/*try {
 		queues[active_device->device]->enqueueReadBuffer(*buffer_obj->buffer, ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) > 0),

@@ -38,6 +38,31 @@ string image_type::to_string() const {
 			channel_type_str_table[(size_t)channel_type]);
 }
 
+size_t image_type::pixel_size() const {
+	const size_t channel_size = (size_t)channel_type;
+	switch(data_type) {
+		case IMAGE_TYPE::INT_8:
+		case IMAGE_TYPE::UINT_8:
+			return 1 * channel_size;
+		case IMAGE_TYPE::INT_16:
+		case IMAGE_TYPE::UINT_16:
+		case IMAGE_TYPE::FLOAT_16:
+			return 2 * channel_size;
+		case IMAGE_TYPE::INT_32:
+		case IMAGE_TYPE::UINT_32:
+		case IMAGE_TYPE::FLOAT_32:
+			return 3 * channel_size;
+		case IMAGE_TYPE::INT_64:
+		case IMAGE_TYPE::UINT_64:
+		case IMAGE_TYPE::FLOAT_64:
+			return 4 * channel_size;
+		case IMAGE_TYPE::NONE:
+		case IMAGE_TYPE::__MAX_TYPE:
+			return 0;
+	}
+	oclr_unreachable();
+}
+
 string image_data_type_to_string(const IMAGE_TYPE& img_data_type) {
 	return data_type_str_table[(size_t)img_data_type];
 }

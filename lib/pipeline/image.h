@@ -57,6 +57,25 @@ public:
 	const uint2& get_size() const;
 	const cl::ImageFormat& get_native_format() const;
 	
+	// note: default parameters => complete image
+	void write(const void* src,
+			   const uint2 offset = { 0u, 0u },
+			   const uint2 size = { ~0u, ~0u });
+	void read(void* dst,
+			  const uint2 offset = { 0u, 0u },
+			  const uint2 size = { ~0u, ~0u });
+	void copy(const image& src_img,
+			  const uint2 src_offset = { 0u, 0u },
+			  const uint2 dst_offset = { 0u, 0u },
+			  const uint2 size = { ~0u, ~0u });
+	void* map(const uint2 offset = { 0u, 0u },
+			  const uint2 size = { ~0u, ~0u });
+	void unmap(void* mapped_ptr);
+	
+	// use this function to convert the image between BUFFER and IMAGE based backing
+	// note that this will of course create a new buffer/image and copy the data
+	bool modify_backing(const BACKING& new_backing);
+	
 	// note: opencl only supports read_only and write_only images
 	// -> if you need read_write access inside your kernel,
 	// buffer based backing must be used
@@ -98,6 +117,7 @@ protected:
 	
 	//
 	void create_buffer(const void* pixels);
+	size2 compute_buffer_offset_and_size(const uint2& offset, const uint2& size) const;
 	
 };
 

@@ -1637,12 +1637,12 @@ void opencl::write_image3d(opencl::buffer_object* buffer_obj, const void* src, s
 	__HANDLE_CL_EXCEPTION("write_buffer")
 }
 
-void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj, const size_t size_) {
+void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj, const size_t offset, const size_t size_) {
 	try {
 		const size_t size = (size_ == 0 ? buffer_obj->size : size_);
 		queues[&active_device->device]->enqueueReadBuffer(*buffer_obj->buffer,
 														  ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) != BUFFER_FLAG::NONE),
-														  0, size, dst);
+														  offset, size, dst);
 	}
 	__HANDLE_CL_EXCEPTION("read_buffer")
 }

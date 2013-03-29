@@ -160,6 +160,11 @@ size_t framebuffer::get_attachment_count() const {
 }
 
 void framebuffer::attach_depth_buffer(image& img) {
+	if(!((img.get_data_type() == IMAGE_TYPE::NONE && img.get_channel_order() == IMAGE_CHANNEL::NONE) ||
+		 (img.get_data_type() == IMAGE_TYPE::FLOAT_32 && img.get_channel_order() == IMAGE_CHANNEL::R))) {
+		oclr_error("framebuffer depth type must either be NONE or FLOAT_32/R");
+		return;
+	}
 	depth_buffer = &img;
 }
 void framebuffer::detach_depth_buffer() {
@@ -167,6 +172,14 @@ void framebuffer::detach_depth_buffer() {
 }
 
 void framebuffer::attach_stencil_buffer(image& img) {
+	if(!((img.get_data_type() == IMAGE_TYPE::NONE && img.get_channel_order() == IMAGE_CHANNEL::NONE) ||
+		 (img.get_data_type() == IMAGE_TYPE::UINT_8 && img.get_channel_order() == IMAGE_CHANNEL::R) ||
+		 (img.get_data_type() == IMAGE_TYPE::UINT_16 && img.get_channel_order() == IMAGE_CHANNEL::R) ||
+		 (img.get_data_type() == IMAGE_TYPE::UINT_32 && img.get_channel_order() == IMAGE_CHANNEL::R) ||
+		 (img.get_data_type() == IMAGE_TYPE::UINT_64 && img.get_channel_order() == IMAGE_CHANNEL::R))) {
+		oclr_error("framebuffer stencil type must either be NONE or UINT_*/R");
+		return;
+	}
 	stencil_buffer = &img;
 }
 void framebuffer::detach_stencil_buffer() {

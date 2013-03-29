@@ -350,14 +350,16 @@ void image::create_buffer(const void* pixels) {
 	}
 }
 
-image::image(image&& img) : backing(img.backing), img_type(img.img_type), data_type(img.data_type), channel_order(img.channel_order), buffer(img.buffer) {
-	img.buffer = nullptr;
-}
-
 image::~image() {
 	if(buffer != nullptr && ocl != nullptr) {
 		ocl->delete_buffer(buffer);
 	}
+}
+
+image::image(image&& img) :
+backing(img.backing), img_type(img.img_type), data_type(img.data_type), channel_order(img.channel_order),
+size(img.size), buffer(img.buffer), native_format(img.native_format) {
+	img.buffer = nullptr;
 }
 
 image::BACKING image::get_backing() const {
@@ -390,4 +392,83 @@ const uint2& image::get_size() const {
 
 const cl::ImageFormat& image::get_native_format() const {
 	return native_format;
+}
+
+// TODO: handle offset and size correclty for buffer-backed images (right now, it's wrapping around and not using the correct image region)
+size2 image::compute_buffer_offset_and_size(const uint2& offset, const uint2& size_) const {
+	const size_t pixel_size = img_type.pixel_size();
+	const size_t buffer_size = (size_.x == ~0u && size_.y == ~0u ? 0 :
+							   (size_.y * (size.x * pixel_size) + size_.x * pixel_size));
+	const size_t buffer_offset = offset.y * (size.x * pixel_size) + offset.x * pixel_size;
+	return { buffer_offset, buffer_size };
+}
+
+void image::write(const void* src, const uint2 offset, const uint2 size_) {
+	if(backing == BACKING::BUFFER) {
+		const auto buffer_info = compute_buffer_offset_and_size(offset, size_);
+		ocl->write_buffer(buffer, src, buffer_info.x, buffer_info.y);
+	}
+	else {
+		const uint2 write_size = (size_.x == ~0u && size_.y == ~0u ? size : size_);
+		ocl->write_image2d(buffer, src, offset, write_size);
+	}
+}
+
+void image::read(void* dst, const uint2 offset, const uint2 size_) {
+	if(backing == BACKING::BUFFER) {
+		const auto buffer_info = compute_buffer_offset_and_size(offset, size_);
+		ocl->read_buffer(dst, buffer, buffer_info.x, buffer_info.y);
+	}
+	else {
+		// TODO: implement this
+	}
+}
+
+void image::copy(const image& src_img, const uint2 src_offset, const uint2 dst_offset, const uint2 size_) {
+	// TODO: implement this
+	if(backing == BACKING::BUFFER) {
+		if(src_img.get_backing() == BACKING::BUFFER) {
+			// buffer -> buffer
+		}
+		else {
+			// image -> buffer
+		}
+	}
+	else {
+		if(src_img.get_backing() == BACKING::IMAGE) {
+			// image -> image
+		}
+		else {
+			// buffer -> image
+		}
+	}
+}
+
+void* image::map(const uint2 offset, const uint2 size) {
+	// TODO: offset + size
+	if(backing == BACKING::BUFFER) {
+		auto mapped_ptr = ocl->map_buffer(buffer,
+										  opencl::MAP_BUFFER_FLAG::READ_WRITE |
+										  opencl::MAP_BUFFER_FLAG::BLOCK);
+		return (void*)((unsigned char*)mapped_ptr + header_size());
+	}
+	else {
+		return ocl->map_buffer(buffer, opencl::MAP_BUFFER_FLAG::READ_WRITE | opencl::MAP_BUFFER_FLAG::BLOCK);
+	}
+}
+
+void image::unmap(void* mapped_ptr) {
+	ocl->unmap_buffer(buffer,
+					  (backing == BACKING::BUFFER ?
+					   (void*)((unsigned char*)mapped_ptr - header_size()) :
+					   mapped_ptr));
+}
+
+bool image::modify_backing(const BACKING& new_backing) {
+	// TODO: implement this
+	if(backing == BACKING::BUFFER) {
+	}
+	else {
+	}
+	return false;
 }

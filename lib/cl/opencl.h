@@ -200,7 +200,7 @@ public:
 	virtual void write_buffer(buffer_object* buffer_obj, const void* src, const size_t offset = 0, const size_t size = 0) = 0;
 	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region) = 0;
 	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region) = 0;
-	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t size = 0) = 0;
+	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t offset = 0, const size_t size = 0) = 0;
 	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK)) = 0;
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr) = 0;
 	void set_manual_gl_sharing(buffer_object* gl_buffer_obj, const bool state);
@@ -409,7 +409,7 @@ public:
 	virtual void write_buffer(buffer_object* buffer_obj, const void* src, const size_t offset = 0, const size_t size = 0);
 	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region);
 	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region);
-	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t size = 0);
+	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t offset = 0, const size_t size = 0);
 	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK));
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	
@@ -471,7 +471,7 @@ public:
 	virtual void write_buffer(buffer_object* buffer_obj, const void* src, const size_t offset = 0, const size_t size = 0);
 	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region);
 	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region);
-	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t size = 0);
+	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t offset = 0, const size_t size = 0);
 	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK));
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	

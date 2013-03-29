@@ -70,6 +70,8 @@ struct __attribute__((packed)) image_type {
 		return !(*this == img_type);
 	}
 	
+	size_t pixel_size() const;
+	
 	string to_string() const;
 	friend ostream& operator<<(ostream& output, const image_type& img_type) {
 		output << img_type.to_string();
