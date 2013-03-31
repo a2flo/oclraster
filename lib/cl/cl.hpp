@@ -482,6 +482,18 @@ public:
             }
         }
     }
+	
+    vector(std::initializer_list<T> init) :
+	size_(init.size()),
+	empty_(init.size() == 0)
+    {
+		size_t idx = 0;
+        for(auto iter = init.begin(); iter != init.end(); iter++) {
+			if(idx >= N) break;
+			data_[idx] = *iter;
+			idx++;
+		}
+    }
   
     vector(const vector<T, N>& vec) : 
         size_(vec.size_),
@@ -490,7 +502,7 @@ public:
         if (!empty_) {
             memcpy(&data_[0], &vec.data_[0], size() * sizeof(T));
         }
-    } 
+    }
 
     vector(unsigned int size, const T& val = T()) :
         size_(-1),
@@ -500,7 +512,24 @@ public:
             push_back(val);
         }
     }
-
+	
+    vector<T, N>& operator=(std::initializer_list<T> init)
+    {
+        size_  = init.size();
+        empty_ = (init.size() == 0);
+		
+        if (!empty_) {
+			size_t idx = 0;
+			for(auto iter = init.begin(); iter != init.end(); iter++) {
+				if(idx >= N) break;
+				data_[idx] = *iter;
+				idx++;
+			}
+        }
+		
+        return *this;
+    }
+	
     vector<T, N>& operator=(const vector<T, N>& rhs)
     {
         if (this == &rhs) {
@@ -687,8 +716,13 @@ public:
  * OpenCL C calls that require arrays of size_t values, who's
  * size is known statically.
  */
-template <int N>
-struct size_t : public cl::vector< ::size_t, N> { };
+
+#if !defined(__USE_DEV_VECTOR) && !defined(__NO_STD_VECTOR)
+#include <array>
+template <size_t N> using size_t = std::array<::size_t, N>;
+#elif !defined(__USE_DEV_VECTOR)
+template <size_t N> using size_t = cl::vector<::size_t, N>;
+#endif
 
 namespace detail {
 
@@ -1905,53 +1939,6 @@ public:
     }
 };
 
-/*! \class BufferRenderGL
- * \brief Memory buffer interface for GL interop with renderbuffer.
- */
-class BufferRenderGL : public Buffer
-{
-public:
-    BufferRenderGL(
-        const Context& context,
-        cl_mem_flags flags,
-        GLuint bufobj,
-        cl_int * err = nullptr)
-    {
-        cl_int error;
-        object_ = ::clCreateFromGLRenderbuffer(
-            context(),
-            flags,
-            bufobj,
-            &error);
-
-        detail::errHandler(error, __CREATE_GL_BUFFER_ERR);
-        if (err != nullptr) {
-            *err = error;
-        }
-    }
-
-    BufferRenderGL() : Buffer() { }
-
-    BufferRenderGL(const BufferGL& buffer) : Buffer(buffer) { }
-
-    BufferRenderGL& operator = (const BufferRenderGL& rhs)
-    {
-        if (this != &rhs) {
-            Buffer::operator=(rhs);
-        }
-        return *this;
-    }
-
-    cl_int getObjectInfo(
-        cl_gl_object_type *type,
-        GLuint * gl_object_name)
-    {
-        return detail::errHandler(
-            ::clGetGLObjectInfo(object_,type,gl_object_name),
-            __GET_GL_OBJECT_INFO_ERR);
-    }
-};
-
 /*! \class Image
  * \brief Base class  interface for all images.
  */
@@ -2070,6 +2057,54 @@ public:
             Image2D::operator=(rhs);
         }
         return *this;
+    }
+};
+
+
+/*! \class ImageRenderGL
+ * \brief Image buffer interface for GL interop with renderbuffer.
+ */
+class ImageRenderGL : public Image2D
+{
+public:
+    ImageRenderGL(
+        const Context& context,
+        cl_mem_flags flags,
+        GLuint bufobj,
+        cl_int * err = nullptr)
+    {
+        cl_int error;
+        object_ = ::clCreateFromGLRenderbuffer(
+            context(),
+            flags,
+            bufobj,
+            &error);
+
+        detail::errHandler(error, __CREATE_GL_BUFFER_ERR);
+        if (err != nullptr) {
+            *err = error;
+        }
+    }
+
+    ImageRenderGL() : Image2D() { }
+
+    ImageRenderGL(const ImageRenderGL& image) : Image2D(image) { }
+
+    ImageRenderGL& operator = (const ImageRenderGL& rhs)
+    {
+        if (this != &rhs) {
+            Image2D::operator=(rhs);
+        }
+        return *this;
+    }
+
+    cl_int getObjectInfo(
+        cl_gl_object_type *type,
+        GLuint * gl_object_name)
+    {
+        return detail::errHandler(
+            ::clGetGLObjectInfo(object_,type,gl_object_name),
+            __GET_GL_OBJECT_INFO_ERR);
     }
 };
 
@@ -2746,9 +2781,9 @@ public:
                 object_, 
                 buffer(), 
                 blocking, 
-                (const ::size_t *)buffer_offset,
-                (const ::size_t *)host_offset,
-                (const ::size_t *)region,
+                (const ::size_t *)&buffer_offset[0],
+                (const ::size_t *)&host_offset[0],
+                (const ::size_t *)&region[0],
                 buffer_row_pitch,
                 buffer_slice_pitch,
                 host_row_pitch,
@@ -2780,9 +2815,9 @@ public:
                 object_, 
                 buffer(), 
                 blocking, 
-                (const ::size_t *)buffer_offset,
-                (const ::size_t *)host_offset,
-                (const ::size_t *)region,
+                (const ::size_t *)&buffer_offset[0],
+                (const ::size_t *)&host_offset[0],
+                (const ::size_t *)&region[0],
                 buffer_row_pitch,
                 buffer_slice_pitch,
                 host_row_pitch,
@@ -2812,9 +2847,9 @@ public:
                 object_, 
                 src(), 
                 dst(), 
-                (const ::size_t *)src_origin, 
-                (const ::size_t *)dst_origin, 
-                (const ::size_t *)region,
+                (const ::size_t *)&src_origin[0],
+                (const ::size_t *)&dst_origin[0],
+                (const ::size_t *)&region[0],
                 src_row_pitch,
                 src_slice_pitch,
                 dst_row_pitch,
@@ -2839,8 +2874,8 @@ public:
     {
         return detail::errHandler(
             ::clEnqueueReadImage(
-                object_, image(), blocking, (const ::size_t *) origin,
-                (const ::size_t *) region, row_pitch, slice_pitch, ptr,
+                object_, image(), blocking, (const ::size_t *) &origin[0],
+                (const ::size_t *) &region[0], row_pitch, slice_pitch, ptr,
                 (events != nullptr) ? (cl_uint) events->size() : 0,
                 (events != nullptr && events->size() > 0) ? (cl_event*) &events->front() : nullptr,
                 (cl_event*) event),
@@ -2860,8 +2895,8 @@ public:
     {
         return detail::errHandler(
             ::clEnqueueWriteImage(
-                object_, image(), blocking, (const ::size_t *) origin,
-                (const ::size_t *) region, row_pitch, slice_pitch, ptr,
+                object_, image(), blocking, (const ::size_t *) &origin[0],
+                (const ::size_t *) &region[0], row_pitch, slice_pitch, ptr,
                 (events != nullptr) ? (cl_uint) events->size() : 0,
                 (events != nullptr && events->size() > 0) ? (cl_event*) &events->front() : nullptr,
                 (cl_event*) event),
@@ -2879,8 +2914,8 @@ public:
     {
         return detail::errHandler(
             ::clEnqueueCopyImage(
-                object_, src(), dst(), (const ::size_t *) src_origin,
-                (const ::size_t *)dst_origin, (const ::size_t *) region,
+                object_, src(), dst(), (const ::size_t *) &src_origin[0],
+                (const ::size_t *)&dst_origin[0], (const ::size_t *) &region[0],
                 (events != nullptr) ? (cl_uint) events->size() : 0,
                 (events != nullptr && events->size() > 0) ? (cl_event*) &events->front() : nullptr,
                 (cl_event*) event),
@@ -2898,8 +2933,8 @@ public:
     {
         return detail::errHandler(
             ::clEnqueueCopyImageToBuffer(
-                object_, src(), dst(), (const ::size_t *) src_origin,
-                (const ::size_t *) region, dst_offset,
+                object_, src(), dst(), (const ::size_t *) &src_origin[0],
+                (const ::size_t *) &region[0], dst_offset,
                 (events != nullptr) ? (cl_uint) events->size() : 0,
                 (events != nullptr && events->size() > 0) ? (cl_event*) &events->front() : nullptr,
                 (cl_event*) event),
@@ -2918,7 +2953,7 @@ public:
         return detail::errHandler(
             ::clEnqueueCopyBufferToImage(
                 object_, src(), dst(), src_offset,
-                (const ::size_t *) dst_origin, (const ::size_t *) region,
+                (const ::size_t *) &dst_origin[0], (const ::size_t *) &region[0],
                 (events != nullptr) ? (cl_uint) events->size() : 0,
                 (events != nullptr && events->size() > 0) ? (cl_event*) &events->front() : nullptr,
                 (cl_event*) event),
@@ -2965,7 +3000,7 @@ public:
         cl_int error;
         void * result = ::clEnqueueMapImage(
             object_, buffer(), blocking, flags,
-            (const ::size_t *) origin, (const ::size_t *) region,
+            (const ::size_t *) &origin[0], (const ::size_t *) &region[0],
             row_pitch, slice_pitch,
             (events != nullptr) ? (cl_uint) events->size() : 0,
             (events != nullptr && events->size() > 0) ? (cl_event*) &events->front() : nullptr,

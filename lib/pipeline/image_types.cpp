@@ -51,11 +51,11 @@ size_t image_type::pixel_size() const {
 		case IMAGE_TYPE::INT_32:
 		case IMAGE_TYPE::UINT_32:
 		case IMAGE_TYPE::FLOAT_32:
-			return 3 * channel_size;
+			return 4 * channel_size;
 		case IMAGE_TYPE::INT_64:
 		case IMAGE_TYPE::UINT_64:
 		case IMAGE_TYPE::FLOAT_64:
-			return 4 * channel_size;
+			return 8 * channel_size;
 		case IMAGE_TYPE::NONE:
 		case IMAGE_TYPE::__MAX_TYPE:
 			return 0;

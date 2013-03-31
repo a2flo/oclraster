@@ -362,6 +362,50 @@ cl::ImageFormat opencl_base::get_image_format(const IMAGE_TYPE& data_type, const
 	return internal_image_format_mapping[data_idx][channel_idx];
 }
 
+bool opencl_base::check_image_origin_and_size(const opencl_base::buffer_object* image_obj, cl::size_t<3>& origin, cl::size_t<3>& region) const {
+	unsigned int image_dim = 0;
+	switch(image_obj->image_type) {
+		case buffer_object::IMAGE_TYPE::IMAGE_1D:
+			origin[1] = 0;
+			origin[2] = 0;
+			region[1] = 1;
+			region[2] = 1;
+			image_dim = 1;
+			break;
+		case buffer_object::IMAGE_TYPE::IMAGE_2D:
+			region[2] = 0;
+			region[2] = 1;
+			image_dim = 2;
+			break;
+		case buffer_object::IMAGE_TYPE::IMAGE_3D:
+			image_dim = 3;
+			break;
+	}
+	
+	for(unsigned int dim = 0; dim < image_dim; dim++) {
+		const char* dim_str = (dim == 0 ? "x" : (dim == 1 ? "y" : "z"));
+		if(region[dim] == 0) {
+			region[dim] = image_obj->image_size[dim];
+		}
+		if(origin[dim] >= image_obj->image_size[dim]) {
+			oclr_error("image %s-origin (%u) out of bound!",
+					   dim_str, origin[dim]);
+			return false;
+		}
+		if(region[dim] > image_obj->image_size[dim]) {
+			oclr_error("image %s-region (%u) out of bound!",
+					   dim_str, region[dim]);
+			return false;
+		}
+		if((origin[dim]+region[dim]) > image_obj->image_size[dim]) {
+			oclr_error("combined image %s-region (%u) and image %s-origin (%u) are out of bound!",
+					   dim_str, dim_str, region[dim], origin[dim]);
+			return false;
+		}
+	}
+	return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // general/actual opencl implementation below
 #define __ERROR_CODE_INFO_CL_11(F) \
@@ -1418,8 +1462,8 @@ opencl::buffer_object* opencl::create_image2d_buffer(opencl::BUFFER_FLAG type, c
 		
 		buffer_obj->format.image_channel_order = channel_order;
 		buffer_obj->format.image_channel_data_type = channel_type;
-		buffer_obj->origin.set(0, 0, 0);
-		buffer_obj->region.set(width, height, 1); // depth must be 1 for 2d images
+		buffer_obj->image_size.set(width, height, 1); // depth must be 1 for 2d images
+		buffer_obj->image_type = buffer_object::IMAGE_TYPE::IMAGE_2D;
 		buffer_obj->image_buffer = new cl::Image2D(*context, buffer_obj->flags, buffer_obj->format, width, height, 0, data, &ierr);
 		return buffer_obj;
 	}
@@ -1434,8 +1478,8 @@ opencl::buffer_object* opencl::create_image3d_buffer(opencl::BUFFER_FLAG type, c
 		
 		buffer_obj->format.image_channel_order = channel_order;
 		buffer_obj->format.image_channel_data_type = channel_type;
-		buffer_obj->origin.set(0, 0, 0);
-		buffer_obj->region.set(width, height, depth);
+		buffer_obj->image_size.set(width, height, depth);
+		buffer_obj->image_type = buffer_object::IMAGE_TYPE::IMAGE_3D;
 		buffer_obj->image_buffer = new cl::Image3D(*context, buffer_obj->flags, buffer_obj->format, width, height, depth, 0, 0, data, &ierr);
 		return buffer_obj;
 	}
@@ -1520,7 +1564,11 @@ opencl::buffer_object* opencl::create_ogl_image2d_buffer(BUFFER_FLAG type, GLuin
 		buffer->ogl_buffer = texture;
 		buffer->data = nullptr;
 		buffer->size = 0;
+		buffer->image_type = buffer_object::IMAGE_TYPE::IMAGE_2D;
 		buffer->image_buffer = new cl::Image2DGL(*context, flags, target, 0, texture, &ierr);
+		buffer->image_size.set(buffer->image_buffer->getImageInfo<CL_IMAGE_WIDTH>(),
+							   buffer->image_buffer->getImageInfo<CL_IMAGE_HEIGHT>(),
+							   1);
 		buffers.push_back(buffer);
 		return buffer;
 	}
@@ -1565,7 +1613,11 @@ opencl::buffer_object* opencl::create_ogl_image2d_renderbuffer(BUFFER_FLAG type,
 		buffer->ogl_buffer = renderbuffer;
 		buffer->data = nullptr;
 		buffer->size = 0;
-		buffer->buffer = new cl::BufferRenderGL(*context, flags, renderbuffer, &ierr);
+		buffer->image_type = buffer_object::IMAGE_TYPE::IMAGE_2D;
+		buffer->image_buffer = new cl::ImageRenderGL(*context, flags, renderbuffer, &ierr);
+		buffer->image_size.set(buffer->image_buffer->getImageInfo<CL_IMAGE_WIDTH>(),
+							   buffer->image_buffer->getImageInfo<CL_IMAGE_HEIGHT>(),
+							   1);
 		return buffer;
 	}
 	__HANDLE_CL_EXCEPTION("create_ogl_image2d_renderbuffer")
@@ -1617,24 +1669,96 @@ void opencl::write_buffer(opencl::buffer_object* buffer_obj, const void* src, co
 	__HANDLE_CL_EXCEPTION("write_buffer")
 }
 
-void opencl::write_image2d(opencl::buffer_object* buffer_obj, const void* src, size2 origin, size2 region) {
+void opencl::write_buffer_rect(buffer_object* buffer_obj, const void* src,
+							   const size3 buffer_origin,
+							   const size3 host_origin,
+							   const size3 region,
+							   const size_t buffer_row_pitch, const size_t buffer_slice_pitch,
+							   const size_t host_row_pitch, const size_t host_slice_pitch) {
 	try {
-		size3 origin3(origin.x, origin.y, 0); // origin z must be 0 for 2d images
-		size3 region3(region.x, region.y, 1); // depth must be 1 for 2d images
+		cl::size_t<3> write_buffer_origin {{ buffer_origin.x, buffer_origin.y, buffer_origin.z }};
+		cl::size_t<3> write_host_origin {{ host_origin.x, host_origin.y, host_origin.z }};
+		cl::size_t<3> write_region {{ region.x, region.y, region.z }};
+		queues[&active_device->device]->enqueueWriteBufferRect(*buffer_obj->buffer,
+															   ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) != BUFFER_FLAG::NONE),
+															   write_buffer_origin, write_host_origin, write_region,
+															   buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, (void*)src);
+	}
+	__HANDLE_CL_EXCEPTION("write_buffer_rect")
+}
+
+void opencl::write_image(opencl::buffer_object* buffer_obj, const void* src, const size3 origin, const size3 region) {
+	try {
+		cl::size_t<3> img_origin {{ origin.x, origin.y, origin.z }};
+		cl::size_t<3> img_region {{ region.x, region.y, region.z }};
+		if(!check_image_origin_and_size(buffer_obj, img_origin, img_region)) return;
 		queues[&active_device->device]->enqueueWriteImage(*buffer_obj->image_buffer,
 														  ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) != BUFFER_FLAG::NONE),
-														  (cl::size_t<3>&)origin3, (cl::size_t<3>&)region3, 0, 0, (void*)src);
+														  img_origin, img_region, 0, 0, (void*)src);
 	}
 	__HANDLE_CL_EXCEPTION("write_image2d")
 }
 
-void opencl::write_image3d(opencl::buffer_object* buffer_obj, const void* src, size3 origin, size3 region) {
+void opencl::copy_buffer(const buffer_object* src_buffer, buffer_object* dst_buffer,
+						 const size_t src_offset, const size_t dst_offset, const size_t size) {
 	try {
-		queues[&active_device->device]->enqueueWriteImage(*buffer_obj->image_buffer,
-														  ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) != BUFFER_FLAG::NONE),
-														  (cl::size_t<3>&)origin, (cl::size_t<3>&)region, 0, 0, (void*)src);
+		queues[&active_device->device]->enqueueCopyBuffer(*src_buffer->buffer, *dst_buffer->buffer, src_offset, dst_offset, size);
 	}
-	__HANDLE_CL_EXCEPTION("write_buffer")
+	__HANDLE_CL_EXCEPTION("copy_buffer")
+}
+
+void opencl::copy_buffer_rect(const buffer_object* src_buffer, buffer_object* dst_buffer,
+							  const size3 src_origin, const size3 dst_origin,
+							  const size3 region,
+							  const size_t src_row_pitch, const size_t src_slice_pitch,
+							  const size_t dst_row_pitch, const size_t dst_slice_pitch) {
+	try {
+		cl::size_t<3> copy_src_origin {{ src_origin.x, src_origin.y, src_origin.z }};
+		cl::size_t<3> copy_dst_origin {{ dst_origin.x, dst_origin.y, dst_origin.z }};
+		cl::size_t<3> copy_region {{ region.x, region.y, region.z }};
+		queues[&active_device->device]->enqueueCopyBufferRect(*src_buffer->buffer, *dst_buffer->buffer,
+															  copy_src_origin, copy_dst_origin, copy_region,
+															  src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch);
+	}
+	__HANDLE_CL_EXCEPTION("copy_buffer_rect")
+}
+
+void opencl::copy_image(const buffer_object* src_buffer, buffer_object* dst_buffer,
+						const size3 src_origin, const size3 dst_origin, const size3 region) {
+	try {
+		cl::size_t<3> img_src_origin {{ src_origin.x, src_origin.y, src_origin.z }};
+		cl::size_t<3> img_dst_origin {{ dst_origin.x, dst_origin.y, dst_origin.z }};
+		cl::size_t<3> img_region {{ region.x, region.y, region.z }};
+		if(!check_image_origin_and_size(src_buffer, img_src_origin, img_region)) return; // check src first, so region is set correctly (if default 0)
+		if(!check_image_origin_and_size(dst_buffer, img_dst_origin, img_region)) return;
+		queues[&active_device->device]->enqueueCopyImage(*src_buffer->image_buffer, *dst_buffer->image_buffer,
+														 img_src_origin, img_dst_origin, img_region);
+	}
+	__HANDLE_CL_EXCEPTION("copy_image")
+}
+
+void opencl::copy_buffer_to_image(const buffer_object* src_buffer, buffer_object* dst_buffer,
+								  const size_t src_offset, const size3 dst_origin, const size3 dst_region) {
+	try {
+		cl::size_t<3> img_origin {{ dst_origin.x, dst_origin.y, dst_origin.z }};
+		cl::size_t<3> img_region {{ dst_region.x, dst_region.y, dst_region.z }};
+		if(!check_image_origin_and_size(dst_buffer, img_origin, img_region)) return;
+		queues[&active_device->device]->enqueueCopyBufferToImage(*src_buffer->buffer, *dst_buffer->image_buffer,
+																 src_offset, img_origin, img_region);
+	}
+	__HANDLE_CL_EXCEPTION("copy_buffer_to_image")
+}
+
+void opencl::copy_image_to_buffer(const buffer_object* src_buffer, buffer_object* dst_buffer,
+								  const size3 src_origin, const size3 src_region, const size_t dst_offset) {
+	try {
+		cl::size_t<3> img_origin {{ src_origin.x, src_origin.y, src_origin.z }};
+		cl::size_t<3> img_region {{ src_region.x, src_region.y, src_region.z }};
+		if(!check_image_origin_and_size(src_buffer, img_origin, img_region)) return;
+		queues[&active_device->device]->enqueueCopyImageToBuffer(*src_buffer->image_buffer, *dst_buffer->buffer,
+																 img_origin, img_region, dst_offset);
+	}
+	__HANDLE_CL_EXCEPTION("copy_image_to_buffer")
 }
 
 void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj, const size_t offset, const size_t size_) {
@@ -1645,6 +1769,38 @@ void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj, const siz
 														  offset, size, dst);
 	}
 	__HANDLE_CL_EXCEPTION("read_buffer")
+}
+
+void opencl::read_buffer_rect(void* dst, buffer_object* buffer_obj,
+							  const size3 buffer_origin,
+							  const size3 host_origin,
+							  const size3 region,
+							  const size_t buffer_row_pitch, const size_t buffer_slice_pitch,
+							  const size_t host_row_pitch, const size_t host_slice_pitch) {
+	try {
+		cl::size_t<3> read_buffer_origin {{ buffer_origin.x, buffer_origin.y, buffer_origin.z }};
+		cl::size_t<3> read_host_origin {{ host_origin.x, host_origin.y, host_origin.z }};
+		cl::size_t<3> read_region {{ region.x, region.y, region.z }};
+		queues[&active_device->device]->enqueueReadBufferRect(*buffer_obj->buffer,
+															  ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) != BUFFER_FLAG::NONE),
+															  read_buffer_origin, read_host_origin, read_region,
+															  buffer_row_pitch, buffer_slice_pitch, host_row_pitch, host_slice_pitch, dst);
+	}
+	__HANDLE_CL_EXCEPTION("read_buffer_rect")
+}
+
+void opencl::read_image(void* dst, opencl::buffer_object* buffer_obj, const size3 origin, const size3 region,
+						  const size_t image_row_pitch, const size_t image_slice_pitch) {
+	try {
+		cl::size_t<3> img_origin {{ origin.x, origin.y, origin.z }};
+		cl::size_t<3> img_region {{ region.x, region.y, region.z }};
+		if(!check_image_origin_and_size(buffer_obj, img_origin, img_region)) return;
+		
+		queues[&active_device->device]->enqueueReadImage(*buffer_obj->image_buffer,
+														 ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) != BUFFER_FLAG::NONE),
+														 img_origin, img_region, image_row_pitch, image_slice_pitch, dst);
+	}
+	__HANDLE_CL_EXCEPTION("read_image2d")
 }
 
 void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
@@ -1796,7 +1952,8 @@ bool opencl::set_kernel_argument(const unsigned int& index, size_t size, void* a
 	return false;
 }
 
-void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type) {
+void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type,
+																	 const size_t offset, const size_t size) {
 	try {
 		const bool blocking { (access_type & MAP_BUFFER_FLAG::BLOCK) != MAP_BUFFER_FLAG::NONE };
 		
@@ -1804,6 +1961,26 @@ void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buf
 		   (access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
 			oclr_error("READ or WRITE access and WRITE_INVALIDATE are mutually exclusive!");
 			return nullptr;
+		}
+		
+		size_t map_size = size;
+		if(map_size == 0) {
+			if(buffer_obj->size == 0) {
+				oclr_error("can't map 0 bytes (size of 0)!");
+				return nullptr;
+			}
+			else map_size = buffer_obj->size;
+		}
+		
+		size_t map_offset = offset;
+		if(map_offset >= buffer_obj->size) {
+			oclr_error("map offset (%d) out of bound!", map_offset);
+			return nullptr;
+		}
+		if(map_offset+map_size > buffer_obj->size) {
+			oclr_error("map offset (%d) or map size (%d) is too big - using map size of (%d) instead!",
+					   map_offset, map_size, (buffer_obj->size - map_offset));
+			map_size = buffer_obj->size - map_offset;
 		}
 		
 		cl_map_flags map_flags = ((access_type & (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::WRITE_INVALIDATE)) ==
@@ -1830,14 +2007,11 @@ void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buf
 		
 		void* __attribute__((aligned(sizeof(cl_long16)))) map_ptr = nullptr;
 		if(buffer_obj->buffer != nullptr) {
-			map_ptr = queues[&active_device->device]->enqueueMapBuffer(*buffer_obj->buffer, blocking, map_flags, 0, buffer_obj->size);
+			map_ptr = queues[&active_device->device]->enqueueMapBuffer(*buffer_obj->buffer, blocking, map_flags, map_offset, map_size);
 		}
 		else if(buffer_obj->image_buffer != nullptr) {
-			size_t row_pitch = 0, slice_pitch = 0;
-			map_ptr = queues[&active_device->device]->enqueueMapImage(*buffer_obj->image_buffer, blocking, map_flags,
-																	  (cl::size_t<3>&)buffer_obj->origin,
-																	  (cl::size_t<3>&)buffer_obj->region,
-																	  &row_pitch, &slice_pitch);
+			oclr_error("use map_image to map an image buffer object!");
+			return nullptr;
 		}
 		else {
 			oclr_error("unknown buffer object!");
@@ -1846,6 +2020,67 @@ void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buf
 		return map_ptr;
 	}
 	__HANDLE_CL_EXCEPTION("map_buffer")
+	return nullptr;
+}
+
+void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_image(opencl_base::buffer_object* buffer_obj,
+																	const MAP_BUFFER_FLAG access_type,
+																	const size3 origin,
+																	const size3 region,
+																	size_t* image_row_pitch,
+																	size_t* image_slice_pitch) {
+	try {
+		const bool blocking { (access_type & MAP_BUFFER_FLAG::BLOCK) != MAP_BUFFER_FLAG::NONE };
+		
+		if((access_type & MAP_BUFFER_FLAG::READ_WRITE) != MAP_BUFFER_FLAG::NONE &&
+		   (access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
+			oclr_error("READ or WRITE access and WRITE_INVALIDATE are mutually exclusive!");
+			return nullptr;
+		}
+		
+		cl::size_t<3> map_origin {{ origin.x, origin.y, origin.z }};
+		cl::size_t<3> map_region {{ region.x, region.y, region.z }};
+		if(!check_image_origin_and_size(buffer_obj, map_origin, map_region)) return nullptr;
+		
+		cl_map_flags map_flags = ((access_type & (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::WRITE_INVALIDATE)) ==
+								  MAP_BUFFER_FLAG::NONE) ? CL_MAP_READ : 0; // if no access type is specified, use read-only
+		switch(access_type & MAP_BUFFER_FLAG::READ_WRITE) {
+			case MAP_BUFFER_FLAG::READ_WRITE: map_flags = CL_MAP_READ | CL_MAP_WRITE; break;
+			case MAP_BUFFER_FLAG::READ: map_flags = CL_MAP_READ; break;
+			case MAP_BUFFER_FLAG::WRITE: map_flags = CL_MAP_WRITE; break;
+			default: break;
+		}
+		if((access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
+#if defined(CL_VERSION_1_2)
+			if(get_platform_cl_version() >= CL_VERSION::CL_1_2) {
+				map_flags |= CL_MAP_WRITE_INVALIDATE_REGION;
+			}
+			else {
+#else
+				map_flags |= CL_MAP_WRITE;
+#endif
+#if defined(CL_VERSION_1_2)
+			}
+#endif
+		}
+		
+		void* __attribute__((aligned(sizeof(cl_long16)))) map_ptr = nullptr;
+		if(buffer_obj->image_buffer != nullptr) {
+			map_ptr = queues[&active_device->device]->enqueueMapImage(*buffer_obj->image_buffer, blocking, map_flags,
+																	  map_origin, map_region,
+																	  image_row_pitch, image_slice_pitch);
+		}
+		else if(buffer_obj->buffer != nullptr) {
+			oclr_error("use map_buffer to map a buffer object!");
+			return nullptr;
+		}
+		else {
+			oclr_error("unknown buffer object!");
+			return nullptr;
+		}
+		return map_ptr;
+	}
+	__HANDLE_CL_EXCEPTION("map_image")
 	return nullptr;
 }
 

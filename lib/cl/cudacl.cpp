@@ -1092,33 +1092,103 @@ void cudacl::write_buffer(opencl_base::buffer_object* buffer_obj, const void* sr
 	}
 }
 
-void cudacl::write_image2d(opencl_base::buffer_object* buffer_obj oclr_unused, const void* src oclr_unused, size2 origin oclr_unused, size2 region oclr_unused) {
-	// TODO
-	/*try {
-		size3 origin3(origin.x, origin.y, 0); // origin z must be 0 for 2d images
-		size3 region3(region.x, region.y, 1); // depth must be 1 for 2d images
-		queues[active_device->device]->enqueueWriteImage(*buffer_obj->image_buffer, ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) > 0),
-														 (cl::size_t<3>&)origin3, (cl::size_t<3>&)region3, 0, 0, (void*)src);
+void cudacl::write_buffer_rect(buffer_object* buffer_obj oclr_unused, const void* src oclr_unused,
+							   const size3 buffer_origin oclr_unused,
+							   const size3 host_origin oclr_unused,
+							   const size3 region oclr_unused,
+							   const size_t buffer_row_pitch oclr_unused, const size_t buffer_slice_pitch oclr_unused,
+							   const size_t host_row_pitch oclr_unused, const size_t host_slice_pitch oclr_unused) {
+	try {
+		// TODO
+		assert(false && "write_buffer_rect not implemented yet!");
 	}
-	__HANDLE_CL_EXCEPTION("write_image2d")*/
+	__HANDLE_CL_EXCEPTION("write_buffer_rect")
 }
 
-void cudacl::write_image3d(opencl_base::buffer_object* buffer_obj oclr_unused, const void* src oclr_unused, size3 origin oclr_unused, size3 region oclr_unused) {
-	// TODO
-	/*try {
-		queues[active_device->device]->enqueueWriteImage(*buffer_obj->image_buffer, ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_WRITE) > 0),
-														 (cl::size_t<3>&)origin, (cl::size_t<3>&)region, 0, 0, (void*)src);
+void cudacl::write_image(opencl::buffer_object* buffer_obj oclr_unused, const void* src oclr_unused, const size3 origin oclr_unused, const size3 region oclr_unused) {
+	try {
+		// TODO
+		assert(false && "write_image not implemented yet!");
 	}
-	__HANDLE_CL_EXCEPTION("write_buffer")*/
+	__HANDLE_CL_EXCEPTION("write_image")
+}
+
+void cudacl::copy_buffer(const buffer_object* src_buffer oclr_unused, buffer_object* dst_buffer oclr_unused,
+						 const size_t src_offset oclr_unused, const size_t dst_offset oclr_unused, const size_t size oclr_unused) {
+	try {
+		// TODO
+		assert(false && "copy_buffer not implemented yet!");
+	}
+	__HANDLE_CL_EXCEPTION("copy_buffer")
+}
+
+void cudacl::copy_buffer_rect(const buffer_object* src_buffer oclr_unused, buffer_object* dst_buffer oclr_unused,
+							  const size3 src_origin oclr_unused, const size3 dst_origin oclr_unused,
+							  const size3 region oclr_unused,
+							  const size_t src_row_pitch oclr_unused, const size_t src_slice_pitch oclr_unused,
+							  const size_t dst_row_pitch oclr_unused, const size_t dst_slice_pitch oclr_unused) {
+	try {
+		// TODO
+		assert(false && "copy_buffer_rect not implemented yet!");
+	}
+	__HANDLE_CL_EXCEPTION("copy_buffer_rect")
+}
+
+void cudacl::copy_image(const buffer_object* src_buffer oclr_unused, buffer_object* dst_buffer oclr_unused,
+						const size3 src_origin oclr_unused, const size3 dst_origin oclr_unused, const size3 region oclr_unused) {
+	try {
+		// TODO
+		assert(false && "copy_image not implemented yet!");
+	}
+	__HANDLE_CL_EXCEPTION("copy_image")
+}
+
+void cudacl::copy_buffer_to_image(const buffer_object* src_buffer oclr_unused, buffer_object* dst_buffer oclr_unused,
+								  const size_t src_offset oclr_unused, const size3 dst_origin oclr_unused, const size3 dst_region oclr_unused) {
+	try {
+		// TODO
+		assert(false && "copy_buffer_to_image not implemented yet!");
+	}
+	__HANDLE_CL_EXCEPTION("copy_buffer_to_image")
+}
+
+void cudacl::copy_image_to_buffer(const buffer_object* src_buffer oclr_unused, buffer_object* dst_buffer oclr_unused,
+								  const size3 src_origin oclr_unused, const size3 src_region oclr_unused, const size_t dst_offset oclr_unused) {
+	try {
+		// TODO
+		assert(false && "copy_image_to_buffer not implemented yet!");
+	}
+	__HANDLE_CL_EXCEPTION("copy_image_to_buffer")
 }
 
 void cudacl::read_buffer(void* dst oclr_unused, opencl_base::buffer_object* buffer_obj oclr_unused, const size_t offset oclr_unused, const size_t size oclr_unused) {
-	// TODO
-	/*try {
-		queues[active_device->device]->enqueueReadBuffer(*buffer_obj->buffer, ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) > 0),
-														 0, buffer_obj->size, dst);
+	try {
+		// TODO
+		assert(false && "read_buffer not implemented yet!");
 	}
-	__HANDLE_CL_EXCEPTION("read_buffer")*/
+	__HANDLE_CL_EXCEPTION("read_buffer")
+}
+
+void cudacl::read_buffer_rect(void* dst oclr_unused, buffer_object* buffer_obj oclr_unused,
+							  const size3 buffer_origin oclr_unused,
+							  const size3 host_origin oclr_unused,
+							  const size3 region oclr_unused,
+							  const size_t buffer_row_pitch oclr_unused, const size_t buffer_slice_pitch oclr_unused,
+							  const size_t host_row_pitch oclr_unused, const size_t host_slice_pitch oclr_unused) {
+	try {
+		// TODO
+		assert(false && "read_buffer_rect not implemented yet!");
+	}
+	__HANDLE_CL_EXCEPTION("read_buffer_rect")
+}
+
+void cudacl::read_image(void* dst oclr_unused, opencl::buffer_object* buffer_obj oclr_unused, const size3 origin oclr_unused, const size3 region oclr_unused,
+						const size_t image_row_pitch oclr_unused, const size_t image_slice_pitch oclr_unused) {
+	try {
+		// TODO
+		assert(false && "read_image not implemented yet!");
+	}
+	__HANDLE_CL_EXCEPTION("read_image")
 }
 
 void cudacl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
@@ -1315,49 +1385,29 @@ bool cudacl::set_kernel_argument(const unsigned int& index, size_t size, void* a
 	return false;
 }
 
-void* __attribute__((aligned(sizeof(cl_long16)))) cudacl::map_buffer(opencl_base::buffer_object* buffer_obj oclr_unused, const MAP_BUFFER_FLAG access_type oclr_unused) {
+void* __attribute__((aligned(sizeof(cl_long16)))) cudacl::map_buffer(opencl_base::buffer_object* buffer_obj oclr_unused,
+																	 const MAP_BUFFER_FLAG access_type oclr_unused,
+																	 const size_t offset oclr_unused, const size_t size oclr_unused) {
 	// TODO
 	/*try {
-		cl_map_flags map_flags = CL_MAP_READ;
-		switch((BUFFER_FLAG)(access_type & 0x03)) {
-			case BUFFER_FLAG::READ_WRITE: map_flags = CL_MAP_READ | CL_MAP_WRITE; break;
-			case BUFFER_FLAG::READ: map_flags = CL_MAP_READ; break;
-			case BUFFER_FLAG::WRITE: map_flags = CL_MAP_WRITE; break;
-			default: break;
-		}
-		
-		void* map_ptr = nullptr;
-		if(buffer_obj->buffer != nullptr) {
-			map_ptr = queues[active_device->device]->enqueueMapBuffer(*buffer_obj->buffer, blocking, map_flags, 0, buffer_obj->size);
-		}
-		else if(buffer_obj->image_buffer != nullptr) {
-			size_t row_pitch, slice_pitch;
-			map_ptr = queues[active_device->device]->enqueueMapImage(*buffer_obj->image_buffer, blocking, map_flags,
-																				 (cl::size_t<3>&)buffer_obj->origin,
-																				 (cl::size_t<3>&)buffer_obj->region,
-																				 &row_pitch, &slice_pitch);
-		}
-		else {
-			oclr_error("unknown buffer object!");
-			return nullptr;
-		}
-		return map_ptr;
 	}
 	__HANDLE_CL_EXCEPTION("map_buffer")*/
+	return nullptr;
+}
+
+void* __attribute__((aligned(sizeof(cl_long16)))) cudacl::map_image(opencl_base::buffer_object* buffer_obj oclr_unused,
+																	const MAP_BUFFER_FLAG access_type oclr_unused,
+																	const size3 origin oclr_unused,
+																	const size3 region oclr_unused,
+																	size_t* image_row_pitch oclr_unused,
+																	size_t* image_slice_pitch oclr_unused) {
+	// TODO
 	return nullptr;
 }
 
 void cudacl::unmap_buffer(opencl_base::buffer_object* buffer_obj oclr_unused, void* map_ptr oclr_unused) {
 	// TODO
 	/*try {
-		void* buffer_ptr = nullptr;
-		if(buffer_obj->buffer != nullptr) buffer_ptr = buffer_obj->buffer;
-		else if(buffer_obj->image_buffer != nullptr) buffer_ptr = buffer_obj->image_buffer;
-		else {
-			oclr_error("unknown buffer object!");
-			return;
-		}
-		queues[active_device->device]->enqueueUnmapMemObject(*(cl::Memory*)buffer_ptr, map_ptr);
 	}
 	__HANDLE_CL_EXCEPTION("unmap_buffer")*/
 }

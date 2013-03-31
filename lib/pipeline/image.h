@@ -68,8 +68,10 @@ public:
 			  const uint2 src_offset = { 0u, 0u },
 			  const uint2 dst_offset = { 0u, 0u },
 			  const uint2 size = { ~0u, ~0u });
-	void* map(const uint2 offset = { 0u, 0u },
-			  const uint2 size = { ~0u, ~0u });
+	void* map();
+	// note: if buffer based backing is used, offset.x must be 0 and size.x must match the image width!
+	void* map_region(const uint2 offset = { 0u, 0u },
+					 const uint2 size = { ~0u, ~0u });
 	void unmap(void* mapped_ptr);
 	
 	// use this function to convert the image between BUFFER and IMAGE based backing
@@ -117,7 +119,6 @@ protected:
 	
 	//
 	void create_buffer(const void* pixels);
-	size2 compute_buffer_offset_and_size(const uint2& offset, const uint2& size) const;
 	
 };
 

@@ -190,19 +190,83 @@ public:
 	void delete_kernel(const string& identifier);
 	virtual void delete_kernel(weak_ptr<kernel_object> kernel_obj) = 0;
 	
+	// create
 	virtual buffer_object* create_buffer(BUFFER_FLAG type, size_t size, void* data = nullptr) = 0;
-	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data = nullptr) = 0;
-	virtual buffer_object* create_image3d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, size_t depth, void* data = nullptr) = 0;
+	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type,
+												 cl_channel_order channel_order,
+												 cl_channel_type channel_type,
+												 size_t width, size_t height,
+												 void* data = nullptr) = 0;
+	virtual buffer_object* create_image3d_buffer(BUFFER_FLAG type,
+												 cl_channel_order channel_order,
+												 cl_channel_type channel_type,
+												 size_t width, size_t height, size_t depth,
+												 void* data = nullptr) = 0;
 	virtual buffer_object* create_ogl_buffer(BUFFER_FLAG type, GLuint ogl_buffer) = 0;
-	virtual buffer_object* create_ogl_image2d_buffer(BUFFER_FLAG type, GLuint texture, GLenum target = GL_TEXTURE_2D) = 0;
+	virtual buffer_object* create_ogl_image2d_buffer(BUFFER_FLAG type,
+													 GLuint texture,
+													 GLenum target = GL_TEXTURE_2D) = 0;
 	virtual buffer_object* create_ogl_image2d_renderbuffer(BUFFER_FLAG type, GLuint renderbuffer) = 0;
 	virtual void delete_buffer(buffer_object* buffer_obj) = 0;
-	virtual void write_buffer(buffer_object* buffer_obj, const void* src, const size_t offset = 0, const size_t size = 0) = 0;
-	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region) = 0;
-	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region) = 0;
-	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t offset = 0, const size_t size = 0) = 0;
-	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK)) = 0;
+	
+	// write
+	virtual void write_buffer(buffer_object* buffer_obj, const void* src,
+							  const size_t offset = 0, const size_t size = 0) = 0;
+	virtual void write_buffer_rect(buffer_object* buffer_obj, const void* src,
+								   const size3 buffer_origin,
+								   const size3 host_origin,
+								   const size3 region,
+								   const size_t buffer_row_pitch = 0, const size_t buffer_slice_pitch = 0,
+								   const size_t host_row_pitch = 0, const size_t host_slice_pitch = 0) = 0;
+	virtual void write_image(buffer_object* buffer_obj, const void* src,
+							 const size3 origin = { 0, 0, 0 }, const size3 region = { 0, 0, 0 }) = 0;
+	
+	// copy
+	virtual void copy_buffer(const buffer_object* src_buffer, buffer_object* dst_buffer,
+							 const size_t src_offset = 0, const size_t dst_offset = 0,
+							 const size_t size = 0) = 0;
+	virtual void copy_buffer_rect(const buffer_object* src_buffer, buffer_object* dst_buffer,
+								  const size3 src_origin, const size3 dst_origin,
+								  const size3 region,
+								  const size_t src_row_pitch = 0, const size_t src_slice_pitch = 0,
+								  const size_t dst_row_pitch = 0, const size_t dst_slice_pitch = 0) = 0;
+	virtual void copy_image(const buffer_object* src_buffer, buffer_object* dst_buffer,
+							const size3 src_origin, const size3 dst_origin,
+							const size3 region) = 0;
+	virtual void copy_buffer_to_image(const buffer_object* src_buffer, buffer_object* dst_buffer,
+									  const size_t src_offset = 0,
+									  const size3 dst_origin = { 0, 0, 0 }, const size3 dst_region = { 0, 0, 0 }) = 0;
+	virtual void copy_image_to_buffer(const buffer_object* src_buffer, buffer_object* dst_buffer,
+									  const size3 src_origin = { 0, 0, 0 }, const size3 src_region = { 0, 0, 0 },
+									  const size_t dst_offset = 0) = 0;
+	
+	// read
+	virtual void read_buffer(void* dst, buffer_object* buffer_obj,
+							 const size_t offset = 0, const size_t size = 0) = 0;
+	virtual void read_buffer_rect(void* dst, buffer_object* buffer_obj,
+								  const size3 buffer_origin,
+								  const size3 host_origin,
+								  const size3 region,
+								  const size_t buffer_row_pitch = 0, const size_t buffer_slice_pitch = 0,
+								  const size_t host_row_pitch = 0, const size_t host_slice_pitch = 0) = 0;
+	virtual void read_image(void* dst, buffer_object* buffer_obj,
+							const size3 origin = { 0, 0, 0 }, const size3 region = { 0, 0, 0 },
+							const size_t image_row_pitch = 0,
+							const size_t image_slice_pitch = 0) = 0;
+	
+	// map
+	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj,
+																		 const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+																		 const size_t offset = 0,
+																		 const size_t size = 0) = 0;
+	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_image(buffer_object* buffer_obj,
+																		const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+																		const size3 origin = { 0, 0, 0 },
+																		const size3 region = { 0, 0, 0 },
+																		size_t* image_row_pitch = nullptr,
+																		size_t* image_slice_pitch = nullptr) = 0;
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr) = 0;
+	
 	void set_manual_gl_sharing(buffer_object* gl_buffer_obj, const bool state);
 	
 	const vector<cl::ImageFormat>& get_image_formats() const;
@@ -267,10 +331,16 @@ public:
 		BUFFER_FLAG type = BUFFER_FLAG::NONE;
 		cl_mem_flags flags = 0;
 		cl::ImageFormat format = cl::ImageFormat(0, 0);
-		size3 origin = size3(size_t(0));
-		size3 region = size3(size_t(0));
+		size3 image_size { 0, 0, 0 };
 		// kernels + argument numbers
 		unordered_map<shared_ptr<kernel_object>, vector<unsigned int>> associated_kernels;
+		
+		enum class IMAGE_TYPE : unsigned int {
+			IMAGE_1D,
+			IMAGE_2D,
+			IMAGE_3D,
+		};
+		IMAGE_TYPE image_type = IMAGE_TYPE::IMAGE_2D;
 		
 		buffer_object() {}
 		~buffer_object() {}
@@ -324,6 +394,8 @@ protected:
 	bool has_vendor_device(VENDOR vendor_type);
 	
 	virtual const char* error_code_to_string(cl_int error_code) const = 0;
+		
+	bool check_image_origin_and_size(const buffer_object* image_obj, cl::size_t<3>& origin, cl::size_t<3>& region) const;
 	
 	cl::Context* context;
 	cl::Platform* platform;
@@ -399,18 +471,81 @@ public:
 	virtual weak_ptr<kernel_object> add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "");
 	virtual void delete_kernel(weak_ptr<kernel_object> kernel_obj);
 	
+	// create
 	virtual buffer_object* create_buffer(BUFFER_FLAG type, size_t size, void* data = nullptr);
-	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data = nullptr);
-	virtual buffer_object* create_image3d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, size_t depth, void* data = nullptr);
+	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type,
+												 cl_channel_order channel_order,
+												 cl_channel_type channel_type,
+												 size_t width, size_t height,
+												 void* data = nullptr);
+	virtual buffer_object* create_image3d_buffer(BUFFER_FLAG type,
+												 cl_channel_order channel_order,
+												 cl_channel_type channel_type,
+												 size_t width, size_t height, size_t depth,
+												 void* data = nullptr);
 	virtual buffer_object* create_ogl_buffer(BUFFER_FLAG type, GLuint ogl_buffer);
-	virtual buffer_object* create_ogl_image2d_buffer(BUFFER_FLAG type, GLuint texture, GLenum target = GL_TEXTURE_2D);
+	virtual buffer_object* create_ogl_image2d_buffer(BUFFER_FLAG type,
+													 GLuint texture,
+													 GLenum target = GL_TEXTURE_2D);
 	virtual buffer_object* create_ogl_image2d_renderbuffer(BUFFER_FLAG type, GLuint renderbuffer);
 	virtual void delete_buffer(buffer_object* buffer_obj);
-	virtual void write_buffer(buffer_object* buffer_obj, const void* src, const size_t offset = 0, const size_t size = 0);
-	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region);
-	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region);
-	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t offset = 0, const size_t size = 0);
-	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK));
+	
+	// write
+	virtual void write_buffer(buffer_object* buffer_obj, const void* src,
+							  const size_t offset = 0, const size_t size = 0);
+	virtual void write_buffer_rect(buffer_object* buffer_obj, const void* src,
+								   const size3 buffer_origin,
+								   const size3 host_origin,
+								   const size3 region,
+								   const size_t buffer_row_pitch = 0, const size_t buffer_slice_pitch = 0,
+								   const size_t host_row_pitch = 0, const size_t host_slice_pitch = 0);
+	virtual void write_image(buffer_object* buffer_obj, const void* src,
+							 const size3 origin = { 0, 0, 0 }, const size3 region = { 0, 0, 0 });
+	
+	// copy
+	virtual void copy_buffer(const buffer_object* src_buffer, buffer_object* dst_buffer,
+							 const size_t src_offset = 0, const size_t dst_offset = 0,
+							 const size_t size = 0);
+	virtual void copy_buffer_rect(const buffer_object* src_buffer, buffer_object* dst_buffer,
+								  const size3 src_origin, const size3 dst_origin,
+								  const size3 region,
+								  const size_t src_row_pitch = 0, const size_t src_slice_pitch = 0,
+								  const size_t dst_row_pitch = 0, const size_t dst_slice_pitch = 0);
+	virtual void copy_image(const buffer_object* src_buffer, buffer_object* dst_buffer,
+							const size3 src_origin, const size3 dst_origin,
+							const size3 region);
+	virtual void copy_buffer_to_image(const buffer_object* src_buffer, buffer_object* dst_buffer,
+									  const size_t src_offset = 0,
+									  const size3 dst_origin = { 0, 0, 0 }, const size3 dst_region = { 0, 0, 0 });
+	virtual void copy_image_to_buffer(const buffer_object* src_buffer, buffer_object* dst_buffer,
+									  const size3 src_origin = { 0, 0, 0 }, const size3 src_region = { 0, 0, 0 },
+									  const size_t dst_offset = 0);
+	
+	// read
+	virtual void read_buffer(void* dst, buffer_object* buffer_obj,
+							 const size_t offset = 0, const size_t size = 0);
+	virtual void read_buffer_rect(void* dst, buffer_object* buffer_obj,
+								  const size3 buffer_origin,
+								  const size3 host_origin,
+								  const size3 region,
+								  const size_t buffer_row_pitch = 0, const size_t buffer_slice_pitch = 0,
+								  const size_t host_row_pitch = 0, const size_t host_slice_pitch = 0);
+	virtual void read_image(void* dst, buffer_object* buffer_obj,
+							const size3 origin = { 0, 0, 0 }, const size3 region = { 0, 0, 0 },
+							const size_t image_row_pitch = 0,
+							const size_t image_slice_pitch = 0);
+	
+	// map
+	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj,
+																		 const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+																		 const size_t offset = 0,
+																		 const size_t size = 0);
+	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_image(buffer_object* buffer_obj,
+																		const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+																		const size3 origin = { 0, 0, 0 },
+																		const size3 region = { 0, 0, 0 },
+																		size_t* image_row_pitch = nullptr,
+																		size_t* image_slice_pitch = nullptr);
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	
 	virtual void _fill_buffer(buffer_object* buffer_obj,
@@ -461,18 +596,81 @@ public:
 	virtual weak_ptr<kernel_object> add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "");
 	virtual void delete_kernel(weak_ptr<kernel_object> kernel_obj);
 	
+	// create
 	virtual buffer_object* create_buffer(BUFFER_FLAG type, size_t size, void* data = nullptr);
-	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data = nullptr);
-	virtual buffer_object* create_image3d_buffer(BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, size_t depth, void* data = nullptr);
+	virtual buffer_object* create_image2d_buffer(BUFFER_FLAG type,
+												 cl_channel_order channel_order,
+												 cl_channel_type channel_type,
+												 size_t width, size_t height,
+												 void* data = nullptr);
+	virtual buffer_object* create_image3d_buffer(BUFFER_FLAG type,
+												 cl_channel_order channel_order,
+												 cl_channel_type channel_type,
+												 size_t width, size_t height, size_t depth,
+												 void* data = nullptr);
 	virtual buffer_object* create_ogl_buffer(BUFFER_FLAG type, GLuint ogl_buffer);
-	virtual buffer_object* create_ogl_image2d_buffer(BUFFER_FLAG type, GLuint texture, GLenum target = GL_TEXTURE_2D);
+	virtual buffer_object* create_ogl_image2d_buffer(BUFFER_FLAG type,
+													 GLuint texture,
+													 GLenum target = GL_TEXTURE_2D);
 	virtual buffer_object* create_ogl_image2d_renderbuffer(BUFFER_FLAG type, GLuint renderbuffer);
 	virtual void delete_buffer(buffer_object* buffer_obj);
-	virtual void write_buffer(buffer_object* buffer_obj, const void* src, const size_t offset = 0, const size_t size = 0);
-	virtual void write_image2d(buffer_object* buffer_obj, const void* src, size2 origin, size2 region);
-	virtual void write_image3d(buffer_object* buffer_obj, const void* src, size3 origin, size3 region);
-	virtual void read_buffer(void* dst, buffer_object* buffer_obj, const size_t offset = 0, const size_t size = 0);
-	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK));
+	
+	// write
+	virtual void write_buffer(buffer_object* buffer_obj, const void* src,
+							  const size_t offset = 0, const size_t size = 0);
+	virtual void write_buffer_rect(buffer_object* buffer_obj, const void* src,
+								   const size3 buffer_origin,
+								   const size3 host_origin,
+								   const size3 region,
+								   const size_t buffer_row_pitch = 0, const size_t buffer_slice_pitch = 0,
+								   const size_t host_row_pitch = 0, const size_t host_slice_pitch = 0);
+	virtual void write_image(buffer_object* buffer_obj, const void* src,
+							 const size3 origin = { 0, 0, 0 }, const size3 region = { 0, 0, 0 });
+	
+	// copy
+	virtual void copy_buffer(const buffer_object* src_buffer, buffer_object* dst_buffer,
+							 const size_t src_offset = 0, const size_t dst_offset = 0,
+							 const size_t size = 0);
+	virtual void copy_image(const buffer_object* src_buffer, buffer_object* dst_buffer,
+							const size3 src_origin, const size3 dst_origin,
+							const size3 region);
+	virtual void copy_buffer_rect(const buffer_object* src_buffer, buffer_object* dst_buffer,
+								  const size3 src_origin, const size3 dst_origin,
+								  const size3 region,
+								  const size_t src_row_pitch = 0, const size_t src_slice_pitch = 0,
+								  const size_t dst_row_pitch = 0, const size_t dst_slice_pitch = 0);
+	virtual void copy_buffer_to_image(const buffer_object* src_buffer, buffer_object* dst_buffer,
+									  const size_t src_offset = 0,
+									  const size3 dst_origin = { 0, 0, 0 }, const size3 dst_region = { 0, 0, 0 });
+	virtual void copy_image_to_buffer(const buffer_object* src_buffer, buffer_object* dst_buffer,
+									  const size3 src_origin = { 0, 0, 0 }, const size3 src_region = { 0, 0, 0 },
+									  const size_t dst_offset = 0);
+	
+	// read
+	virtual void read_buffer(void* dst, buffer_object* buffer_obj,
+							 const size_t offset = 0, const size_t size = 0);
+	virtual void read_buffer_rect(void* dst, buffer_object* buffer_obj,
+								  const size3 buffer_origin,
+								  const size3 host_origin,
+								  const size3 region,
+								  const size_t buffer_row_pitch = 0, const size_t buffer_slice_pitch = 0,
+								  const size_t host_row_pitch = 0, const size_t host_slice_pitch = 0);
+	virtual void read_image(void* dst, buffer_object* buffer_obj,
+							const size3 origin = { 0, 0, 0 }, const size3 region = { 0, 0, 0 },
+							const size_t image_row_pitch = 0,
+							const size_t image_slice_pitch = 0);
+	
+	// map
+	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj,
+																		 const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+																		 const size_t offset = 0,
+																		 const size_t size = 0);
+	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_image(buffer_object* buffer_obj,
+																		const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+																		const size3 origin = { 0, 0, 0 },
+																		const size3 region = { 0, 0, 0 },
+																		size_t* image_row_pitch = nullptr,
+																		size_t* image_slice_pitch = nullptr);
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	
 	virtual void _fill_buffer(buffer_object* buffer_obj,
