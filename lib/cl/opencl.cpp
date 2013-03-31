@@ -1371,7 +1371,7 @@ void opencl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) 
 	__HANDLE_CL_EXCEPTION("log_program_binary")
 }
 
-opencl::buffer_object* opencl::create_buffer_object(opencl::BUFFER_FLAG type, void* data) {
+opencl::buffer_object* opencl::create_buffer_object(const opencl::BUFFER_FLAG type, const void* data) {
 	try {
 		opencl::buffer_object* buffer = new opencl::buffer_object();
 		buffers.push_back(buffer);
@@ -1428,14 +1428,14 @@ opencl::buffer_object* opencl::create_buffer_object(opencl::BUFFER_FLAG type, vo
 		
 		buffer->type = vtype;
 		buffer->flags = flags;
-		buffer->data = data;
+		buffer->data = (void*)data;
 		return buffer;
 	}
 	__HANDLE_CL_EXCEPTION("create_buffer_object")
 	return nullptr;
 }
 
-opencl::buffer_object* opencl::create_buffer(opencl::BUFFER_FLAG type, size_t size, void* data) {
+opencl::buffer_object* opencl::create_buffer(const opencl::BUFFER_FLAG type, const size_t size, const void* data) {
 	if(size == 0) {
 		return nullptr;
 	}
@@ -1447,7 +1447,7 @@ opencl::buffer_object* opencl::create_buffer(opencl::BUFFER_FLAG type, size_t si
 		buffer_obj->size = size;
 		buffer_obj->buffer = new cl::Buffer(*context, buffer_obj->flags, size,
 											((buffer_obj->type & BUFFER_FLAG::INITIAL_COPY) != BUFFER_FLAG::NONE ||
-											 (buffer_obj->type & BUFFER_FLAG::USE_HOST_MEMORY) != BUFFER_FLAG::NONE ? data : nullptr),
+											 (buffer_obj->type & BUFFER_FLAG::USE_HOST_MEMORY) != BUFFER_FLAG::NONE ? (void*)data : nullptr),
 											&ierr);
 		return buffer_obj;
 	}
@@ -1455,39 +1455,72 @@ opencl::buffer_object* opencl::create_buffer(opencl::BUFFER_FLAG type, size_t si
 	return nullptr;
 }
 
-opencl::buffer_object* opencl::create_image2d_buffer(opencl::BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, void* data) {
+opencl::buffer_object* opencl::create_sub_buffer(const buffer_object* parent_buffer,
+												 const BUFFER_FLAG type,
+												 const size_t offset,
+												 const size_t size) {
+	if(parent_buffer == nullptr || parent_buffer->buffer == nullptr) {
+		oclr_error("invalid buffer object!");
+		return nullptr;
+	}
+	if(size == 0 || size > parent_buffer->size) {
+		oclr_error("invalid size (%u) - must be > 0 and <= buffer size (%u)!", size, parent_buffer->size);
+		return nullptr;
+	}
+	if(offset >= parent_buffer->size || (size+offset) > parent_buffer->size) {
+		oclr_error("invalid offset (%u) - offset must be < buffer size (%u) and offset+size (%u) must be <= buffer size (%u)!",
+				   size, parent_buffer->size, size+offset, parent_buffer->size);
+		return nullptr;
+	}
+	
 	try {
-		buffer_object* buffer_obj = create_buffer_object(type, data);
+		buffer_object* sub_buffer = create_buffer_object(type, nullptr);
+		if(sub_buffer == nullptr) return nullptr;
+		
+		const auto region = cl_buffer_region { offset, size };
+		sub_buffer->buffer = new cl::Buffer(parent_buffer->buffer->createSubBuffer(sub_buffer->flags, CL_BUFFER_CREATE_TYPE_REGION, &region));
+	}
+	__HANDLE_CL_EXCEPTION("create_sub_buffer")
+	return nullptr;
+}
+
+opencl::buffer_object* opencl::create_image2d_buffer(const opencl::BUFFER_FLAG type,
+													 const cl_channel_order channel_order, const cl_channel_type channel_type,
+													 const size_t width, const size_t height, const void* data) {
+	try {
+		buffer_object* buffer_obj = create_buffer_object(type, (void*)data);
 		if(buffer_obj == nullptr) return nullptr;
 		
 		buffer_obj->format.image_channel_order = channel_order;
 		buffer_obj->format.image_channel_data_type = channel_type;
 		buffer_obj->image_size.set(width, height, 1); // depth must be 1 for 2d images
 		buffer_obj->image_type = buffer_object::IMAGE_TYPE::IMAGE_2D;
-		buffer_obj->image_buffer = new cl::Image2D(*context, buffer_obj->flags, buffer_obj->format, width, height, 0, data, &ierr);
+		buffer_obj->image_buffer = new cl::Image2D(*context, buffer_obj->flags, buffer_obj->format, width, height, 0, (void*)data, &ierr);
 		return buffer_obj;
 	}
 	__HANDLE_CL_EXCEPTION("create_image2d_buffer")
 	return nullptr;
 }
 
-opencl::buffer_object* opencl::create_image3d_buffer(opencl::BUFFER_FLAG type, cl_channel_order channel_order, cl_channel_type channel_type, size_t width, size_t height, size_t depth, void* data) {
+opencl::buffer_object* opencl::create_image3d_buffer(const opencl::BUFFER_FLAG type,
+													 const cl_channel_order channel_order, const cl_channel_type channel_type,
+													 const size_t width, const size_t height, const size_t depth, const void* data) {
 	try {
-		buffer_object* buffer_obj = create_buffer_object(type, data);
+		buffer_object* buffer_obj = create_buffer_object(type, (void*)data);
 		if(buffer_obj == nullptr) return nullptr;
 		
 		buffer_obj->format.image_channel_order = channel_order;
 		buffer_obj->format.image_channel_data_type = channel_type;
 		buffer_obj->image_size.set(width, height, depth);
 		buffer_obj->image_type = buffer_object::IMAGE_TYPE::IMAGE_3D;
-		buffer_obj->image_buffer = new cl::Image3D(*context, buffer_obj->flags, buffer_obj->format, width, height, depth, 0, 0, data, &ierr);
+		buffer_obj->image_buffer = new cl::Image3D(*context, buffer_obj->flags, buffer_obj->format, width, height, depth, 0, 0, (void*)data, &ierr);
 		return buffer_obj;
 	}
 	__HANDLE_CL_EXCEPTION("create_image3d_buffer")
 	return nullptr;
 }
 
-opencl::buffer_object* opencl::create_ogl_buffer(opencl::BUFFER_FLAG type, GLuint ogl_buffer) {
+opencl::buffer_object* opencl::create_ogl_buffer(const opencl::BUFFER_FLAG type, const GLuint ogl_buffer) {
 	try {
 		opencl::buffer_object* buffer = new opencl::buffer_object();
 		buffers.push_back(buffer);
@@ -1529,7 +1562,7 @@ opencl::buffer_object* opencl::create_ogl_buffer(opencl::BUFFER_FLAG type, GLuin
 	return nullptr;
 }
 
-opencl::buffer_object* opencl::create_ogl_image2d_buffer(BUFFER_FLAG type, GLuint texture, GLenum target) {
+opencl::buffer_object* opencl::create_ogl_image2d_buffer(const BUFFER_FLAG type, const GLuint texture, const GLenum target) {
 	opencl::buffer_object* buffer = nullptr;
 	try {
 		buffer = new opencl::buffer_object();
@@ -1578,7 +1611,7 @@ opencl::buffer_object* opencl::create_ogl_image2d_buffer(BUFFER_FLAG type, GLuin
 	return nullptr;
 }
 
-opencl::buffer_object* opencl::create_ogl_image2d_renderbuffer(BUFFER_FLAG type, GLuint renderbuffer) {
+opencl::buffer_object* opencl::create_ogl_image2d_renderbuffer(const BUFFER_FLAG type, const GLuint renderbuffer) {
 	try {
 		opencl::buffer_object* buffer = new opencl::buffer_object();
 		buffers.push_back(buffer);
@@ -1761,7 +1794,7 @@ void opencl::copy_image_to_buffer(const buffer_object* src_buffer, buffer_object
 	__HANDLE_CL_EXCEPTION("copy_image_to_buffer")
 }
 
-void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj, const size_t offset, const size_t size_) {
+void opencl::read_buffer(void* dst, const opencl::buffer_object* buffer_obj, const size_t offset, const size_t size_) {
 	try {
 		const size_t size = (size_ == 0 ? buffer_obj->size : size_);
 		queues[&active_device->device]->enqueueReadBuffer(*buffer_obj->buffer,
@@ -1771,7 +1804,7 @@ void opencl::read_buffer(void* dst, opencl::buffer_object* buffer_obj, const siz
 	__HANDLE_CL_EXCEPTION("read_buffer")
 }
 
-void opencl::read_buffer_rect(void* dst, buffer_object* buffer_obj,
+void opencl::read_buffer_rect(void* dst, const buffer_object* buffer_obj,
 							  const size3 buffer_origin,
 							  const size3 host_origin,
 							  const size3 region,
@@ -1789,7 +1822,7 @@ void opencl::read_buffer_rect(void* dst, buffer_object* buffer_obj,
 	__HANDLE_CL_EXCEPTION("read_buffer_rect")
 }
 
-void opencl::read_image(void* dst, opencl::buffer_object* buffer_obj, const size3 origin, const size3 region,
+void opencl::read_image(void* dst, const opencl::buffer_object* buffer_obj, const size3 origin, const size3 region,
 						  const size_t image_row_pitch, const size_t image_slice_pitch) {
 	try {
 		cl::size_t<3> img_origin {{ origin.x, origin.y, origin.z }};

@@ -68,11 +68,12 @@ public:
 			  const uint2 src_offset = { 0u, 0u },
 			  const uint2 dst_offset = { 0u, 0u },
 			  const uint2 size = { ~0u, ~0u });
-	void* map();
+	void* __attribute__((aligned(sizeof(cl_long16)))) map();
+	const void* __attribute__((aligned(sizeof(cl_long16)))) map() const; // read-only!
 	// note: if buffer based backing is used, offset.x must be 0 and size.x must match the image width!
-	void* map_region(const uint2 offset = { 0u, 0u },
-					 const uint2 size = { ~0u, ~0u });
-	void unmap(void* mapped_ptr);
+	void* __attribute__((aligned(sizeof(cl_long16)))) map_region(const uint2 offset = { 0u, 0u },
+																 const uint2 size = { ~0u, ~0u });
+	void unmap(const void* mapped_ptr) const;
 	
 	// use this function to convert the image between BUFFER and IMAGE based backing
 	// note that this will of course create a new buffer/image and copy the data
@@ -88,23 +89,26 @@ public:
 	};
 	
 	// image header when a buffer is used
-	struct __attribute__((packed, aligned(32))) header {
+	struct __attribute__((packed, aligned(128))) header {
 		IMAGE_TYPE type;
 		IMAGE_CHANNEL channel_order;
 		unsigned short int width;
 		unsigned short int height;
-		unsigned char _unused[24];
+		unsigned char _unused[120];
 	};
 	static constexpr size_t header_size() {
-		// max allowed size: 4 (channels) * 8 (sizeof(double))
-		// this is necessary to guarantee correct alignment
-		static_assert(sizeof(header) == (4*8), "invalid image header size!");
-		return (4*8);
+		// opencl requires an address alignment of 128 bytes (16 * 64-bit value)
+		static_assert(sizeof(header) == (16*8), "invalid image header size!");
+		return (16*8);
 	}
 	
 	//
 	const opencl::buffer_object* get_buffer() const;
 	opencl::buffer_object* get_buffer();
+	
+	// only available if buffer based backing is used
+	const opencl::buffer_object* get_data_buffer() const;
+	opencl::buffer_object* get_data_buffer();
 	
 protected:
 	BACKING backing;
@@ -116,6 +120,10 @@ protected:
 	
 	// only used with image based backing
 	cl::ImageFormat native_format;
+	
+	// only used with buffer based backing
+	// sub-buffer of "buffer", only containing the image data
+	opencl::buffer_object* data_buffer = nullptr;
 	
 	//
 	void create_buffer(const void* pixels);

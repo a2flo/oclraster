@@ -91,7 +91,6 @@ public:
 	
 	//
 	const framebuffer* get_default_framebuffer() const;
-	framebuffer* get_default_framebuffer();
 	
 	// "draw calls" (for now, these always draw triangles)
 	// TODO: get the necessary information from somewhere again ...

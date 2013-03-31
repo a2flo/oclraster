@@ -11,12 +11,12 @@
 #endif
 
 //
-typedef struct __attribute__((packed, aligned(32))) {
+typedef struct __attribute__((packed, aligned(128))) {
 	const ushort type;
 	const ushort channel_order;
 	const ushort width;
 	const ushort height;
-	const unsigned char _unused[24];
+	const unsigned char _unused[120];
 } image_header;
 typedef global const image_header* image_header_ptr;
 

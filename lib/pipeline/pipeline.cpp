@@ -258,7 +258,3 @@ void pipeline::bind_framebuffer(framebuffer* fb) {
 const framebuffer* pipeline::get_default_framebuffer() const {
 	return &default_framebuffer;
 }
-
-framebuffer* pipeline::get_default_framebuffer() {
-	return &default_framebuffer;
-}

@@ -19,21 +19,6 @@
 #include "image.h"
 #include "oclraster.h"
 
-static constexpr array<size_t, (size_t)IMAGE_TYPE::__MAX_TYPE> image_type_sizes {
-	{
-		0,
-		1, 2, 4, 8, // INT*
-		1, 2, 4, 8, // UINT*
-		2, 4, 8, // FLOAT*
-	}
-};
-static constexpr array<size_t, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL> image_channel_sizes {
-	{
-		0,
-		1, 2, 3, 4, // R/RG/RGB/RGBA
-	}
-};
-
 bool is_correct_format(const SDL_PixelFormat& format, const IMAGE_CHANNEL& channel_order);
 bool is_correct_format(const SDL_PixelFormat& format, const IMAGE_CHANNEL& channel_order) {
 	switch(channel_order) {
@@ -115,18 +100,17 @@ image image::from_file(const string& filename, const BACKING& backing,
 	
 	// check if the loaded surface must be converted to match the requested channel order (format)
 	// note that this will only work for INT_8 and UINT_8 images (SDL only supports these directly)
+	const size_t pixel_size = image_type(type, channel_order).pixel_size();
 	SDL_PixelFormat* format = surface->format;
-	const size_t channel_count = image_channel_sizes[static_cast<underlying_type<IMAGE_CHANNEL>::type>(channel_order)];
-	const size_t type_size = image_type_sizes[static_cast<underlying_type<IMAGE_TYPE>::type>(type)];
 	if((type == IMAGE_TYPE::INT_8 || type == IMAGE_TYPE::UINT_8) &&
-	   (format->BytesPerPixel != (channel_count * type_size) ||
+	   (format->BytesPerPixel != pixel_size ||
 		!is_correct_format(*format, channel_order))) {
 		SDL_PixelFormat correct_format;
 		memcpy(&correct_format, format, sizeof(SDL_PixelFormat));
 		
 		//
-		correct_format.BytesPerPixel = channel_count * type_size;
-		correct_format.BitsPerPixel = channel_count * type_size * 8;
+		correct_format.BytesPerPixel = pixel_size;
+		correct_format.BitsPerPixel = pixel_size * 8;
 		switch(channel_order) {
 #if defined(SDL_LIL_ENDIAN)
 			case IMAGE_CHANNEL::R:
@@ -305,9 +289,8 @@ void image::create_buffer(const void* pixels) {
 	}
 	
 	if(backing == BACKING::BUFFER) {
-		const size_t data_size = (size.x * size.y *
-								  image_type_sizes[static_cast<underlying_type<IMAGE_TYPE>::type>(data_type)] *
-								  image_channel_sizes[static_cast<underlying_type<IMAGE_CHANNEL>::type>(channel_order)]);
+		const size_t pixel_size = img_type.pixel_size();
+		const size_t data_size = size.x * size.y * pixel_size;
 		const size_t buffer_size = header_size() + data_size;
 		buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 									opencl::BUFFER_FLAG::BLOCK_ON_READ |
@@ -335,6 +318,12 @@ void image::create_buffer(const void* pixels) {
 			copy_n((const unsigned char*)pixels, data_size, data_ptr);
 		}
 		ocl->unmap_buffer(buffer, mapped_ptr);
+		
+		data_buffer = ocl->create_sub_buffer(buffer,
+											 opencl::BUFFER_FLAG::READ_WRITE |
+											 opencl::BUFFER_FLAG::BLOCK_ON_READ |
+											 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+											 header_size(), data_size);
 	}
 	else {
 		img_type.native = true;
@@ -352,6 +341,9 @@ void image::create_buffer(const void* pixels) {
 
 image::~image() {
 	if(buffer != nullptr && ocl != nullptr) {
+		if(data_buffer != nullptr) {
+			ocl->delete_buffer(data_buffer);
+		}
 		ocl->delete_buffer(buffer);
 	}
 }
@@ -372,6 +364,14 @@ const opencl::buffer_object* image::get_buffer() const {
 
 opencl::buffer_object* image::get_buffer() {
 	return buffer;
+}
+
+const opencl::buffer_object* image::get_data_buffer() const {
+	return data_buffer;
+}
+
+opencl::buffer_object* image::get_data_buffer() {
+	return data_buffer;
 }
 
 image_type image::get_image_type() const {
@@ -401,25 +401,7 @@ void image::write(const void* src, const uint2 offset, const uint2 size_) {
 		1
 	};
 	if(backing == BACKING::BUFFER) {
-		// 
-		const size_t pixel_size = img_type.pixel_size();
-		if(offset.x == 0 && write_size.x == size.x) { // y offset or size doesn't matter (can be easily offset)
-			ocl->write_buffer(buffer, src, header_size() + size.x * offset.y, pixel_size * size.x * write_size.y);
-		}
-		else {
-			// if an x-offset other than 0 or an x-size other than the images width is used,
-			// the image rows must be copied "manually", because there is no way to specify a row-offset
-			const size_t buffer_row_size = pixel_size * size.x;
-			const size_t host_row_size = pixel_size * write_size.x;
-			const unsigned char* src_ptr = (const unsigned char*)src;
-			
-			auto mapped_ptr = map();
-			unsigned char* dst_ptr = (unsigned char*)mapped_ptr + (offset.x * pixel_size);
-			for(size_t row = 0; row < write_size.y; row++, dst_ptr += buffer_row_size, src_ptr += host_row_size) {
-				memcpy(dst_ptr, src_ptr, host_row_size);
-			}
-			unmap(mapped_ptr);
-		}
+		ocl->write_buffer_rect(data_buffer, src, size3(offset.x, offset.y, 0), size3(0, 0, 0), write_size);
 	}
 	else {
 		ocl->write_image(buffer, src, size3(offset.x, offset.y, 0), write_size);
@@ -433,24 +415,7 @@ void image::read(void* dst, const uint2 offset, const uint2 size_) {
 		1
 	};
 	if(backing == BACKING::BUFFER) {
-		const size_t pixel_size = img_type.pixel_size();
-		if(offset.x == 0 && read_size.x == size.x) { // y offset or size doesn't matter (can be easily offset)
-			ocl->read_buffer(dst, buffer, header_size() + size.x * offset.y, pixel_size * size.x * read_size.y);
-		}
-		else {
-			// if an x-offset other than 0 or an x-size other than the images width is used,
-			// the image rows must be copied "manually", because there is no way to specify a row-offset
-			const size_t buffer_row_size = pixel_size * size.x;
-			const size_t host_row_size = pixel_size * read_size.x;
-			unsigned char* dst_ptr = (unsigned char*)dst;
-			
-			auto mapped_ptr = map();
-			const unsigned char* src_ptr = (const unsigned char*)mapped_ptr + (offset.x * pixel_size);
-			for(size_t row = 0; row < read_size.y; row++, src_ptr += buffer_row_size, dst_ptr += host_row_size) {
-				memcpy(dst_ptr, src_ptr, host_row_size);
-			}
-			unmap(mapped_ptr);
-		}
+		ocl->read_buffer_rect(dst, data_buffer, size3(offset.x, offset.y, 0), size3(0, 0, 0), read_size);
 	}
 	else {
 		ocl->read_image(dst, buffer, size3(offset.x, offset.y, 0), read_size);
@@ -458,34 +423,33 @@ void image::read(void* dst, const uint2 offset, const uint2 size_) {
 }
 
 void image::copy(const image& src_img, const uint2 src_offset, const uint2 dst_offset, const uint2 size_) {
-	// TODO: handle offset and size correctly for buffer-backed images (right now, it's wrapping around and not using the correct image region)
 	const size3 copy_src_offset(src_offset.x, src_offset.y, 0);
 	const size3 copy_dst_offset(dst_offset.x, dst_offset.y, 0);
 	const size3 copy_region(size_.x == ~0u ? size.x : std::min(size.x, size_.x),
 							size_.y == ~0u ? size.y : std::min(size.y, size_.y),
 							1);
+	const size_t pixel_size = img_type.pixel_size();
 	if(backing == BACKING::BUFFER) {
 		if(src_img.get_backing() == BACKING::BUFFER) {
-			// TODO
 			// buffer -> buffer
-			ocl->copy_buffer_rect(src_img.get_buffer(), buffer, copy_src_offset, copy_dst_offset, copy_region);
+			ocl->copy_buffer_rect(src_img.get_data_buffer(), data_buffer, copy_src_offset, copy_dst_offset, copy_region);
 		}
 		else {
 			// image -> buffer
 			// since opencl has no clEnqueueCopyImageToBufferRect function, the data needs to copied to a temporary buffer object
-			// and then copied to this buffer object, if the dst offset is any other than (0, 0)
-			if(dst_offset.x == 0 && dst_offset.y == 0) {
-				ocl->copy_image_to_buffer(src_img.get_buffer(), buffer, copy_src_offset, copy_region, header_size());
+			// and then copied to this buffer object, if the dst x-offset is any other than 0, or the copy x-region is not equal to the image width
+			if(dst_offset.x == 0 && copy_region.x == size.x) {
+				ocl->copy_image_to_buffer(src_img.get_buffer(), data_buffer,
+										  copy_src_offset, copy_region,
+										  pixel_size * dst_offset.y * size.x);
 			}
 			else {
-				// TODO
-				const size_t pixel_size = img_type.pixel_size();
 				opencl::buffer_object* copy_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 																		opencl::BUFFER_FLAG::BLOCK_ON_READ |
 																		opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 																		pixel_size * copy_region.x * copy_region.y, nullptr);
 				ocl->copy_image_to_buffer(src_img.get_buffer(), copy_buffer, copy_src_offset, copy_region, 0);
-				ocl->copy_buffer_rect(copy_buffer, buffer, size3(0, 0, 0), copy_dst_offset, copy_region);
+				ocl->copy_buffer_rect(copy_buffer, data_buffer, size3(0, 0, 0), copy_dst_offset, copy_region);
 				ocl->delete_buffer(copy_buffer);
 			}
 		}
@@ -498,18 +462,18 @@ void image::copy(const image& src_img, const uint2 src_offset, const uint2 dst_o
 		else {
 			// buffer -> image
 			// since opencl has no clEnqueueCopyBufferRectToImage function, the data needs to copied to a temporary buffer object
-			// and then copied to this image object, if the src offset is any other than (0, 0)
-			if(src_offset.x == 0 && src_offset.y == 0) {
-				ocl->copy_buffer_to_image(src_img.get_buffer(), buffer, header_size(), copy_dst_offset, copy_region);
+			// and then copied to this buffer object, if the src x-offset is any other than 0, or the copy x-region is not equal to the image width
+			if(src_offset.x == 0 && copy_region.x == size.x) {
+				ocl->copy_buffer_to_image(src_img.get_buffer(), data_buffer,
+										  pixel_size * src_offset.y * size.x,
+										  copy_dst_offset, copy_region);
 			}
 			else {
-				// TODO
-				const size_t pixel_size = img_type.pixel_size();
 				opencl::buffer_object* copy_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 																		opencl::BUFFER_FLAG::BLOCK_ON_READ |
 																		opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 																		pixel_size * copy_region.x * copy_region.y, nullptr);
-				ocl->copy_buffer_rect(buffer, copy_buffer, copy_src_offset, size3(0, 0, 0), copy_region);
+				ocl->copy_buffer_rect(src_img.get_data_buffer(), copy_buffer, copy_src_offset, size3(0, 0, 0), copy_region);
 				ocl->copy_buffer_to_image(copy_buffer, buffer, 0, copy_dst_offset, copy_region);
 				ocl->delete_buffer(copy_buffer);
 			}
@@ -517,19 +481,29 @@ void image::copy(const image& src_img, const uint2 src_offset, const uint2 dst_o
 	}
 }
 
-void* image::map() {
+void* __attribute__((aligned(sizeof(cl_long16)))) image::map() {
 	if(backing == BACKING::BUFFER) {
-		auto mapped_ptr = ocl->map_buffer(buffer,
-										  opencl::MAP_BUFFER_FLAG::READ_WRITE |
-										  opencl::MAP_BUFFER_FLAG::BLOCK);
-		return (void*)((unsigned char*)mapped_ptr + header_size());
+		return ocl->map_buffer(data_buffer,
+							   opencl::MAP_BUFFER_FLAG::READ_WRITE |
+							   opencl::MAP_BUFFER_FLAG::BLOCK);
 	}
 	else {
 		return ocl->map_image(buffer, opencl::MAP_BUFFER_FLAG::READ_WRITE | opencl::MAP_BUFFER_FLAG::BLOCK);
 	}
 }
 
-void* image::map_region(const uint2 offset, const uint2 size_) {
+const void* __attribute__((aligned(sizeof(cl_long16)))) image::map() const {
+	if(backing == BACKING::BUFFER) {
+		return ocl->map_buffer(data_buffer,
+							   opencl::MAP_BUFFER_FLAG::READ_WRITE |
+							   opencl::MAP_BUFFER_FLAG::BLOCK);
+	}
+	else {
+		return ocl->map_image(buffer, opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
+	}
+}
+
+void* __attribute__((aligned(sizeof(cl_long16)))) image::map_region(const uint2 offset, const uint2 size_) {
 	const size3 map_size {
 		(size_.x == ~0u ? size.x : std::min(size.x, size_.x)),
 		(size_.y == ~0u ? size.y : std::min(size.y, size_.y)),
@@ -547,10 +521,10 @@ void* image::map_region(const uint2 offset, const uint2 size_) {
 			return nullptr;
 		}
 		
-		return ocl->map_buffer(buffer,
+		return ocl->map_buffer(data_buffer,
 							   opencl::MAP_BUFFER_FLAG::READ_WRITE |
 							   opencl::MAP_BUFFER_FLAG::BLOCK,
-							   header_size() + offset.y * size.x,
+							   img_type.pixel_size() * offset.y * size.x,
 							   map_size.y * size.x);
 	}
 	else {
@@ -558,11 +532,8 @@ void* image::map_region(const uint2 offset, const uint2 size_) {
 	}
 }
 
-void image::unmap(void* mapped_ptr) {
-	ocl->unmap_buffer(buffer,
-					  backing == BACKING::BUFFER ?
-					  (void*)((unsigned char*)mapped_ptr - header_size()) :
-					  mapped_ptr);
+void image::unmap(const void* mapped_ptr) const {
+	ocl->unmap_buffer(buffer, (void*)mapped_ptr);
 }
 
 bool image::modify_backing(const BACKING& new_backing oclr_unused) {

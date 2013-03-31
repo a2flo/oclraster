@@ -716,7 +716,7 @@ void cudacl::log_program_binary(const shared_ptr<opencl::kernel_object> kernel) 
 	if(kernel == nullptr) return;
 }
 
-opencl_base::buffer_object* cudacl::create_buffer_object(opencl_base::BUFFER_FLAG type, void* data) {
+opencl_base::buffer_object* cudacl::create_buffer_object(const opencl_base::BUFFER_FLAG type, const void* data) {
 	try {
 		opencl_base::buffer_object* buffer = new opencl_base::buffer_object();
 		buffers.push_back(buffer);
@@ -773,14 +773,14 @@ opencl_base::buffer_object* cudacl::create_buffer_object(opencl_base::BUFFER_FLA
 		
 		buffer->type = vtype;
 		buffer->flags = flags;
-		buffer->data = data;
+		buffer->data = (void*)data;
 		return buffer;
 	}
 	__HANDLE_CL_EXCEPTION("create_buffer_object")
 	return nullptr;
 }
 
-opencl_base::buffer_object* cudacl::create_buffer(opencl_base::BUFFER_FLAG type, size_t size, void* data) {
+opencl_base::buffer_object* cudacl::create_buffer(const opencl_base::BUFFER_FLAG type, const size_t size, const void* data) {
 	if(size == 0) {
 		return nullptr;
 	}
@@ -820,7 +820,41 @@ opencl_base::buffer_object* cudacl::create_buffer(opencl_base::BUFFER_FLAG type,
 	return nullptr;
 }
 
-opencl_base::buffer_object* cudacl::create_image2d_buffer(opencl_base::BUFFER_FLAG type oclr_unused, cl_channel_order channel_order oclr_unused, cl_channel_type channel_type oclr_unused, size_t width oclr_unused, size_t height oclr_unused, void* data oclr_unused) {
+
+opencl_base::buffer_object* cudacl::create_sub_buffer(const buffer_object* parent_buffer,
+													  const BUFFER_FLAG type oclr_unused,
+													  const size_t offset,
+													  const size_t size) {
+	assert(false && "create_sub_buffer not implemented yet!");
+	
+	if(parent_buffer == nullptr || parent_buffer->buffer == nullptr) {
+		oclr_error("invalid buffer object!");
+		return nullptr;
+	}
+	if(size == 0 || size > parent_buffer->size) {
+		oclr_error("invalid size (%u) - must be > 0 and <= buffer size (%u)!", size, parent_buffer->size);
+		return nullptr;
+	}
+	if(offset >= parent_buffer->size || (size+offset) > parent_buffer->size) {
+		oclr_error("invalid offset (%u) - offset must be < buffer size (%u) and offset+size (%u) must be <= buffer size (%u)!",
+				   size, parent_buffer->size, size+offset, parent_buffer->size);
+		return nullptr;
+	}
+	
+	try {
+		/*buffer_object* sub_buffer = create_buffer_object(type, nullptr);
+		if(sub_buffer == nullptr) return nullptr;
+		
+		const auto region = cl_buffer_region { offset, size };
+		sub_buffer->buffer = new cl::Buffer(parent_buffer->buffer->createSubBuffer(sub_buffer->flags, CL_BUFFER_CREATE_TYPE_REGION, &region));*/
+	}
+	__HANDLE_CL_EXCEPTION("create_sub_buffer")
+	return nullptr;
+}
+
+opencl_base::buffer_object* cudacl::create_image2d_buffer(const opencl_base::BUFFER_FLAG type oclr_unused,
+														  const cl_channel_order channel_order oclr_unused, const cl_channel_type channel_type oclr_unused,
+														  const size_t width oclr_unused, const size_t height oclr_unused, const void* data oclr_unused) {
 	// TODO
 	/*try {
 		buffer_object* buffer_obj = create_buffer_object(type, data);
@@ -837,7 +871,9 @@ opencl_base::buffer_object* cudacl::create_image2d_buffer(opencl_base::BUFFER_FL
 	return nullptr;
 }
 
-opencl_base::buffer_object* cudacl::create_image3d_buffer(opencl_base::BUFFER_FLAG type oclr_unused, cl_channel_order channel_order oclr_unused, cl_channel_type channel_type oclr_unused, size_t width oclr_unused, size_t height oclr_unused, size_t depth oclr_unused, void* data oclr_unused) {
+opencl_base::buffer_object* cudacl::create_image3d_buffer(const opencl_base::BUFFER_FLAG type oclr_unused,
+														  const cl_channel_order channel_order oclr_unused, const cl_channel_type channel_type oclr_unused,
+														  const size_t width oclr_unused, const size_t height oclr_unused, const size_t depth oclr_unused, const void* data oclr_unused) {
 	// TODO
 	/*try {
 		buffer_object* buffer_obj = create_buffer_object(type, data);
@@ -854,7 +890,7 @@ opencl_base::buffer_object* cudacl::create_image3d_buffer(opencl_base::BUFFER_FL
 	return nullptr;
 }
 
-opencl_base::buffer_object* cudacl::create_ogl_buffer(opencl_base::BUFFER_FLAG type, GLuint ogl_buffer) {
+opencl_base::buffer_object* cudacl::create_ogl_buffer(const opencl_base::BUFFER_FLAG type, const GLuint ogl_buffer) {
 	try {
 		opencl_base::buffer_object* buffer = new opencl_base::buffer_object();
 		buffers.push_back(buffer);
@@ -1161,7 +1197,7 @@ void cudacl::copy_image_to_buffer(const buffer_object* src_buffer oclr_unused, b
 	__HANDLE_CL_EXCEPTION("copy_image_to_buffer")
 }
 
-void cudacl::read_buffer(void* dst oclr_unused, opencl_base::buffer_object* buffer_obj oclr_unused, const size_t offset oclr_unused, const size_t size oclr_unused) {
+void cudacl::read_buffer(void* dst oclr_unused, const opencl_base::buffer_object* buffer_obj oclr_unused, const size_t offset oclr_unused, const size_t size oclr_unused) {
 	try {
 		// TODO
 		assert(false && "read_buffer not implemented yet!");
@@ -1169,7 +1205,7 @@ void cudacl::read_buffer(void* dst oclr_unused, opencl_base::buffer_object* buff
 	__HANDLE_CL_EXCEPTION("read_buffer")
 }
 
-void cudacl::read_buffer_rect(void* dst oclr_unused, buffer_object* buffer_obj oclr_unused,
+void cudacl::read_buffer_rect(void* dst oclr_unused, const buffer_object* buffer_obj oclr_unused,
 							  const size3 buffer_origin oclr_unused,
 							  const size3 host_origin oclr_unused,
 							  const size3 region oclr_unused,
@@ -1182,7 +1218,7 @@ void cudacl::read_buffer_rect(void* dst oclr_unused, buffer_object* buffer_obj o
 	__HANDLE_CL_EXCEPTION("read_buffer_rect")
 }
 
-void cudacl::read_image(void* dst oclr_unused, opencl::buffer_object* buffer_obj oclr_unused, const size3 origin oclr_unused, const size3 region oclr_unused,
+void cudacl::read_image(void* dst oclr_unused, const opencl::buffer_object* buffer_obj oclr_unused, const size3 origin oclr_unused, const size3 region oclr_unused,
 						const size_t image_row_pitch oclr_unused, const size_t image_slice_pitch oclr_unused) {
 	try {
 		// TODO
