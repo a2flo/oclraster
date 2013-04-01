@@ -289,6 +289,7 @@ void image::create_buffer(const void* pixels) {
 	}
 	
 	if(backing == BACKING::BUFFER) {
+		img_type.native = false;
 		const size_t pixel_size = img_type.pixel_size();
 		const size_t data_size = size.x * size.y * pixel_size;
 		const size_t buffer_size = header_size() + data_size;
@@ -297,10 +298,11 @@ void image::create_buffer(const void* pixels) {
 									opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 									buffer_size);
 		
-		// init buffer ...
+		// init buffer
 		auto mapped_ptr = ocl->map_buffer(buffer,
 										  opencl::MAP_BUFFER_FLAG::WRITE_INVALIDATE |
-										  opencl::MAP_BUFFER_FLAG::BLOCK);
+										  opencl::MAP_BUFFER_FLAG::BLOCK,
+										  0, pixels == nullptr ? header_size() : buffer_size);
 		
 		header* header_ptr = (header*)mapped_ptr;
 		header_ptr->type = data_type;
@@ -308,13 +310,9 @@ void image::create_buffer(const void* pixels) {
 		header_ptr->width = size.x;
 		header_ptr->height = size.y;
 		
-		unsigned char* data_ptr = (unsigned char*)mapped_ptr + header_size();
-		if(pixels == nullptr) {
-			// ... with 0s
-			fill_n(data_ptr, data_size, 0);
-		}
-		else {
-			// ... with the specified pixels
+		// fill buffer with the specified pixels (otherwise, leave it uninitialized)
+		if(pixels != nullptr) {
+			unsigned char* data_ptr = (unsigned char*)mapped_ptr + header_size();
 			copy_n((const unsigned char*)pixels, data_size, data_ptr);
 		}
 		ocl->unmap_buffer(buffer, mapped_ptr);
@@ -536,11 +534,36 @@ void image::unmap(const void* mapped_ptr) const {
 	ocl->unmap_buffer(buffer, (void*)mapped_ptr);
 }
 
-bool image::modify_backing(const BACKING& new_backing oclr_unused) {
-	// TODO: implement this
-	if(backing == BACKING::BUFFER) {
+bool image::modify_backing(const BACKING& new_backing) {
+	if(backing == new_backing) return true;
+	
+	const BACKING old_backing = backing;
+	opencl::buffer_object* old_buffer = buffer;
+	opencl::buffer_object* old_data_buffer = data_buffer;
+	
+	backing = new_backing;
+	create_buffer(nullptr); // init pixel == nullptr, because we'll do a device-side copy later
+	
+	// this can only happen, if IMAGE backing should be used, but it's falling back to BUFFER backing
+	if(old_backing == backing) {
+		oclr_error("failed to modify image backing!");
+		return false;
+	}
+	
+	// copy image data from the old buffer to the new buffer
+	if(old_backing == BACKING::BUFFER) {
+		ocl->copy_buffer_to_image(old_data_buffer, buffer);
 	}
 	else {
+		ocl->copy_image_to_buffer(old_buffer, data_buffer);
 	}
-	return false;
+	
+	// cleanup
+	if(old_backing == BACKING::BUFFER) {
+		ocl->delete_buffer(old_data_buffer); // no longer needed
+		data_buffer = nullptr;
+	}
+	ocl->delete_buffer(old_buffer);
+	
+	return true;
 }

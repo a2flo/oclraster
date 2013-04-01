@@ -82,7 +82,7 @@ protected:
 	
 	//
 	string processed_code = ""; // created once on program creation (pre-specialized processing)
-	vector<kernel_image_spec> compiled_image_kernels;
+	vector<kernel_image_spec*> compiled_image_kernels;
 	unordered_map<kernel_image_spec*, weak_ptr<opencl::kernel_object>> kernels;
 	weak_ptr<opencl::kernel_object> build_kernel(const kernel_image_spec& spec);
 	

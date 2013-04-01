@@ -26,6 +26,9 @@ entry_function(entry_function_) {
 }
 
 oclraster_program::~oclraster_program() {
+	for(auto& spec : compiled_image_kernels) {
+		delete spec;
+	}
 	if(ocl != nullptr) {
 		for(const auto& kernel : kernels) {
 			ocl->delete_kernel(kernel.second);
@@ -281,11 +284,12 @@ void oclraster_program::process_program(const string& code) {
 }
 
 weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_image_spec& spec) {
-	compiled_image_kernels.emplace_back(spec);
+	kernel_image_spec* new_spec = new kernel_image_spec(spec);
+	compiled_image_kernels.emplace_back(new_spec);
 	
 	// finally: call the specialized processing function of inheriting classes/programs
 	// note: this should inject the user code into their respective code templates
-	const string program_code { specialized_processing(processed_code, spec) };
+	const string program_code { specialized_processing(processed_code, *new_spec) };
 	
 	string img_spec_str = "";
 	for(const auto& type : spec) {
@@ -302,7 +306,7 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_ima
 		oclr_debug("kernel source: %s", program_code);
 	}
 #endif
-	kernels.emplace(&compiled_image_kernels.back(), kernel);
+	kernels.emplace(new_spec, kernel);
 	return kernel;
 }
 
@@ -632,9 +636,9 @@ weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_image
 		oclr_error("no kernel has been compiled for this program!");
 		return opencl::null_kernel_object;
 	}
-	if(spec.size() != compiled_image_kernels[0].size()) {
+	if(spec.size() != compiled_image_kernels[0]->size()) {
 		oclr_error("invalid kernel image spec size (%u) - should be (%u)!",
-				   spec.size(), compiled_image_kernels[0].size());
+				   spec.size(), compiled_image_kernels[0]->size());
 		return opencl::null_kernel_object;
 	}
 	
@@ -644,7 +648,7 @@ weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_image
 		bool spec_found = true;
 		for(size_t i = 0; i < spec_count; i++) {
 			if(spec[i] != (*kernel.first)[i]) {
-				oclr_msg("spec: %u != %u @%u", spec[i], (*kernel.first)[i], i);
+				//oclr_msg("spec: %u != %u @%u", spec[i], (*kernel.first)[i], i);
 				spec_found = false;
 				break;
 			}
