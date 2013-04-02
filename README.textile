@@ -7,11 +7,13 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 
 *Software Requirements and Important Information:*
 * on Windows:
-** if you have an ATI/AMD GPU/CPU or an Intel CPU: please install the "Intel OpenCL SDK for Windows (64-bit)":http://software.intel.com/en-us/vcsource/tools/opencl-sdk
+** if you have an AMD GPU/CPU or an Intel CPU: please install the "Intel OpenCL SDK for Windows (64-bit)":http://software.intel.com/en-us/vcsource/tools/opencl-sdk
+** alternatively (although not recommended due to performance issues): install the AMD APP SDK ("AMD APP SDK":http://developer.amd.com/tools/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/#one)
 ** make sure to select the correct opencl platform in config.xml
 * on OS X:
 ** please install the "latest XQuartz":http://xquartz.macosforge.org
-** OpenCL on 10.7.5 and 10.8.2 on non-CPU devices is broken, please use a CPU device for now or use an earlier version of OS X (or 10.8.3+)
+** 10.7: OpenCL on 10.7.5 on non-CPU devices is broken, please use a CPU device for now or use an earlier version of OS X (or 10.8)
+** 10.8: update to at least 10.8.3 (prior version are majorly bugged)
 ** -if you have a Nvidia GPU, you can also use "CUDA":https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda")- currently defunct
 
 *Requirements:*
@@ -60,6 +62,11 @@ TODO: all papers
 * "High-Performance Software Rasterization on GPUs":http://research.nvidia.com/sites/default/files/publications/laine2011hpg_paper.pdf
 
 *Screenshots:*
+* progress as of 2013/03/28, running on a GPU in OS X:
+!https://dl.dropbox.com/u/1004620/blending1.png(programmable blending)!
+!https://dl.dropbox.com/u/1004620/blending2.png(programmable blending)!
+!https://dl.dropbox.com/u/1004620/parallax%2Bfp_noise.png(more image functionality: native and buffer images, sampling a 32-bit float noise texture, ...)!
+
 * progress as of 2013/02/21, running on a CPU in OS X and on a dual-core ARM CPU in iOS:
 !https://dl.dropbox.com/u/1004620/osx_blender_monkey_1.png(subdivided blender monkey with parallax mapping)!
 !https://dl.dropbox.com/u/1004620/osx_blender_monkey_2.png(subdivided blender monkey with parallax mapping)!
