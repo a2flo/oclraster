@@ -84,8 +84,8 @@
 
 // gcc check
 #elif defined(__GNUC__)
-#if (__GNUC__ < 4) || (__GNUC__ == 4 && __GNUC_MINOR__ < 7)
-#error "Sorry, but you need GCC 4.7+ to compile oclraster"
+#if (__GNUC__ < 4) || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
+#error "Sorry, but you need GCC 4.9+ to compile oclraster"
 #endif
 
 // just fall through ...
