@@ -123,14 +123,15 @@ void pipeline::swap() {
 	
 	// copy opencl framebuffer to blit framebuffer/texture
 	const uint2 default_fb_size = default_framebuffer.get_size();
-	void* fbo_data = default_framebuffer.get_image(0)->map();
+	image* fbo_img = default_framebuffer.get_image(0);
+	auto fbo_data = fbo_img->map(opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
 #if !defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
 #endif
 	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, default_fb_size.x, default_fb_size.y,
 					GL_RGBA, GL_UNSIGNED_BYTE, (const unsigned char*)fbo_data);
-	ocl->unmap_buffer(default_framebuffer.get_image(0)->get_buffer(), fbo_data);
+	fbo_img->unmap(fbo_data);
 	
 #if !defined(OCLRASTER_IOS)
 	// blit

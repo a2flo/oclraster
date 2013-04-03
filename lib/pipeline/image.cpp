@@ -534,7 +534,12 @@ void* __attribute__((aligned(sizeof(cl_long16)))) image::map_region(const uint2 
 }
 
 void image::unmap(const void* mapped_ptr) const {
-	ocl->unmap_buffer(buffer, (void*)mapped_ptr);
+	if(backing == BACKING::BUFFER) {
+		ocl->unmap_buffer(data_buffer, (void*)mapped_ptr);
+	}
+	else {
+		ocl->unmap_buffer(buffer, (void*)mapped_ptr);
+	}
 }
 
 bool image::modify_backing(const BACKING& new_backing) {
