@@ -35,6 +35,8 @@ typedef vector4<int> int4;
 typedef vector4<bool> bool4;
 typedef vector4<size_t> size4;
 typedef vector4<ssize_t> ssize4;
+typedef vector4<long long int> long4;
+typedef vector4<unsigned long long int> ulong4;
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -304,6 +306,8 @@ extern template class vector4<unsigned char>;
 extern template class vector4<bool>;
 extern template class vector4<size_t>;
 extern template class vector4<ssize_t>;
+extern template class vector4<long long int>;
+extern template class vector4<unsigned long long int>;
 #endif
 
 #if defined(__clang__)

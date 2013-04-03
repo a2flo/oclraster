@@ -17,7 +17,156 @@
  */
 
 #include "framebuffer.h"
+#include "oclraster.h"
+#include "oclraster_program.h"
 
+//
+static constexpr char template_framebuffer_program[] { u8R"OCLRASTER_RAWSTR(
+	#include "oclr_global.h"
+	#include "oclr_framebuffer_clear.h"
+	
+	//
+	void clear_depth(global float* depth_image, const uint offset, const float clear_depth) {
+		depth_image[offset] = clear_depth;
+	}
+	
+	void FUNC_OVERLOAD clear_stencil(global uchar* stencil_image, const uint offset, const ulong clear_stencil) {
+		stencil_image[offset] = clear_stencil;
+	}
+	void FUNC_OVERLOAD clear_stencil(global ushort* stencil_image, const uint offset, const ulong clear_stencil) {
+		stencil_image[offset] = clear_stencil;
+	}
+	void FUNC_OVERLOAD clear_stencil(global uint* stencil_image, const uint offset, const ulong clear_stencil) {
+		stencil_image[offset] = clear_stencil;
+	}
+	void FUNC_OVERLOAD clear_stencil(global ulong* stencil_image, const uint offset, const ulong clear_stencil) {
+		stencil_image[offset] = clear_stencil;
+	}
+	
+	//
+	kernel void clear_framebuffer(//###OCLRASTER_FRAMEBUFFER_IMAGES###
+								  const uint2 framebuffer_size,
+								  const ulong4 clear_color_value,
+								  const float clear_depth_value,
+								  const ulong clear_stencil_value) {
+		const unsigned int x = get_global_id(0);
+		const unsigned int y = get_global_id(1);
+		if(x >= framebuffer_size.x || y >= framebuffer_size.y) return;
+		const unsigned int offset = y * framebuffer_size.x + x;
+		
+		//###OCLRASTER_FRAMEBUFFER_CLEAR_CALLS###
+#if defined(CLEAR_DEPTH)
+		clear_depth(depth_image, offset, clear_depth_value);
+#endif
+#if defined(CLEAR_STENCIL)
+		clear_stencil(stencil_image, offset, clear_stencil_value);
+#endif
+	}
+)OCLRASTER_RAWSTR"};
+
+class framebuffer_program {
+public:
+	framebuffer_program() = delete;
+	~framebuffer_program() = delete;
+	framebuffer_program(framebuffer_program& prog) = delete;
+	framebuffer_program& operator=(framebuffer_program& prog) = delete;
+	
+	struct image_spec {
+		vector<image_type> images;
+		image_type depth_image;
+		image_type stencil_image;
+	};
+	static vector<image_spec*> compiled_image_kernels;
+	static unordered_map<image_spec*, weak_ptr<opencl::kernel_object>> kernels;
+	static weak_ptr<opencl::kernel_object> get_clear_kernel(const image_spec spec);
+	static weak_ptr<opencl::kernel_object> build_kernel(const image_spec& spec);
+	
+	static void delete_kernels();
+	
+};
+vector<framebuffer_program::image_spec*> framebuffer_program::compiled_image_kernels;
+unordered_map<framebuffer_program::image_spec*, weak_ptr<opencl::kernel_object>> framebuffer_program::kernels;
+
+weak_ptr<opencl::kernel_object> framebuffer_program::get_clear_kernel(const image_spec spec) {
+	const size_t spec_size = spec.images.size();
+	for(const auto& kernel : kernels) {
+		if(kernel.first->images.size() != spec_size) continue;
+		if(kernel.first->depth_image != spec.depth_image) continue;
+		if(kernel.first->stencil_image != spec.stencil_image) continue;
+		
+		bool spec_found = true;
+		for(size_t i = 0; i < spec_size; i++) {
+			if(spec.images[i] != kernel.first->images[i]) {
+				spec_found = false;
+				break;
+			}
+		}
+		if(!spec_found) continue;
+		
+		return kernel.second;
+	}
+	// new kernel image spec -> compile new kernel
+	return build_kernel(spec);
+}
+
+weak_ptr<opencl::kernel_object> framebuffer_program::build_kernel(const image_spec& spec) {
+	image_spec* new_spec = new image_spec(spec);
+	compiled_image_kernels.emplace_back(new_spec);
+	
+	//
+	string program_code { template_framebuffer_program };
+	string kernel_image_parameters = "", clear_calls = "", img_spec_str = "";
+	size_t img_idx = 0;
+	for(const auto& type : spec.images) {
+		const auto type_str = type.to_string();
+		img_spec_str += "." + type_str;
+		kernel_image_parameters += "global " + type_str + "* image_" + size_t2string(img_idx) + ",\n";
+		clear_calls += "clear_image(image_" + size_t2string(img_idx) + ", offset, clear_color_value);\n";
+		img_idx++;
+	}
+	
+	string build_options = "";
+	if(spec.depth_image.is_valid()) {
+		build_options += " -DCLEAR_DEPTH";
+		kernel_image_parameters += "global float* depth_image,\n";
+		clear_calls += "clear_depth(depth_image, offset, clear_depth_value);\n";
+	}
+	if(spec.stencil_image.is_valid()) {
+		build_options += " -DCLEAR_STENCIL";
+		kernel_image_parameters += "global " + spec.stencil_image.to_string() + "* stencil_image,\n";
+		clear_calls += "clear_stencil(stencil_image, offset, clear_stencil_value);\n";
+	}
+	img_spec_str += ".depth_"+spec.depth_image.to_string();
+	img_spec_str += ".stencil_"+spec.stencil_image.to_string();
+	
+	core::find_and_replace(program_code, "//###OCLRASTER_FRAMEBUFFER_IMAGES###", kernel_image_parameters);
+	core::find_and_replace(program_code, "//###OCLRASTER_FRAMEBUFFER_CLEAR_CALLS###", clear_calls);
+	
+	//
+	const string identifier = "FRAMEBUFFER_CLEAR"+img_spec_str;
+	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, "clear_framebuffer", build_options);
+#if defined(OCLRASTER_DEBUG)
+	if(kernel.use_count() == 0) {
+		oclr_debug("kernel source: %s", program_code);
+	}
+#endif
+	kernels.emplace(new_spec, kernel);
+	return kernel;
+}
+
+void framebuffer_program::delete_kernels() {
+	for(auto& spec : compiled_image_kernels) {
+		delete spec;
+	}
+	compiled_image_kernels.clear();
+	kernels.clear();
+}
+	
+void delete_clear_kernels() {
+	framebuffer_program::delete_kernels();
+}
+
+//
 framebuffer framebuffer::create_with_images(const unsigned int& width, const unsigned int& height,
 											initializer_list<pair<IMAGE_TYPE, IMAGE_CHANNEL>> image_types,
 											pair<IMAGE_TYPE, IMAGE_CHANNEL> depth_type,
@@ -184,4 +333,78 @@ void framebuffer::attach_stencil_buffer(image& img) {
 }
 void framebuffer::detach_stencil_buffer() {
 	stencil_buffer = nullptr;
+}
+
+void framebuffer::clear(const vector<size_t> image_indices, const bool depth_clear, const bool stencil_clear) const {
+	const vector<size_t>* indices = &image_indices;
+	vector<size_t> all_indices;
+	if(image_indices.size() == 1 && image_indices[0] == ~0u) {
+		// clear all
+		const size_t img_count = images.size();
+		all_indices.resize(img_count);
+		for(size_t i = 0; i < img_count; i++) {
+			all_indices[i] = i;
+		}
+		indices = &all_indices;
+	}
+	
+	//
+	framebuffer_program::image_spec spec;
+	for(const auto& idx : *indices) {
+		spec.images.emplace_back(images[idx]->get_image_type());
+	}
+	
+	if(depth_clear && depth_buffer != nullptr) {
+		spec.depth_image = depth_buffer->get_image_type();
+	}
+	
+	if(stencil_clear && stencil_buffer != nullptr) {
+		spec.stencil_image = stencil_buffer->get_image_type();
+	}
+	
+	//
+	unsigned int argc = 0;
+	auto clear_kernel = framebuffer_program::get_clear_kernel(spec);
+	ocl->use_kernel(clear_kernel);
+	
+	for(const auto& idx : *indices) {
+		ocl->set_kernel_argument(argc++, images[idx]->get_data_buffer());
+	}
+	if(depth_clear && depth_buffer != nullptr) {
+		ocl->set_kernel_argument(argc++, depth_buffer->get_data_buffer());
+	}
+	if(stencil_clear && stencil_buffer != nullptr) {
+		ocl->set_kernel_argument(argc++, stencil_buffer->get_data_buffer());
+	}
+	
+	ocl->set_kernel_argument(argc++, size);
+	ocl->set_kernel_argument(argc++, clear_color);
+	ocl->set_kernel_argument(argc++, clear_depth);
+	ocl->set_kernel_argument(argc++, clear_stencil);
+	ocl->set_kernel_range(ocl->compute_kernel_ranges(size.x, size.y));
+	ocl->run_kernel();
+}
+
+void framebuffer::set_clear_color(const ulong4 value) {
+	clear_color = value;
+}
+
+const ulong4& framebuffer::get_clear_color() const {
+	return clear_color;
+}
+
+void framebuffer::set_clear_depth(const float value) {
+	clear_depth = value;
+}
+
+const float& framebuffer::get_clear_depth() const {
+	return clear_depth;
+}
+
+void framebuffer::set_clear_stencil(const unsigned long long int value) {
+	clear_stencil = value;
+}
+
+const unsigned long long int& framebuffer::get_clear_stencil() const {
+	return clear_stencil;
 }

@@ -7,23 +7,23 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
-		5CE84CAD16AEBCD6005F1C6F /* oclr_simple_deployment */ = {
+		5CE84CAD16AEBCD6005F1C6F /* oclr_rtt_deployment */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = 5CE84CAE16AEBCD6005F1C6F /* Build configuration list for PBXAggregateTarget "oclr_simple_deployment" */;
+			buildConfigurationList = 5CE84CAE16AEBCD6005F1C6F /* Build configuration list for PBXAggregateTarget "oclr_rtt_deployment" */;
 			buildPhases = (
 				5CE84CB116AEBCE4005F1C6F /* ShellScript */,
 			);
 			dependencies = (
 				5CE84CB316AEBCF1005F1C6F /* PBXTargetDependency */,
 			);
-			name = oclr_simple_deployment;
-			productName = oclr_simple_deployment;
+			name = oclr_rtt_deployment;
+			productName = oclr_rtt_deployment;
 		};
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
 		5C5C186816C24D2500AB23E6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CCC964C1641B653005C3DE4 /* Foundation.framework */; };
-		5C5C188016C24D4200AB23E6 /* oclr_simple.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CCC966F1641B775005C3DE4 /* oclr_simple.cpp */; };
+		5C5C188016C24D4200AB23E6 /* oclr_rtt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CCC966F1641B775005C3DE4 /* oclr_rtt.cpp */; };
 		5C5C188316C24E2400AB23E6 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C5C188216C24E2400AB23E6 /* UIKit.framework */; };
 		5C5C188516C24E2800AB23E6 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C5C188416C24E2800AB23E6 /* OpenGLES.framework */; };
 		5C5C188A16C24E3300AB23E6 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C5C188616C24E3300AB23E6 /* CoreAudio.framework */; };
@@ -37,7 +37,7 @@
 		5C5C189716C24E6B00AB23E6 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C5C189616C24E6B00AB23E6 /* CoreGraphics.framework */; };
 		5C5C189916C24E9E00AB23E6 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C5C189816C24E9E00AB23E6 /* OpenCL.framework */; };
 		5CCC96481641B653005C3DE4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CCC96471641B653005C3DE4 /* Cocoa.framework */; };
-		5CCC96711641B775005C3DE4 /* oclr_simple.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CCC966F1641B775005C3DE4 /* oclr_simple.cpp */; };
+		5CCC96711641B775005C3DE4 /* oclr_rtt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CCC966F1641B775005C3DE4 /* oclr_rtt.cpp */; };
 		5CCC96781641BAF3005C3DE4 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CCC96761641BAF3005C3DE4 /* SDL2.framework */; };
 		5CCC96791641BAF3005C3DE4 /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CCC96771641BAF3005C3DE4 /* SDL2_image.framework */; };
 /* End PBXBuildFile section */
@@ -48,11 +48,13 @@
 			containerPortal = 5CCC963A1641B653005C3DE4 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 5CCC96421641B653005C3DE4;
-			remoteInfo = oclr_simple;
+			remoteInfo = oclr_rtt;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5C29D5B7170A6C3D009371E2 /* rtt_display_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = rtt_display_fs.cl; sourceTree = "<group>"; };
+		5C29D5B8170A6C3D009371E2 /* rtt_display_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = rtt_display_vs.cl; sourceTree = "<group>"; };
 		5C2D23CB16D50C1700013DBF /* oclr_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_image.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.opencl; };
 		5C47267016A69E1200F7EA21 /* simple_shader_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_fs.cl; sourceTree = "<group>"; };
 		5C47267116A69E1200F7EA21 /* simple_shader_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_vs.cl; sourceTree = "<group>"; };
@@ -60,8 +62,10 @@
 		5C4FCF7C170A4E6600F264AE /* Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Prefix.pch; path = ios/Prefix.pch; sourceTree = SOURCE_ROOT; };
 		5C4FCF7D170A4E6D00F264AE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = osx/Info.plist; sourceTree = SOURCE_ROOT; };
 		5C4FCF7E170A4E6D00F264AE /* Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Prefix.pch; path = osx/Prefix.pch; sourceTree = SOURCE_ROOT; };
+		5C4FCF7F170A4FCF00F264AE /* diffuse_texturing_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = diffuse_texturing_fs.cl; sourceTree = "<group>"; };
+		5C4FCF80170A4FCF00F264AE /* diffuse_texturing_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = diffuse_texturing_vs.cl; sourceTree = "<group>"; };
 		5C55F7F016E4F92E0050946C /* oclr_image_support.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_image_support.h; sourceTree = "<group>"; };
-		5C5C186516C24D2500AB23E6 /* oclr_simple_iosd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = oclr_simple_iosd.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C5C186516C24D2500AB23E6 /* oclr_rtt_iosd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = oclr_rtt_iosd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C5C188216C24E2400AB23E6 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		5C5C188416C24E2800AB23E6 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/System/Library/Frameworks/OpenGLES.framework; sourceTree = DEVELOPER_DIR; };
 		5C5C188616C24E3300AB23E6 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/System/Library/Frameworks/CoreAudio.framework; sourceTree = DEVELOPER_DIR; };
@@ -82,15 +86,15 @@
 		5C91650F166685EA00626436 /* oclr_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_math.h; sourceTree = "<group>"; };
 		5C916510166685EA00626436 /* oclr_matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_matrix.h; sourceTree = "<group>"; };
 		5C9165111666946B00626436 /* bin_rasterize.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = bin_rasterize.cl; sourceTree = "<group>"; };
-		5CCC96431641B653005C3DE4 /* oclr_simpled.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = oclr_simpled.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5CCC96431641B653005C3DE4 /* oclr_rttd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = oclr_rttd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CCC96471641B653005C3DE4 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		5CCC964A1641B653005C3DE4 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		5CCC964B1641B653005C3DE4 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		5CCC964C1641B653005C3DE4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		5CCC966B1641B739005C3DE4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = osx/en.lproj/Credits.rtf; sourceTree = SOURCE_ROOT; };
 		5CCC966D1641B739005C3DE4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = osx/en.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
-		5CCC966F1641B775005C3DE4 /* oclr_simple.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = oclr_simple.cpp; path = src/oclr_simple.cpp; sourceTree = SOURCE_ROOT; };
-		5CCC96701641B775005C3DE4 /* oclr_simple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oclr_simple.h; path = src/oclr_simple.h; sourceTree = SOURCE_ROOT; };
+		5CCC966F1641B775005C3DE4 /* oclr_rtt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = oclr_rtt.cpp; path = src/oclr_rtt.cpp; sourceTree = SOURCE_ROOT; };
+		5CCC96701641B775005C3DE4 /* oclr_rtt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oclr_rtt.h; path = src/oclr_rtt.h; sourceTree = SOURCE_ROOT; };
 		5CCC96761641BAF3005C3DE4 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = Library/Frameworks/SDL2.framework; sourceTree = SDKROOT; };
 		5CCC96771641BAF3005C3DE4 /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = Library/Frameworks/SDL2_image.framework; sourceTree = SDKROOT; };
 		5CCC967B1641BF72005C3DE4 /* cutil_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cutil_math.h; sourceTree = "<group>"; };
@@ -148,7 +152,7 @@
 				5C4FCF7C170A4E6600F264AE /* Prefix.pch */,
 			);
 			name = iOS;
-			path = oclr_simple_ios;
+			path = oclr_rtt_ios;
 			sourceTree = SOURCE_ROOT;
 		};
 		5C5C188116C24DF800AB23E6 /* iOS Frameworks */ = {
@@ -174,7 +178,7 @@
 			isa = PBXGroup;
 			children = (
 				5CCC967A1641BF72005C3DE4 /* kernels */,
-				5CCC964D1641B653005C3DE4 /* oclr_simple */,
+				5CCC964D1641B653005C3DE4 /* oclr_rtt */,
 				5CCC964E1641B653005C3DE4 /* Supporting Files */,
 				5CCC96461641B653005C3DE4 /* Frameworks */,
 				5C5C188116C24DF800AB23E6 /* iOS Frameworks */,
@@ -185,8 +189,8 @@
 		5CCC96441641B653005C3DE4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5CCC96431641B653005C3DE4 /* oclr_simpled.app */,
-				5C5C186516C24D2500AB23E6 /* oclr_simple_iosd.app */,
+				5CCC96431641B653005C3DE4 /* oclr_rttd.app */,
+				5C5C186516C24D2500AB23E6 /* oclr_rtt_iosd.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -204,13 +208,13 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		5CCC964D1641B653005C3DE4 /* oclr_simple */ = {
+		5CCC964D1641B653005C3DE4 /* oclr_rtt */ = {
 			isa = PBXGroup;
 			children = (
-				5CCC966F1641B775005C3DE4 /* oclr_simple.cpp */,
-				5CCC96701641B775005C3DE4 /* oclr_simple.h */,
+				5CCC966F1641B775005C3DE4 /* oclr_rtt.cpp */,
+				5CCC96701641B775005C3DE4 /* oclr_rtt.h */,
 			);
-			path = oclr_simple;
+			path = oclr_rtt;
 			sourceTree = "<group>";
 		};
 		5CCC964E1641B653005C3DE4 /* Supporting Files */ = {
@@ -223,7 +227,7 @@
 				5C4FCF7E170A4E6D00F264AE /* Prefix.pch */,
 			);
 			name = "Supporting Files";
-			path = oclr_simple;
+			path = oclr_rtt;
 			sourceTree = "<group>";
 		};
 		5CCC967A1641BF72005C3DE4 /* kernels */ = {
@@ -254,6 +258,10 @@
 				5CCCDD7116BF023800C14D3C /* simple_texturing_fs.cl */,
 				5CE91CEE16F00F050044C264 /* debug_vs.cl */,
 				5CE91CED16F00F050044C264 /* debug_fs.cl */,
+				5C4FCF7F170A4FCF00F264AE /* diffuse_texturing_fs.cl */,
+				5C4FCF80170A4FCF00F264AE /* diffuse_texturing_vs.cl */,
+				5C29D5B7170A6C3D009371E2 /* rtt_display_fs.cl */,
+				5C29D5B8170A6C3D009371E2 /* rtt_display_vs.cl */,
 			);
 			path = user;
 			sourceTree = "<group>";
@@ -261,9 +269,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		5C5C186416C24D2500AB23E6 /* oclr_simple_ios */ = {
+		5C5C186416C24D2500AB23E6 /* oclr_rtt_ios */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5C5C187F16C24D2500AB23E6 /* Build configuration list for PBXNativeTarget "oclr_simple_ios" */;
+			buildConfigurationList = 5C5C187F16C24D2500AB23E6 /* Build configuration list for PBXNativeTarget "oclr_rtt_ios" */;
 			buildPhases = (
 				5C5C186116C24D2500AB23E6 /* Sources */,
 				5C5C186216C24D2500AB23E6 /* Frameworks */,
@@ -274,14 +282,14 @@
 			);
 			dependencies = (
 			);
-			name = oclr_simple_ios;
-			productName = oclr_simple_ios;
-			productReference = 5C5C186516C24D2500AB23E6 /* oclr_simple_iosd.app */;
+			name = oclr_rtt_ios;
+			productName = oclr_rtt_ios;
+			productReference = 5C5C186516C24D2500AB23E6 /* oclr_rtt_iosd.app */;
 			productType = "com.apple.product-type.application";
 		};
-		5CCC96421641B653005C3DE4 /* oclr_simple */ = {
+		5CCC96421641B653005C3DE4 /* oclr_rtt */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5CCC96611641B654005C3DE4 /* Build configuration list for PBXNativeTarget "oclr_simple" */;
+			buildConfigurationList = 5CCC96611641B654005C3DE4 /* Build configuration list for PBXNativeTarget "oclr_rtt" */;
 			buildPhases = (
 				5CCC963F1641B653005C3DE4 /* Sources */,
 				5CCC96401641B653005C3DE4 /* Frameworks */,
@@ -291,9 +299,9 @@
 			);
 			dependencies = (
 			);
-			name = oclr_simple;
-			productName = oclr_simple;
-			productReference = 5CCC96431641B653005C3DE4 /* oclr_simpled.app */;
+			name = oclr_rtt;
+			productName = oclr_rtt;
+			productReference = 5CCC96431641B653005C3DE4 /* oclr_rttd.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -305,7 +313,7 @@
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = albion2;
 			};
-			buildConfigurationList = 5CCC963D1641B653005C3DE4 /* Build configuration list for PBXProject "oclr_simple" */;
+			buildConfigurationList = 5CCC963D1641B653005C3DE4 /* Build configuration list for PBXProject "oclr_rtt" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -317,9 +325,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				5CCC96421641B653005C3DE4 /* oclr_simple */,
-				5CE84CAD16AEBCD6005F1C6F /* oclr_simple_deployment */,
-				5C5C186416C24D2500AB23E6 /* oclr_simple_ios */,
+				5CCC96421641B653005C3DE4 /* oclr_rtt */,
+				5CE84CAD16AEBCD6005F1C6F /* oclr_rtt_deployment */,
+				5C5C186416C24D2500AB23E6 /* oclr_rtt_ios */,
 			);
 		};
 /* End PBXProject section */
@@ -366,7 +374,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "\nAPP_NAME=\"oclr_simple\"\nSUFFIX=\"\"\nif [[ $CONFIGURATION == \"Debug\" ]]; then\n\tSUFFIX=\"d\"\n\tAPP_NAME=${APP_NAME}${SUFFIX}\nfi\n\nrm -Rf ../../bin/${APP_NAME}.app/Contents/{Resources,Frameworks} 2>/dev/null\nmkdir ../../bin/${APP_NAME}.app/Contents/{Resources,Frameworks} 2>/dev/null\ncp -f /usr/local/lib/liboclraster${SUFFIX}.dylib ../../bin/${APP_NAME}.app/Contents/Resources/\ncp -Rf /Library/Frameworks/{SDL2,SDL2_image}.framework ../../bin/${APP_NAME}.app/Contents/Frameworks/\ncp -Rf osx/en.lproj ../../bin/${APP_NAME}.app/Contents/Resources/\n";
+			shellScript = "\nAPP_NAME=\"oclr_rtt\"\nSUFFIX=\"\"\nif [[ $CONFIGURATION == \"Debug\" ]]; then\n\tSUFFIX=\"d\"\n\tAPP_NAME=${APP_NAME}${SUFFIX}\nfi\n\nrm -Rf ../../bin/${APP_NAME}.app/Contents/{Resources,Frameworks} 2>/dev/null\nmkdir ../../bin/${APP_NAME}.app/Contents/{Resources,Frameworks} 2>/dev/null\ncp -f /usr/local/lib/liboclraster${SUFFIX}.dylib ../../bin/${APP_NAME}.app/Contents/Resources/\ncp -Rf /Library/Frameworks/{SDL2,SDL2_image}.framework ../../bin/${APP_NAME}.app/Contents/Frameworks/\ncp -Rf osx/en.lproj ../../bin/${APP_NAME}.app/Contents/Resources/\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -375,7 +383,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5C5C188016C24D4200AB23E6 /* oclr_simple.cpp in Sources */,
+				5C5C188016C24D4200AB23E6 /* oclr_rtt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -383,7 +391,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5CCC96711641B775005C3DE4 /* oclr_simple.cpp in Sources */,
+				5CCC96711641B775005C3DE4 /* oclr_rtt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -392,7 +400,7 @@
 /* Begin PBXTargetDependency section */
 		5CE84CB316AEBCF1005F1C6F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 5CCC96421641B653005C3DE4 /* oclr_simple */;
+			target = 5CCC96421641B653005C3DE4 /* oclr_rtt */;
 			targetProxy = 5CE84CB216AEBCF1005F1C6F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -700,7 +708,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		5C5C187F16C24D2500AB23E6 /* Build configuration list for PBXNativeTarget "oclr_simple_ios" */ = {
+		5C5C187F16C24D2500AB23E6 /* Build configuration list for PBXNativeTarget "oclr_rtt_ios" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5C5C187D16C24D2500AB23E6 /* Debug */,
@@ -709,7 +717,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5CCC963D1641B653005C3DE4 /* Build configuration list for PBXProject "oclr_simple" */ = {
+		5CCC963D1641B653005C3DE4 /* Build configuration list for PBXProject "oclr_rtt" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5CCC965F1641B654005C3DE4 /* Debug */,
@@ -718,7 +726,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5CCC96611641B654005C3DE4 /* Build configuration list for PBXNativeTarget "oclr_simple" */ = {
+		5CCC96611641B654005C3DE4 /* Build configuration list for PBXNativeTarget "oclr_rtt" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5CCC96621641B654005C3DE4 /* Debug */,
@@ -727,7 +735,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5CE84CAE16AEBCD6005F1C6F /* Build configuration list for PBXAggregateTarget "oclr_simple_deployment" */ = {
+		5CE84CAE16AEBCD6005F1C6F /* Build configuration list for PBXAggregateTarget "oclr_rtt_deployment" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5CE84CAF16AEBCD6005F1C6F /* Debug */,

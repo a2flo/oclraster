@@ -632,7 +632,7 @@ const oclraster_program::oclraster_image_info& oclraster_program::get_images() c
 
 weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_image_spec spec) {
 	//
-	if(kernels.empty()) {
+	if(kernels.empty() || compiled_image_kernels.empty()) {
 		oclr_error("no kernel has been compiled for this program!");
 		return opencl::null_kernel_object;
 	}
@@ -643,10 +643,10 @@ weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_image
 	}
 	
 	//
-	const size_t spec_count = spec.size();
+	const size_t spec_size = spec.size();
 	for(const auto& kernel : kernels) {
 		bool spec_found = true;
-		for(size_t i = 0; i < spec_count; i++) {
+		for(size_t i = 0; i < spec_size; i++) {
 			if(spec[i] != (*kernel.first)[i]) {
 				//oclr_msg("spec: %u != %u @%u", spec[i], (*kernel.first)[i], i);
 				spec_found = false;

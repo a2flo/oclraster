@@ -68,11 +68,18 @@ public:
 			  const uint2 src_offset = { 0u, 0u },
 			  const uint2 dst_offset = { 0u, 0u },
 			  const uint2 size = { ~0u, ~0u });
-	void* __attribute__((aligned(sizeof(cl_long16)))) map();
-	const void* __attribute__((aligned(sizeof(cl_long16)))) map() const; // read-only!
+	void* __attribute__((aligned(sizeof(cl_long16)))) map(const opencl::MAP_BUFFER_FLAG access_type =
+														  opencl::MAP_BUFFER_FLAG::READ_WRITE |
+														  opencl::MAP_BUFFER_FLAG::BLOCK);
+	const void* __attribute__((aligned(sizeof(cl_long16)))) map(const opencl::MAP_BUFFER_FLAG access_type =
+																opencl::MAP_BUFFER_FLAG::READ |
+																opencl::MAP_BUFFER_FLAG::BLOCK) const; // read-only!
 	// note: if buffer based backing is used, offset.x must be 0 and size.x must match the image width!
 	void* __attribute__((aligned(sizeof(cl_long16)))) map_region(const uint2 offset = { 0u, 0u },
-																 const uint2 size = { ~0u, ~0u });
+																 const uint2 size = { ~0u, ~0u },
+																 const opencl::MAP_BUFFER_FLAG access_type =
+																 opencl::MAP_BUFFER_FLAG::READ_WRITE |
+																 opencl::MAP_BUFFER_FLAG::BLOCK);
 	void unmap(const void* mapped_ptr) const;
 	
 	// use this function to convert the image between BUFFER and IMAGE based backing

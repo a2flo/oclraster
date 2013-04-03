@@ -25,6 +25,8 @@ class transform_program : public oclraster_program {
 public:
 	transform_program(const string& code, const string entry_function = "main");
 	virtual ~transform_program();
+	transform_program(transform_program& prog) = delete;
+	transform_program& operator=(transform_program& prog) = delete;
 
 protected:
 	virtual string specialized_processing(const string& code,

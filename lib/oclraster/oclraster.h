@@ -53,7 +53,7 @@ public:
 	static xml* get_xml();
 
 	// miscellaneous control functions
-	static void set_caption(const char* caption);
+	static void set_caption(const string& caption);
 	static const char* get_caption();
 
 	static void set_cursor_visible(const bool& state);

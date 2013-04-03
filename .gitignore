@@ -27,4 +27,4 @@ obj/
 log.txt
 config.xml.local
 etc/image_support/oclr_image_support.h
-
+etc/image_support/oclr_framebuffer_clear.h

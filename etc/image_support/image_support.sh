@@ -21,10 +21,13 @@ declare -a defs=(
 )
 
 CODE=""
+CLEAR_CODE=""
 for type in "${defs[@]}"; do
 	img_type=${type%%:*}
 	img_norm=${type#*:*:}
 	declare -a return_types=($(sed -E "s/(.*):(.*):(.*)/\2/" <<< ${type}))
+	
+	# read functions
 	for return_type in "${return_types[@]}"; do
 		IFS=""
 		for (( i=0; i < ${#channels[@]}; i++ )); do
@@ -74,14 +77,46 @@ for type in "${defs[@]}"; do
 		done
 		IFS=" "
 	done
+	
+	# clear functions
+	for (( i=1; i <= ${#channels[@]}; i++ )); do
+		img_type_vec=${img_type}${channels[$i-1]}
+		echo ${img_type_vec}" clear"
+		
+		# fp types need special handling
+		is_half_type=0
+		is_float_type=0
+		is_double_type=0
+		if [[ ${img_type} == "oclr_half" ]]; then
+			is_half_type=1
+		fi
+		if [[ ${img_type} == "float" ]]; then
+			is_float_type=1
+		fi
+		if [[ ${img_type} == "double" ]]; then
+			is_double_type=1
+		fi
+		
+		CLEAR_CODE+=$(clang -E -DIMG_TYPE_VEC=${img_type_vec} -DIMG_TYPE=${img_type} -DCHANNEL_COUNT=${i} \
+					  -DIS_HALF_TYPE=${is_half_type} -DIS_FLOAT_TYPE=${is_float_type} -DIS_DOUBLE_TYPE=${is_double_type} \
+					  framebuffer_clear_template.h | grep -v "#")
+		CLEAR_CODE+="\n\n"
+	done
 done
 
 # remove empty lines
 CODE=$(sed "/^$/d" <<< ${CODE})
+CLEAR_CODE=$(sed "/^$/d" <<< ${CLEAR_CODE})
 
-# create and fill final output file (oclr_image_support.h)
+# create and fill final output files (oclr_image_support.h + oclr_framebuffer_clear.h)
 IFS=""
+
 echo -e "// NOTE: this is an automatically generated file!\n// If you need to change anything in here, please have a look at etc/image_support/image_support.sh\n" > oclr_image_support.h
 echo -e "#ifndef __OCLRASTER_IMAGE_SUPPORT_H__\n#define __OCLRASTER_IMAGE_SUPPORT_H__\n" >> oclr_image_support.h
 echo -e $CODE >> oclr_image_support.h
 echo -e "#endif" >> oclr_image_support.h
+
+echo -e "// NOTE: this is an automatically generated file!\n// If you need to change anything in here, please have a look at etc/image_support/image_support.sh\n" > oclr_framebuffer_clear.h
+echo -e "#ifndef __OCLRASTER_FRAMEBUFFER_CLEAR_H__\n#define __OCLRASTER_FRAMEBUFFER_CLEAR_H__\n" >> oclr_framebuffer_clear.h
+echo -e $CLEAR_CODE >> oclr_framebuffer_clear.h
+echo -e "#endif" >> oclr_framebuffer_clear.h

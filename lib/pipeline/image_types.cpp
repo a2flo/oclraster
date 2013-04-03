@@ -21,7 +21,7 @@
 
 static constexpr array<const char*, (size_t)IMAGE_TYPE::__MAX_TYPE> data_type_str_table {
 	{
-		"",
+		"none",
 		"char", "short", "int", "long",
 		"uchar", "ushort", "uint", "ulong",
 		"half", "float", "double"

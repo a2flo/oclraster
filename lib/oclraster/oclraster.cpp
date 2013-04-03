@@ -21,6 +21,7 @@
 #include "core/rtt.h"
 #include "core/camera.h"
 #include "core/gl_support.h"
+#include "pipeline/framebuffer.h"
 
 #if defined(__APPLE__)
 #if !defined(OCLRASTER_IOS)
@@ -239,6 +240,7 @@ void oclraster::destroy() {
 	delete event_handler_fnctr;
 	
 	rtt::destroy();
+	delete_clear_kernels();
 	if(x != nullptr) delete x;
 	if(ocl != nullptr) {
 		delete ocl;
@@ -595,8 +597,6 @@ void oclraster::start_draw() {
 /*! stops drawing the window
  */
 void oclraster::stop_draw() {
-	// TODO: draw scene
-	
 	//
 	swap();
 	
@@ -653,8 +653,8 @@ void oclraster::stop_draw() {
 /*! sets the window caption
  *  @param caption the window caption
  */
-void oclraster::set_caption(const char* caption) {
-	SDL_SetWindowTitle(config.wnd, caption);
+void oclraster::set_caption(const string& caption) {
+	SDL_SetWindowTitle(config.wnd, caption.c_str());
 }
 
 /*! returns the window caption
@@ -1029,8 +1029,8 @@ bool oclraster::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 		resize_window();
 		return true;
 	}
-#if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 	else if(type == EVENT_TYPE::KERNEL_RELOAD) {
+#if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 		template_transform_program = file_io::file_to_string(data_path("kernels/template_transform_program.cl"));
 		if(template_transform_program == "") {
 			oclr_error("failed to load template_transform_program!");
@@ -1039,9 +1039,13 @@ bool oclraster::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 		if(template_rasterization_program == "") {
 			oclr_error("failed to load template_rasterization_program!");
 		}
+#endif
+		
+		// deletes all framebuffer clear kernels
+		delete_clear_kernels();
+		
 		return true;
 	}
-#endif
 	return false;
 }
 

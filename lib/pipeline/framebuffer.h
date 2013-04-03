@@ -53,6 +53,22 @@ public:
 	image* get_stencil_buffer();
 	
 	//
+	void clear(const vector<size_t> image_indices = vector<size_t> { ~0u },
+			   const bool clear_depth = true,
+			   const bool clear_stencil = true) const;
+	
+	// clear colors/values are clamped to the used image format types
+	// e.g.: UINT_8 is used, clear color is set to ~0 => will use 255u
+	void set_clear_color(const ulong4 value = ulong4 { 0, 0, 0, 0 });
+	const ulong4& get_clear_color() const;
+	
+	void set_clear_depth(const float value = std::numeric_limits<float>::max());
+	const float& get_clear_depth() const;
+	
+	void set_clear_stencil(const unsigned long long int value = 0ull);
+	const unsigned long long int& get_clear_stencil() const;
+	
+	//
 	void attach(const size_t& index, image& img);
 	void detach(const size_t& index);
 	
@@ -71,6 +87,14 @@ protected:
 	image* depth_buffer = nullptr;
 	image* stencil_buffer = nullptr;
 	
+	//
+	ulong4 clear_color { 0, 0, 0, 0 };
+	float clear_depth { std::numeric_limits<float>::max() };
+	unsigned long long int clear_stencil { 0 };
+	
 };
+
+// only used internally!
+extern void delete_clear_kernels();
 
 #endif

@@ -27,6 +27,8 @@ class oclraster_program {
 public:
 	oclraster_program(const string& code, const string entry_function = "main");
 	virtual ~oclraster_program();
+	oclraster_program(oclraster_program& prog) = delete;
+	oclraster_program& operator=(oclraster_program& prog) = delete;
 	
 	enum class STRUCT_TYPE : unsigned int {
 		INPUT,

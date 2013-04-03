@@ -519,9 +519,6 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "bin_rasterize",
 					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)),
-			make_tuple("CLEAR_COLOR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
-			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
-					   " -DDEPTH_FRAMEBUFFER=1"),
 		};
 		
 		load_internal_kernels();

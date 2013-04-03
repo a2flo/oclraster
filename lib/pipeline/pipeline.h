@@ -77,8 +77,7 @@ public:
 	~pipeline();
 	
 	//
-	void start();
-	void stop();
+	void swap();
 	
 	//
 	template <class program_type> void bind_program(const program_type& program);
@@ -107,7 +106,6 @@ protected:
 	//
 	void create_framebuffers(const uint2& size);
 	void destroy_framebuffers();
-	uint2 framebuffer_size { 1280, 720 };
 	framebuffer default_framebuffer;
 	
 	// map/copy fbo

@@ -898,32 +898,10 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		if(fastest_gpu != nullptr) oclr_debug("fastest GPU device: %s %s (score: %u)", fastest_gpu->vendor.c_str(), fastest_gpu->name.c_str(), fastest_gpu_score);
 		
 		// compile internal kernels
-		//for(const auto& device : devices) cout << "max wg size: " << device->max_wg_size << endl;
-		
-		size_t local_size_limit = std::max((size_t)512, devices[0]->max_wg_size); // default to 512
-		//bool local_atomics_support = true;
-		for(const auto& device : devices) {
-			if(device->max_wg_size < local_size_limit) {
-				local_size_limit = device->max_wg_size;
-			}
-			/*if(device->extensions.find("cl_khr_local_int32_base_atomics") == string::npos ||
-			   device->extensions.find("cl_khr_local_int32_extended_atomics") == string::npos) {
-				local_atomics_support = false;
-			}*/
-		}
-		//const string lsl_str = " -DLOCAL_SIZE_LIMIT="+size_t2string(local_size_limit);
-		
 		internal_kernels = { // first time init:
 			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "oclraster_bin",
 					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)),
-			make_tuple("CLEAR_COLOR_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer", ""),
-			make_tuple("CLEAR_COLOR_DEPTH_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
-					   " -DDEPTH_FRAMEBUFFER=1"),
-			make_tuple("CLEAR_COLOR_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
-					   " -DIMAGE_FRAMEBUFFERS=1"),
-			make_tuple("CLEAR_COLOR_DEPTH_IMAGE_FRAMEBUFFER", "clear_framebuffer.cl", "clear_framebuffer",
-					   " -DIMAGE_FRAMEBUFFERS=1 -DDEPTH_FRAMEBUFFER=1"),
 		};
 		
 		load_internal_kernels();
@@ -1478,6 +1456,7 @@ opencl::buffer_object* opencl::create_sub_buffer(const buffer_object* parent_buf
 		if(sub_buffer == nullptr) return nullptr;
 		
 		const auto region = cl_buffer_region { offset, size };
+		sub_buffer->size = size;
 		sub_buffer->buffer = new cl::Buffer(parent_buffer->buffer->createSubBuffer(sub_buffer->flags, CL_BUFFER_CREATE_TYPE_REGION, &region));
 		return sub_buffer;
 	}
@@ -1834,7 +1813,7 @@ void opencl::read_image(void* dst, const opencl::buffer_object* buffer_obj, cons
 														 ((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) != BUFFER_FLAG::NONE),
 														 img_origin, img_region, image_row_pitch, image_slice_pitch, dst);
 	}
-	__HANDLE_CL_EXCEPTION("read_image2d")
+	__HANDLE_CL_EXCEPTION("read_image")
 }
 
 void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
@@ -2138,7 +2117,7 @@ void opencl::_fill_buffer(buffer_object* buffer_obj,
 						  const size_t& pattern_size,
 						  const size_t offset,
 						  const size_t size_) {
-	// TODO: on os x: clEnqueueFillBuffer spams the console on every call (unusable as of 10.8.3)
+	// TODO: on os x: clEnqueueFillBuffer spams the console on every call (unusable as of 10.8.3; semi-fixed in 10.8.4)
 	// also: insanely slow (slower than copying a zero buffer)
 	try {
 		// TODO: get 1.2 cl.hpp

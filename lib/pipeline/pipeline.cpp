@@ -27,6 +27,8 @@ pipeline::pipeline() :
 default_framebuffer(0, 0),
 event_handler_fnctr(this, &pipeline::event_handler) {
 	create_framebuffers(size2(oclraster::get_width(), oclraster::get_height()));
+	state.framebuffer_size = default_framebuffer.get_size();
+	state.active_framebuffer = &default_framebuffer;
 	oclraster::get_event()->add_internal_event_handler(event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
 	
 #if defined(OCLRASTER_IOS)
@@ -62,15 +64,16 @@ bool pipeline::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 }
 
 void pipeline::create_framebuffers(const uint2& size) {
+	const bool is_default_framebuffer = (state.active_framebuffer == &default_framebuffer);
+	
 	// destroy old framebuffers first
 	destroy_framebuffers();
 	
 	const uint2 scaled_size = float2(size) / oclraster::get_upscaling();
-	framebuffer_size = scaled_size;
 	oclr_debug("size: %v -> %v", size, scaled_size);
 	
 	//
-	default_framebuffer = framebuffer::create_with_images(framebuffer_size.x, framebuffer_size.y,
+	default_framebuffer = framebuffer::create_with_images(scaled_size.x, scaled_size.y,
 														  { { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA } },
 														  { IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R });
 	
@@ -85,11 +88,19 @@ void pipeline::create_framebuffers(const uint2& size) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, rtt::convert_internal_format(GL_RGBA8), framebuffer_size.x, framebuffer_size.y,
+	glTexImage2D(GL_TEXTURE_2D, 0, rtt::convert_internal_format(GL_RGBA8), scaled_size.x, scaled_size.y,
 				 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	// rebind new default framebuffer (+set correct state)
+	if(is_default_framebuffer) {
+		bind_framebuffer(nullptr);
+	}
+	
+	// do an initial clear
+	default_framebuffer.clear();
 }
 
 void pipeline::destroy_framebuffers() {
@@ -103,18 +114,7 @@ void pipeline::destroy_framebuffers() {
 	copy_fbo_id = 0;
 }
 
-void pipeline::start() {
-	// clear framebuffer
-	unsigned int argc = 0;
-	ocl->use_kernel("CLEAR_COLOR_DEPTH_FRAMEBUFFER");
-	ocl->set_kernel_argument(argc++, framebuffer_size);
-	ocl->set_kernel_argument(argc++, default_framebuffer.get_image(0)->get_buffer());
-	ocl->set_kernel_argument(argc++, default_framebuffer.get_depth_buffer()->get_buffer());
-	ocl->set_kernel_range(ocl->compute_kernel_ranges(framebuffer_size.x, framebuffer_size.y));
-	ocl->run_kernel();
-}
-
-void pipeline::stop() {
+void pipeline::swap() {
 	// draw/blit to screen
 #if defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
@@ -122,19 +122,20 @@ void pipeline::stop() {
 	oclraster::start_2d_draw();
 	
 	// copy opencl framebuffer to blit framebuffer/texture
-	void* fbo_data = ocl->map_buffer(default_framebuffer.get_image(0)->get_buffer(), opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
+	const uint2 default_fb_size = default_framebuffer.get_size();
+	void* fbo_data = default_framebuffer.get_image(0)->map();
 #if !defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
 #endif
 	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer_size.x, framebuffer_size.y,
-					GL_RGBA, GL_UNSIGNED_BYTE, ((const unsigned char*)fbo_data) + image::header_size());
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, default_fb_size.x, default_fb_size.y,
+					GL_RGBA, GL_UNSIGNED_BYTE, (const unsigned char*)fbo_data);
 	ocl->unmap_buffer(default_framebuffer.get_image(0)->get_buffer(), fbo_data);
 	
 #if !defined(OCLRASTER_IOS)
 	// blit
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
-	glBlitFramebuffer(0, 0, framebuffer_size.x, framebuffer_size.y,
+	glBlitFramebuffer(0, 0, default_fb_size.x, default_fb_size.y,
 					  0, 0, oclraster::get_width(), oclraster::get_height(),
 					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 #else
@@ -163,6 +164,8 @@ void pipeline::stop() {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
 #endif
+	
+	default_framebuffer.clear();
 }
 
 void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
@@ -170,23 +173,21 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	// TODO: check buffer sanity/correctness (in debug mode)
 #endif
 	
-	// initialize draw state
-	state.depth_test = 1;
-	state.framebuffer_size = framebuffer_size;
-	state.active_framebuffer = &default_framebuffer;
-	state.bin_count = {
-		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
-		(state.framebuffer_size.y / state.bin_size.y) + ((state.framebuffer_size.y % state.bin_size.y) != 0 ? 1 : 0)
-	};
-	state.batch_count = ((state.triangle_count / state.batch_size) +
-						 ((state.triangle_count % state.batch_size) != 0 ? 1 : 0));
-	
 	const auto index_count = (element_range.second - element_range.first + 1) * 3;
 	const auto num_elements = element_range.second - element_range.first + 1;
 	state.triangle_count = num_elements;
 	/*const auto num_elements = (element_range.first != ~0u ?
 							   element_range.second - element_range.first + 1 :
 							   ib.index_count / 3);*/
+	
+	// initialize draw state
+	state.depth_test = 1;
+	state.bin_count = {
+		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
+		(state.framebuffer_size.y / state.bin_size.y) + ((state.framebuffer_size.y % state.bin_size.y) != 0 ? 1 : 0)
+	};
+	state.batch_count = ((state.triangle_count / state.batch_size) +
+						 ((state.triangle_count % state.batch_size) != 0 ? 1 : 0));
 	
 	// TODO: this should be static!
 	// note: internal transformed buffer size must be a multiple of "batch size" triangles (necessary for the binner)

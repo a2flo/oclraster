@@ -29,6 +29,8 @@ template class vector4<unsigned char>;
 template class vector4<bool>;
 template class vector4<size_t>;
 template class vector4<ssize_t>;
+template class vector4<long long int>;
+template class vector4<unsigned long long int>;
 #endif
 
 template<> OCLRASTER_API float4& vector4<float>::floor() {
