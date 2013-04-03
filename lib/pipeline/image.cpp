@@ -479,7 +479,7 @@ void image::copy(const image& src_img, const uint2 src_offset, const uint2 dst_o
 	}
 }
 
-void* __attribute__((aligned(sizeof(cl_long16)))) image::map(const opencl::MAP_BUFFER_FLAG access_type) {
+void* __attribute__((aligned(128))) image::map(const opencl::MAP_BUFFER_FLAG access_type) {
 	if(backing == BACKING::BUFFER) {
 		return ocl->map_buffer(data_buffer, access_type);
 	}
@@ -488,7 +488,7 @@ void* __attribute__((aligned(sizeof(cl_long16)))) image::map(const opencl::MAP_B
 	}
 }
 
-const void* __attribute__((aligned(sizeof(cl_long16)))) image::map(const opencl::MAP_BUFFER_FLAG access_type) const {
+const void* __attribute__((aligned(128))) image::map(const opencl::MAP_BUFFER_FLAG access_type) const {
 #if defined(OCLRASTER_DEBUG)
 	if((access_type & opencl::MAP_BUFFER_FLAG::READ_WRITE) == opencl::MAP_BUFFER_FLAG::READ_WRITE ||
 	   (access_type & opencl::MAP_BUFFER_FLAG::WRITE) == opencl::MAP_BUFFER_FLAG::WRITE ||
@@ -506,7 +506,7 @@ const void* __attribute__((aligned(sizeof(cl_long16)))) image::map(const opencl:
 	}
 }
 
-void* __attribute__((aligned(sizeof(cl_long16)))) image::map_region(const uint2 offset, const uint2 size_, const opencl::MAP_BUFFER_FLAG access_type) {
+void* __attribute__((aligned(128))) image::map_region(const uint2 offset, const uint2 size_, const opencl::MAP_BUFFER_FLAG access_type) {
 	const size3 map_size {
 		(size_.x == ~0u ? size.x : std::min(size.x, size_.x)),
 		(size_.y == ~0u ? size.y : std::min(size.y, size_.y)),

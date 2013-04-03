@@ -1965,8 +1965,8 @@ bool opencl::set_kernel_argument(const unsigned int& index, size_t size, void* a
 	return false;
 }
 
-void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type,
-																	 const size_t offset, const size_t size) {
+void* __attribute__((aligned(128))) opencl::map_buffer(opencl::buffer_object* buffer_obj, const MAP_BUFFER_FLAG access_type,
+													   const size_t offset, const size_t size) {
 	try {
 		const bool blocking { (access_type & MAP_BUFFER_FLAG::BLOCK) != MAP_BUFFER_FLAG::NONE };
 		
@@ -2018,7 +2018,7 @@ void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buf
 #endif
 		}
 		
-		void* __attribute__((aligned(sizeof(cl_long16)))) map_ptr = nullptr;
+		void* __attribute__((aligned(128))) map_ptr = nullptr;
 		if(buffer_obj->buffer != nullptr) {
 			map_ptr = queues[&active_device->device]->enqueueMapBuffer(*buffer_obj->buffer, blocking, map_flags, map_offset, map_size);
 		}
@@ -2036,12 +2036,12 @@ void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_buffer(opencl::buf
 	return nullptr;
 }
 
-void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_image(opencl_base::buffer_object* buffer_obj,
-																	const MAP_BUFFER_FLAG access_type,
-																	const size3 origin,
-																	const size3 region,
-																	size_t* image_row_pitch,
-																	size_t* image_slice_pitch) {
+void* __attribute__((aligned(128))) opencl::map_image(opencl_base::buffer_object* buffer_obj,
+													  const MAP_BUFFER_FLAG access_type,
+													  const size3 origin,
+													  const size3 region,
+													  size_t* image_row_pitch,
+													  size_t* image_slice_pitch) {
 	try {
 		const bool blocking { (access_type & MAP_BUFFER_FLAG::BLOCK) != MAP_BUFFER_FLAG::NONE };
 		
@@ -2077,7 +2077,7 @@ void* __attribute__((aligned(sizeof(cl_long16)))) opencl::map_image(opencl_base:
 #endif
 		}
 		
-		void* __attribute__((aligned(sizeof(cl_long16)))) map_ptr = nullptr;
+		void* __attribute__((aligned(128))) map_ptr = nullptr;
 		if(buffer_obj->image_buffer != nullptr) {
 			map_ptr = queues[&active_device->device]->enqueueMapImage(*buffer_obj->image_buffer, blocking, map_flags,
 																	  map_origin, map_region,

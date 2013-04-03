@@ -262,16 +262,16 @@ public:
 							const size_t image_slice_pitch = 0) = 0;
 	
 	// map
-	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj,
-																		 const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
-																		 const size_t offset = 0,
-																		 const size_t size = 0) = 0;
-	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_image(buffer_object* buffer_obj,
-																		const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
-																		const size3 origin = { 0, 0, 0 },
-																		const size3 region = { 0, 0, 0 },
-																		size_t* image_row_pitch = nullptr,
-																		size_t* image_slice_pitch = nullptr) = 0;
+	virtual void* __attribute__((aligned(128))) map_buffer(buffer_object* buffer_obj,
+														   const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+														   const size_t offset = 0,
+														   const size_t size = 0) = 0;
+	virtual void* __attribute__((aligned(128))) map_image(buffer_object* buffer_obj,
+														  const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+														  const size3 origin = { 0, 0, 0 },
+														  const size3 region = { 0, 0, 0 },
+														  size_t* image_row_pitch = nullptr,
+														  size_t* image_slice_pitch = nullptr) = 0;
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr) = 0;
 	
 	//
@@ -551,16 +551,16 @@ public:
 							const size_t image_slice_pitch = 0);
 	
 	// map
-	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj,
-																		 const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
-																		 const size_t offset = 0,
-																		 const size_t size = 0);
-	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_image(buffer_object* buffer_obj,
-																		const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
-																		const size3 origin = { 0, 0, 0 },
-																		const size3 region = { 0, 0, 0 },
-																		size_t* image_row_pitch = nullptr,
-																		size_t* image_slice_pitch = nullptr);
+	virtual void* __attribute__((aligned(128))) map_buffer(buffer_object* buffer_obj,
+														   const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+														   const size_t offset = 0,
+														   const size_t size = 0);
+	virtual void* __attribute__((aligned(128))) map_image(buffer_object* buffer_obj,
+														  const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+														  const size3 origin = { 0, 0, 0 },
+														  const size3 region = { 0, 0, 0 },
+														  size_t* image_row_pitch = nullptr,
+														  size_t* image_slice_pitch = nullptr);
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	
 	virtual void _fill_buffer(buffer_object* buffer_obj,
@@ -683,16 +683,16 @@ public:
 							const size_t image_slice_pitch = 0);
 	
 	// map
-	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_buffer(buffer_object* buffer_obj,
-																		 const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
-																		 const size_t offset = 0,
-																		 const size_t size = 0);
-	virtual void* __attribute__((aligned(sizeof(cl_long16)))) map_image(buffer_object* buffer_obj,
-																		const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
-																		const size3 origin = { 0, 0, 0 },
-																		const size3 region = { 0, 0, 0 },
-																		size_t* image_row_pitch = nullptr,
-																		size_t* image_slice_pitch = nullptr);
+	virtual void* __attribute__((aligned(128))) map_buffer(buffer_object* buffer_obj,
+														   const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+														   const size_t offset = 0,
+														   const size_t size = 0);
+	virtual void* __attribute__((aligned(128))) map_image(buffer_object* buffer_obj,
+														  const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::BLOCK),
+														  const size3 origin = { 0, 0, 0 },
+														  const size3 region = { 0, 0, 0 },
+														  size_t* image_row_pitch = nullptr,
+														  size_t* image_slice_pitch = nullptr);
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	
 	virtual void _fill_buffer(buffer_object* buffer_obj,

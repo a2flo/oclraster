@@ -1418,9 +1418,9 @@ bool cudacl::set_kernel_argument(const unsigned int& index, size_t size, void* a
 	return false;
 }
 
-void* __attribute__((aligned(sizeof(cl_long16)))) cudacl::map_buffer(opencl_base::buffer_object* buffer_obj oclr_unused,
-																	 const MAP_BUFFER_FLAG access_type oclr_unused,
-																	 const size_t offset oclr_unused, const size_t size oclr_unused) {
+void* __attribute__((aligned(128))) cudacl::map_buffer(opencl_base::buffer_object* buffer_obj oclr_unused,
+													   const MAP_BUFFER_FLAG access_type oclr_unused,
+													   const size_t offset oclr_unused, const size_t size oclr_unused) {
 	// TODO
 	/*try {
 	}
@@ -1428,12 +1428,12 @@ void* __attribute__((aligned(sizeof(cl_long16)))) cudacl::map_buffer(opencl_base
 	return nullptr;
 }
 
-void* __attribute__((aligned(sizeof(cl_long16)))) cudacl::map_image(opencl_base::buffer_object* buffer_obj oclr_unused,
-																	const MAP_BUFFER_FLAG access_type oclr_unused,
-																	const size3 origin oclr_unused,
-																	const size3 region oclr_unused,
-																	size_t* image_row_pitch oclr_unused,
-																	size_t* image_slice_pitch oclr_unused) {
+void* __attribute__((aligned(128))) cudacl::map_image(opencl_base::buffer_object* buffer_obj oclr_unused,
+													  const MAP_BUFFER_FLAG access_type oclr_unused,
+													  const size3 origin oclr_unused,
+													  const size3 region oclr_unused,
+													  size_t* image_row_pitch oclr_unused,
+													  size_t* image_slice_pitch oclr_unused) {
 	// TODO
 	return nullptr;
 }
