@@ -1,6 +1,6 @@
-*Flexible OpenCL Rasterizer*
+*Flexible Rasterizer in OpenCL*
 
-This is the source code to my bachelor's thesis "Flexible OpenCL Rasterizer". The intension is to write a fully functional and programmable software rasterizer in OpenCL.
+This is the source code to my bachelor's thesis "Flexible Rasterizer in OpenCL". The intension is to write a fully functional and programmable software rasterizer in OpenCL.
 TODO: abstract
 
 Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (initialization, core, event and initial OpenCL/CUDA functionality)
