@@ -13,7 +13,7 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * on OS X:
 ** please install the "latest XQuartz":http://xquartz.macosforge.org
 ** 10.7: OpenCL on 10.7.5 on non-CPU devices is broken, please use a CPU device for now or use an earlier version of OS X (or 10.8)
-** 10.8: update to at least 10.8.3 (prior version are majorly bugged)
+** 10.8: update to at least 10.8.3 (prior versions are majorly bugged)
 ** -if you have a Nvidia GPU, you can also use "CUDA":https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda")- currently defunct
 
 *Requirements:*
@@ -62,6 +62,9 @@ TODO: all papers
 * "High-Performance Software Rasterization on GPUs":http://research.nvidia.com/sites/default/files/publications/laine2011hpg_paper.pdf
 
 *Screenshots:*
+* progress as of 2013/04/03, running on a GPU in OS X:
+!https://dl.dropbox.com/u/1004620/rtt.png(render-to-texture / multi-framebuffer support)!
+
 * progress as of 2013/03/28, running on a GPU in OS X:
 !https://dl.dropbox.com/u/1004620/blending1.png(programmable blending)!
 !https://dl.dropbox.com/u/1004620/blending2.png(programmable blending)!
