@@ -31,16 +31,33 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * 256 MB VRAM minimum, 1 GB VRAM are recommended
 
 *Build Instructions:*
-TODO / gist (for mingw and linux):
-* install all necessary libraries (-> Credits; freetype2 and a2elight are not required)
-* ./premake.sh
+on Linux:
+* install all necessary libraries (-> Credits; freetype2 and a2elight are not required/used, CUDA is optional)
+* install clang 3.2+ and libc++ (currently 1101)
+* run ./premake.sh
 * make
 * there is a install script located in lib/ which should be executed from that folder (will install to /usr/local/)
+* alternatively:
+** sudo ln -sf /path/to/oclraster/bin/liboclraster{,d}.{a,so} /usr/local/lib/
+** sudo ln -sf /path/to/oclraster/lib /usr/local/include/oclraster
 
-for OS X:
-* install Xquartz, SDL2 and SDL2_image
+on Windows/MinGW:
+* install custom MinGW builds "gcc-dw2-4.6":http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/rubenvb/gcc-dw2-4.6-release/ and "clang-3.2":http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/rubenvb/clang-3.2-release/ (thanks to "rubenvb":https://github.com/rubenvb for providing these!)
+* install "MSYS":http://sourceforge.net/projects/mingw-w64/files/External%20binary%20packages%20%28Win64%20hosted%29/MSYS%20%2832-bit%29/ to your MinGW folder
+* build/install all necessary libraries (-> Credits; freetype2 and a2elight are not required/used, CUDA is optional)
+* add a Windows system environment variable called "MINGW_ROOT" and set it to your MinGW root folder (e.g. "/c/mingw/mingw32/")
+* run ./premake.sh
+* make
+* libraries and headers will be automatically installed to your set MinGW folder
+* note: to make things easier, I might provide a full MinGW package containing all required libraries at a later point
+
+on OS X:
+* install Xcode 4.6+, Xquartz, SDL2 and SDL2_image (and optionally CUDA)
 * compile oclraster.xcodeproj
-* install/symlink oclraster .dylib and lib folder to /usr/local/{lib,include} resp.
+* install/symlink oclraster .dylib and lib folder:
+** if /usr/local or any sub-folders do not exist, create them (sudo mkdir -p /usr/local/{include,lib})
+** sudo ln -sf /path/to/oclraster/bin/liboclraster{,d}.dylib /usr/local/lib/
+** sudo ln -sf /path/to/oclraster/lib /usr/local/include/oclraster
 * compile any samples you like
 
 *Credits:*
@@ -52,7 +69,8 @@ for OS X:
 * http://mingw-w64.sourceforge.net / MinGW-w64/MSYS environment
 * http://www.freetype.org / FreeType2
 * http://www.dejavu-fonts.org / Bitstream DejaVu Fonts
-* clang/libc++ (http://www.llvm.org)
+* http://clang.llvm.org / clang
+* http://libcxx.llvm.org / libc++
 * Khronos (http://www.khronos.org) / Nvidia / AMD / Apple / Intel (OpenGL/OpenCL)
 * CUDA (http://www.nvidia.com)
 
