@@ -22,7 +22,7 @@
 #include "core/platform.h"
 
 // bin x/y size in pixels
-#define OCLRASTER_BIN_SIZE (64u)
+#define OCLRASTER_BIN_SIZE (32u)
 
 // amount of triangles per batch (in the binner) - don't change this!
 #define OCLRASTER_BATCH_SIZE (256u)

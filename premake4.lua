@@ -308,3 +308,33 @@ project "oclr_rtt"
 		if(not os.is("windows") or win_unixenv) then
 			buildoptions { "-gdwarf-2" }
 		end
+
+project "oclr_volume"
+	targetname "oclr_volume"
+	kind "ConsoleApp"
+	language "C++"
+	files { "samples/oclr_volume/src/**.h", "samples/oclr_volume/src/**.cpp" }
+	basedir "samples/oclr_volume"
+	targetdir "bin"
+
+	includedirs { "/usr/include/oclraster",
+				  "/usr/local/include/oclraster",
+				  "samples/oclr_volume/src/" }
+
+	configuration "Release"
+		links { "oclraster" }
+		targetname "oclr_volume"
+		defines { "NDEBUG" }
+		flags { "Optimize" }
+		if(not os.is("windows") or win_unixenv) then
+			buildoptions { "-O3 -ffast-math" }
+		end
+		
+	configuration "Debug"
+		links { "oclrasterd" }
+		targetname "oclr_volumed"
+		defines { "DEBUG", "OCLRASTER_DEBUG" }
+		flags { "Symbols" }
+		if(not os.is("windows") or win_unixenv) then
+			buildoptions { "-gdwarf-2" }
+		end

@@ -313,7 +313,6 @@ bool load_programs() {
 #endif
 	};
 	
-
 	if(!file_io::file_to_string(oclraster::kernel_path("user/"+shader_filenames[0]), vs_str)) {
 		oclr_error("couldn't open vs program!");
 		return false;

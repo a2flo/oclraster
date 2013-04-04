@@ -1,0 +1,8 @@
+ObjectFileName: c60.dat.raw
+TaggedFileName: ---
+Resolution:     64 64 64
+SliceThickness: 1 1 1
+Format:         UCHAR
+ObjectType:     TEXTURE_VOLUME_OBJECT
+ObjectModel:    RGBA
+GridType:       EQUIDISTANT
