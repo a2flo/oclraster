@@ -78,31 +78,6 @@ int main(int argc, char* argv[]) {
 	// load, compile and bind user shaders
 	if(!load_programs()) return -1;
 	
-	// create / ref buffers
-	struct __attribute__((packed, aligned(16))) tp_uniforms {
-		matrix4f rotation;
-		matrix4f modelview;
-	} transform_uniforms {
-		matrix4f(),
-		matrix4f()
-	};
-	opencl::buffer_object* tp_uniforms_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
-																   opencl::BUFFER_FLAG::INITIAL_COPY |
-																   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-																   sizeof(tp_uniforms),
-																   (void*)&transform_uniforms);
-	
-	struct __attribute__((packed, aligned(16))) rp_uniforms {
-		float4 camera_position;
-	} rasterize_uniforms {
-		float4(oclraster::get_camera_setup().position, 1.0f)
-	};
-	opencl::buffer_object* rp_uniforms_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
-																   opencl::BUFFER_FLAG::INITIAL_COPY |
-																   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-																   sizeof(rp_uniforms),
-																   (void*)&rasterize_uniforms);
-	
 	// create volume and a default transfer function
 	string volume_name = "c60.dat";
 	if(argc > 2 && !string(argv[1]).empty() && !string(argv[2]).empty()) {
@@ -149,7 +124,6 @@ int main(int argc, char* argv[]) {
 	oclraster::release_context();
 	
 	// main loop
-	float model_rotation = 0.0f;
 	while(!done) {
 		// event handling
 		evt->handle_events();
@@ -179,17 +153,6 @@ int main(int argc, char* argv[]) {
 		p->bind_program(*volume_tp);
 		p->bind_program(*volume_rp);
 		
-		// update uniforms
-		if(update_model) {
-			transform_uniforms.modelview = matrix4f().rotate_y(model_rotation);
-			transform_uniforms.rotation = transform_uniforms.modelview;
-			model_rotation += 1.5f;
-			if(model_rotation >= 360.0f) {
-				model_rotation = core::wrap(model_rotation, 360.0f);
-			}
-			ocl->write_buffer(tp_uniforms_buffer, &transform_uniforms);
-		}
-		
 		// draw volume
 		const float3 view_vec = oclraster::get_camera_setup().forward.normalized();
 		const size_t axis = view_vec.abs().max_element_index();
@@ -208,9 +171,6 @@ int main(int argc, char* argv[]) {
 	delete tf_texture;
 	delete vol;
 	delete cam;
-	
-	ocl->delete_buffer(tp_uniforms_buffer);
-	ocl->delete_buffer(rp_uniforms_buffer);
 	
 	evt->remove_event_handler(key_handler_fnctr);
 	evt->remove_event_handler(mouse_handler_fnctr);
