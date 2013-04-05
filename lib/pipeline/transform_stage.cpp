@@ -40,17 +40,15 @@ transform_stage::~transform_stage() {
 	ocl->delete_buffer(const_buffer_tp);
 }
 
-void transform_stage::transform(draw_state& state,
-								const unsigned int& num_elements) {
+void transform_stage::transform(draw_state& state, const unsigned int& num_elements) {
 	// update const buffer
-	const auto& cam = oclraster::get_camera_setup();
 	const constant_data_tp const_data_tp {
-		cam.position,
-		cam.origin,
-		cam.x_vec,
-		cam.y_vec,
-		cam.forward,
-		cam.frustum_normals,
+		state.cam_setup.position,
+		state.cam_setup.origin,
+		state.cam_setup.x_vec,
+		state.cam_setup.y_vec,
+		state.cam_setup.forward,
+		state.cam_setup.frustum_normals,
 		state.framebuffer_size
 	};
 	ocl->write_buffer(const_buffer_tp, &const_data_tp); // TODO: make this non-blocking

@@ -31,7 +31,6 @@
 class opencl_base;
 extern opencl_base* ocl;
 
-class camera;
 class OCLRASTER_API oclraster {
 public:
 	static void init(const char* callpath_, const char* datapath_);
@@ -72,35 +71,6 @@ public:
 	static void acquire_context();
 	static void release_context();
 	
-	// misc position/rotation/matrix functions
-	struct camera_setup {
-		float3 position;
-		float3 origin;
-		float3 forward;
-		float3 x_vec;
-		float3 y_vec;
-		// note: there is no far plane and front plane normal == -forward
-		array<float4, 3> frustum_normals;
-	};
-	static const camera_setup& get_camera_setup();
-	static void push_projection_matrix();
-	static void pop_projection_matrix();
-	static void push_modelview_matrix();
-	static void pop_modelview_matrix();
-	static matrix4f& get_projection_matrix();
-	static matrix4f& get_modelview_matrix();
-	static matrix4f& get_mvp_matrix();
-	static matrix4f& get_translation_matrix();
-	static matrix4f& get_rotation_matrix();
-	static void set_position(const float& xpos, const float& ypos, const float& zpos);
-	static float3& get_position();
-	static void set_rotation(const float& xrot, const float& yrot);
-	static float3& get_rotation();
-	
-	static void set_camera(camera* cam);
-	static camera* get_camera();
-	static void run_camera(); // TODO: move to protected again (-> add better way of manipulating the camera during a frame)
-	
 	// fps functions
 	static unsigned int get_fps();
 	static float get_frame_time();
@@ -131,6 +101,7 @@ public:
 	static void set_fov(const float& fov);
 	static void set_upscaling(const float& upscaling);
 	static const float& get_upscaling();
+	static float get_scale_factor();
 	
 	// input
 	static unsigned int get_key_repeat();
@@ -191,20 +162,6 @@ protected:
 	static string rel_datapath;
 	static string callpath;
 	static string kernelpath;
-
-	// transformation/positioning/rotation
-	//static void run_camera();
-	static camera* cam;
-	static camera_setup cam_setup;
-	static float3 position;
-	static float3 rotation;
-	static matrix4f projection_matrix;
-	static matrix4f modelview_matrix;
-	static matrix4f mvp_matrix;
-	static matrix4f translation_matrix;
-	static matrix4f rotation_matrix;
-	static deque<matrix4f*> projm_stack;
-	static deque<matrix4f*> mvm_stack;
 
 	// fps counting
 	static unsigned int fps;

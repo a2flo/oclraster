@@ -56,10 +56,10 @@ int main(int argc, char* argv[]) {
 	cam->set_speed(cam_speeds.x);
 	cam->set_rotation_speed(cam->get_rotation_speed() * 1.5f);
 	cam->set_wasd_input(true);
-	oclraster::set_camera(cam);
 	
 	//
 	p = new pipeline();
+	p->set_camera(cam);
 	
 	// add event handlers
 	event::handler key_handler_fnctr(&key_handler);
@@ -152,9 +152,10 @@ int main(int argc, char* argv[]) {
 		oclraster::start_draw();
 		p->bind_program(*volume_tp);
 		p->bind_program(*volume_rp);
+		p->run_camera();
 		
 		// draw volume
-		const float3 view_vec = oclraster::get_camera_setup().forward.normalized();
+		const float3 view_vec = p->get_camera_setup().forward.normalized();
 		const size_t axis = view_vec.abs().max_element_index();
 		
 		p->bind_buffer("index_buffer", vol->get_index_buffer(axis, view_vec[axis] < 0.0f ? 0 : 1));

@@ -65,10 +65,10 @@ int main(int argc oclr_unused, char* argv[]) {
 	cam->set_speed(cam_speeds.x);
 	cam->set_rotation_speed(cam->get_rotation_speed() * 1.5f);
 	cam->set_wasd_input(true);
-	oclraster::set_camera(cam);
 	
 	//
 	p = new pipeline();
+	p->set_camera(cam);
 	
 	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
 	//a2m* model = new a2m(oclraster::data_path("blend_test.a2m"));
@@ -114,7 +114,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		float4 light_position; // .w = light radius ^ 2
 		float4 light_color;
 	} rasterize_uniforms {
-		float4(oclraster::get_camera_setup().position, 1.0f),
+		float4(cam->get_position(), 1.0f),
 		float4(sinf(light_pos)*light_dist, 0.0f, cosf(light_pos)*light_dist, light_intensity*light_intensity),
 		float4(0.0f, 0.3f, 0.7f, 1.0f)
 	};
@@ -215,6 +215,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		}
 		
 		oclraster::start_draw();
+		p->run_camera();
 		
 		// update uniforms
 		if(update_model) {
@@ -256,9 +257,9 @@ int main(int argc oclr_unused, char* argv[]) {
 			rasterize_uniforms.light_color.z += core::rand(-color_step_range, color_step_range);
 			rasterize_uniforms.light_color.clamp(0.0f, 1.0f);
 		}
-		if(update_light || update_light_color) {
-			ocl->write_buffer(rp_uniforms_buffer, &rasterize_uniforms);
-		}
+		
+		rasterize_uniforms.camera_position.vector3<float>::set(cam->get_position());
+		ocl->write_buffer(rp_uniforms_buffer, &rasterize_uniforms);
 		
 		// draw something
 		p->bind_buffer("index_buffer", index_buffer);

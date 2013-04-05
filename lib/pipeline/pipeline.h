@@ -27,6 +27,7 @@
 #include "pipeline/framebuffer.h"
 #include "core/rtt.h"
 #include "core/event.h"
+#include "core/camera.h"
 #include "program/oclraster_program.h"
 #include "program/transform_program.h"
 #include "program/rasterization_program.h"
@@ -69,6 +70,18 @@ struct draw_state {
 	const unsigned int batch_size { OCLRASTER_BATCH_SIZE };
 	unsigned int batch_count { 0 };
 	unsigned int triangle_count { 0 };
+	
+	//
+	struct camera_setup {
+		float3 position; // actual camera position
+		float3 origin; // screen origin
+		float3 forward; // normalized forward vector
+		float3 x_vec; // "dx", (right) vector from one screen pixel to the next (in the same screen row)
+		float3 y_vec; // "dy", (up) vector from one screen pixel to the next (in the same screen column)
+		// note: there is no far plane, front plane normal == -forward and normals are stored transposed
+		// -> call pipeline::compute_frustum_normals instead of setting these manually
+		array<float4, 3> frustum_normals;
+	} cam_setup;
 };
 
 class pipeline {
@@ -92,10 +105,26 @@ public:
 	const framebuffer* get_default_framebuffer() const;
 	
 	// "draw calls" (for now, these always draw triangles)
-	// TODO: get the necessary information from somewhere again ...
-	/*void draw(// default element range: draw all
-			  const pair<unsigned int, unsigned int> element_range = { ~0u, ~0u });*/
+	// range is inclusive!
 	void draw(const pair<unsigned int, unsigned int> element_range);
+	
+	// camera
+	// NOTE: the camera class and these functions are only provided to make things easier.
+	// meaning, they don't have to be used if you don't want to use them and want to roll your own camera code.
+	// in that case, the draw_state camera_setup must be set to the wanted (valid) state manually,
+	// and you probably also want to call compute_frustum_normals(...) with your camera_setup.
+	void set_camera(camera* cam_);
+	camera* get_camera() const;
+	
+	// runs the previously set camera and updates the draw_state camera_setup accordingly
+	void run_camera();
+	
+	// use these to manually modify the draw_state camera_setup
+	const draw_state::camera_setup& get_camera_setup() const;
+	draw_state::camera_setup& get_camera_setup();
+	
+	// computes and writes the frustum normals from/to the given camera setup
+	void compute_frustum_normals(draw_state::camera_setup& cam_setup);
 	
 protected:
 	draw_state state;
@@ -113,6 +142,9 @@ protected:
 #if defined(OCLRASTER_IOS)
 	GLuint vbo_fullscreen_triangle = 0;
 #endif
+	
+	// camera
+	camera* cam = nullptr;
 	
 	// event handler
 	event::handler event_handler_fnctr;

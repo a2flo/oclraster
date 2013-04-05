@@ -22,6 +22,7 @@
 static bool done = false;
 static event* evt = nullptr;
 static camera* cam = nullptr;
+static camera* monkey_cam = nullptr;
 static constexpr float3 cam_speeds { 0.01f, 0.1f, 0.001f };
 static atomic<unsigned int> update_model { true };
 static vector<transform_program*> transform_programs;
@@ -57,7 +58,15 @@ int main(int argc oclr_unused, char* argv[]) {
 	cam->set_speed(cam_speeds.x);
 	cam->set_rotation_speed(cam->get_rotation_speed() * 1.5f);
 	cam->set_wasd_input(true);
-	oclraster::set_camera(cam);
+	
+	monkey_cam = new camera();
+	monkey_cam->set_position(0.8f, 0.28f, 3.2f);
+	monkey_cam->set_rotation(-5.2f, 196.0f, 0.0f);
+	monkey_cam->set_speed(0.0f);
+	monkey_cam->set_rotation_speed(0.0f);
+	monkey_cam->set_wasd_input(false);
+	monkey_cam->set_keyboard_input(false);
+	monkey_cam->set_mouse_input(false);
 	
 	//
 	p = new pipeline();
@@ -97,17 +106,6 @@ int main(int argc oclr_unused, char* argv[]) {
 																   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 																   sizeof(tp_uniforms),
 																   (void*)&transform_uniforms);
-	
-	struct __attribute__((packed, aligned(16))) rp_uniforms {
-		float4 camera_position;
-	} rasterize_uniforms {
-		float4(oclraster::get_camera_setup().position, 1.0f)
-	};
-	opencl::buffer_object* rp_uniforms_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
-																   opencl::BUFFER_FLAG::INITIAL_COPY |
-																   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-																   sizeof(rp_uniforms),
-																   (void*)&rasterize_uniforms);
 	
 	// textures
 	static const array<string, material_count*3> texture_names {
@@ -196,6 +194,8 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_framebuffer(&rtt_fb);
 		p->bind_program(*rtt_tp);
 		p->bind_program(*rtt_rp);
+		p->set_camera(monkey_cam);
+		p->run_camera();
 		
 		// update uniforms
 		if(update_model) {
@@ -208,16 +208,17 @@ int main(int argc oclr_unused, char* argv[]) {
 			ocl->write_buffer(tp_uniforms_buffer, &transform_uniforms);
 		}
 		
-		// draw something
+		// draw monkey to rtt framebuffer
 		p->bind_buffer("index_buffer", index_buffer);
 		p->bind_buffer("input_attributes", input_attributes);
 		p->bind_buffer("tp_uniforms", *tp_uniforms_buffer);
-		p->bind_buffer("rp_uniforms", *rp_uniforms_buffer);
 		p->bind_image("diffuse_texture", materials[0][0]);
 		p->draw({ 0, model->get_index_count(0)-1 });
 		
 		//
 		p->bind_framebuffer(nullptr);
+		p->set_camera(cam);
+		p->run_camera();
 		
 		p->bind_program(*rtt_display_tp);
 		p->bind_program(*rtt_display_rp);
@@ -233,10 +234,10 @@ int main(int argc oclr_unused, char* argv[]) {
 	// cleanup
 	framebuffer::destroy_images(rtt_fb);
 	delete model;
+	delete monkey_cam;
 	delete cam;
 	
 	ocl->delete_buffer(tp_uniforms_buffer);
-	ocl->delete_buffer(rp_uniforms_buffer);
 	
 	evt->remove_event_handler(key_handler_fnctr);
 	evt->remove_event_handler(mouse_handler_fnctr);

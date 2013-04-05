@@ -8,12 +8,6 @@ oclraster_out simple_output {
 	float2 tex_coord;
 } output_attributes;
 
-oclraster_uniforms rasterize_uniforms {
-	float4 camera_position;
-	float4 light_position; // .w = light radius ^ 2
-	float4 light_color;
-} rp_uniforms;
-
 oclraster_images {
 	read_only image2d diffuse_texture;
 };

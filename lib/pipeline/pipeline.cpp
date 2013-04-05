@@ -260,3 +260,98 @@ void pipeline::bind_framebuffer(framebuffer* fb) {
 const framebuffer* pipeline::get_default_framebuffer() const {
 	return &default_framebuffer;
 }
+
+void pipeline::set_camera(camera* cam_) {
+	cam = cam_;
+}
+
+camera* pipeline::get_camera() const {
+	return cam;
+}
+
+void pipeline::run_camera() {
+	if(cam == nullptr) return;
+	cam->run();
+	
+	const float2 fp_framebuffer_size { (float)state.framebuffer_size.x, (float)state.framebuffer_size.y };
+	const float aspect_ratio = fp_framebuffer_size.x / fp_framebuffer_size.y;
+	const float angle_ratio = tanf(DEG2RAD(oclraster::get_fov() * 0.5f)) * 2.0f;
+	
+	const float3 forward_(cam->get_forward());
+	const float3 up_(cam->get_up());
+	
+	const float3 right { (up_ ^ forward_).normalized() };
+	const float3 up { (forward_ ^ right).normalized() };
+	const float3 forward { forward_.normalized() };
+	//oclr_debug("right: %v, up: %v, forward: %v", right, up, forward);
+	
+	const float3 width_vec { right * angle_ratio * aspect_ratio };
+	const float3 height_vec { up * angle_ratio };
+	const float3 half_width_vec { width_vec * 0.5f };
+	const float3 half_height_vec { height_vec * 0.5f };
+	//oclr_debug("w/h: %v %v, %f %f", width_vec, height_vec, aspect_ratio, angle_ratio);
+	
+	state.cam_setup.position = cam->get_position();
+	// TODO: general upscaling support
+#if !defined(__APPLE__)
+	cam_setup.x_vec = width_vec / fp_framebuffer_size.x;
+	cam_setup.y_vec = height_vec / fp_framebuffer_size.y;
+#else
+	const float scale_factor = oclraster::get_scale_factor();
+	state.cam_setup.x_vec = (width_vec * scale_factor) / fp_framebuffer_size.x;
+	state.cam_setup.y_vec = (height_vec * scale_factor) / fp_framebuffer_size.y;
+#endif
+	state.cam_setup.origin = forward - half_width_vec - half_height_vec;
+	state.cam_setup.origin.normalized();
+	state.cam_setup.forward = forward;
+	
+	compute_frustum_normals(state.cam_setup);
+}
+
+void pipeline::compute_frustum_normals(draw_state::camera_setup& cam_setup) {
+	const float2 fp_framebuffer_size { (float)state.framebuffer_size.x, (float)state.framebuffer_size.y };
+	const float3 half_width_vec = cam_setup.x_vec * (fp_framebuffer_size.x * 0.5f);
+	const float3 half_height_vec = cam_setup.y_vec * (fp_framebuffer_size.y * 0.5f);
+	
+	// compute frustum (normals of left/top/right/bottom plane)
+	// note: near plane normal == forward vector, and since there is no
+	// far plane, this doesn't have to computed either (would be -forward)
+	const array<float3, 4> near_points {
+		{
+			cam_setup.origin, // bottom left
+			cam_setup.forward - half_width_vec + half_height_vec, // top left
+			cam_setup.forward + half_width_vec + half_height_vec, // top right
+			cam_setup.forward + half_width_vec - half_height_vec, // bottom right
+		}
+	};
+	
+	// to compute the outer planes normals, we don't need to compute "far points"
+	// since they are located on the same ray as the "near points" which also
+	// always goes through (0, 0, 0)
+	// -> pretend the near points are the far points and (0, 0, 0) is the near
+	// point in all cases (substraction is omitted for obvious reasons)
+	// also note: normals point inwards for algorithmic reasons
+	const array<float3, 4> frustum_normals = {
+		{
+			(near_points[1] ^ near_points[0]).normalized(), // left
+			(near_points[2] ^ near_points[1]).normalized(), // top
+			(near_points[3] ^ near_points[2]).normalized(), // right
+			(near_points[0] ^ near_points[3]).normalized(), // bottom
+		}
+	};
+	// "transpose" to save memory and do 4 computations at a time (if possible)
+	for(size_t i = 0; i < 3; i++) {
+		cam_setup.frustum_normals[i].x = frustum_normals[0][i];
+		cam_setup.frustum_normals[i].y = frustum_normals[1][i];
+		cam_setup.frustum_normals[i].z = frustum_normals[2][i];
+		cam_setup.frustum_normals[i].w = frustum_normals[3][i];
+	}
+}
+
+const draw_state::camera_setup& pipeline::get_camera_setup() const {
+	return state.cam_setup;
+}
+
+draw_state::camera_setup& pipeline::get_camera_setup() {
+	return state.cam_setup;
+}

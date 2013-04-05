@@ -19,7 +19,6 @@
 #include "oclraster/oclraster_version.h"
 #include "cl/opencl.h"
 #include "core/rtt.h"
-#include "core/camera.h"
 #include "core/gl_support.h"
 #include "pipeline/framebuffer.h"
 
@@ -35,7 +34,6 @@
 event* oclraster::evt = nullptr;
 xml* oclraster::x = nullptr;
 opencl_base* ocl = nullptr;
-camera* oclraster::cam = nullptr;
 
 struct oclraster::oclraster_config oclraster::config;
 xml::xml_doc oclraster::config_doc;
@@ -44,17 +42,6 @@ string oclraster::datapath = "";
 string oclraster::rel_datapath = "";
 string oclraster::callpath = "";
 string oclraster::kernelpath = "";
-
-struct oclraster::camera_setup oclraster::cam_setup;
-float3 oclraster::position;
-float3 oclraster::rotation;
-matrix4f oclraster::projection_matrix;
-matrix4f oclraster::modelview_matrix;
-matrix4f oclraster::mvp_matrix;
-matrix4f oclraster::translation_matrix;
-matrix4f oclraster::rotation_matrix;
-deque<matrix4f*> oclraster::projm_stack;
-deque<matrix4f*> oclraster::mvm_stack;
 
 unsigned int oclraster::fps = 0;
 unsigned int oclraster::fps_counter = 0;
@@ -444,25 +431,8 @@ void oclraster::init_internal() {
 	// resize stuff
 	resize_window();
 
-	// seed
-	const unsigned int rseed = ((unsigned int)time(nullptr)/SDL_GetTicks())*((unsigned int)time(nullptr)%SDL_GetTicks());
-	srand(rseed >> 1);
-	
-	// draw the loading screen/image
-	start_draw();
-	start_2d_draw();
-	/*oclr_texture load_tex = t->add_texture(data_path("loading.png"), TEXTURE_FILTERING::LINEAR, 0, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-	const uint2 load_tex_draw_size(load_tex->width/2, load_tex->height/2);
-	const uint2 img_offset((unsigned int)config.width/2 - load_tex_draw_size.x/2,
-						   (unsigned int)config.height/2 - load_tex_draw_size.y/2);
-	gfx2d::set_blend_mode(gfx2d::BLEND_MODE::PRE_MUL);
-	gfx2d::draw_rectangle_texture(rect(img_offset.x, img_offset.y,
-									   img_offset.x + load_tex_draw_size.x,
-									   img_offset.y + load_tex_draw_size.y),
-								  load_tex->tex(),
-								  coord(0.0f, 1.0f), coord(1.0f, 0.0f));*/
-	stop_2d_draw();
-	stop_draw();
+	// seed (just in case someone is still using the c random functions)
+	srand((unsigned int)time(nullptr));
 	
 	// retrieve dpi info
 	if(config.dpi == 0) {
@@ -583,15 +553,6 @@ void oclraster::start_draw() {
 	
 	// clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	// reset model view matrix
-	modelview_matrix.identity();
-	translation_matrix.identity();
-	rotation_matrix.identity();
-	mvp_matrix = projection_matrix;
-	
-	// run/step camera
-	run_camera();
 }
 
 /*! stops drawing the window
@@ -689,55 +650,6 @@ void oclraster::init_gl() {
 void oclraster::resize_window() {
 	// set the viewport
 	glViewport(0, 0, (GLsizei)config.width, (GLsizei)config.height);
-
-	// projection matrix
-	// set perspective with fov (default = 72) and near/far plane value (default = 1.0f/1000.0f)
-	projection_matrix.perspective(config.fov, float(config.width) / float(config.height),
-								  config.near_far_plane.x, config.near_far_plane.y);
-
-	// model view matrix
-	modelview_matrix.identity();
-	translation_matrix.identity();
-	rotation_matrix.identity();
-	mvp_matrix = projection_matrix;
-}
-
-/*! sets the position of the user/viewer
- *  @param xpos x coordinate
- *  @param ypos y coordinate
- *  @param zpos z coordinate
- */
-void oclraster::set_position(const float& xpos, const float& ypos, const float& zpos) {
-	position.set(xpos, ypos, zpos);
-	
-	translation_matrix = matrix4f().translate(xpos, ypos, zpos);
-	modelview_matrix = translation_matrix * rotation_matrix;
-	mvp_matrix = modelview_matrix * projection_matrix;
-}
-
-/*! sets the rotation of the user/viewer
- *  @param xrot x rotation
- *  @param yrot y rotation
- */
-void oclraster::set_rotation(const float& xrot, const float& yrot) {
-	rotation.x = xrot;
-	rotation.y = yrot;
-	
-	rotation_matrix = matrix4f().rotate_y(yrot) * matrix4f().rotate_x(xrot);
-	modelview_matrix = translation_matrix * rotation_matrix;
-	mvp_matrix = modelview_matrix * projection_matrix;
-}
-
-/*! returns the position of the user
- */
-float3& oclraster::get_position() {
-	return position;
-}
-
-/*! returns the rotation of the user
- */
-float3& oclraster::get_rotation() {
-	return rotation;
 }
 
 /*! starts drawing the 2d elements and initializes the opengl functions for that
@@ -748,17 +660,9 @@ void oclraster::start_2d_draw() {
 
 void oclraster::start_2d_draw(const unsigned int width, const unsigned int height) {
 	glViewport(0, 0, width, height);
-
-	// we need an orthogonal view (2d) for drawing 2d elements
-	push_projection_matrix();
-	projection_matrix.ortho(0, width, 0, height, -1.0, 1.0);
-
-	push_modelview_matrix();
-	modelview_matrix.identity();
 	
 	glFrontFace(GL_CW);
-	mvp_matrix = projection_matrix;
-	glDisable(GL_CULL_FACE); // TODO: GL3, remove again
+	glDisable(GL_CULL_FACE);
 	
 	// shaders are using pre-multiplied alpha
 	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -767,10 +671,8 @@ void oclraster::start_2d_draw(const unsigned int width, const unsigned int heigh
 /*! stops drawing the 2d elements
  */
 void oclraster::stop_2d_draw() {
-	pop_projection_matrix();
-	pop_modelview_matrix();
 	glFrontFace(GL_CCW);
-	glEnable(GL_CULL_FACE); // TODO: GL3, remove again
+	glEnable(GL_CULL_FACE);
 }
 
 /*! sets the cursors visibility to state
@@ -848,26 +750,6 @@ string oclraster::strip_data_path(const string& str) {
 	return core::find_and_replace(str, datapath, "");
 }
 
-matrix4f& oclraster::get_projection_matrix() {
-	return oclraster::projection_matrix;
-}
-
-matrix4f& oclraster::get_modelview_matrix() {
-	return oclraster::modelview_matrix;
-}
-
-matrix4f& oclraster::get_mvp_matrix() {
-	return oclraster::mvp_matrix;
-}
-
-matrix4f& oclraster::get_translation_matrix() {
-	return oclraster::translation_matrix;
-}
-
-matrix4f& oclraster::get_rotation_matrix() {
-	return oclraster::rotation_matrix;
-}
-
 unsigned int oclraster::get_fps() {
 	new_fps_count = false;
 	return oclraster::fps;
@@ -933,29 +815,6 @@ void oclraster::swap() {
 	SDL_GL_SwapWindow(config.wnd);
 }
 
-void oclraster::push_projection_matrix() {
-	projm_stack.push_back(new matrix4f(projection_matrix));
-}
-
-void oclraster::pop_projection_matrix() {
-	matrix4f* pmat = projm_stack.back();
-	projection_matrix = *pmat;
-	delete pmat;
-	projm_stack.pop_back();
-}
-
-void oclraster::push_modelview_matrix() {
-	mvm_stack.push_back(new matrix4f(modelview_matrix));
-}
-
-void oclraster::pop_modelview_matrix() {
-	matrix4f* pmat = mvm_stack.back();
-	modelview_matrix = *pmat;
-	mvp_matrix = modelview_matrix * projection_matrix;
-	delete pmat;
-	mvm_stack.pop_back();
-}
-
 void oclraster::reload_kernels() {
 	reload_kernels_flag = true;
 }
@@ -968,8 +827,7 @@ void oclraster::set_fov(const float& fov) {
 	if(config.fov == fov) return;
 	config.fov = fov;
 	evt->add_event(EVENT_TYPE::WINDOW_RESIZE,
-				   make_shared<window_resize_event>(SDL_GetTicks(),
-													size2(config.width, config.height)));
+				   make_shared<window_resize_event>(SDL_GetTicks(), size2(config.width, config.height)));
 }
 
 const float2& oclraster::get_near_far_plane() {
@@ -1049,98 +907,20 @@ bool oclraster::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	return false;
 }
 
-void oclraster::run_camera() {
-	if(cam == nullptr) return;
-	cam->run();
-	
-	const float aspect_ratio = float(config.width) / float(config.height);
-	const float angle_ratio = tanf(DEG2RAD(config.fov * 0.5f)) * 2.0f;
-	
-	const float3 forward_(cam->get_forward());
-	const float3 up_(cam->get_up());
-	
-	const float3 right { (up_ ^ forward_).normalized() };
-	const float3 up { (forward_ ^ right).normalized() };
-	const float3 forward { forward_.normalized() };
-	//oclr_debug("right: %v, up: %v, forward: %v", right, up, forward);
-	
-	const float3 width_vec { right * angle_ratio * aspect_ratio };
-	const float3 height_vec { up * angle_ratio };
-	const float3 half_width_vec { width_vec * 0.5f };
-	const float3 half_height_vec { height_vec * 0.5f };
-	//oclr_debug("w/h: %v %v, %f %f", width_vec, height_vec, aspect_ratio, angle_ratio);
-	
-	cam_setup.position = cam->get_position();
-	// TODO: general upscaling support
-#if !defined(__APPLE__)
-	cam_setup.x_vec = width_vec / float(config.width);
-	cam_setup.y_vec = height_vec / float(config.height);
-#else
-#if !defined(OCLRASTER_IOS)
-	const float scale_factor = osx_helper::get_scale_factor(config.wnd);
-#else
-	const float scale_factor = config.upscaling; // TODO: get this from somewhere ...
-#endif
-	cam_setup.x_vec = (width_vec * scale_factor) / float(config.width);
-	cam_setup.y_vec = (height_vec * scale_factor) / float(config.height);
-#endif
-	cam_setup.origin = forward - half_width_vec - half_height_vec;
-	cam_setup.origin.normalized();
-	cam_setup.forward = forward;
-	
-	// compute frustum (normals of left/top/right/bottom plane)
-	// note: near plane normal == forward vector, and since there is no
-	// far plane, this doesn't have to computed either (would be -forward)
-	const array<float3, 4> near_points {
-		{
-			cam_setup.origin, // bottom left
-			forward - half_width_vec + half_height_vec, // top left
-			forward + half_width_vec + half_height_vec, // top right
-			forward + half_width_vec - half_height_vec, // bottom right
-		}
-	};
-
-	// to compute the outer planes normals, we don't need to compute "far points"
-	// since they are located on the same ray as the "near points" which also
-	// always goes through (0, 0, 0)
-	// -> pretend the near points are the far points and (0, 0, 0) is the near
-	// point in all cases (substraction is omitted for obvious reasons)
-	// also note: normals point inwards for algorithmic reasons
-	const array<float3, 4> frustum_normals = {
-		{
-			(near_points[1] ^ near_points[0]).normalized(), // left
-			(near_points[2] ^ near_points[1]).normalized(), // top
-			(near_points[3] ^ near_points[2]).normalized(), // right
-			(near_points[0] ^ near_points[3]).normalized(), // bottom
-		}
-	};
-	// "transpose" to save memory and do 4 computations at a time (if possible)
-	for(size_t i = 0; i < 3; i++) {
-		cam_setup.frustum_normals[i].x = frustum_normals[0][i];
-		cam_setup.frustum_normals[i].y = frustum_normals[1][i];
-		cam_setup.frustum_normals[i].z = frustum_normals[2][i];
-		cam_setup.frustum_normals[i].w = frustum_normals[3][i];
-	}
-}
-
-const oclraster::camera_setup& oclraster::get_camera_setup() {
-	return cam_setup;
-}
-
-void oclraster::set_camera(camera* cam_) {
-	cam = cam_;
-}
-
-camera* oclraster::get_camera() {
-	return cam;
-}
-
 void oclraster::set_upscaling(const float& upscaling_) {
 	config.upscaling = upscaling_;
 }
 
 const float& oclraster::get_upscaling() {
 	return config.upscaling;
+}
+
+float oclraster::get_scale_factor() {
+#if defined(__APPLE__) && !defined(OCLRASTER_IOS)
+	return osx_helper::get_scale_factor(config.wnd);
+#else
+	return config.upscaling; // TODO: get this from somewhere ...
+#endif
 }
 
 bool oclraster::get_gl_sharing() {
