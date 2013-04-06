@@ -150,9 +150,10 @@ int main(int argc, char* argv[]) {
 		}
 		
 		oclraster::start_draw();
+		cam->run();
 		p->bind_program(*volume_tp);
 		p->bind_program(*volume_rp);
-		p->run_camera();
+		p->set_camera(cam);
 		
 		// draw volume
 		const float3 view_vec = p->get_camera_setup().forward.normalized();

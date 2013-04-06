@@ -116,12 +116,12 @@ public:
 	void set_camera(camera* cam_);
 	camera* get_camera() const;
 	
-	// runs the previously set camera and updates the draw_state camera_setup accordingly
-	void run_camera();
-	
 	// use these to manually modify the draw_state camera_setup
 	const draw_state::camera_setup& get_camera_setup() const;
 	draw_state::camera_setup& get_camera_setup();
+	
+	// correctly sets/computes the camera_setup from the given camera (automatically called by set_camera)
+	void set_camera_setup_from_camera(camera* cam);
 	
 	// computes and writes the frustum normals from/to the given camera setup
 	void compute_frustum_normals(draw_state::camera_setup& cam_setup);

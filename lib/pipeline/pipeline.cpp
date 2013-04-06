@@ -263,22 +263,22 @@ const framebuffer* pipeline::get_default_framebuffer() const {
 
 void pipeline::set_camera(camera* cam_) {
 	cam = cam_;
+	set_camera_setup_from_camera(cam);
 }
 
 camera* pipeline::get_camera() const {
 	return cam;
 }
 
-void pipeline::run_camera() {
-	if(cam == nullptr) return;
-	cam->run();
+void pipeline::set_camera_setup_from_camera(camera* cam_) {
+	if(cam_ == nullptr) return;
 	
 	const float2 fp_framebuffer_size { (float)state.framebuffer_size.x, (float)state.framebuffer_size.y };
 	const float aspect_ratio = fp_framebuffer_size.x / fp_framebuffer_size.y;
 	const float angle_ratio = tanf(DEG2RAD(oclraster::get_fov() * 0.5f)) * 2.0f;
 	
-	const float3 forward_(cam->get_forward());
-	const float3 up_(cam->get_up());
+	const float3 forward_(cam_->get_forward());
+	const float3 up_(cam_->get_up());
 	
 	const float3 right { (up_ ^ forward_).normalized() };
 	const float3 up { (forward_ ^ right).normalized() };
@@ -291,7 +291,7 @@ void pipeline::run_camera() {
 	const float3 half_height_vec { height_vec * 0.5f };
 	//oclr_debug("w/h: %v %v, %f %f", width_vec, height_vec, aspect_ratio, angle_ratio);
 	
-	state.cam_setup.position = cam->get_position();
+	state.cam_setup.position = cam_->get_position();
 	// TODO: general upscaling support
 #if !defined(__APPLE__)
 	cam_setup.x_vec = width_vec / fp_framebuffer_size.x;

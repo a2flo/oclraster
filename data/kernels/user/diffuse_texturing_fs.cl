@@ -3,8 +3,6 @@
 // rasterization program
 
 oclraster_out simple_output {
-	float4 vertex;
-	float4 normal;
 	float2 tex_coord;
 } output_attributes;
 

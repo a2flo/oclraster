@@ -188,6 +188,8 @@ int main(int argc oclr_unused, char* argv[]) {
 		}
 		
 		oclraster::start_draw();
+		cam->run();
+		monkey_cam->run();
 		
 		//
 		rtt_fb.clear();
@@ -195,7 +197,6 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_program(*rtt_tp);
 		p->bind_program(*rtt_rp);
 		p->set_camera(monkey_cam);
-		p->run_camera();
 		
 		// update uniforms
 		if(update_model) {
@@ -218,7 +219,6 @@ int main(int argc oclr_unused, char* argv[]) {
 		//
 		p->bind_framebuffer(nullptr);
 		p->set_camera(cam);
-		p->run_camera();
 		
 		p->bind_program(*rtt_display_tp);
 		p->bind_program(*rtt_display_rp);

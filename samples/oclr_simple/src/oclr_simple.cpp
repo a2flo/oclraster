@@ -215,7 +215,8 @@ int main(int argc oclr_unused, char* argv[]) {
 		}
 		
 		oclraster::start_draw();
-		p->run_camera();
+		cam->run();
+		p->set_camera(cam);
 		
 		// update uniforms
 		if(update_model) {
