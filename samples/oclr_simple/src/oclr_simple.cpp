@@ -245,7 +245,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		}
 			
 		if(update_light) {
-			light_pos -= 0.25f;
+			light_pos -= 0.125f;
 			rasterize_uniforms.light_position.set(sinf(light_pos)*light_dist,
 												  0.0f,
 												  cosf(light_pos)*light_dist,
