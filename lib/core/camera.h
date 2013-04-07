@@ -26,9 +26,9 @@
 class OCLRASTER_API camera {
 public:
 	camera();
-	~camera();
+	virtual ~camera();
 	
-	void run();
+	virtual void run();
 	
 	void set_position(const float& x, const float& y, const float& z);
 	void set_position(const float3& pos);
@@ -39,9 +39,6 @@ public:
 	void set_rotation(const float3& rot);
 	float3& get_rotation();
 	const float3& get_rotation() const;
-	
-	void set_forward(const float& x, const float& y, const float& z);
-	void set_forward(const float3& forward);
 	const float3& get_forward() const;
 	const float3& get_up() const;
 	
@@ -78,7 +75,7 @@ protected:
 	event::handler keyboard_handler;
 	bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
 	
-	void compute_rotation();
+	virtual void compute_rotation();
 	
 };
 

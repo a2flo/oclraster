@@ -28,7 +28,7 @@ camera::~camera() {
 	evt->remove_event_handler(keyboard_handler);
 }
 
-/*! runs the camera (expected to be called every draw)
+/*! runs the camera (expected to be called every frame)
  */
 void camera::run() {
 	if(keyboard_input) {
@@ -291,16 +291,6 @@ bool camera::key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	}
 	
 	return true;
-}
-
-void camera::set_forward(const float& x, const float& y, const float& z) {
-	forward.set(x, y, z);
-	rotation.set(RAD2DEG(asinf(forward.y)), RAD2DEG(asinf(forward.x)), 0.0f);
-	compute_rotation();
-}
-
-void camera::set_forward(const float3& forward_) {
-	set_forward(forward_.x, forward_.y, forward_.z);
 }
 
 const float3& camera::get_forward() const {
