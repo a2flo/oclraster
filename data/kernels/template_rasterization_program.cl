@@ -2,18 +2,15 @@
 	#include "oclr_math.h"
 	#include "oclr_matrix.h"
 	#include "oclr_image.h"
-	
-	typedef struct __attribute__((packed, aligned(16))) {
+
+	typedef struct __attribute__((packed, aligned(4))) {
 		// VV0: 0 - 2
 		// VV1: 3 - 5
 		// VV2: 6 - 8
 		// depth: 9
-		// unused: 10 - 11
-		// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
-		// y_bounds: 14 - 15
-		const float data[16];
+		float data[10];
 	} transformed_data;
-	
+
 	//###OCLRASTER_USER_CODE###
 	
 	//

@@ -193,10 +193,11 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	// TODO: this should be static!
 	// note: internal transformed buffer size must be a multiple of "batch size" triangles (necessary for the binner)
 	const unsigned int tc_mod_batch_size = (state.triangle_count % OCLRASTER_BATCH_SIZE);
+	const unsigned int triangle_padding = (tc_mod_batch_size == 0 ? 0 : OCLRASTER_BATCH_SIZE - tc_mod_batch_size);
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-												  state.transformed_primitive_size *
-												  (state.triangle_count + (tc_mod_batch_size == 0 ? 0 :
-																		   OCLRASTER_BATCH_SIZE - tc_mod_batch_size)));
+												  state.transformed_primitive_size * (state.triangle_count + triangle_padding));
+	state.triangle_bounds_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
+													  sizeof(float) * 4 * (state.triangle_count + triangle_padding));
 	
 	// create user transformed buffers (transform program outputs)
 	const auto active_device = ocl->get_active_device();
@@ -219,6 +220,7 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	
 	//
 	ocl->delete_buffer(state.transformed_buffer);
+	ocl->delete_buffer(state.triangle_bounds_buffer);
 	
 	// delete user transformed buffers
 	for(const auto& ut_buffer : state.user_transformed_buffers) {

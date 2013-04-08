@@ -2,16 +2,17 @@
 #include "oclr_global.h"
 #include "oclr_math.h"
 
-typedef struct __attribute__((packed, aligned(16))) {
+typedef struct __attribute__((packed, aligned(4))) {
 	// VV0: 0 - 2
 	// VV1: 3 - 5
 	// VV2: 6 - 8
 	// depth: 9
-	// unused: 10 - 11
-	// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
-	// y_bounds: 14 - 15
-	const float data[16];
+	float data[10];
 } transformed_data;
+
+typedef struct __attribute__((packed, aligned(16))) {
+	float4 bounds; // (.x = INFINITY if culled)
+} triangle_bounds;
 
 //
 kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
@@ -21,7 +22,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 						  const unsigned int batch_count,
 						  const unsigned int triangle_count,
 						  
-						  global const transformed_data* transformed_buffer,
+						  global const triangle_bounds* triangle_bounds_buffer,
 						  const uint2 framebuffer_size
 						  ) {
 	const unsigned int local_id = get_local_id(0);
@@ -69,9 +70,9 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 		unsigned int triangles_in_queue = 0;
 		// read input triangle bounds into shared memory (across work-group)
 		const unsigned int triangle_id_offset = batch_idx * BATCH_SIZE;
-		event_t event = async_work_group_strided_copy(&triangle_bounds[0],
-													  (global const float4*)&transformed_buffer[triangle_id_offset].data[12],
-													  BATCH_SIZE, 4, 0);
+		event_t event = async_work_group_copy(&triangle_bounds[0],
+											  (global const float4*)&triangle_bounds_buffer[triangle_id_offset],
+											  BATCH_SIZE, 0);
 		wait_group_events(1, &event);
 		
 		for(unsigned int triangle_id = triangle_id_offset, idx = 0,
@@ -101,12 +102,12 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 			last_triangle_id = min(triangle_id_offset + BATCH_SIZE, triangle_count);
 			triangle_id < last_triangle_id; triangle_id++, idx++) {
 			// cull:
-			if(transformed_buffer[triangle_id].data[12] == INFINITY) continue;
+			if(triangle_bounds_buffer[triangle_id].bounds.x == INFINITY) continue;
 			
-			const uint2 x_bounds = (uint2)(convert_uint(transformed_buffer[triangle_id].data[12]),
-										   convert_uint(transformed_buffer[triangle_id].data[13]));
-			const uint2 y_bounds = (uint2)(convert_uint(transformed_buffer[triangle_id].data[14]),
-										   convert_uint(transformed_buffer[triangle_id].data[15]));
+			const uint2 x_bounds = (uint2)(convert_uint(triangle_bounds_buffer[triangle_id].bounds.x),
+										   convert_uint(triangle_bounds_buffer[triangle_id].bounds.y));
+			const uint2 y_bounds = (uint2)(convert_uint(triangle_bounds_buffer[triangle_id].bounds.z),
+										   convert_uint(triangle_bounds_buffer[triangle_id].bounds.w));
 			
 #endif
 			

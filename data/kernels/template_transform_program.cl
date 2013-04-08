@@ -13,16 +13,17 @@
 		uint2 viewport;
 	} constant_data;
 	
-	typedef struct __attribute__((packed, aligned(16))) {
+	typedef struct __attribute__((packed, aligned(4))) {
 		// VV0: 0 - 2
 		// VV1: 3 - 5
 		// VV2: 6 - 8
 		// depth: 9
-		// unused: 10 - 11
-		// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
-		// y_bounds: 14 - 15
-		float data[16];
+		float data[10];
 	} transformed_data;
+
+	typedef struct __attribute__((packed, aligned(16))) {
+		float4 bounds; // (.x = INFINITY if culled)
+	} triangle_bounds;
 	
 	// transform rerouting
 	#define transform(vertex) _oclraster_transform(vertex, VE, transformed_vertex)
@@ -33,10 +34,11 @@
 	//###OCLRASTER_USER_CODE###
 	
 	//
-	#define discard() { tf_ptr->data[12] = INFINITY; return; }
+	#define discard() { tb_ptr->bounds.x = INFINITY; return; }
 	kernel void oclraster_program(//###OCLRASTER_USER_STRUCTS###
 								  global const unsigned int* index_buffer,
 								  global transformed_data* transformed_buffer,
+								  global triangle_bounds* triangle_bounds_buffer,
 								  constant constant_data* cdata,
 								  const unsigned int triangle_count) {
 		const unsigned int triangle_id = get_global_id(0);
@@ -44,6 +46,7 @@
 		// -> check for triangle_count instead of get_global_size(0)
 		if(triangle_id >= triangle_count) return;
 		global transformed_data* tf_ptr = &transformed_buffer[triangle_id];
+		global triangle_bounds* tb_ptr = &triangle_bounds_buffer[triangle_id];
 		global float* tf_data_ptr = tf_ptr->data;
 		
 		const unsigned int indices[3] = {
@@ -293,14 +296,10 @@
 		}
 		//printf("[%d] bounds: %f %f -> %f %f\n", triangle_id, x_bounds.x, y_bounds.x, x_bounds.y, y_bounds.y);
 		*tf_data_ptr++ = VV_depth;
-		tf_data_ptr++; // unused
-		tf_data_ptr++; // unused
 		
 		// TODO: rounding should depend on sampling mode (more samples -> use floor/ceil again)
-		*tf_data_ptr++ = round(x_bounds.x);
-		*tf_data_ptr++ = round(x_bounds.y);
-		*tf_data_ptr++ = round(y_bounds.x);
-		*tf_data_ptr++ = round(y_bounds.y);
+		
+		tb_ptr->bounds = (float4)(round(x_bounds), round(y_bounds));
 		
 		// note: this is isn't the most space efficient way to do this,
 		// but it doesn't require any index -> triangle id mapping or

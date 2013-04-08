@@ -48,7 +48,7 @@ struct draw_state {
 	};
 	
 	// NOTE: this is just for the internal transformed buffer
-	const unsigned int transformed_primitive_size = 16 * sizeof(float);
+	const unsigned int transformed_primitive_size = 10 * sizeof(float);
 	
 	// framebuffers
 	uint2 framebuffer_size { 1280, 720 };
@@ -56,6 +56,7 @@ struct draw_state {
 	
 	//
 	opencl::buffer_object* transformed_buffer = nullptr;
+	opencl::buffer_object* triangle_bounds_buffer = nullptr;
 	unordered_map<string, const opencl_base::buffer_object&> user_buffers;
 	unordered_map<string, const image&> user_images;
 	vector<opencl::buffer_object*> user_transformed_buffers;
@@ -87,12 +88,12 @@ struct draw_state {
 class pipeline {
 public:
 	pipeline();
-	~pipeline();
+	virtual ~pipeline();
 	
-	//
+	// "swaps"/displays the default framebuffer (-> blits the default framebuffer to the window framebuffer)
 	void swap();
 	
-	//
+	// binds a transform_program or rasterization_program (or any derived class thereof)
 	template <class program_type> void bind_program(const program_type& program);
 	
 	// buffer binding
