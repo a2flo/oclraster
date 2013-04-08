@@ -296,8 +296,8 @@ void pipeline::set_camera_setup_from_camera(camera* cam_) {
 	state.cam_setup.position = cam_->get_position();
 	// TODO: general upscaling support
 #if !defined(__APPLE__)
-	cam_setup.x_vec = width_vec / fp_framebuffer_size.x;
-	cam_setup.y_vec = height_vec / fp_framebuffer_size.y;
+	state.cam_setup.x_vec = width_vec / fp_framebuffer_size.x;
+	state.cam_setup.y_vec = height_vec / fp_framebuffer_size.y;
 #else
 	const float scale_factor = oclraster::get_scale_factor();
 	state.cam_setup.x_vec = (width_vec * scale_factor) / fp_framebuffer_size.x;
