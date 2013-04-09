@@ -169,19 +169,26 @@ void pipeline::swap() {
 	default_framebuffer.clear();
 }
 
-void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
-#if defined(OCLRASTER_DEBUG)
-	// TODO: check buffer sanity/correctness (in debug mode)
-#endif
+void pipeline::draw(const PRIMITIVE_TYPE type, const pair<unsigned int, unsigned int> element_range) {
+	if(element_range.second <= element_range.first) {
+		oclr_error("invalid element range: %u - %u", element_range.first, element_range.second);
+		return;
+	}
+	const auto num_elements = element_range.second - element_range.first;
 	
-	const auto index_count = (element_range.second - element_range.first + 1) * 3;
-	const auto num_elements = element_range.second - element_range.first + 1;
-	state.triangle_count = num_elements;
-	/*const auto num_elements = (element_range.first != ~0u ?
-							   element_range.second - element_range.first + 1 :
-							   ib.index_count / 3);*/
+	unsigned int index_count = 0;
+	switch(type) {
+		case PRIMITIVE_TYPE::TRIANGLE:
+			index_count = num_elements * 3; // 3 indices per triangle
+			break;
+		case PRIMITIVE_TYPE::TRIANGLE_STRIP:
+		case PRIMITIVE_TYPE::TRIANGLE_FAN:
+			index_count = num_elements + 2; // 1 index per triangle, starting with 2
+			break;
+	}
 	
 	// initialize draw state
+	state.triangle_count = num_elements;
 	state.depth_test = 1;
 	state.bin_count = {
 		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),

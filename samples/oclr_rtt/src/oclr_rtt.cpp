@@ -214,7 +214,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_buffer("input_attributes", input_attributes);
 		p->bind_buffer("tp_uniforms", *tp_uniforms_buffer);
 		p->bind_image("diffuse_texture", materials[0][0]);
-		p->draw({ 0, model->get_index_count(0)-1 });
+		p->draw(PRIMITIVE_TYPE::TRIANGLE, { 0, model->get_index_count(0) });
 		
 		//
 		p->bind_framebuffer(nullptr);
@@ -225,7 +225,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_buffer("index_buffer", *plane_index_buffer);
 		p->bind_buffer("input_attributes", *plane_input_attributes);
 		p->bind_image("texture", *rtt_fb.get_image(0));
-		p->draw({ 0, plane_indices.size()-1 });
+		p->draw(PRIMITIVE_TYPE::TRIANGLE, { 0, plane_indices.size() });
 		
 		p->swap();
 		oclraster::stop_draw();

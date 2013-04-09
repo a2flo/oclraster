@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
 		p->bind_buffer("input_attributes", vol->get_vertex_buffer(axis));
 		p->bind_image("volume_texture", *vol->get_texture(axis));
 		p->bind_image("tf_texture", *tf_texture);
-		p->draw({ 0, vol->get_index_count(axis)-1 });
+		p->draw(PRIMITIVE_TYPE::TRIANGLE, { 0, vol->get_index_count(axis) });
 		
 		p->swap();
 		oclraster::stop_draw();

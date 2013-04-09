@@ -32,6 +32,7 @@
 #include "program/transform_program.h"
 #include "program/rasterization_program.h"
 
+// internal pipeline/draw state to handle rendering across different stages and draw calls
 struct draw_state {
 	// TODO: store actual flags/data
 	union {
@@ -85,6 +86,14 @@ struct draw_state {
 	} cam_setup;
 };
 
+//
+enum class PRIMITIVE_TYPE : unsigned int {
+	TRIANGLE,
+	TRIANGLE_STRIP,
+	TRIANGLE_FAN
+};
+
+//
 class pipeline {
 public:
 	pipeline();
@@ -105,9 +114,8 @@ public:
 	//
 	const framebuffer* get_default_framebuffer() const;
 	
-	// "draw calls" (for now, these always draw triangles)
-	// range is inclusive!
-	void draw(const pair<unsigned int, unsigned int> element_range);
+	// "draw calls", range: [first, last)
+	void draw(const PRIMITIVE_TYPE type, const pair<unsigned int, unsigned int> element_range);
 	
 	// camera
 	// NOTE: the camera class and these functions are only provided to make things easier.
