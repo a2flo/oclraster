@@ -14,18 +14,20 @@
 	//###OCLRASTER_USER_CODE###
 	
 	//
-	kernel void oclraster_program(//###OCLRASTER_USER_STRUCTS###
-								  
-								  global unsigned int* bin_distribution_counter,
-								  global const transformed_data* transformed_buffer,
-								  global const uchar* bin_queues,
-								  
-								  const uint2 bin_count,
-								  const unsigned int bin_count_lin,
-								  const unsigned int batch_count,
-								  const unsigned int intra_bin_groups,
-								  
-								  const uint2 framebuffer_size) {
+	kernel void oclraster_rasterization(//###OCLRASTER_USER_STRUCTS###
+										
+										global const unsigned int* index_buffer,
+										
+										global unsigned int* bin_distribution_counter,
+										global const transformed_data* transformed_buffer,
+										global const uchar* bin_queues,
+										
+										const uint2 bin_count,
+										const unsigned int bin_count_lin,
+										const unsigned int batch_count,
+										const unsigned int intra_bin_groups,
+										
+										const uint2 framebuffer_size) {
 		const unsigned int local_id = get_local_id(0);
 		const unsigned int local_size = get_local_size(0);
 		
@@ -151,6 +153,11 @@
 							*fragment_depth = barycentric.w;
 							
 							//
+							const unsigned int indices[3] = {
+								index_buffer[triangle_id*3],
+								index_buffer[triangle_id*3 + 1],
+								index_buffer[triangle_id*3 + 2]
+							};
 							//###OCLRASTER_USER_MAIN_CALL###
 						}
 					}

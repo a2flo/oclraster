@@ -40,6 +40,8 @@ public:
 	
 	const opencl::buffer_object& get_vertex_buffer() const;
 	const opencl::buffer_object& get_index_buffer(const size_t& sub_object) const;
+	
+	unsigned int get_vertex_count() const;
 	unsigned int get_index_count(const unsigned int& sub_object) const;
 	
 	void flip_faces();

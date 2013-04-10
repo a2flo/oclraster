@@ -22,7 +22,7 @@
 
 oclraster_program::oclraster_program(const string& code oclr_unused,
 									 const string entry_function_) :
-entry_function(entry_function_) {
+entry_function(entry_function_), kernel_function_name("oclraster_program") {
 }
 
 oclraster_program::~oclraster_program() {
@@ -296,8 +296,8 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_ima
 		img_spec_str += "." + type.to_string();
 	}
 	
-	const string identifier = "USER_PROGRAM."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter());
-	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, "oclraster_program",
+	const string identifier = "USER_PROGRAM."+kernel_function_name+"."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter());
+	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, kernel_function_name,
 																 " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 																 " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE));
 	//oclr_msg("%s:\n%s\n", identifier, program_code);

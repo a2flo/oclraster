@@ -81,6 +81,7 @@ public:
 
 protected:
 	string entry_function = "main";
+	string kernel_function_name;
 	
 	//
 	string processed_code = ""; // created once on program creation (pre-specialized processing)

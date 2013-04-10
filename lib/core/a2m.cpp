@@ -250,6 +250,10 @@ const opencl::buffer_object& a2m::get_index_buffer(const size_t& sub_object) con
 	return *cl_index_buffers[sub_object];
 }
 
+unsigned int a2m::get_vertex_count() const {
+	return vertex_count;
+}
+
 unsigned int a2m::get_index_count(const unsigned int& sub_object) const {
 	return index_count[sub_object];
 }

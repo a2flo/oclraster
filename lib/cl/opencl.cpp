@@ -902,6 +902,10 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "oclraster_bin",
 					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)),
+			
+			make_tuple("PROCESSING", "processing.cl", "oclraster_processing",
+					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)),
 		};
 		
 		load_internal_kernels();

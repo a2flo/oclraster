@@ -338,6 +338,7 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 
 transform_program::transform_program(const string& code, const string entry_function_) :
 oclraster_program(code, entry_function_) {
+	kernel_function_name = "oclraster_transform";
 	process_program(code);
 }
 
@@ -357,7 +358,6 @@ string transform_program::specialized_processing(const string& code,
 	
 	// insert main call + prior buffer handling
 	string buffer_handling_code = "";
-	string pre_buffer_handling_code = "";
 	string output_handling_code = "";
 	string main_call_parameters = "";
 	size_t cur_user_buffer = 0;
@@ -366,23 +366,20 @@ string transform_program::specialized_processing(const string& code,
 		switch (oclr_struct.type) {
 			case oclraster_program::STRUCT_TYPE::INPUT:
 				buffer_handling_code += oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str +
-										 " = user_buffer_"+cur_user_buffer_str+"[indices[i]];\n";
+										 " = user_buffer_"+cur_user_buffer_str+"[vertex_id];\n";
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
 			case oclraster_program::STRUCT_TYPE::OUTPUT:
-				pre_buffer_handling_code += oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str + "[3];\n";
-				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + "[i], ";
-				output_handling_code += "for(unsigned int i = 0; i < 3; i++) {\n";
-				output_handling_code += "const unsigned int idx = (triangle_index * 3) + i;\n";
+				buffer_handling_code += oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str + ";\n";
+				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				for(const auto& var : oclr_struct.variables) {
-					output_handling_code += "user_buffer_" + cur_user_buffer_str + "[idx]." + var + " = ";
-					output_handling_code += "user_buffer_element_" + cur_user_buffer_str + "[i]." + var + ";\n";
+					output_handling_code += "user_buffer_" + cur_user_buffer_str + "[vertex_id]." + var + " = ";
+					output_handling_code += "user_buffer_element_" + cur_user_buffer_str + "." + var + ";\n";
 				}
-				output_handling_code += "}\n";
 				break;
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
-				pre_buffer_handling_code += ("const " + oclr_struct.name + " user_buffer_element_" +
-											 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
+				buffer_handling_code += ("const " + oclr_struct.name + " user_buffer_element_" +
+										 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
 			case oclraster_program::STRUCT_TYPE::IMAGES:
@@ -393,10 +390,10 @@ string transform_program::specialized_processing(const string& code,
 	for(const auto& img : images.image_names) {
 		main_call_parameters += img + ", ";
 	}
-	main_call_parameters += "i, &VE, &vertices[i]"; // the same for all transform programs
-	core::find_and_replace(program_code, "//###OCLRASTER_USER_PRE_MAIN_CALL###", pre_buffer_handling_code);
+	main_call_parameters += "vertex_id, camera_position"; // the same for all transform programs
+	core::find_and_replace(program_code, "//###OCLRASTER_USER_PRE_MAIN_CALL###", buffer_handling_code);
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
-						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
+						   "_oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_OUTPUT_COPY###", output_handling_code);
 	
 	// replace remaining image placeholders
@@ -410,7 +407,7 @@ string transform_program::specialized_processing(const string& code,
 }
 
 string transform_program::get_fixed_entry_function_parameters() const {
-	return "const int index, const float3* VE, float3* transformed_vertex";
+	return "const int vertex_index, const float3 camera_position";
 }
 
 string transform_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type) const {

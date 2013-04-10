@@ -129,12 +129,12 @@ int main(int argc oclr_unused, char* argv[]) {
 		float4 vertex;
 		float2 tex_coord;
 	};
-	const vector<plane_vertex_attribute> plane_attributes {
+	const array<plane_vertex_attribute, 4> plane_attributes {{
 		{ float4 { -1.0f, -1.0f, 0.0f, 1.0f }, float2 { 0.0f, 0.0f } },
 		{ float4 { -1.0f, 1.0f, 0.0f, 1.0f }, float2 { 0.0f, 1.0f } },
 		{ float4 { 1.0f, 1.0f, 0.0f, 1.0f }, float2 { 1.0f, 1.0f } },
 		{ float4 { 1.0f, -1.0f, 0.0f, 1.0f }, float2 { 1.0f, 0.0f } },
-	};
+	}};
 	opencl::buffer_object* plane_input_attributes = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 																	   opencl::BUFFER_FLAG::INITIAL_COPY |
 																	   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
@@ -214,7 +214,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_buffer("input_attributes", input_attributes);
 		p->bind_buffer("tp_uniforms", *tp_uniforms_buffer);
 		p->bind_image("diffuse_texture", materials[0][0]);
-		p->draw(PRIMITIVE_TYPE::TRIANGLE, { 0, model->get_index_count(0) });
+		p->draw(PRIMITIVE_TYPE::TRIANGLE, model->get_vertex_count(), { 0, model->get_index_count(0) });
 		
 		//
 		p->bind_framebuffer(nullptr);
@@ -225,7 +225,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_buffer("index_buffer", *plane_index_buffer);
 		p->bind_buffer("input_attributes", *plane_input_attributes);
 		p->bind_image("texture", *rtt_fb.get_image(0));
-		p->draw(PRIMITIVE_TYPE::TRIANGLE, { 0, plane_indices.size() });
+		p->draw(PRIMITIVE_TYPE::TRIANGLE, plane_attributes.size(), { 0, plane_indices.size() });
 		
 		p->swap();
 		oclraster::stop_draw();

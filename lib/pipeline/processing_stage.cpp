@@ -17,9 +17,34 @@
  */
 
 #include "processing_stage.h"
+#include "pipeline.h"
+#include "oclraster.h"
 
-processing_stage::processing_stage() {
+processing_stage::processing_stage() : stage_base() {
 }
 
 processing_stage::~processing_stage() {
+}
+
+void processing_stage::process(draw_state& state, const unsigned int& primitive_count) {
+	// -> 1D kernel, with max #work-items per work-group
+	ocl->use_kernel("PROCESSING");
+	
+	unsigned int argc = 0;
+	
+	const auto index_buffer = state.user_buffers.find("index_buffer");
+	if(index_buffer == state.user_buffers.cend()) {
+		oclr_error("index buffer not bound!");
+		return;
+	}
+	ocl->set_kernel_argument(argc++, &index_buffer->second);
+	
+	// internal buffer / kernel parameters
+	ocl->set_kernel_argument(argc++, state.transformed_vertices_buffer);
+	ocl->set_kernel_argument(argc++, state.transformed_buffer);
+	ocl->set_kernel_argument(argc++, state.triangle_bounds_buffer);
+	ocl->set_kernel_argument(argc++, state.camera_buffer);
+	ocl->set_kernel_argument(argc++, primitive_count);
+	ocl->set_kernel_range(ocl->compute_kernel_ranges(primitive_count));
+	ocl->run_kernel();
 }

@@ -21,6 +21,7 @@
 
 #include "cl/opencl.h"
 #include "pipeline/transform_stage.h"
+#include "pipeline/processing_stage.h"
 #include "pipeline/binning_stage.h"
 #include "pipeline/rasterization_stage.h"
 #include "pipeline/image.h"
@@ -56,6 +57,7 @@ struct draw_state {
 	framebuffer* active_framebuffer = nullptr;
 	
 	//
+	opencl::buffer_object* transformed_vertices_buffer = nullptr;
 	opencl::buffer_object* transformed_buffer = nullptr;
 	opencl::buffer_object* triangle_bounds_buffer = nullptr;
 	unordered_map<string, const opencl_base::buffer_object&> user_buffers;
@@ -72,6 +74,7 @@ struct draw_state {
 	const unsigned int batch_size { OCLRASTER_BATCH_SIZE };
 	unsigned int batch_count { 0 };
 	unsigned int triangle_count { 0 };
+	unsigned int vertex_count { 0 };
 	
 	//
 	struct camera_setup {
@@ -84,6 +87,7 @@ struct draw_state {
 		// -> call pipeline::compute_frustum_normals instead of setting these manually
 		array<float4, 3> frustum_normals;
 	} cam_setup;
+	opencl::buffer_object* camera_buffer = nullptr;
 };
 
 //
@@ -115,7 +119,9 @@ public:
 	const framebuffer* get_default_framebuffer() const;
 	
 	// "draw calls", range: [first, last)
-	void draw(const PRIMITIVE_TYPE type, const pair<unsigned int, unsigned int> element_range);
+	void draw(const PRIMITIVE_TYPE type,
+			  const unsigned int vertex_count,
+			  const pair<unsigned int, unsigned int> element_range);
 	
 	// camera
 	// NOTE: the camera class and these functions are only provided to make things easier.
@@ -138,6 +144,7 @@ public:
 protected:
 	draw_state state;
 	transform_stage transform;
+	processing_stage processing;
 	binning_stage binning;
 	rasterization_stage rasterization;
 	

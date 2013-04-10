@@ -271,7 +271,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_image("normal_texture", materials[selected_material][1]);
 		p->bind_image("height_texture", materials[selected_material][2]);
 		p->bind_image("fp_noise", *fp_noise);
-		p->draw(PRIMITIVE_TYPE::TRIANGLE, {0, model->get_index_count(0)});
+		p->draw(PRIMITIVE_TYPE::TRIANGLE, model->get_vertex_count(), { 0, model->get_index_count(0) });
 		
 		p->swap();
 		oclraster::stop_draw();

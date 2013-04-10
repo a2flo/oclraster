@@ -30,10 +30,9 @@ public:
 	
 	//
 	void transform(draw_state& state,
-				   const unsigned int& num_elements);
+				   const unsigned int& vertex_count);
 
 protected:
-	opencl_base::buffer_object* const_buffer_tp = nullptr;
 
 };
 

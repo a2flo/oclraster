@@ -23,12 +23,26 @@
 #include "ios_helper.h"
 #endif
 
+struct __attribute__((packed, aligned(16))) constant_camera_data {
+	float4 camera_position;
+	float4 camera_origin;
+	float4 camera_x_vec;
+	float4 camera_y_vec;
+	float4 camera_forward;
+	array<float4, 3> frustum_normals;
+	uint2 viewport;
+};
+
 pipeline::pipeline() :
 default_framebuffer(0, 0),
 event_handler_fnctr(this, &pipeline::event_handler) {
 	create_framebuffers(size2(oclraster::get_width(), oclraster::get_height()));
 	state.framebuffer_size = default_framebuffer.get_size();
 	state.active_framebuffer = &default_framebuffer;
+	state.camera_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
+											 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+											 sizeof(constant_camera_data));
+	
 	oclraster::get_event()->add_internal_event_handler(event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
 	
 #if defined(OCLRASTER_IOS)
@@ -44,6 +58,8 @@ pipeline::~pipeline() {
 	oclraster::get_event()->remove_event_handler(event_handler_fnctr);
 	
 	destroy_framebuffers();
+	
+	ocl->delete_buffer(state.camera_buffer);
 	
 #if defined(OCLRASTER_IOS)
 	if(glIsBuffer(vbo_fullscreen_triangle)) glDeleteBuffers(1, &vbo_fullscreen_triangle);
@@ -169,26 +185,29 @@ void pipeline::swap() {
 	default_framebuffer.clear();
 }
 
-void pipeline::draw(const PRIMITIVE_TYPE type, const pair<unsigned int, unsigned int> element_range) {
+void pipeline::draw(const PRIMITIVE_TYPE type,
+					const unsigned int vertex_count,
+					const pair<unsigned int, unsigned int> element_range) {
 	if(element_range.second <= element_range.first) {
 		oclr_error("invalid element range: %u - %u", element_range.first, element_range.second);
 		return;
 	}
-	const auto num_elements = element_range.second - element_range.first;
+	const auto primitive_count = element_range.second - element_range.first;
 	
 	unsigned int index_count = 0;
 	switch(type) {
 		case PRIMITIVE_TYPE::TRIANGLE:
-			index_count = num_elements * 3; // 3 indices per triangle
+			index_count = primitive_count * 3; // 3 indices per triangle
 			break;
 		case PRIMITIVE_TYPE::TRIANGLE_STRIP:
 		case PRIMITIVE_TYPE::TRIANGLE_FAN:
-			index_count = num_elements + 2; // 1 index per triangle, starting with 2
+			index_count = primitive_count + 2; // 1 index per triangle, starting with 2
 			break;
 	}
 	
 	// initialize draw state
-	state.triangle_count = num_elements;
+	state.triangle_count = primitive_count;
+	state.vertex_count = vertex_count;
 	state.depth_test = 1;
 	state.bin_count = {
 		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
@@ -205,6 +224,8 @@ void pipeline::draw(const PRIMITIVE_TYPE type, const pair<unsigned int, unsigned
 												  state.transformed_primitive_size * (state.triangle_count + triangle_padding));
 	state.triangle_bounds_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 													  sizeof(float) * 4 * (state.triangle_count + triangle_padding));
+	state.transformed_vertices_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
+														   sizeof(float) * 4 * state.vertex_count);
 	
 	// create user transformed buffers (transform program outputs)
 	const auto active_device = ocl->get_active_device();
@@ -219,7 +240,8 @@ void pipeline::draw(const PRIMITIVE_TYPE type, const pair<unsigned int, unsigned
 	}
 	
 	// pipeline
-	transform.transform(state, state.triangle_count);
+	transform.transform(state, state.vertex_count);
+	processing.process(state, state.triangle_count);
 	const auto queue_buffer = binning.bin(state);
 	
 	// TODO: pipelining/splitting
@@ -228,6 +250,7 @@ void pipeline::draw(const PRIMITIVE_TYPE type, const pair<unsigned int, unsigned
 	//
 	ocl->delete_buffer(state.transformed_buffer);
 	ocl->delete_buffer(state.triangle_bounds_buffer);
+	ocl->delete_buffer(state.transformed_vertices_buffer);
 	
 	// delete user transformed buffers
 	for(const auto& ut_buffer : state.user_transformed_buffers) {
@@ -315,6 +338,18 @@ void pipeline::set_camera_setup_from_camera(camera* cam_) {
 	state.cam_setup.forward = forward;
 	
 	compute_frustum_normals(state.cam_setup);
+	
+	// update const camera buffer
+	const constant_camera_data cam_data {
+		state.cam_setup.position,
+		state.cam_setup.origin,
+		state.cam_setup.x_vec,
+		state.cam_setup.y_vec,
+		state.cam_setup.forward,
+		state.cam_setup.frustum_normals,
+		state.framebuffer_size
+	};
+	ocl->write_buffer(state.camera_buffer, &cam_data);
 }
 
 void pipeline::compute_frustum_normals(draw_state::camera_setup& cam_setup) {
