@@ -53,8 +53,8 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	//
 	cam = new camera();
-	cam->set_position(0.8f, 0.28f, 3.2f);
-	cam->set_rotation(-5.2f, 196.0f, 0.0f);
+	cam->set_position(0.0f, 0.25f, -3.0f);
+	cam->set_rotation(-4.0f, EPSILON, 0.0f);
 	cam->set_speed(cam_speeds.x);
 	cam->set_rotation_speed(cam->get_rotation_speed() * 1.5f);
 	cam->set_wasd_input(true);
@@ -129,25 +129,62 @@ int main(int argc oclr_unused, char* argv[]) {
 		float4 vertex;
 		float2 tex_coord;
 	};
+//#define OCLRASTER_RTT_RECT
+#define OCLRASTER_RTT_HEXAGON
+//#define OCLRASTER_RTT_FLAG
+#if defined(OCLRASTER_RTT_RECT)
 	const array<plane_vertex_attribute, 4> plane_attributes {{
 		{ float4 { -1.0f, -1.0f, 0.0f, 1.0f }, float2 { 0.0f, 0.0f } },
 		{ float4 { -1.0f, 1.0f, 0.0f, 1.0f }, float2 { 0.0f, 1.0f } },
 		{ float4 { 1.0f, 1.0f, 0.0f, 1.0f }, float2 { 1.0f, 1.0f } },
 		{ float4 { 1.0f, -1.0f, 0.0f, 1.0f }, float2 { 1.0f, 0.0f } },
 	}};
+#elif defined(OCLRASTER_RTT_HEXAGON)
+	const array<plane_vertex_attribute, 7> plane_attributes {{
+		{ float4 { 0.0f, 0.0f, 0.0f, 1.0f }, float2 { 0.5f, 0.5f } },
+		
+		{ float4 { -0.5f, -1.0f, 0.0f, 1.0f }, float2 { 0.25f, 0.0f } },
+		{ float4 { -1.0f, 0.0f, 0.0f, 1.0f }, float2 { 0.0f, 0.5f } },
+		{ float4 { -0.5f, 1.0f, 0.0f, 1.0f }, float2 { 0.25f, 1.0f } },
+		
+		{ float4 { 0.5f, 1.0f, 0.0f, 1.0f }, float2 { 0.75f, 1.0f } },
+		{ float4 { 1.0f, 0.0f, 0.0f, 1.0f }, float2 { 1.0f, 0.5f } },
+		{ float4 { 0.5f, -1.0f, 0.0f, 1.0f }, float2 { 0.75f, 0.0f } },
+	}};
+#elif defined(OCLRASTER_RTT_FLAG)
+	const array<plane_vertex_attribute, 5> plane_attributes {{
+		{ float4 { -1.0f, 1.0f, 0.0f, 1.0f }, float2 { 0.0f, 1.0f } },
+		{ float4 { -1.0f, 0.0f, 0.0f, 1.0f }, float2 { 0.0f, 0.0f } },
+		
+		{ float4 { 0.0f, 0.75f, 0.0f, 1.0f }, float2 { 0.5f, 0.75f } },
+		{ float4 { 0.0f, 0.25f, 0.0f, 1.0f }, float2 { 0.5f, 0.25f } },
+		
+		{ float4 { 1.0f, 0.5f, 0.0f, 1.0f }, float2 { 1.0f, 0.5f } },
+	}};
+#endif
 	opencl::buffer_object* plane_input_attributes = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 																	   opencl::BUFFER_FLAG::INITIAL_COPY |
 																	   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 																	   sizeof(plane_vertex_attribute) * plane_attributes.size(),
 																	   (void*)&plane_attributes[0]);
 	
+#if defined(OCLRASTER_RTT_RECT)
 	const vector<index3> plane_indices {
 		{ { 0, 1, 2 }, { 0, 2, 3 }, { 0, 2, 1 }, { 0, 3, 2 } }
 	};
+#elif defined(OCLRASTER_RTT_HEXAGON)
+	const vector<unsigned int> plane_indices {
+		{ 0, 1, 2, 3, 4, 5, 6, 1 }
+	};
+#elif defined(OCLRASTER_RTT_FLAG)
+	const vector<unsigned int> plane_indices {
+		{ 0, 1, 2, 3, 4 }
+	};
+#endif
 	opencl::buffer_object* plane_index_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 																   opencl::BUFFER_FLAG::INITIAL_COPY |
 																   opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-																   sizeof(index3) * plane_indices.size(),
+																   sizeof(decltype(plane_indices)::value_type) * plane_indices.size(),
 																   (void*)&plane_indices[0]);
 	
 	// rtt framebuffer
@@ -225,7 +262,13 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_buffer("index_buffer", *plane_index_buffer);
 		p->bind_buffer("input_attributes", *plane_input_attributes);
 		p->bind_image("texture", *rtt_fb.get_image(0));
+#if defined(OCLRASTER_RTT_RECT)
 		p->draw(PRIMITIVE_TYPE::TRIANGLE, plane_attributes.size(), { 0, plane_indices.size() });
+#elif defined(OCLRASTER_RTT_HEXAGON)
+		p->draw(PRIMITIVE_TYPE::TRIANGLE_FAN, plane_attributes.size(), { 0, 6 });
+#elif defined(OCLRASTER_RTT_FLAG)
+		p->draw(PRIMITIVE_TYPE::TRIANGLE_STRIP, plane_attributes.size(), { 0, 3 });
+#endif
 		
 		p->swap();
 		oclraster::stop_draw();

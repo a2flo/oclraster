@@ -22,6 +22,7 @@
 #include "cl/opencl.h"
 #include "pipeline/stage_base.h"
 
+enum class PRIMITIVE_TYPE : unsigned int;
 struct draw_state;
 class rasterization_stage : public stage_base {
 public:
@@ -29,6 +30,7 @@ public:
 	virtual ~rasterization_stage();
 	
 	void rasterize(draw_state& state,
+				   const PRIMITIVE_TYPE type,
 				   const opencl_base::buffer_object* queue_buffer);
 
 protected:

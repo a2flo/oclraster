@@ -26,7 +26,6 @@
 #include "pipeline/rasterization_stage.h"
 #include "pipeline/image.h"
 #include "pipeline/framebuffer.h"
-#include "core/rtt.h"
 #include "core/event.h"
 #include "core/camera.h"
 #include "program/oclraster_program.h"
@@ -125,20 +124,22 @@ public:
 	
 	// camera
 	// NOTE: the camera class and these functions are only provided to make things easier.
-	// meaning, they don't have to be used if you don't want to use them and want to roll your own camera code.
+	// meaning, they don't have to be used if you don't want to use them and roll your own camera code instead.
 	// in that case, the draw_state camera_setup must be set to the wanted (valid) state manually,
-	// and you probably also want to call compute_frustum_normals(...) with your camera_setup.
+	// by either calling set_camera_setup_from_camera(...) with a derived camera class or directly
+	// modifying the camera_setup via get_camera_setup() and manually calling update_camera_buffer()
 	void set_camera(camera* cam_);
 	camera* get_camera() const;
 	
 	// use these to manually modify the draw_state camera_setup
 	const draw_state::camera_setup& get_camera_setup() const;
 	draw_state::camera_setup& get_camera_setup();
+	void update_camera_buffer() const;
 	
 	// correctly sets/computes the camera_setup from the given camera (automatically called by set_camera)
 	void set_camera_setup_from_camera(camera* cam);
 	
-	// computes and writes the frustum normals from/to the given camera setup
+	// computes and writes the frustum normals from/to the given camera setup (automatically called by set_camera_setup_from_camera)
 	void compute_frustum_normals(draw_state::camera_setup& cam_setup);
 	
 protected:

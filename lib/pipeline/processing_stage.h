@@ -22,6 +22,7 @@
 #include "cl/opencl.h"
 #include "pipeline/stage_base.h"
 
+enum class PRIMITIVE_TYPE : unsigned int;
 struct draw_state;
 class processing_stage : public stage_base {
 public:
@@ -30,6 +31,7 @@ public:
 	
 	//
 	void process(draw_state& state,
+				 const PRIMITIVE_TYPE type,
 				 const unsigned int& primitive_count);
 	
 protected:

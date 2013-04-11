@@ -38,6 +38,7 @@ rasterization_stage::~rasterization_stage() {
 }
 
 void rasterization_stage::rasterize(draw_state& state,
+									const PRIMITIVE_TYPE type,
 									const opencl_base::buffer_object* queue_buffer) {
 	////
 	// render / rasterization
@@ -77,6 +78,7 @@ void rasterization_stage::rasterize(draw_state& state,
 	ocl->set_kernel_argument(argc++, (unsigned int)(state.bin_count.x * state.bin_count.y));
 	ocl->set_kernel_argument(argc++, state.batch_count);
 	ocl->set_kernel_argument(argc++, intra_bin_groups);
+	ocl->set_kernel_argument(argc++, (underlying_type<PRIMITIVE_TYPE>::type)type);
 	ocl->set_kernel_argument(argc++, state.framebuffer_size);
 	
 	if(ocl->get_active_device()->type >= opencl::DEVICE_TYPE::CPU0 &&

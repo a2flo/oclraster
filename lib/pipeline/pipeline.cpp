@@ -104,7 +104,13 @@ void pipeline::create_framebuffers(const uint2& size) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, rtt::convert_internal_format(GL_RGBA8), scaled_size.x, scaled_size.y,
+	glTexImage2D(GL_TEXTURE_2D, 0,
+#if !defined(OCLRASTER_IOS)
+				 GL_RGBA8,
+#else
+				 GL_RGBA,
+#endif
+				 scaled_size.x, scaled_size.y,
 				 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
@@ -194,17 +200,6 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 	}
 	const auto primitive_count = element_range.second - element_range.first;
 	
-	unsigned int index_count = 0;
-	switch(type) {
-		case PRIMITIVE_TYPE::TRIANGLE:
-			index_count = primitive_count * 3; // 3 indices per triangle
-			break;
-		case PRIMITIVE_TYPE::TRIANGLE_STRIP:
-		case PRIMITIVE_TYPE::TRIANGLE_FAN:
-			index_count = primitive_count + 2; // 1 index per triangle, starting with 2
-			break;
-	}
-	
 	// initialize draw state
 	state.triangle_count = primitive_count;
 	state.vertex_count = vertex_count;
@@ -233,7 +228,7 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 		if(tp_struct.type == oclraster_program::STRUCT_TYPE::OUTPUT) {
 			opencl::buffer_object* buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 															   // get device specific size from program
-															   tp_struct.device_infos.at(active_device).struct_size * index_count);
+															   tp_struct.device_infos.at(active_device).struct_size * vertex_count);
 			state.user_transformed_buffers.push_back(buffer);
 			bind_buffer(tp_struct.object_name, *buffer);
 		}
@@ -241,11 +236,11 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 	
 	// pipeline
 	transform.transform(state, state.vertex_count);
-	processing.process(state, state.triangle_count);
+	processing.process(state, type, state.triangle_count);
 	const auto queue_buffer = binning.bin(state);
 	
 	// TODO: pipelining/splitting
-	rasterization.rasterize(state, queue_buffer);
+	rasterization.rasterize(state, type, queue_buffer);
 	
 	//
 	ocl->delete_buffer(state.transformed_buffer);
@@ -340,6 +335,10 @@ void pipeline::set_camera_setup_from_camera(camera* cam_) {
 	compute_frustum_normals(state.cam_setup);
 	
 	// update const camera buffer
+	update_camera_buffer();
+}
+
+void pipeline::update_camera_buffer() const {
 	const constant_camera_data cam_data {
 		state.cam_setup.position,
 		state.cam_setup.origin,

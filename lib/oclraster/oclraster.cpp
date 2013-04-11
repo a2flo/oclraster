@@ -18,7 +18,6 @@
 #include "oclraster/oclraster.h"
 #include "oclraster/oclraster_version.h"
 #include "cl/opencl.h"
-#include "core/rtt.h"
 #include "core/gl_support.h"
 #include "pipeline/framebuffer.h"
 
@@ -226,7 +225,6 @@ void oclraster::destroy() {
 	evt->remove_event_handler(*event_handler_fnctr);
 	delete event_handler_fnctr;
 	
-	rtt::destroy();
 	delete_clear_kernels();
 	if(x != nullptr) delete x;
 	if(ocl != nullptr) {
@@ -464,16 +462,13 @@ void oclraster::init_internal() {
 #endif
 	}
 	
-	// init rtt
-	rtt::init();
+	// set dpi lower bound to 72
+	if(config.dpi < 72) config.dpi = 72;
 	
 	// init opencl
 	ocl->init(false,
 			  config.opencl_platform == "cuda" ? 0 : string2size_t(config.opencl_platform),
 			  config.cl_device_restriction, config.gl_sharing);
-	
-	// set dpi lower bound to 72
-	if(config.dpi < 72) config.dpi = 72;
 	
 	release_context();
 }
