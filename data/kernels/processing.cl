@@ -1,5 +1,6 @@
 #include "oclr_global.h"
 #include "oclr_math.h"
+#include "oclr_primitive_assembly.h"
 
 typedef struct __attribute__((packed, aligned(16))) {
 	float4 camera_position;
@@ -40,29 +41,8 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	global triangle_bounds* tb_ptr = &triangle_bounds_buffer[triangle_id];
 	global float* tf_data_ptr = tf_ptr->data;
 	
-	unsigned int index_ids[3];
-	switch(primitive_type) {
-		case PT_TRIANGLE:
-			index_ids[0] = triangle_id * 3;
-			index_ids[1] = index_ids[0] + 1;
-			index_ids[2] = index_ids[0] + 2;
-			break;
-		case PT_TRIANGLE_STRIP:
-			index_ids[0] = triangle_id + (1 - (triangle_id % 2));
-			index_ids[1] = triangle_id + (triangle_id % 2);
-			index_ids[2] = triangle_id + 2;
-			break;
-		case PT_TRIANGLE_FAN:
-			index_ids[0] = 0;
-			index_ids[1] = triangle_id + 1;
-			index_ids[2] = triangle_id + 2;
-			break;
-	}
-	const unsigned int indices[3] = {
-		index_buffer[index_ids[0]],
-		index_buffer[index_ids[1]],
-		index_buffer[index_ids[2]]
-	};
+	//
+	MAKE_PRIMITIVE_INDICES(indices);
 	
 	//
 	const float3 D0 = cdata->camera_origin.xyz;

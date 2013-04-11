@@ -87,6 +87,7 @@
 		5C916510166685EA00626436 /* oclr_matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_matrix.h; sourceTree = "<group>"; };
 		5C9165111666946B00626436 /* bin_rasterize.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = bin_rasterize.cl; sourceTree = "<group>"; };
 		5CC688FA17160853006BD36B /* processing.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = processing.cl; sourceTree = "<group>"; };
+		5CC688FB1716CFEB006BD36B /* oclr_primitive_assembly.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_primitive_assembly.h; sourceTree = "<group>"; };
 		5CCC96431641B653005C3DE4 /* oclr_rttd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = oclr_rttd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CCC96471641B653005C3DE4 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		5CCC964A1641B653005C3DE4 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -239,10 +240,11 @@
 				5C916510166685EA00626436 /* oclr_matrix.h */,
 				5C2D23CB16D50C1700013DBF /* oclr_image.h */,
 				5C55F7F016E4F92E0050946C /* oclr_image_support.h */,
+				5CC688FB1716CFEB006BD36B /* oclr_primitive_assembly.h */,
 				5CCC967B1641BF72005C3DE4 /* cutil_math.h */,
 				5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */,
-				5CC688FA17160853006BD36B /* processing.cl */,
 				5C9165111666946B00626436 /* bin_rasterize.cl */,
+				5CC688FA17160853006BD36B /* processing.cl */,
 				5CEF6CC616F4FA440044E2DF /* template_rasterization_program.cl */,
 				5CEF6CC716F4FA440044E2DF /* template_transform_program.cl */,
 				5CEC5B641699719F00C464D5 /* user */,
