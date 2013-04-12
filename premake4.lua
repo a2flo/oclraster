@@ -81,6 +81,7 @@ solution "oclraster"
 		end
 		argc=argc+1
 	end
+	defines { "TCC_LIB_ONLY=1" }
 	
 	configurations { "Release", "Debug" }
 	
@@ -213,7 +214,7 @@ project "liboclraster"
 	kind "SharedLib"
 	language "C++"
 
-	files { "lib/**.h", "lib/**.hpp", "lib/**.cpp" }
+	files { "lib/**.h", "lib/**.hpp", "lib/**.cpp", "lib/**.c" }
 	basedir "lib"
 	targetdir "bin"
 	includedirs { "lib/",
