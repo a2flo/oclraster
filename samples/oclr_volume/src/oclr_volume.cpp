@@ -93,8 +93,8 @@ int main(int argc, char* argv[]) {
 	for(size_t i = 0; i < 256; i++) {
 		if(i < 64) tf_data[i] = uchar4(0);
 		else if(i >= 64 && i < 256) {
-			float f = (M_PI / 192.0f) * (float)(i - 64);
-			float val = 255.0f * ((sinf(f - M_PI/2) + 1.0f) / 2.0f);
+			float f = (PI / 192.0f) * (float)(i - 64);
+			float val = 255.0f * ((sinf(f - PI/2) + 1.0f) / 2.0f);
 			
 			if(i >= 64 && i < 96) tf_data[i] = uchar4(val, 0, 0, val / alpha_div);
 			else if(i >= 96 && i < 128) tf_data[i] = uchar4(0, val, 0, val / alpha_div);

@@ -96,7 +96,7 @@ solution "oclraster"
 		add_include("/usr/local/include")
 		add_include("/usr/include/libxml2")
 		add_include("/usr/include/libxml")
-		buildoptions { "-Wall -x c++ -std=c++11" }
+		buildoptions { "-std=c++11 -Wall" }
 		
 		if(clang_libcxx) then
 			buildoptions { "-stdlib=libc++" }
@@ -136,8 +136,6 @@ solution "oclraster"
 	end
 	
 	if(win_unixenv) then
-		-- only works with gnu++11 for now ...
-		buildoptions { "-std=gnu++11" }
 		defines { "WIN_UNIXENV" }
 		if(cygwin) then
 			defines { "CYGWIN" }
@@ -223,6 +221,7 @@ project "liboclraster"
 				  "lib/oclraster/",
 				  "lib/pipeline/",
 				  "lib/program/",
+				  "lib/tccpp/",
 				  "lib/threading/" }
 	
 	if(not os.is("windows") or win_unixenv) then

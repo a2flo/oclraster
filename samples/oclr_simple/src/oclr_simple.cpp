@@ -108,7 +108,7 @@ int main(int argc oclr_unused, char* argv[]) {
 																   sizeof(tp_uniforms),
 																   (void*)&transform_uniforms);
 	
-	float light_pos = M_PI, light_dist = 10.0f, light_intensity = 32.0f;
+	float light_pos = PI, light_dist = 10.0f, light_intensity = 32.0f;
 	struct __attribute__((packed, aligned(16))) rp_uniforms {
 		float4 camera_position;
 		float4 light_position; // .w = light radius ^ 2
