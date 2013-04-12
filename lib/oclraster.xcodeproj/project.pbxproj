@@ -50,6 +50,14 @@
 		5C47267516A8D97400F7EA21 /* gl_support.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C47267316A8D97400F7EA21 /* gl_support.h */; };
 		5C4ABF8B15FD818F00E8BDE1 /* cudacl_translator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C4ABF8915FD818F00E8BDE1 /* cudacl_translator.cpp */; };
 		5C4ABF8C15FD818F00E8BDE1 /* cudacl_translator.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C4ABF8A15FD818F00E8BDE1 /* cudacl_translator.h */; };
+		5C4ACFEC171824E200575953 /* libtcc.c in Sources */ = {isa = PBXBuildFile; fileRef = 5C4ACFE7171824E200575953 /* libtcc.c */; };
+		5C4ACFED171824E200575953 /* libtcc.c in Sources */ = {isa = PBXBuildFile; fileRef = 5C4ACFE7171824E200575953 /* libtcc.c */; };
+		5C4ACFEE171824E200575953 /* libtcc.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C4ACFE8171824E200575953 /* libtcc.h */; };
+		5C4ACFEF171824E200575953 /* tcc.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C4ACFE9171824E200575953 /* tcc.h */; };
+		5C4ACFF0171824E200575953 /* tccgen.c in Sources */ = {isa = PBXBuildFile; fileRef = 5C4ACFEA171824E200575953 /* tccgen.c */; };
+		5C4ACFF1171824E200575953 /* tccgen.c in Sources */ = {isa = PBXBuildFile; fileRef = 5C4ACFEA171824E200575953 /* tccgen.c */; };
+		5C4ACFF2171824E200575953 /* tccpp.c in Sources */ = {isa = PBXBuildFile; fileRef = 5C4ACFEB171824E200575953 /* tccpp.c */; };
+		5C4ACFF3171824E200575953 /* tccpp.c in Sources */ = {isa = PBXBuildFile; fileRef = 5C4ACFEB171824E200575953 /* tccpp.c */; };
 		5C61BDAC1231D32000FD3451 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C61BDA81231D32000FD3451 /* AppKit.framework */; };
 		5C61BDAD1231D32000FD3451 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C61BDA91231D32000FD3451 /* Cocoa.framework */; };
 		5C61BDAE1231D32000FD3451 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C61BDAA1231D32000FD3451 /* OpenCL.framework */; };
@@ -193,6 +201,11 @@
 		5C47267316A8D97400F7EA21 /* gl_support.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gl_support.h; sourceTree = "<group>"; };
 		5C4ABF8915FD818F00E8BDE1 /* cudacl_translator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cudacl_translator.cpp; sourceTree = "<group>"; };
 		5C4ABF8A15FD818F00E8BDE1 /* cudacl_translator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cudacl_translator.h; sourceTree = "<group>"; };
+		5C4ACFE7171824E200575953 /* libtcc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = libtcc.c; path = tccpp/libtcc.c; sourceTree = SOURCE_ROOT; };
+		5C4ACFE8171824E200575953 /* libtcc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libtcc.h; path = tccpp/libtcc.h; sourceTree = SOURCE_ROOT; };
+		5C4ACFE9171824E200575953 /* tcc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcc.h; path = tccpp/tcc.h; sourceTree = SOURCE_ROOT; };
+		5C4ACFEA171824E200575953 /* tccgen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tccgen.c; path = tccpp/tccgen.c; sourceTree = SOURCE_ROOT; };
+		5C4ACFEB171824E200575953 /* tccpp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tccpp.c; path = tccpp/tccpp.c; sourceTree = SOURCE_ROOT; };
 		5C61BDA81231D32000FD3451 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		5C61BDA91231D32000FD3451 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		5C61BDAA1231D32000FD3451 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = /System/Library/Frameworks/OpenCL.framework; sourceTree = "<absolute>"; };
@@ -331,6 +344,7 @@
 				5CD8DB78164853E20082BEF7 /* program */,
 				5C03756215A465350030C37B /* osx */,
 				5C8B986B16D58FBA00EAAD97 /* ios */,
+				5C4ACFE6171824D500575953 /* tccpp */,
 				5C397642123189750075C168 /* threading */,
 			);
 			path = Source;
@@ -428,6 +442,18 @@
 			);
 			path = threading;
 			sourceTree = SOURCE_ROOT;
+		};
+		5C4ACFE6171824D500575953 /* tccpp */ = {
+			isa = PBXGroup;
+			children = (
+				5C4ACFE7171824E200575953 /* libtcc.c */,
+				5C4ACFE8171824E200575953 /* libtcc.h */,
+				5C4ACFE9171824E200575953 /* tcc.h */,
+				5C4ACFEA171824E200575953 /* tccgen.c */,
+				5C4ACFEB171824E200575953 /* tccpp.c */,
+			);
+			name = tccpp;
+			sourceTree = "<group>";
 		};
 		5C8B986B16D58FBA00EAAD97 /* ios */ = {
 			isa = PBXGroup;
@@ -553,6 +579,8 @@
 				5CCCDD7616BF036300C14D3C /* image.h in Headers */,
 				5C0959FB16DC61490075E5B6 /* stage_base.h in Headers */,
 				5CCB940716E89B9500079EC1 /* framebuffer.h in Headers */,
+				5C4ACFEE171824E200575953 /* libtcc.h in Headers */,
+				5C4ACFEF171824E200575953 /* tcc.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -674,6 +702,9 @@
 				5C0959F916DC61490075E5B6 /* stage_base.cpp in Sources */,
 				5CF109D816E61178007426FB /* image_types.cpp in Sources */,
 				5CCB940516E89B9500079EC1 /* framebuffer.cpp in Sources */,
+				5C4ACFEC171824E200575953 /* libtcc.c in Sources */,
+				5C4ACFF0171824E200575953 /* tccgen.c in Sources */,
+				5C4ACFF2171824E200575953 /* tccpp.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -714,6 +745,9 @@
 				5C0959FA16DC61490075E5B6 /* stage_base.cpp in Sources */,
 				5CF109D916E61178007426FB /* image_types.cpp in Sources */,
 				5CCB940616E89B9500079EC1 /* framebuffer.cpp in Sources */,
+				5C4ACFED171824E200575953 /* libtcc.c in Sources */,
+				5C4ACFF1171824E200575953 /* tccgen.c in Sources */,
+				5C4ACFF3171824E200575953 /* tccpp.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
