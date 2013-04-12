@@ -51,21 +51,19 @@ void oclraster_program::process_program(const string& code) {
 	};
 	
 	// current oclraster_struct grammar limitation/requirements:
-	// * no preprocessor (this would require a compiler)
-	// * no interior structs/unions (TODO: possibly allow this)
+	// * no interior structs/unions
 	// * no multi-variable declarations (e.g. "float x, y, z;")
-	// * no user defined types are allowed (TODO: for now?)
+	// * no __attribute__ (oclraster_structs already have a __attribute__ qualifier)
+	// * user defined types must be accessible (must be accessible after preprocessing)
 	// * use of any oclraster_struct specifier in other places is disallowed (no typedefs, comments, ...)
-	// * otherwise standard c
-	//
-	// TODO: __attribute__ handling
+	// * otherwise standard OpenCL C
 	//
 	// example:
 	// oclraster_in vertex_input {
 	// 		float4 vertex;
 	// 		float4 normal;
 	// 		float2 tex_coord;
-	// };
+	// } inputs;
 	//
 	vector<size2> image_struct_positions;
 	try {

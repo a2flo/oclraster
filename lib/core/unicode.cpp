@@ -32,6 +32,10 @@ vector<unsigned int> unicode::utf8_to_unicode(const string& str) {
 			ret.emplace_back(char_code & 0x7F);
 			continue;
 		}
+		else if(size >= 5) {
+			// invalid -> abort
+			return ret;
+		}
 		
 		// AND lower (7 - size) bits of the first character
 		unsigned int cur_code = char_code & ((1 << (7 - size)) - 1);
@@ -41,6 +45,10 @@ vector<unsigned int> unicode::utf8_to_unicode(const string& str) {
 		
 		for(unsigned int i = 0; i < size; i++) {
 			cur_code += (((unsigned int)*++iter) & 0x3F) << ((size - i - 1) * 6);
+		}
+		if(cur_code > 0x10FFFF) {
+			// invalid -> abort
+			return ret;
 		}
 		ret.emplace_back(cur_code);
 	}
@@ -80,7 +88,10 @@ string unicode::unicode_to_utf8(const vector<unsigned int>& codes) {
 				ret += (unsigned char)(0x80 | ((code & 0xFC0) >> 6));
 				ret += (unsigned char)(0x80 | (code & 0x3F));
 			}
-			// else: invalid? utf-8 supports more, but unicode doesn't atm
+			else {
+				// invalid -> abort
+				return ret;
+			}
 		}
 	}
 	return ret;
