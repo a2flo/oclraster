@@ -55,8 +55,7 @@ void rasterize_main() {
 	nbt_mat.m[0] = output_attributes->tangent.xyz;
 	nbt_mat.m[1] = output_attributes->binormal.xyz;
 	nbt_mat.m[2] = output_attributes->normal.xyz;
-	//normal = normalize(mat3_mul_vec3(nbt_mat, normal));
-	normal = normalize(-normal);
+	normal = normalize(mat3_mul_vec3(nbt_mat, normal));
 	
 	// check if lit by light (compute attenuation)
 	float3 light_dir = rp_uniforms->light_position.xyz - output_attributes->vertex.xyz;

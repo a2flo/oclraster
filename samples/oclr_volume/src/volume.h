@@ -61,6 +61,9 @@ public:
 	const opencl::buffer_object& get_index_buffer(const size_t& axis, const size_t& side) const {
 		return *index_buffer[axis*2 + side];
 	}
+	size_t get_vertex_count(const size_t& axis) const {
+		return size[axis] * 4;
+	}
 	size_t get_index_count(const size_t& axis) const {
 		return index_count[axis];
 	}

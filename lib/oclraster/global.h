@@ -28,6 +28,8 @@
 #define OCLRASTER_BATCH_SIZE (256u)
 
 // uses kernel templates from the data/kernels/ folder instead of the internal one
-//#define OCLRASTER_INTERNAL_PROGRAM_DEBUG (1)
+#if !defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+#define OCLRASTER_INTERNAL_PROGRAM_DEBUG (1)
+#endif
 
 #endif

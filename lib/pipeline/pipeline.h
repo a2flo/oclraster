@@ -21,17 +21,18 @@
 
 #include "cl/opencl.h"
 #include "pipeline/transform_stage.h"
+#include "pipeline/processing_stage.h"
 #include "pipeline/binning_stage.h"
 #include "pipeline/rasterization_stage.h"
 #include "pipeline/image.h"
 #include "pipeline/framebuffer.h"
-#include "core/rtt.h"
 #include "core/event.h"
 #include "core/camera.h"
 #include "program/oclraster_program.h"
 #include "program/transform_program.h"
 #include "program/rasterization_program.h"
 
+// internal pipeline/draw state to handle rendering across different stages and draw calls
 struct draw_state {
 	// TODO: store actual flags/data
 	union {
@@ -48,14 +49,16 @@ struct draw_state {
 	};
 	
 	// NOTE: this is just for the internal transformed buffer
-	const unsigned int transformed_primitive_size = 16 * sizeof(float);
+	const unsigned int transformed_primitive_size = 10 * sizeof(float);
 	
 	// framebuffers
 	uint2 framebuffer_size { 1280, 720 };
 	framebuffer* active_framebuffer = nullptr;
 	
 	//
+	opencl::buffer_object* transformed_vertices_buffer = nullptr;
 	opencl::buffer_object* transformed_buffer = nullptr;
+	opencl::buffer_object* triangle_bounds_buffer = nullptr;
 	unordered_map<string, const opencl_base::buffer_object&> user_buffers;
 	unordered_map<string, const image&> user_images;
 	vector<opencl::buffer_object*> user_transformed_buffers;
@@ -70,6 +73,7 @@ struct draw_state {
 	const unsigned int batch_size { OCLRASTER_BATCH_SIZE };
 	unsigned int batch_count { 0 };
 	unsigned int triangle_count { 0 };
+	unsigned int vertex_count { 0 };
 	
 	//
 	struct camera_setup {
@@ -82,17 +86,26 @@ struct draw_state {
 		// -> call pipeline::compute_frustum_normals instead of setting these manually
 		array<float4, 3> frustum_normals;
 	} cam_setup;
+	opencl::buffer_object* camera_buffer = nullptr;
 };
 
+//
+enum class PRIMITIVE_TYPE : unsigned int {
+	TRIANGLE,
+	TRIANGLE_STRIP,
+	TRIANGLE_FAN
+};
+
+//
 class pipeline {
 public:
 	pipeline();
-	~pipeline();
+	virtual ~pipeline();
 	
-	//
+	// "swaps"/displays the default framebuffer (-> blits the default framebuffer to the window framebuffer)
 	void swap();
 	
-	//
+	// binds a transform_program or rasterization_program (or any derived class thereof)
 	template <class program_type> void bind_program(const program_type& program);
 	
 	// buffer binding
@@ -104,31 +117,35 @@ public:
 	//
 	const framebuffer* get_default_framebuffer() const;
 	
-	// "draw calls" (for now, these always draw triangles)
-	// range is inclusive!
-	void draw(const pair<unsigned int, unsigned int> element_range);
+	// "draw calls", range: [first, last)
+	void draw(const PRIMITIVE_TYPE type,
+			  const unsigned int vertex_count,
+			  const pair<unsigned int, unsigned int> element_range);
 	
 	// camera
 	// NOTE: the camera class and these functions are only provided to make things easier.
-	// meaning, they don't have to be used if you don't want to use them and want to roll your own camera code.
+	// meaning, they don't have to be used if you don't want to use them and roll your own camera code instead.
 	// in that case, the draw_state camera_setup must be set to the wanted (valid) state manually,
-	// and you probably also want to call compute_frustum_normals(...) with your camera_setup.
+	// by either calling set_camera_setup_from_camera(...) with a derived camera class or directly
+	// modifying the camera_setup via get_camera_setup() and manually calling update_camera_buffer()
 	void set_camera(camera* cam_);
 	camera* get_camera() const;
 	
 	// use these to manually modify the draw_state camera_setup
 	const draw_state::camera_setup& get_camera_setup() const;
 	draw_state::camera_setup& get_camera_setup();
+	void update_camera_buffer() const;
 	
 	// correctly sets/computes the camera_setup from the given camera (automatically called by set_camera)
 	void set_camera_setup_from_camera(camera* cam);
 	
-	// computes and writes the frustum normals from/to the given camera setup
+	// computes and writes the frustum normals from/to the given camera setup (automatically called by set_camera_setup_from_camera)
 	void compute_frustum_normals(draw_state::camera_setup& cam_setup);
 	
 protected:
 	draw_state state;
 	transform_stage transform;
+	processing_stage processing;
 	binning_stage binning;
 	rasterization_stage rasterization;
 	

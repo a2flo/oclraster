@@ -195,6 +195,7 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 
 rasterization_program::rasterization_program(const string& code, const string entry_function_) :
 oclraster_program(code, entry_function_) {
+	kernel_function_name = "oclraster_rasterization";
 	process_program(code);
 }
 
@@ -228,7 +229,7 @@ string rasterization_program::specialized_processing(const string& code,
 				for(const auto& var : oclr_struct.variables) {
 					buffer_handling_code += interp_var_name + "." + var + " = interpolate(";
 					for(size_t i = 0; i < 3; i++) {
-						buffer_handling_code += "user_buffer_" + cur_user_buffer_str + "[(triangle_id * 3) + " + size_t2string(i) + "]." + var;
+						buffer_handling_code += "user_buffer_" + cur_user_buffer_str + "[indices[" + size_t2string(i) + "]]." + var;
 						if(i < 2) buffer_handling_code += ", ";
 					}
 					buffer_handling_code += ", barycentric.xyz);\n";

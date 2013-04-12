@@ -96,4 +96,11 @@ typedef half4 oclr_half4;
 #define oclraster_out typedef struct __attribute__((packed, aligned(16)))
 #define oclraster_uniforms typedef struct __attribute__((packed, aligned(16)))
 
+// unsigned int on host side
+enum PRIMITIVE_TYPE {
+	PT_TRIANGLE,
+	PT_TRIANGLE_STRIP,
+	PT_TRIANGLE_FAN
+};
+
 #endif

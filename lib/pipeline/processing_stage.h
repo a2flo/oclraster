@@ -19,13 +19,21 @@
 #ifndef __OCLRASTER_PROCESSING_STAGE_H__
 #define __OCLRASTER_PROCESSING_STAGE_H__
 
-#include "oclraster/global.h"
+#include "cl/opencl.h"
+#include "pipeline/stage_base.h"
 
-class processing_stage {
+enum class PRIMITIVE_TYPE : unsigned int;
+struct draw_state;
+class processing_stage : public stage_base {
 public:
 	processing_stage();
-	~processing_stage();
-
+	virtual ~processing_stage();
+	
+	//
+	void process(draw_state& state,
+				 const PRIMITIVE_TYPE type,
+				 const unsigned int& primitive_count);
+	
 protected:
 
 };

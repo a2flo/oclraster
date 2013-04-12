@@ -23,12 +23,26 @@
 #include "ios_helper.h"
 #endif
 
+struct __attribute__((packed, aligned(16))) constant_camera_data {
+	float4 camera_position;
+	float4 camera_origin;
+	float4 camera_x_vec;
+	float4 camera_y_vec;
+	float4 camera_forward;
+	array<float4, 3> frustum_normals;
+	uint2 viewport;
+};
+
 pipeline::pipeline() :
 default_framebuffer(0, 0),
 event_handler_fnctr(this, &pipeline::event_handler) {
 	create_framebuffers(size2(oclraster::get_width(), oclraster::get_height()));
 	state.framebuffer_size = default_framebuffer.get_size();
 	state.active_framebuffer = &default_framebuffer;
+	state.camera_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
+											 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+											 sizeof(constant_camera_data));
+	
 	oclraster::get_event()->add_internal_event_handler(event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
 	
 #if defined(OCLRASTER_IOS)
@@ -44,6 +58,8 @@ pipeline::~pipeline() {
 	oclraster::get_event()->remove_event_handler(event_handler_fnctr);
 	
 	destroy_framebuffers();
+	
+	ocl->delete_buffer(state.camera_buffer);
 	
 #if defined(OCLRASTER_IOS)
 	if(glIsBuffer(vbo_fullscreen_triangle)) glDeleteBuffers(1, &vbo_fullscreen_triangle);
@@ -88,7 +104,13 @@ void pipeline::create_framebuffers(const uint2& size) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, rtt::convert_internal_format(GL_RGBA8), scaled_size.x, scaled_size.y,
+	glTexImage2D(GL_TEXTURE_2D, 0,
+#if !defined(OCLRASTER_IOS)
+				 GL_RGBA8,
+#else
+				 GL_RGBA,
+#endif
+				 scaled_size.x, scaled_size.y,
 				 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
@@ -169,19 +191,18 @@ void pipeline::swap() {
 	default_framebuffer.clear();
 }
 
-void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
-#if defined(OCLRASTER_DEBUG)
-	// TODO: check buffer sanity/correctness (in debug mode)
-#endif
-	
-	const auto index_count = (element_range.second - element_range.first + 1) * 3;
-	const auto num_elements = element_range.second - element_range.first + 1;
-	state.triangle_count = num_elements;
-	/*const auto num_elements = (element_range.first != ~0u ?
-							   element_range.second - element_range.first + 1 :
-							   ib.index_count / 3);*/
+void pipeline::draw(const PRIMITIVE_TYPE type,
+					const unsigned int vertex_count,
+					const pair<unsigned int, unsigned int> element_range) {
+	if(element_range.second <= element_range.first) {
+		oclr_error("invalid element range: %u - %u", element_range.first, element_range.second);
+		return;
+	}
+	const auto primitive_count = element_range.second - element_range.first;
 	
 	// initialize draw state
+	state.triangle_count = primitive_count;
+	state.vertex_count = vertex_count;
 	state.depth_test = 1;
 	state.bin_count = {
 		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
@@ -193,10 +214,13 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 	// TODO: this should be static!
 	// note: internal transformed buffer size must be a multiple of "batch size" triangles (necessary for the binner)
 	const unsigned int tc_mod_batch_size = (state.triangle_count % OCLRASTER_BATCH_SIZE);
+	const unsigned int triangle_padding = (tc_mod_batch_size == 0 ? 0 : OCLRASTER_BATCH_SIZE - tc_mod_batch_size);
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-												  state.transformed_primitive_size *
-												  (state.triangle_count + (tc_mod_batch_size == 0 ? 0 :
-																		   OCLRASTER_BATCH_SIZE - tc_mod_batch_size)));
+												  state.transformed_primitive_size * (state.triangle_count + triangle_padding));
+	state.triangle_bounds_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
+													  sizeof(float) * 4 * (state.triangle_count + triangle_padding));
+	state.transformed_vertices_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
+														   sizeof(float) * 4 * state.vertex_count);
 	
 	// create user transformed buffers (transform program outputs)
 	const auto active_device = ocl->get_active_device();
@@ -204,21 +228,24 @@ void pipeline::draw(const pair<unsigned int, unsigned int> element_range) {
 		if(tp_struct.type == oclraster_program::STRUCT_TYPE::OUTPUT) {
 			opencl::buffer_object* buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 															   // get device specific size from program
-															   tp_struct.device_infos.at(active_device).struct_size * index_count);
+															   tp_struct.device_infos.at(active_device).struct_size * vertex_count);
 			state.user_transformed_buffers.push_back(buffer);
 			bind_buffer(tp_struct.object_name, *buffer);
 		}
 	}
 	
 	// pipeline
-	transform.transform(state, state.triangle_count);
+	transform.transform(state, state.vertex_count);
+	processing.process(state, type, state.triangle_count);
 	const auto queue_buffer = binning.bin(state);
 	
 	// TODO: pipelining/splitting
-	rasterization.rasterize(state, queue_buffer);
+	rasterization.rasterize(state, type, queue_buffer);
 	
 	//
 	ocl->delete_buffer(state.transformed_buffer);
+	ocl->delete_buffer(state.triangle_bounds_buffer);
+	ocl->delete_buffer(state.transformed_vertices_buffer);
 	
 	// delete user transformed buffers
 	for(const auto& ut_buffer : state.user_transformed_buffers) {
@@ -294,8 +321,8 @@ void pipeline::set_camera_setup_from_camera(camera* cam_) {
 	state.cam_setup.position = cam_->get_position();
 	// TODO: general upscaling support
 #if !defined(__APPLE__)
-	cam_setup.x_vec = width_vec / fp_framebuffer_size.x;
-	cam_setup.y_vec = height_vec / fp_framebuffer_size.y;
+	state.cam_setup.x_vec = width_vec / fp_framebuffer_size.x;
+	state.cam_setup.y_vec = height_vec / fp_framebuffer_size.y;
 #else
 	const float scale_factor = oclraster::get_scale_factor();
 	state.cam_setup.x_vec = (width_vec * scale_factor) / fp_framebuffer_size.x;
@@ -306,6 +333,22 @@ void pipeline::set_camera_setup_from_camera(camera* cam_) {
 	state.cam_setup.forward = forward;
 	
 	compute_frustum_normals(state.cam_setup);
+	
+	// update const camera buffer
+	update_camera_buffer();
+}
+
+void pipeline::update_camera_buffer() const {
+	const constant_camera_data cam_data {
+		state.cam_setup.position,
+		state.cam_setup.origin,
+		state.cam_setup.x_vec,
+		state.cam_setup.y_vec,
+		state.cam_setup.forward,
+		state.cam_setup.frustum_normals,
+		state.framebuffer_size
+	};
+	ocl->write_buffer(state.camera_buffer, &cam_data);
 }
 
 void pipeline::compute_frustum_normals(draw_state::camera_setup& cam_setup) {

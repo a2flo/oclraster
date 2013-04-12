@@ -2,33 +2,34 @@
 	#include "oclr_math.h"
 	#include "oclr_matrix.h"
 	#include "oclr_image.h"
-	
-	typedef struct __attribute__((packed, aligned(16))) {
+	#include "oclr_primitive_assembly.h"
+
+	typedef struct __attribute__((packed, aligned(4))) {
 		// VV0: 0 - 2
 		// VV1: 3 - 5
 		// VV2: 6 - 8
 		// depth: 9
-		// unused: 10 - 11
-		// x_bounds: 12 - 13 (.x/12 = INFINITY if culled)
-		// y_bounds: 14 - 15
-		const float data[16];
+		float data[10];
 	} transformed_data;
-	
+
 	//###OCLRASTER_USER_CODE###
 	
 	//
-	kernel void oclraster_program(//###OCLRASTER_USER_STRUCTS###
-								  
-								  global unsigned int* bin_distribution_counter,
-								  global const transformed_data* transformed_buffer,
-								  global const uchar* bin_queues,
-								  
-								  const uint2 bin_count,
-								  const unsigned int bin_count_lin,
-								  const unsigned int batch_count,
-								  const unsigned int intra_bin_groups,
-								  
-								  const uint2 framebuffer_size) {
+	kernel void oclraster_rasterization(//###OCLRASTER_USER_STRUCTS###
+										
+										global const unsigned int* index_buffer,
+										
+										global unsigned int* bin_distribution_counter,
+										global const transformed_data* transformed_buffer,
+										global const uchar* bin_queues,
+										
+										const uint2 bin_count,
+										const unsigned int bin_count_lin,
+										const unsigned int batch_count,
+										const unsigned int intra_bin_groups,
+										
+										const unsigned int primitive_type,
+										const uint2 framebuffer_size) {
 		const unsigned int local_id = get_local_id(0);
 		const unsigned int local_size = get_local_size(0);
 		
@@ -154,6 +155,7 @@
 							*fragment_depth = barycentric.w;
 							
 							//
+							MAKE_PRIMITIVE_INDICES(indices);
 							//###OCLRASTER_USER_MAIN_CALL###
 						}
 					}

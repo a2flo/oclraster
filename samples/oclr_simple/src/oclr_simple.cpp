@@ -245,7 +245,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		}
 			
 		if(update_light) {
-			light_pos -= 0.25f;
+			light_pos -= 0.125f;
 			rasterize_uniforms.light_position.set(sinf(light_pos)*light_dist,
 												  0.0f,
 												  cosf(light_pos)*light_dist,
@@ -271,7 +271,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_image("normal_texture", materials[selected_material][1]);
 		p->bind_image("height_texture", materials[selected_material][2]);
 		p->bind_image("fp_noise", *fp_noise);
-		p->draw({0, model->get_index_count(0)-1});
+		p->draw(PRIMITIVE_TYPE::TRIANGLE, model->get_vertex_count(), { 0, model->get_index_count(0) });
 		
 		p->swap();
 		oclraster::stop_draw();
