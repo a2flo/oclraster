@@ -25,7 +25,9 @@
 
 class oclraster_program {
 public:
-	oclraster_program(const string& code, const string entry_function = "main");
+	oclraster_program(const string& code,
+					  const string entry_function = "main",
+					  const string build_options = "");
 	virtual ~oclraster_program();
 	oclraster_program(oclraster_program& prog) = delete;
 	oclraster_program& operator=(oclraster_program& prog) = delete;
@@ -81,6 +83,7 @@ public:
 
 protected:
 	string entry_function = "main";
+	string build_options = "";
 	string kernel_function_name;
 	
 	//
@@ -111,6 +114,9 @@ protected:
 	vector<oclraster_struct_info> structs;
 	oclraster_image_info images;
 	void generate_struct_info_cl_program(oclraster_struct_info& struct_info);
+	
+	//
+	virtual string preprocess_code(const string& raw_code);
 
 };
 

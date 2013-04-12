@@ -23,7 +23,9 @@
 
 class transform_program : public oclraster_program {
 public:
-	transform_program(const string& code, const string entry_function = "main");
+	transform_program(const string& code,
+					  const string entry_function = "main",
+					  const string build_options = "");
 	virtual ~transform_program();
 	transform_program(transform_program& prog) = delete;
 	transform_program& operator=(transform_program& prog) = delete;

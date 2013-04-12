@@ -20,9 +20,15 @@
 #include "oclraster.h"
 #include <regex>
 
+#include "libtcc.h"
+extern "C" {
+#include "tcc.h"
+}
+
 oclraster_program::oclraster_program(const string& code oclr_unused,
-									 const string entry_function_) :
-entry_function(entry_function_), kernel_function_name("oclraster_program") {
+									 const string entry_function_,
+									 const string build_options_) :
+entry_function(entry_function_), build_options(build_options_), kernel_function_name("oclraster_program") {
 }
 
 oclraster_program::~oclraster_program() {
@@ -36,7 +42,11 @@ oclraster_program::~oclraster_program() {
 	}
 }
 
-void oclraster_program::process_program(const string& code) {
+void oclraster_program::process_program(const string& raw_code) {
+	// preprocess
+	const string code = preprocess_code(raw_code);
+	
+	// parse
 	static const array<const pair<const char*, const STRUCT_TYPE>, 5> oclraster_struct_types {
 		{
 			{ u8"oclraster_in", STRUCT_TYPE::INPUT },
@@ -297,7 +307,8 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_ima
 	const string identifier = "USER_PROGRAM."+kernel_function_name+"."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter());
 	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, kernel_function_name,
 																 " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
-																 " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE));
+																 " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
+																 " "+build_options);
 	//oclr_msg("%s:\n%s\n", identifier, program_code);
 #if defined(OCLRASTER_DEBUG)
 	if(kernel.use_count() == 0) {
@@ -656,4 +667,32 @@ weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_image
 	}
 	// new kernel image spec -> compile new kernel
 	return build_kernel(spec);
+}
+
+string oclraster_program::preprocess_code(const string& raw_code) {
+	// init
+	string ret_code = "";
+	TCCState* state = tcc_new();
+	state->output_type = TCC_OUTPUT_PREPROCESS;
+	
+	// split build options and let tcc parse them
+	const auto build_option_args = core::tokenize(build_options, ' ');
+	const size_t argc = build_option_args.size();
+	vector<const char*> argv;
+	for(const auto& arg : build_option_args) {
+		argv.emplace_back(arg.data());
+	}
+	tcc_parse_args(state, (int)argc, &argv[0]);
+	
+	// in-memory preprocessing
+	const uint8_t* code_input = (const uint8_t*)raw_code.c_str();
+	tcc_in_memory_preprocess(state, code_input, raw_code.length(), &ret_code,
+							 [](const char* str, void* ret) -> void {
+								 *(string*)ret += str;
+							 });
+	
+	// cleanup + return
+	tcc_delete(state);
+	//oclr_msg("preprocessed code: %s", ret_code);
+	return ret_code;
 }

@@ -23,7 +23,9 @@
 
 class rasterization_program : public oclraster_program {
 public:
-	rasterization_program(const string& code, const string entry_function = "main");
+	rasterization_program(const string& code,
+						  const string entry_function = "main",
+						  const string build_options = "");
 	virtual ~rasterization_program();
 	rasterization_program(rasterization_program& prog) = delete;
 	rasterization_program& operator=(rasterization_program& prog) = delete;
