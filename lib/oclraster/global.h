@@ -29,7 +29,7 @@
 
 // uses kernel templates from the data/kernels/ folder instead of the internal one
 #if !defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
-#define OCLRASTER_INTERNAL_PROGRAM_DEBUG (1)
+//#define OCLRASTER_INTERNAL_PROGRAM_DEBUG (1)
 #endif
 
 #endif
