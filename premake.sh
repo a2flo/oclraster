@@ -100,8 +100,9 @@ if [[ $BUILD_USE_CLANG == 1 ]]; then
 	sed -i '1i export CC=clang' Makefile
 	sed -i '1i export CXX=clang++' Makefile
 fi
-sed -i 's/CFLAGS    += $(CPPFLAGS) $(ARCH) -O2 -m32 -std=c++11/CFLAGS    += $(CPPFLAGS) $(ARCH) -O2 -m32 -std=c11/g' lib/Makefile
-sed -i 's/CXXFLAGS  += $(CFLAGS)/CXXFLAGS  += $(CFLAGS) -std=c++11/g' lib/Makefile
+sed -i 's/-std=c++11/-std=c11/g' lib/Makefile
+sed -i 's/-Wall -stdlib=libc++/-Wall/g' lib/Makefile
+sed -i 's/CXXFLAGS  += $(CFLAGS)/CXXFLAGS  += $(CFLAGS) -std=c++11 -stdlib=libc++/g' lib/Makefile
 
 chmod +x lib/build_version.sh
 
