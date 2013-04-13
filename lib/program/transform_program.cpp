@@ -70,7 +70,7 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 #endif
 
 transform_program::transform_program(const string& code, const string entry_function_, const string build_options_) :
-oclraster_program(code, entry_function_, build_options_) {
+oclraster_program(code, entry_function_, "-DOCLRASTER_TRANSFORM_PROGRAM "+build_options_) {
 	kernel_function_name = "oclraster_transform";
 	process_program(code);
 }
@@ -96,22 +96,22 @@ string transform_program::specialized_processing(const string& code,
 	size_t cur_user_buffer = 0;
 	for(const auto& oclr_struct : structs) {
 		const string cur_user_buffer_str = size_t2string(cur_user_buffer);
-		switch (oclr_struct.type) {
+		switch (oclr_struct->type) {
 			case oclraster_program::STRUCT_TYPE::INPUT:
-				buffer_handling_code += oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str +
+				buffer_handling_code += oclr_struct->name + " user_buffer_element_" + cur_user_buffer_str +
 										 " = user_buffer_"+cur_user_buffer_str+"[vertex_id];\n";
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
 			case oclraster_program::STRUCT_TYPE::OUTPUT:
-				buffer_handling_code += oclr_struct.name + " user_buffer_element_" + cur_user_buffer_str + ";\n";
+				buffer_handling_code += oclr_struct->name + " user_buffer_element_" + cur_user_buffer_str + ";\n";
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
-				for(const auto& var : oclr_struct.variables) {
+				for(const auto& var : oclr_struct->variables) {
 					output_handling_code += "user_buffer_" + cur_user_buffer_str + "[vertex_id]." + var + " = ";
 					output_handling_code += "user_buffer_element_" + cur_user_buffer_str + "." + var + ";\n";
 				}
 				break;
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
-				buffer_handling_code += ("const " + oclr_struct.name + " user_buffer_element_" +
+				buffer_handling_code += ("const " + oclr_struct->name + " user_buffer_element_" +
 										 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
@@ -126,7 +126,7 @@ string transform_program::specialized_processing(const string& code,
 	main_call_parameters += "vertex_id, camera_position"; // the same for all transform programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_PRE_MAIN_CALL###", buffer_handling_code);
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
-						   "_oclraster_user_"+entry_function+"("+main_call_parameters+");");
+						   "oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_OUTPUT_COPY###", output_handling_code);
 	
 	// replace remaining image placeholders

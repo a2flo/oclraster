@@ -225,12 +225,12 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 	// create user transformed buffers (transform program outputs)
 	const auto active_device = ocl->get_active_device();
 	for(const auto& tp_struct : state.transform_prog->get_structs()) {
-		if(tp_struct.type == oclraster_program::STRUCT_TYPE::OUTPUT) {
+		if(tp_struct->type == oclraster_program::STRUCT_TYPE::OUTPUT) {
 			opencl::buffer_object* buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 															   // get device specific size from program
-															   tp_struct.device_infos.at(active_device).struct_size * vertex_count);
+															   tp_struct->device_infos.at(active_device).struct_size * vertex_count);
 			state.user_transformed_buffers.push_back(buffer);
-			bind_buffer(tp_struct.object_name, *buffer);
+			bind_buffer(tp_struct->object_name, *buffer);
 		}
 	}
 	

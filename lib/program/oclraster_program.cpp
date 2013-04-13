@@ -35,6 +35,9 @@ oclraster_program::~oclraster_program() {
 	for(auto& spec : compiled_image_kernels) {
 		delete spec;
 	}
+	for(auto& oclr_struct : structs) {
+		delete oclr_struct;
+	}
 	if(ocl != nullptr) {
 		for(const auto& kernel : kernels) {
 			ocl->delete_kernel(kernel.second);
@@ -171,7 +174,8 @@ void oclraster_program::process_program(const string& raw_code) {
 				// create info struct
 				if(type.second != STRUCT_TYPE::IMAGES &&
 				   type.second != STRUCT_TYPE::FRAMEBUFFER) {
-					structs.push_back({
+					const bool empty = (variable_names.size() == 0); // can't use variable_names when moving
+					structs.push_back(new oclraster_struct_info {
 						type.second,
 						size2(struct_pos, end_semicolon_pos+1),
 						struct_name,
@@ -179,6 +183,7 @@ void oclraster_program::process_program(const string& raw_code) {
 						std::move(variable_names),
 						std::move(variable_types),
 						std::move(variable_specifiers),
+						empty,
 						{}
 					});
 				}
@@ -195,19 +200,15 @@ void oclraster_program::process_program(const string& raw_code) {
 		
 		// process found structs
 		for(auto& oclr_struct : structs) {
-			generate_struct_info_cl_program(oclr_struct);
+			if(oclr_struct->empty) continue;
+			generate_struct_info_cl_program(*oclr_struct);
 		}
 		
-		// build entry function parameter string
-		const string entry_function_params = create_entry_function_parameters();
-		
-		// check if entry function exists, and if so, replace it with a modified function name
-		const regex rx_entry_function("("+entry_function+")\\s*\\(\\s*\\)");
-		if(!regex_search(code, rx_entry_function)) {
-			throw oclraster_exception("entry function \""+entry_function+"\" not found!");
-		}
-		processed_code = regex_replace(code, rx_entry_function,
-									   "_oclraster_user_"+entry_function+"("+entry_function_params+")");
+		// order
+		sort(structs.begin(), structs.end(),
+			 [](const oclraster_struct_info* info_0, const oclraster_struct_info* info_1) -> bool {
+				 return info_0->code_pos.x < info_1->code_pos.x;
+			 });
 		
 		// write framebuffer struct
 		bool has_framebuffer = false;
@@ -226,13 +227,14 @@ void oclraster_program::process_program(const string& raw_code) {
 		framebuffer_code += "} oclraster_framebuffer;\n";
 		
 		// recreate structs (in reverse, so that the offsets stay valid)
+		processed_code = code;
 		const size_t struct_count = structs.size() + image_struct_positions.size();
 		for(size_t i = 0, cur_struct = structs.size(), cur_image = image_struct_positions.size();
 			i < struct_count; i++) {
 			// figure out which struct comes next (normal struct or image struct)
 			size_t image_code_pos = 0, struct_code_pos = 0;
 			if(cur_image > 0) image_code_pos = image_struct_positions[cur_image-1].x;
-			if(cur_struct > 0) struct_code_pos = structs[cur_struct-1].code_pos.x;
+			if(cur_struct > 0) struct_code_pos = structs[cur_struct-1]->code_pos.x;
 			
 			// image
 			if(image_code_pos > struct_code_pos) {
@@ -248,32 +250,54 @@ void oclraster_program::process_program(const string& raw_code) {
 			// struct
 			else {
 				cur_struct--;
-				oclraster_struct_info& oclr_struct = structs[cur_struct];
+				const oclraster_struct_info& oclr_struct = *structs[cur_struct];
 				processed_code.erase(oclr_struct.code_pos.x,
 									 oclr_struct.code_pos.y - oclr_struct.code_pos.x);
 				
-				string struct_code = "";
-				switch(oclr_struct.type) {
-					case STRUCT_TYPE::INPUT:
-						struct_code += "oclraster_in";
-						break;
-					case STRUCT_TYPE::OUTPUT:
-						struct_code += "oclraster_out";
-						break;
-					case STRUCT_TYPE::UNIFORMS:
-						struct_code += "oclraster_uniforms";
-						break;
-					case STRUCT_TYPE::IMAGES:
-					case STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
+				if(!oclr_struct.empty) {
+					string struct_code = "";
+					switch(oclr_struct.type) {
+						case STRUCT_TYPE::INPUT:
+							struct_code += "oclraster_in";
+							break;
+						case STRUCT_TYPE::OUTPUT:
+							struct_code += "oclraster_out";
+							break;
+						case STRUCT_TYPE::UNIFORMS:
+							struct_code += "oclraster_uniforms";
+							break;
+						case STRUCT_TYPE::IMAGES:
+						case STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
+					}
+					struct_code += " {\n";
+					for(size_t var_index = 0; var_index < oclr_struct.variables.size(); var_index++) {
+						struct_code += oclr_struct.variable_types[var_index] + " " + oclr_struct.variables[var_index] + ";\n";
+					}
+					struct_code += "} " + oclr_struct.name + ";\n";
+					processed_code.insert(oclr_struct.code_pos.x, struct_code);
 				}
-				struct_code += " {\n";
-				for(size_t var_index = 0; var_index < oclr_struct.variables.size(); var_index++) {
-					struct_code += oclr_struct.variable_types[var_index] + " " + oclr_struct.variables[var_index] + ";\n";
-				}
-				struct_code += "} " + oclr_struct.name + ";\n";
-				processed_code.insert(oclr_struct.code_pos.x, struct_code);
 			}
 		}
+		
+		// remove empty structs
+		for(auto iter = structs.begin(); iter != structs.end();) {
+			if((*iter)->empty) {
+				delete *iter;
+				iter = structs.erase(iter);
+			}
+			else iter++;
+		}
+		
+		// build entry function parameter string
+		const string entry_function_params = create_entry_function_parameters();
+		
+		// check if entry function exists, and if so, replace it with a modified function name
+		const regex rx_entry_function("("+entry_function+")\\s*\\(\\s*\\)");
+		if(!regex_search(code, rx_entry_function)) {
+			throw oclraster_exception("entry function \""+entry_function+"\" not found!");
+		}
+		processed_code = regex_replace(processed_code, rx_entry_function,
+									   "oclraster_user_"+entry_function+"("+entry_function_params+")");
 		
 		// create default/first/hinted image spec, do the final processing and compile
 		kernel_image_spec spec {};
@@ -323,9 +347,9 @@ string oclraster_program::create_entry_function_parameters() const {
 	const string fixed_params = get_fixed_entry_function_parameters();
 	string entry_function_params = "";
 	for(size_t i = 0, struct_count = structs.size(); i < struct_count; i++) {
-		const string qualifier = get_qualifier_for_struct_type(structs[i].type);
+		const string qualifier = get_qualifier_for_struct_type(structs[i]->type);
 		if(qualifier != "") entry_function_params += qualifier + " ";
-		entry_function_params += structs[i].name + "* " + structs[i].object_name + ", ";
+		entry_function_params += structs[i]->name + "* " + structs[i]->object_name + ", ";
 	}
 	for(size_t i = 0, image_count = images.image_names.size(); i < image_count; i++) {
 		// framebuffer is passed in separately
@@ -345,7 +369,7 @@ string oclraster_program::create_user_kernel_parameters(const kernel_image_spec&
 	string kernel_parameters = "";
 	size_t user_buffer_count = 0;
 	for(const auto& oclr_struct : structs) {
-		switch (oclr_struct.type) {
+		switch(oclr_struct->type) {
 			case oclraster_program::STRUCT_TYPE::INPUT:
 				kernel_parameters += "global const ";
 				break;
@@ -359,7 +383,7 @@ string oclraster_program::create_user_kernel_parameters(const kernel_image_spec&
 			case oclraster_program::STRUCT_TYPE::IMAGES:
 			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
 		}
-		kernel_parameters += oclr_struct.name + "* user_buffer_"+size_t2string(user_buffer_count)+",\n";
+		kernel_parameters += oclr_struct->name + "* user_buffer_"+size_t2string(user_buffer_count)+",\n";
 		user_buffer_count++;
 	}
 	for(size_t i = 0, img_count = images.image_names.size(); i < img_count; i++) {
@@ -631,7 +655,7 @@ void oclraster_program::invalidate(const string error_info) {
 			   error_info != "" ? ": " + error_info + "!" : "");
 }
 
-const vector<oclraster_program::oclraster_struct_info>& oclraster_program::get_structs() const {
+const vector<oclraster_program::oclraster_struct_info*>& oclraster_program::get_structs() const {
 	return structs;
 }
 

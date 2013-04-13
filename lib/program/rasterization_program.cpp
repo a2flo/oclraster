@@ -178,8 +178,6 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 							// reset depth (note: fragment_color will contain the last valid color)
 							*fragment_depth = barycentric.w;
 							
-							//
-							MAKE_PRIMITIVE_INDICES(indices);
 							//###OCLRASTER_USER_MAIN_CALL###
 						}
 					}
@@ -196,7 +194,7 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 #endif
 
 rasterization_program::rasterization_program(const string& code, const string entry_function_, const string build_options_) :
-oclraster_program(code, entry_function_, build_options_) {
+oclraster_program(code, entry_function_, "-DOCLRASTER_RASTERIZATION_PROGRAM "+build_options_) {
 	kernel_function_name = "oclraster_rasterization";
 	process_program(code);
 }
@@ -219,16 +217,18 @@ string rasterization_program::specialized_processing(const string& code,
 	string buffer_handling_code = "";
 	string main_call_parameters = "";
 	size_t cur_user_buffer = 0;
+	bool has_output_structs = false;
 	for(const auto& oclr_struct : structs) {
 		const string cur_user_buffer_str = size_t2string(cur_user_buffer);
-		switch (oclr_struct.type) {
+		switch (oclr_struct->type) {
 			case oclraster_program::STRUCT_TYPE::INPUT:
 				// there are no input structs
 				continue;
 			case oclraster_program::STRUCT_TYPE::OUTPUT: {
+				has_output_structs = true;
 				const string interp_var_name = "interpolated_user_buffer_element_" + cur_user_buffer_str;
-				buffer_handling_code += oclr_struct.name + " " + interp_var_name +";\n";
-				for(const auto& var : oclr_struct.variables) {
+				buffer_handling_code += oclr_struct->name + " " + interp_var_name +";\n";
+				for(const auto& var : oclr_struct->variables) {
 					buffer_handling_code += interp_var_name + "." + var + " = interpolate(";
 					for(size_t i = 0; i < 3; i++) {
 						buffer_handling_code += "user_buffer_" + cur_user_buffer_str + "[indices[" + size_t2string(i) + "]]." + var;
@@ -240,7 +240,7 @@ string rasterization_program::specialized_processing(const string& code,
 			}
 			break;
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
-				buffer_handling_code += ("const " + oclr_struct.name + " user_buffer_element_" +
+				buffer_handling_code += ("const " + oclr_struct->name + " user_buffer_element_" +
 										 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
@@ -249,6 +249,10 @@ string rasterization_program::specialized_processing(const string& code,
 		}
 		cur_user_buffer++;
 	}
+	if(has_output_structs) {
+		// reading indices is only necessary when transform stage output variables must be interpolated
+		buffer_handling_code = "MAKE_PRIMITIVE_INDICES(indices);\n" + buffer_handling_code;
+	}
 	for(size_t i = 0, img_count = image_decls.size(); i < img_count; i++) {
 		// framebuffer is passed in separately
 		if(images.is_framebuffer[i]) continue;
@@ -256,7 +260,7 @@ string rasterization_program::specialized_processing(const string& code,
 	}
 	main_call_parameters += "&framebuffer, fragment_coord, barycentric.xyz"; // the same for all rasterization programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
-						   buffer_handling_code+"_oclraster_user_"+entry_function+"("+main_call_parameters+");");
+						   buffer_handling_code+"oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	
 	// image and framebuffer handling
 	string framebuffer_read_code = "", framebuffer_write_code = "";

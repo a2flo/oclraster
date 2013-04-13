@@ -59,6 +59,7 @@ public:
 		const vector<string> variables;
 		const vector<string> variable_types;
 		const vector<string> variable_specifiers;
+		const bool empty;
 		struct device_struct_info {
 			size_t struct_size;
 			vector<size_t> sizes;
@@ -66,7 +67,7 @@ public:
 		};
 		unordered_map<opencl::device_object*, const device_struct_info> device_infos;
 	};
-	const vector<oclraster_struct_info>& get_structs() const;
+	const vector<oclraster_struct_info*>& get_structs() const;
 	
 	typedef vector<image_type> kernel_image_spec;
 	struct oclraster_image_info {
@@ -111,7 +112,7 @@ protected:
 	void invalidate(const string error_info = "");
 	
 	//
-	vector<oclraster_struct_info> structs;
+	vector<oclraster_struct_info*> structs;
 	oclraster_image_info images;
 	void generate_struct_info_cl_program(oclraster_struct_info& struct_info);
 	

@@ -154,8 +154,6 @@
 							// reset depth (note: fragment_color will contain the last valid color)
 							*fragment_depth = barycentric.w;
 							
-							//
-							MAKE_PRIMITIVE_INDICES(indices);
 							//###OCLRASTER_USER_MAIN_CALL###
 						}
 					}
