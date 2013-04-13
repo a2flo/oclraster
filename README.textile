@@ -31,6 +31,9 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * 256 MB VRAM minimum, 1 GB VRAM are recommended
 
 *Build Instructions:*
+* after cloning: git submodule init && git submodule update
+* after a submodule update / pull: git submodule update
+
 on Linux:
 * install all necessary libraries (-> Credits; freetype2 and a2elight are not required/used, CUDA is optional)
 * install clang 3.2+ and libc++ (currently 1101)
