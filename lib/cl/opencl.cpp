@@ -95,6 +95,7 @@ opencl_base::CL_VERSION opencl_base::get_platform_cl_version() const {
 
 void opencl_base::destroy_kernels() {
 	cur_kernel = nullptr;
+	kernels_lock.lock();
 	for(auto& k : kernels) {
 		kernel_object::unassociate_buffers(k.second);
 		if(k.second.use_count() > 1) {
@@ -104,6 +105,7 @@ void opencl_base::destroy_kernels() {
 		k.second = nullptr; // implicit delete
 	}
 	kernels.clear();
+	kernels_lock.unlock();
 }
 
 bool opencl_base::is_cpu_support() {
@@ -117,30 +119,24 @@ bool opencl_base::is_gpu_support() {
 }
 
 weak_ptr<opencl_base::kernel_object> opencl_base::add_kernel_file(const string& identifier, const string& file_name, const string& func_name, const string additional_options) {
-	if(kernels.count(identifier) != 0) {
+	kernels_lock.lock();
+	const auto existing_kernel = kernels.find(identifier);
+	if(existing_kernel != kernels.end()) {
 		oclr_error("kernel \"%s\" already exists!", identifier);
-		return kernels[identifier];
+		auto ret_kernel = existing_kernel->second;
+		kernels_lock.unlock();
+		return ret_kernel;
 	}
+	kernels_lock.unlock();
 	
-	stringstream buffer(stringstream::in | stringstream::out);
-	if(!file_io::file_to_buffer(file_name, buffer)) {
+	//
+	string kernel_data;
+	if(!file_io::file_to_string(file_name, kernel_data)) {
 		return null_kernel_object;
 	}
-	string kernel_data(buffer.str());
 	
 	// work around caching bug and modify source on each load, TODO: check if this still exists (still present in 10.8.3 ...)
-	kernel_data = "#define __" + core::str_to_upper(func_name) +  "_BUILD_TIME__ " + uint2string((unsigned int)time(nullptr)) + "\n" + kernel_data;
-	
-	// check if this is an external kernel (and hasn't been added before)
-	if(external_kernels.count(identifier) == 0 &&
-	   none_of(begin(internal_kernels), end(internal_kernels),
-			   [&identifier](const decltype(internal_kernels)::value_type& int_kernel) {
-				   return (get<0>(int_kernel) == identifier);
-			   })) {
-		// if so, add it to the external kernel list
-		external_kernels.insert(make_pair(identifier,
-										  make_tuple(file_name, func_name, additional_options)));
-	}
+	kernel_data.insert(0, "#define __" + core::str_to_upper(func_name) +  "_BUILD_TIME__ " + uint2string((unsigned int)time(nullptr)) + "\n");
 	
 	return add_kernel_src(identifier, kernel_data, func_name, additional_options);
 }
@@ -153,6 +149,7 @@ void opencl_base::check_compilation(const bool ret, const string& filename) {
 }
 
 void opencl_base::reload_kernels() {
+	lock_guard<recursive_mutex> lock(kernels_lock);
 	destroy_kernels();
 	
 	successful_internal_compilation = true;
@@ -171,15 +168,6 @@ void opencl_base::reload_kernels() {
 		oclr_error("there were problems loading/compiling the internal kernels!");
 	}
 	
-	// load external kernels
-	for(const auto& ext_kernel : external_kernels) {
-		add_kernel_file(ext_kernel.first,
-						get<0>(ext_kernel.second).c_str(),
-						get<1>(ext_kernel.second),
-						get<2>(ext_kernel.second).c_str());
-	}
-	if(!external_kernels.empty()) oclr_debug("external kernels loaded successfully!");
-	
 	// emit kernel reload event
 	oclraster::get_event()->add_event(EVENT_TYPE::KERNEL_RELOAD, make_shared<kernel_reload_event>(SDL_GetTicks()));
 }
@@ -192,12 +180,14 @@ void opencl_base::load_internal_kernels() {
 }
 
 void opencl_base::use_kernel(const string& identifier) {
-	if(kernels.count(identifier) == 0) {
+	lock_guard<recursive_mutex> lock(kernels_lock);
+	const auto kernel_iter = kernels.find(identifier);
+	if(kernel_iter == kernels.end()) {
 		oclr_error("kernel \"%s\" doesn't exist!", identifier.c_str());
 		cur_kernel = nullptr;
 		return;
 	}
-	cur_kernel = kernels[identifier];
+	cur_kernel = kernel_iter->second;
 }
 
 void opencl_base::use_kernel(weak_ptr<opencl_base::kernel_object> kernel_obj) {
@@ -209,18 +199,26 @@ void opencl_base::run_kernel() {
 }
 
 void opencl_base::run_kernel(const string& identifier) {
+	kernels_lock.lock();
 	const auto iter = kernels.find(identifier);
 	if(iter != kernels.end()) {
-		run_kernel(iter->second);
+		auto kernel_ptr = iter->second;
+		kernels_lock.unlock();
+		run_kernel(kernel_ptr);
 	}
+	kernels_lock.unlock();
 	oclr_error("kernel \"%s\" doesn't exist!", identifier);
 }
 
 void opencl_base::delete_kernel(const string& identifier) {
+	kernels_lock.lock();
 	const auto iter = kernels.find(identifier);
 	if(iter != kernels.end()) {
-		delete_kernel(iter->second);
+		auto kernel_ptr = iter->second;
+		kernels_lock.unlock();
+		delete_kernel(kernel_ptr);
 	}
+	kernels_lock.unlock();
 	oclr_error("kernel \"%s\" doesn't exist!", identifier);
 }
 
@@ -404,6 +402,18 @@ bool opencl_base::check_image_origin_and_size(const opencl_base::buffer_object* 
 		}
 	}
 	return true;
+}
+
+void opencl_base::lock() {
+	execution_lock.lock();
+}
+
+void opencl_base::unlock() {
+	execution_lock.unlock();
+}
+
+bool opencl_base::try_lock() {
+	return execution_lock.try_lock();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1088,11 +1098,29 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 }
 
 weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {
-	if(kernels.count(identifier) != 0) {
+	// lock kernels (for mt safety), check if a kernel with such an identifier
+	// already exists (return it, if it does), otherwise create a new kernel
+	kernels_lock.lock();
+	
+	const auto existing_kernel = kernels.find(identifier);
+	if(existing_kernel != kernels.end()) {
 		oclr_error("kernel \"%s\" already exists!", identifier);
-		return kernels[identifier];
+		auto ret_kernel = existing_kernel->second;
+		kernels_lock.unlock();
+		return ret_kernel;
 	}
 	
+	auto kernel_ptr = make_shared<opencl::kernel_object>();
+	if(kernel_ptr == nullptr) {
+		// complete failure
+		oclr_error("could not create kernel_object for \"%s\"!", identifier);
+		return null_kernel_object;
+	}
+	kernels.emplace(identifier, kernel_ptr);
+	
+	kernels_lock.unlock();
+	
+	//
 	oclr_debug("compiling \"%s\" kernel!", identifier);
 	string options = build_options;
 	
@@ -1124,8 +1152,6 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 		}
 		
 		// add kernel
-		auto kernel_ptr = make_shared<opencl::kernel_object>();
-		kernels.emplace(identifier, kernel_ptr);
 		kernel_ptr->name = identifier;
 		cl::Program::Sources source(1, make_pair(src.c_str(), src.length()));
 		kernel_ptr->program = new cl::Program(*context, source);
@@ -1194,19 +1220,6 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 #endif
 	}
 	__HANDLE_CL_EXCEPTION_START("add_kernel")
-		//
-		const auto kernel_iter = kernels.find(identifier);
-		if(kernel_iter == kernels.end()) {
-			// complete failure ...
-			return null_kernel_object;
-		}
-		
-		auto kernel_ptr = kernel_iter->second;
-		if(kernel_ptr == nullptr) {
-			// again: complete failure
-			return null_kernel_object;
-		}
-
 		// print out build log and build options
 		for(const auto& device : devices) {
 			char build_log[CLINFO_STR_SIZE];
@@ -1225,13 +1238,14 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 		kernel_ptr = nullptr;
 		delete_kernel(delete_ptr);
 		
-		//log_program_binary(kernels[identifier], options);
+		//log_program_binary(kernel_ptr, options);
 		return null_kernel_object;
 	__HANDLE_CL_EXCEPTION_END
 	if(oclraster::get_log_binaries()) {
-		log_program_binary(kernels.at(identifier));
+		log_program_binary(kernel_ptr);
 	}
-	return kernels[identifier];
+	kernel_ptr->valid = true;
+	return kernel_ptr;
 }
 
 void opencl::delete_kernel(weak_ptr<opencl::kernel_object> kernel_obj) {
@@ -1241,6 +1255,7 @@ void opencl::delete_kernel(weak_ptr<opencl::kernel_object> kernel_obj) {
 		return;
 	}
 	
+	// note: when add_kernel_src fails and calls this function => cur_kernel != kernel_ptr
 	if(cur_kernel == kernel_ptr) {
 		// if the currently active kernel is being deleted, flush+finish the queue
 		flush();
@@ -1248,6 +1263,8 @@ void opencl::delete_kernel(weak_ptr<opencl::kernel_object> kernel_obj) {
 		cur_kernel = nullptr;
 	}
 	
+	// must iterate over all kernels -> lock
+	lock_guard<recursive_mutex> lock(kernels_lock);
 	for(const auto& kernel : kernels) {
 		if(kernel.second == kernel_ptr) {
 			kernel_object::unassociate_buffers(kernel_ptr);

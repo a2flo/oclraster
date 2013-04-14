@@ -63,11 +63,10 @@ void oclraster_program::process_program(const string& raw_code) {
 		"read_only", "write_only", "read_write"
 	};
 	
-	// current oclraster_struct grammar limitation/requirements:
-	// * no interior structs/unions
+	// current oclraster_struct grammar limitations/requirements:
+	// * no interior/nested structs/unions
 	// * no multi-variable declarations (e.g. "float x, y, z;")
 	// * no __attribute__ (oclraster_structs already have a __attribute__ qualifier)
-	// * user defined types must be accessible (must be accessible after preprocessing)
 	// * use of any oclraster_struct specifier in other places is disallowed (no typedefs, comments, ...)
 	// * otherwise standard OpenCL C
 	//
@@ -313,11 +312,23 @@ void oclraster_program::process_program(const string& raw_code) {
 	catch(oclraster_exception& ex) {
 		invalidate(ex.what());
 	}
+	valid = true;
 }
 
 weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_image_spec& spec) {
 	kernel_image_spec* new_spec = new kernel_image_spec(spec);
 	compiled_image_kernels.emplace_back(new_spec);
+	
+	// build image defines string (image functions for each image type are #ifdef'ed)
+	string image_defines = "";
+	set<string> img_types;
+	for(const auto& img_type : spec) {
+		if(img_type.native) continue;
+		img_types.insert(img_type.to_string());
+	}
+	for(const auto& img_type : img_types) {
+		image_defines += " -DOCLRASTER_IMAGE_" + core::str_to_upper(img_type);
+	}
 	
 	// finally: call the specialized processing function of inheriting classes/programs
 	// note: this should inject the user code into their respective code templates
@@ -328,10 +339,13 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_ima
 		img_spec_str += "." + type.to_string();
 	}
 	
-	const string identifier = "USER_PROGRAM."+kernel_function_name+"."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter());
+	stringstream id_stream;
+	id_stream << dec << this_thread::get_id();
+	const string identifier = "USER_PROGRAM."+kernel_function_name+"."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter())+"."+id_stream.str();
 	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, kernel_function_name,
 																 " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 																 " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
+																 image_defines+
 																 " "+build_options);
 	//oclr_msg("%s:\n%s\n", identifier, program_code);
 #if defined(OCLRASTER_DEBUG)
@@ -592,7 +606,9 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	//oclr_debug("generated kernel file:\n%s\n", kernel_code);
 	
 	// and compile
-	const string unique_identifier = "STRUCT_INFO."+ull2string(SDL_GetPerformanceCounter());
+	stringstream id_stream;
+	id_stream << dec << this_thread::get_id();
+	const string unique_identifier = "STRUCT_INFO."+ull2string(SDL_GetPerformanceCounter())+"."+id_stream.str();
 	weak_ptr<opencl::kernel_object> kernel_obj = ocl->add_kernel_src(unique_identifier, kernel_code, "struct_info");
 	auto kernel_ptr = kernel_obj.lock();
 	if(kernel_ptr == nullptr) {
@@ -603,6 +619,7 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	const size_t info_buffer_size = 1 + struct_info.variables.size() * 2;
 	int* info_buffer_results = new int[info_buffer_size];
 	
+	ocl->lock();
 	auto active_device = ocl->get_active_device();
 	const auto& devices = ocl->get_devices();
 	for(size_t dev_num = 0; dev_num < devices.size(); dev_num++) {
@@ -638,6 +655,7 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 		ocl->delete_buffer(info_buffer);
 	}
 	ocl->set_active_device(active_device->type);
+	ocl->unlock();
 	
 	// cleanup
 	delete [] info_buffer_results;
@@ -700,7 +718,8 @@ string oclraster_program::preprocess_code(const string& raw_code) {
 	state->output_type = TCC_OUTPUT_PREPROCESS;
 	
 	// split build options and let tcc parse them
-	const auto build_option_args = core::tokenize(build_options, ' ');
+	const string kernels_include_path = "-I" + core::strip_path(oclraster::kernel_path("")) + " ";
+	const auto build_option_args = core::tokenize(kernels_include_path+build_options, ' ');
 	const size_t argc = build_option_args.size();
 	vector<const char*> argv;
 	for(const auto& arg : build_option_args) {

@@ -173,18 +173,28 @@ public:
 					  const bool gl_sharing = true) = 0;
 	void reload_kernels();
 	
+	// kernel execution
 	void use_kernel(const string& identifier);
 	void use_kernel(weak_ptr<kernel_object> kernel_obj);
 	void run_kernel();
 	void run_kernel(const string& identifier);
 	virtual void run_kernel(weak_ptr<kernel_object> kernel_obj) = 0;
 	weak_ptr<kernel_object> get_cur_kernel() { return cur_kernel; }
+	
+	// helper functions (for external synchronization, not used internally!)
+	// note: kernel execution and kernel parameter setting is not thread-safe!
+	void lock();
+	void unlock();
+	bool try_lock();
+	
+	//
 	virtual void finish() = 0;
 	virtual void flush() = 0;
 	virtual void barrier() = 0;
 	virtual void activate_context() = 0;
 	virtual void deactivate_context() = 0;
 	
+	//
 	weak_ptr<kernel_object> add_kernel_file(const string& identifier, const string& file_name, const string& func_name, const string additional_options = "");
 	virtual weak_ptr<kernel_object> add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options = "") = 0;
 	void delete_kernel(const string& identifier);
@@ -314,6 +324,7 @@ public:
 		vector<buffer_object*> buffer_args;
 		string name = "";
 		unordered_map<cl::CommandQueue*, cl::KernelFunctor> functors;
+		atomic<bool> valid { false };
 		
 		kernel_object() {}
 		~kernel_object() {
@@ -420,13 +431,15 @@ protected:
 	vector<cl::ImageFormat> img_formats;
 	
 	vector<buffer_object*> buffers;
+	
+	recursive_mutex execution_lock;
+	recursive_mutex kernels_lock;
 	unordered_map<string, shared_ptr<kernel_object>> kernels;
 	shared_ptr<kernel_object> cur_kernel;
 	
 	unordered_map<const cl::Device*, cl::CommandQueue*> queues;
 	
 	// identifier -> <file_name, func_name, options>
-	unordered_map<string, tuple<string, string, string>> external_kernels;
 	vector<tuple<string, string, string, string>> internal_kernels;
 	
 };

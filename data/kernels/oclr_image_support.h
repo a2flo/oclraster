@@ -4,6 +4,8 @@
 #ifndef __OCLRASTER_IMAGE_SUPPORT_H__
 #define __OCLRASTER_IMAGE_SUPPORT_H__
 
+#if defined(OCLRASTER_IMAGE_UCHAR)
+
 float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar* img, const uint offset) {
  global const uchar* img_data_ptr = (global const uchar*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
  const uchar texel = img_data_ptr[offset];
@@ -60,7 +62,9 @@ float4 FUNC_OVERLOAD image_read(global const uchar* img, const sampler_t sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UCHAR2)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar2* img, const uint offset) {
  global const uchar2* img_data_ptr = (global const uchar2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -118,7 +122,9 @@ float4 FUNC_OVERLOAD image_read(global const uchar2* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UCHAR3)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar3* img, const uint offset) {
  global const uchar3* img_data_ptr = (global const uchar3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -176,7 +182,9 @@ float4 FUNC_OVERLOAD image_read(global const uchar3* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UCHAR4)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const uchar4* img, const uint offset) {
  global const uchar4* img_data_ptr = (global const uchar4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -234,7 +242,9 @@ float4 FUNC_OVERLOAD image_read(global const uchar4* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UCHAR)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar* img, const uint offset) {
  global const uchar* img_data_ptr = (global const uchar*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -292,7 +302,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uchar* img, const sampler_t sam
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UCHAR2)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar2* img, const uint offset) {
  global const uchar2* img_data_ptr = (global const uchar2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -350,7 +362,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uchar2* img, const sampler_t sa
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UCHAR3)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar3* img, const uint offset) {
  global const uchar3* img_data_ptr = (global const uchar3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -408,7 +422,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uchar3* img, const sampler_t sa
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UCHAR4)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uchar4* img, const uint offset) {
  global const uchar4* img_data_ptr = (global const uchar4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -466,7 +482,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uchar4* img, const sampler_t sa
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_USHORT)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort* img, const uint offset) {
  global const ushort* img_data_ptr = (global const ushort*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -524,7 +542,9 @@ float4 FUNC_OVERLOAD image_read(global const ushort* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_USHORT2)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort2* img, const uint offset) {
  global const ushort2* img_data_ptr = (global const ushort2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -582,7 +602,9 @@ float4 FUNC_OVERLOAD image_read(global const ushort2* img, const sampler_t sampl
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_USHORT3)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort3* img, const uint offset) {
  global const ushort3* img_data_ptr = (global const ushort3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -640,7 +662,9 @@ float4 FUNC_OVERLOAD image_read(global const ushort3* img, const sampler_t sampl
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_USHORT4)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const ushort4* img, const uint offset) {
  global const ushort4* img_data_ptr = (global const ushort4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -698,7 +722,9 @@ float4 FUNC_OVERLOAD image_read(global const ushort4* img, const sampler_t sampl
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_USHORT)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort* img, const uint offset) {
  global const ushort* img_data_ptr = (global const ushort*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -756,7 +782,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const ushort* img, const sampler_t sa
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_USHORT2)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort2* img, const uint offset) {
  global const ushort2* img_data_ptr = (global const ushort2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -814,7 +842,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const ushort2* img, const sampler_t s
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_USHORT3)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort3* img, const uint offset) {
  global const ushort3* img_data_ptr = (global const ushort3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -872,7 +902,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const ushort3* img, const sampler_t s
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_USHORT4)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const ushort4* img, const uint offset) {
  global const ushort4* img_data_ptr = (global const ushort4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -930,7 +962,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const ushort4* img, const sampler_t s
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UINT)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint* img, const uint offset) {
  global const uint* img_data_ptr = (global const uint*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -988,7 +1022,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uint* img, const sampler_t samp
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UINT2)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint2* img, const uint offset) {
  global const uint2* img_data_ptr = (global const uint2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1046,7 +1082,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uint2* img, const sampler_t sam
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UINT3)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint3* img, const uint offset) {
  global const uint3* img_data_ptr = (global const uint3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1104,7 +1142,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uint3* img, const sampler_t sam
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_UINT4)
 
 uint4 FUNC_OVERLOAD image_read_uint_nearest(global const uint4* img, const uint offset) {
  global const uint4* img_data_ptr = (global const uint4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1162,7 +1202,9 @@ uint4 FUNC_OVERLOAD image_read_uint(global const uint4* img, const sampler_t sam
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_ULONG)
 
 ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong* img, const uint offset) {
  global const ulong* img_data_ptr = (global const ulong*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1220,7 +1262,9 @@ ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong* img, const sampler_t s
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_ULONG2)
 
 ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong2* img, const uint offset) {
  global const ulong2* img_data_ptr = (global const ulong2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1278,7 +1322,9 @@ ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong2* img, const sampler_t 
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_ULONG3)
 
 ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong3* img, const uint offset) {
  global const ulong3* img_data_ptr = (global const ulong3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1336,7 +1382,9 @@ ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong3* img, const sampler_t 
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_ULONG4)
 
 ulong4 FUNC_OVERLOAD image_read_ulong_nearest(global const ulong4* img, const uint offset) {
  global const ulong4* img_data_ptr = (global const ulong4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1394,7 +1442,9 @@ ulong4 FUNC_OVERLOAD image_read_ulong(global const ulong4* img, const sampler_t 
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_CHAR)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const char* img, const uint offset) {
  global const char* img_data_ptr = (global const char*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1452,7 +1502,9 @@ float4 FUNC_OVERLOAD image_read(global const char* img, const sampler_t sampler,
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_CHAR2)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const char2* img, const uint offset) {
  global const char2* img_data_ptr = (global const char2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1510,7 +1562,9 @@ float4 FUNC_OVERLOAD image_read(global const char2* img, const sampler_t sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_CHAR3)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const char3* img, const uint offset) {
  global const char3* img_data_ptr = (global const char3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1568,7 +1622,9 @@ float4 FUNC_OVERLOAD image_read(global const char3* img, const sampler_t sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_CHAR4)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const char4* img, const uint offset) {
  global const char4* img_data_ptr = (global const char4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1626,7 +1682,9 @@ float4 FUNC_OVERLOAD image_read(global const char4* img, const sampler_t sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_CHAR)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const char* img, const uint offset) {
  global const char* img_data_ptr = (global const char*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1684,7 +1742,9 @@ int4 FUNC_OVERLOAD image_read_int(global const char* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_CHAR2)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const char2* img, const uint offset) {
  global const char2* img_data_ptr = (global const char2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1742,7 +1802,9 @@ int4 FUNC_OVERLOAD image_read_int(global const char2* img, const sampler_t sampl
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_CHAR3)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const char3* img, const uint offset) {
  global const char3* img_data_ptr = (global const char3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1800,7 +1862,9 @@ int4 FUNC_OVERLOAD image_read_int(global const char3* img, const sampler_t sampl
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_CHAR4)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const char4* img, const uint offset) {
  global const char4* img_data_ptr = (global const char4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1858,7 +1922,9 @@ int4 FUNC_OVERLOAD image_read_int(global const char4* img, const sampler_t sampl
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_SHORT)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const short* img, const uint offset) {
  global const short* img_data_ptr = (global const short*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1916,7 +1982,9 @@ float4 FUNC_OVERLOAD image_read(global const short* img, const sampler_t sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_SHORT2)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const short2* img, const uint offset) {
  global const short2* img_data_ptr = (global const short2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -1974,7 +2042,9 @@ float4 FUNC_OVERLOAD image_read(global const short2* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_SHORT3)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const short3* img, const uint offset) {
  global const short3* img_data_ptr = (global const short3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2032,7 +2102,9 @@ float4 FUNC_OVERLOAD image_read(global const short3* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_SHORT4)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const short4* img, const uint offset) {
  global const short4* img_data_ptr = (global const short4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2090,7 +2162,9 @@ float4 FUNC_OVERLOAD image_read(global const short4* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_SHORT)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const short* img, const uint offset) {
  global const short* img_data_ptr = (global const short*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2148,7 +2222,9 @@ int4 FUNC_OVERLOAD image_read_int(global const short* img, const sampler_t sampl
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_SHORT2)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const short2* img, const uint offset) {
  global const short2* img_data_ptr = (global const short2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2206,7 +2282,9 @@ int4 FUNC_OVERLOAD image_read_int(global const short2* img, const sampler_t samp
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_SHORT3)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const short3* img, const uint offset) {
  global const short3* img_data_ptr = (global const short3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2264,7 +2342,9 @@ int4 FUNC_OVERLOAD image_read_int(global const short3* img, const sampler_t samp
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_SHORT4)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const short4* img, const uint offset) {
  global const short4* img_data_ptr = (global const short4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2322,7 +2402,9 @@ int4 FUNC_OVERLOAD image_read_int(global const short4* img, const sampler_t samp
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_INT)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const int* img, const uint offset) {
  global const int* img_data_ptr = (global const int*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2380,7 +2462,9 @@ int4 FUNC_OVERLOAD image_read_int(global const int* img, const sampler_t sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_INT2)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const int2* img, const uint offset) {
  global const int2* img_data_ptr = (global const int2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2438,7 +2522,9 @@ int4 FUNC_OVERLOAD image_read_int(global const int2* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_INT3)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const int3* img, const uint offset) {
  global const int3* img_data_ptr = (global const int3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2496,7 +2582,9 @@ int4 FUNC_OVERLOAD image_read_int(global const int3* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_INT4)
 
 int4 FUNC_OVERLOAD image_read_int_nearest(global const int4* img, const uint offset) {
  global const int4* img_data_ptr = (global const int4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2554,7 +2642,9 @@ int4 FUNC_OVERLOAD image_read_int(global const int4* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_LONG)
 
 long4 FUNC_OVERLOAD image_read_long_nearest(global const long* img, const uint offset) {
  global const long* img_data_ptr = (global const long*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2612,7 +2702,9 @@ long4 FUNC_OVERLOAD image_read_long(global const long* img, const sampler_t samp
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_LONG2)
 
 long4 FUNC_OVERLOAD image_read_long_nearest(global const long2* img, const uint offset) {
  global const long2* img_data_ptr = (global const long2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2670,7 +2762,9 @@ long4 FUNC_OVERLOAD image_read_long(global const long2* img, const sampler_t sam
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_LONG3)
 
 long4 FUNC_OVERLOAD image_read_long_nearest(global const long3* img, const uint offset) {
  global const long3* img_data_ptr = (global const long3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2728,7 +2822,9 @@ long4 FUNC_OVERLOAD image_read_long(global const long3* img, const sampler_t sam
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_LONG4)
 
 long4 FUNC_OVERLOAD image_read_long_nearest(global const long4* img, const uint offset) {
  global const long4* img_data_ptr = (global const long4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -2786,7 +2882,9 @@ long4 FUNC_OVERLOAD image_read_long(global const long4* img, const sampler_t sam
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_OCLR_HALF)
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half* img, const uint offset) {
  global const half* img_data_ptr = (global const half*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
  const float texel = vload_half(offset, img_data_ptr);
@@ -2837,7 +2935,9 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half* img, const sampler_t sam
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_OCLR_HALF2)
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half2* img, const uint offset) {
  global const half* img_data_ptr = (global const half*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
  const float2 texel = vload_half2(offset, img_data_ptr);
@@ -2888,7 +2988,9 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half2* img, const sampler_t sa
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_OCLR_HALF3)
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half3* img, const uint offset) {
  global const half* img_data_ptr = (global const half*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
  const float3 texel = vload_half3(offset, img_data_ptr);
@@ -2939,7 +3041,9 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half3* img, const sampler_t sa
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_OCLR_HALF4)
 float4 FUNC_OVERLOAD image_read_float_nearest(global const oclr_half4* img, const uint offset) {
  global const half* img_data_ptr = (global const half*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
  const float4 texel = vload_half4(offset, img_data_ptr);
@@ -2990,7 +3094,9 @@ float4 FUNC_OVERLOAD image_read(global const oclr_half4* img, const sampler_t sa
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_FLOAT)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const float* img, const uint offset) {
  global const float* img_data_ptr = (global const float*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -3048,7 +3154,9 @@ float4 FUNC_OVERLOAD image_read(global const float* img, const sampler_t sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_FLOAT2)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const float2* img, const uint offset) {
  global const float2* img_data_ptr = (global const float2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -3106,7 +3214,9 @@ float4 FUNC_OVERLOAD image_read(global const float2* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_FLOAT3)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const float3* img, const uint offset) {
  global const float3* img_data_ptr = (global const float3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -3164,7 +3274,9 @@ float4 FUNC_OVERLOAD image_read(global const float3* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_FLOAT4)
 
 float4 FUNC_OVERLOAD image_read_float_nearest(global const float4* img, const uint offset) {
  global const float4* img_data_ptr = (global const float4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -3222,7 +3334,9 @@ float4 FUNC_OVERLOAD image_read(global const float4* img, const sampler_t sample
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_DOUBLE)
 
 double4 FUNC_OVERLOAD image_read_double_nearest(global const double* img, const uint offset) {
  global const double* img_data_ptr = (global const double*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -3280,7 +3394,9 @@ double4 FUNC_OVERLOAD image_read_double(global const double* img, const sampler_
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_DOUBLE2)
 
 double4 FUNC_OVERLOAD image_read_double_nearest(global const double2* img, const uint offset) {
  global const double2* img_data_ptr = (global const double2*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -3338,7 +3454,9 @@ double4 FUNC_OVERLOAD image_read_double(global const double2* img, const sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_DOUBLE3)
 
 double4 FUNC_OVERLOAD image_read_double_nearest(global const double3* img, const uint offset) {
  global const double3* img_data_ptr = (global const double3*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -3396,7 +3514,9 @@ double4 FUNC_OVERLOAD image_read_double(global const double3* img, const sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
+#endif
 
+#if defined(OCLRASTER_IMAGE_DOUBLE4)
 
 double4 FUNC_OVERLOAD image_read_double_nearest(global const double4* img, const uint offset) {
  global const double4* img_data_ptr = (global const double4*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
@@ -3454,6 +3574,7 @@ double4 FUNC_OVERLOAD image_read_double(global const double4* img, const sampler
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
+#endif
 
 
 #endif

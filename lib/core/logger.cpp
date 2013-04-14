@@ -19,6 +19,12 @@
 #include "logger.h"
 #include <thread>
 
+#if defined(__APPLE__) || defined(WIN_UNIXENV)
+#include <SDL2/SDL.h>
+#else
+#include <SDL.h>
+#endif
+
 #if !defined(OCLRASTER_IOS)
 #define OCLRASTER_LOG_FILENAME "log.txt"
 #else
@@ -27,7 +33,7 @@
 
 static ofstream* log_file = new ofstream(OCLRASTER_LOG_FILENAME);
 static atomic<unsigned int> err_counter { 0 };
-static atomic<unsigned int> slock { 0 };
+static mutex output_lock;
 
 void logger::init() {
 	if(!log_file->is_open()) {
@@ -81,18 +87,19 @@ void logger::_log(stringstream& buffer, const char* str) {
 	while(*str) {
 		if(*str == '%' && *(++str) != '%') {
 			cout << "LOG ERROR: invalid log format, missing arguments!" << endl;
+			cout.flush();
 		}
 		buffer << *str++;
 	}
 	buffer << endl;
 	
 	// finally: output
-	unsigned int cas_zero = 0;
-	while(!slock.compare_exchange_strong(cas_zero, 1)) {
+	while(!output_lock.try_lock()) {
 		this_thread::yield();
 	}
 	string bstr(buffer.str());
 	cout << bstr;
+	cout.flush();
 	if(bstr[0] != 0x1B) {
 		*log_file << bstr;
 	}
@@ -102,6 +109,6 @@ void logger::_log(stringstream& buffer, const char* str) {
 		*log_file << bstr;
 	}
 	log_file->flush();
-	slock = 0;
+	output_lock.unlock();
 }
 

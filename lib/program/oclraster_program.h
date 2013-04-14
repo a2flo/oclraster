@@ -108,7 +108,7 @@ protected:
 	virtual string get_fixed_entry_function_parameters() const = 0;
 	virtual string get_qualifier_for_struct_type(const STRUCT_TYPE& type) const = 0;
 	
-	bool valid = false;
+	atomic<bool> valid { false };
 	void invalidate(const string error_info = "");
 	
 	//

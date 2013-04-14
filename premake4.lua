@@ -338,3 +338,78 @@ project "oclr_volume"
 		if(not os.is("windows") or win_unixenv) then
 			buildoptions { "-gdwarf-2" }
 		end
+
+-- oclraster_support lib
+--[[ project "liboclraster_support"
+	-- project settings
+	targetname "liboclraster_support"
+	kind "SharedLib"
+	language "C++"
+
+	files { "support/**.h", "support/**.cpp" }
+	basedir "support"
+	targetdir "bin"
+	includedirs { "support/",
+				  "support/oclraster_support/",
+				  "support/rendering/",
+				  "support/gui/",
+				  "/usr/include/oclraster",
+				  "/usr/local/include/oclraster" }
+	
+	if(not os.is("windows") or win_unixenv) then
+		prebuildcommands { "./build_version.sh" }
+		if(mingw) then
+			-- TODO postbuildcommands { "./install.sh" }
+		end
+	end
+
+	configuration "Release"
+		links { "oclraster" }
+		targetname "oclraster_support"
+		defines { "NDEBUG" }
+		flags { "Optimize" }
+		if(not os.is("windows") or win_unixenv) then
+			buildoptions { "-O3 -ffast-math" }
+		end
+
+	configuration "Debug"
+		links { "oclrasterd" }
+		targetname "oclraster_supportd"
+		defines { "DEBUG", "OCLRASTER_DEBUG" }
+		flags { "Symbols" }
+		if(not os.is("windows") or win_unixenv) then
+			buildoptions { "-gdwarf-2" }
+		end
+
+project "oclr_ui"
+	targetname "oclr_ui"
+	kind "ConsoleApp"
+	language "C++"
+	files { "samples/oclr_ui/src/**.h", "samples/oclr_ui/src/**.cpp" }
+	basedir "samples/oclr_ui"
+	targetdir "bin"
+
+	includedirs { "/usr/include/oclraster",
+				  "/usr/include/oclraster_support",
+				  "/usr/local/include/oclraster",
+				  "/usr/local/include/oclraster_support",
+				  "samples/oclr_ui/src/" }
+
+	configuration "Release"
+		links { "oclraster", "oclraster_support" }
+		targetname "oclr_ui"
+		defines { "NDEBUG" }
+		flags { "Optimize" }
+		if(not os.is("windows") or win_unixenv) then
+			buildoptions { "-O3 -ffast-math" }
+		end
+		
+	configuration "Debug"
+		links { "oclrasterd", "oclraster_supportd" }
+		targetname "oclr_uid"
+		defines { "DEBUG", "OCLRASTER_DEBUG" }
+		flags { "Symbols" }
+		if(not os.is("windows") or win_unixenv) then
+			buildoptions { "-gdwarf-2" }
+		end
+]]--

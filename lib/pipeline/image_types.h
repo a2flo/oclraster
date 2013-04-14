@@ -72,7 +72,7 @@ struct __attribute__((packed)) image_type {
 	
 	size_t pixel_size() const;
 	
-	string to_string() const;
+	string to_string(const bool print_native = true) const;
 	friend ostream& operator<<(ostream& output, const image_type& img_type) {
 		output << img_type.to_string();
 		return output;
