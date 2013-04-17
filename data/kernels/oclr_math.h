@@ -11,6 +11,15 @@
 #include "oclr_global.h"
 
 //
+#define PI 3.1415926535897932384626433832795
+#define _180DIVPI 57.295779513082322
+#define _PIDIV180 0.01745329251994
+#define _PIDIV360 0.00872664625997
+#define RAD2DEG(rad) (rad * _180DIVPI)
+#define DEG2RAD(deg) (deg * _PIDIV180)
+#define EPSILON 0.00001f
+
+//
 OCLRASTER_FUNC float det3(const float3 v0, const float3 v1, const float3 v2) {
 	return dot(v0, cross(v1, v2));
 }
@@ -27,7 +36,8 @@ OCLRASTER_FUNC float3 reflect(const float3 I, const float3 N) {
 }
 
 //
-#define interpolate(v0, v1, v2, gad) ((v0 * gad.x) + (v1 * gad.y) + (v2 * gad.z))
+#define interpolate(v0, v1, v2, gad) (mad(v0, gad.x, mad(v1, gad.y, v2 * gad.z)))
+#define linear_blend(v0, v1, interp) (mad(v1 - v0, interp, v0))
 
 //
 #if defined(__clang__)

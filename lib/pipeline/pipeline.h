@@ -114,8 +114,10 @@ public:
 	void bind_image(const string& name, const image& img);
 	void bind_framebuffer(framebuffer* fb);
 	
-	//
+	// any default framebuffer modification happens at your own risk!
+	// attachment count and formats should never be modified
 	const framebuffer* get_default_framebuffer() const;
+	framebuffer* get_default_framebuffer();
 	
 	// "draw calls", range: [first, last)
 	void draw(const PRIMITIVE_TYPE type,
@@ -141,6 +143,10 @@ public:
 	
 	// computes and writes the frustum normals from/to the given camera setup (automatically called by set_camera_setup_from_camera)
 	void compute_frustum_normals(draw_state::camera_setup& cam_setup);
+	
+	// helper function to easily set the camera up for orthographic/2D rendering
+	void start_orthographic_rendering();
+	void stop_orthographic_rendering(); // alternatively: use set_camera(...) or overwrite camera_setup manually
 	
 protected:
 	draw_state state;

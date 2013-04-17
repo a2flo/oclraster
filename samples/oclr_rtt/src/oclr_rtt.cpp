@@ -94,7 +94,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	const opencl::buffer_object& index_buffer = model->get_index_buffer(0);
 	const opencl::buffer_object& input_attributes = model->get_vertex_buffer();
 	
-	struct __attribute__((packed, aligned(16))) tp_uniforms {
+	oclraster_struct tp_uniforms {
 		matrix4f rotation;
 		matrix4f modelview;
 	} transform_uniforms {
@@ -125,7 +125,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	}};
 	
 	// plane model
-	struct __attribute__((packed, aligned(16))) plane_vertex_attribute {
+	oclraster_struct plane_vertex_attribute {
 		float4 vertex;
 		float2 tex_coord;
 	};

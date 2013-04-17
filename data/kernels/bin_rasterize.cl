@@ -2,14 +2,6 @@
 #include "oclr_global.h"
 #include "oclr_math.h"
 
-typedef struct __attribute__((packed, aligned(4))) {
-	// VV0: 0 - 2
-	// VV1: 3 - 5
-	// VV2: 6 - 8
-	// depth: 9
-	float data[10];
-} transformed_data;
-
 typedef struct __attribute__((packed, aligned(16))) {
 	float4 bounds; // (.x = INFINITY if culled)
 } triangle_bounds;

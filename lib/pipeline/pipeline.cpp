@@ -288,6 +288,10 @@ const framebuffer* pipeline::get_default_framebuffer() const {
 	return &default_framebuffer;
 }
 
+framebuffer* pipeline::get_default_framebuffer() {
+	return &default_framebuffer;
+}
+
 void pipeline::set_camera(camera* cam_) {
 	cam = cam_;
 	set_camera_setup_from_camera(cam);
@@ -319,15 +323,8 @@ void pipeline::set_camera_setup_from_camera(camera* cam_) {
 	//oclr_debug("w/h: %v %v, %f %f", width_vec, height_vec, aspect_ratio, angle_ratio);
 	
 	state.cam_setup.position = cam_->get_position();
-	// TODO: general upscaling support
-#if !defined(__APPLE__)
 	state.cam_setup.x_vec = width_vec / fp_framebuffer_size.x;
 	state.cam_setup.y_vec = height_vec / fp_framebuffer_size.y;
-#else
-	const float scale_factor = oclraster::get_scale_factor();
-	state.cam_setup.x_vec = (width_vec * scale_factor) / fp_framebuffer_size.x;
-	state.cam_setup.y_vec = (height_vec * scale_factor) / fp_framebuffer_size.y;
-#endif
 	state.cam_setup.origin = forward - half_width_vec - half_height_vec;
 	state.cam_setup.origin.normalized();
 	state.cam_setup.forward = forward;
@@ -397,4 +394,20 @@ const draw_state::camera_setup& pipeline::get_camera_setup() const {
 
 draw_state::camera_setup& pipeline::get_camera_setup() {
 	return state.cam_setup;
+}
+
+void pipeline::start_orthographic_rendering() {
+	const float2 fp_framebuffer_size { (float)state.framebuffer_size.x, (float)state.framebuffer_size.y };
+	const float aspect_ratio = fp_framebuffer_size.x / fp_framebuffer_size.y;
+	state.cam_setup.position.set(0.0f, 0.0f, 0.0f);
+	state.cam_setup.origin.set(0.0f, 0.0f, 0.0f);
+	state.cam_setup.x_vec.set(aspect_ratio / (float)state.framebuffer_size.x, 0.0f, 0.0f);
+	state.cam_setup.y_vec.set(0.0f, 1.0f / (float)state.framebuffer_size.y, 0.0f);
+	state.cam_setup.forward.set(0.0f, 0.0f, 1.0f);
+	compute_frustum_normals(state.cam_setup);
+	update_camera_buffer();
+}
+
+void pipeline::stop_orthographic_rendering() {
+	set_camera_setup_from_camera(cam);
 }

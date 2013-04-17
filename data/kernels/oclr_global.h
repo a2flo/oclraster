@@ -70,10 +70,10 @@ typedef half4 oclr_half4;
 
 //
 #define print_float3(vec) { \
-	printf(#vec": (%f %f %f)\n", vec.x, vec.y, vec.z); \
+	printf(#vec": (%.10f %.10f %.10f)\n", vec.x, vec.y, vec.z); \
 }
 #define print_float4(vec) { \
-	printf(#vec": (%f %f %f %f)\n", vec.x, vec.y, vec.z, vec.w); \
+	printf(#vec": (%.10f %.10f %.10f %.10f)\n", vec.x, vec.y, vec.z, vec.w); \
 }
 #define print_mat4(mat) { \
 	printf(#mat":\n/ %f %f %f %f \\\n| %f %f %f %f |\n| %f %f %f %f |\n\\ %f %f %f %f /\n", \
@@ -92,9 +92,10 @@ typedef half4 oclr_half4;
 #endif
 
 // TODO: create an extra header for this
-#define oclraster_in typedef struct __attribute__((packed, aligned(16)))
-#define oclraster_out typedef struct __attribute__((packed, aligned(16)))
-#define oclraster_uniforms typedef struct __attribute__((packed, aligned(16)))
+#define oclraster_struct typedef struct __attribute__((packed, aligned(OCLRASTER_STRUCT_ALIGNMENT)))
+#define oclraster_in typedef struct __attribute__((packed, aligned(OCLRASTER_STRUCT_ALIGNMENT)))
+#define oclraster_out typedef struct __attribute__((packed, aligned(OCLRASTER_STRUCT_ALIGNMENT)))
+#define oclraster_uniforms typedef struct __attribute__((packed, aligned(OCLRASTER_STRUCT_ALIGNMENT)))
 
 // unsigned int on host side
 enum PRIMITIVE_TYPE {

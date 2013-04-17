@@ -587,7 +587,7 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	string kernel_code = kernel_header;
 	
 	// struct decl
-	kernel_code += "typedef struct __attribute__((packed, aligned(16))) {\n";
+	kernel_code += "oclraster_struct {\n";
 	for(size_t i = 0; i < struct_info.variables.size(); i++) {
 		kernel_code += struct_info.variable_types[i] + " " + struct_info.variables[i] + ";\n";
 	}

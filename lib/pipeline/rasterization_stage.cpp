@@ -20,10 +20,6 @@
 #include "pipeline.h"
 #include "oclraster.h"
 
-struct __attribute__((packed)) constant_data_rp {
-	const unsigned int triangle_count;
-};
-
 rasterization_stage::rasterization_stage() : stage_base() {
 	bin_distribution_counter = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 												  opencl::BUFFER_FLAG::BLOCK_ON_READ |

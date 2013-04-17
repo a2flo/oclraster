@@ -25,6 +25,10 @@ typedef struct __attribute__((packed, aligned(16))) {
 } triangle_bounds;
 
 //
+#define OCLRASTER_PROJECTION_PERSPECTIVE
+//#define OCLRASTER_PROJECTION_ORTHOGRAPHIC
+
+//
 #define discard() { tb_ptr->bounds.x = INFINITY; return; }
 kernel void oclraster_processing(global const unsigned int* index_buffer,
 								 global const float4* transformed_vertex_buffer,
@@ -45,10 +49,16 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	MAKE_PRIMITIVE_INDICES(indices);
 	
 	//
+#if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
 	const float3 D0 = cdata->camera_origin.xyz;
 	const float3 DX = cdata->camera_x_vec.xyz;
 	const float3 DY = cdata->camera_y_vec.xyz;
 	const float3 forward = cdata->camera_forward.xyz;
+#elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
+	const float2 D0 = cdata->camera_origin.xy;
+	const float DX = cdata->camera_x_vec.x;
+	const float DY = cdata->camera_y_vec.y;
+#endif
 	
 	// read user transformed vertices
 	const float3 vertices[3] = {
@@ -62,6 +72,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 		if(vertices[i].x == INFINITY) discard();
 	}
 	
+#if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
 	// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
 	const float triangle_near_clipping[3] = {
 		dot(vertices[0], forward),
@@ -95,9 +106,11 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	if(any(signbit(fc_dot))) {
 		discard();
 	}
+#endif
 	
-	// since VE0 can be interpreted as (0, 0, 0, 1) after it has been substracted from the vertices,
-	// the original algorithm (requiring the computation of 4x4 matrix determinants) can be simplified:
+#if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
+	// this uses the non-homogeneous version of the 3D rasterization algorithm (-> computing 4x4 matrix determinats is not required)
+	// also: substracting VE in here is not necessary, since it has already been done in the transform stage
 	const float3 c01 = cross(vertices[0] - vertices[1], vertices[1]);
 	const float3 c20 = cross(vertices[2] - vertices[0], vertices[0]);
 	const float3 c12 = cross(vertices[1] - vertices[2], vertices[2]);
@@ -120,7 +133,34 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 		{ x01, y01, o01 }
 	};
 	const float VV_depth = dot(vertices[0], c12);
+#elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
+	// TODO: D0 offset
 	
+	const float x0 = DX * (vertices[2].y - vertices[1].y);
+	const float x1 = DX * (vertices[0].y - vertices[2].y);
+	const float x2 = DX * (vertices[1].y - vertices[0].y);
+	
+	const float y0 = DY * (vertices[1].x - vertices[2].x);
+	const float y1 = DY * (vertices[2].x - vertices[0].x);
+	const float y2 = DY * (vertices[0].x - vertices[1].x);
+	
+	const float o0 = -(vertices[2].x * x0) + -(vertices[2].y * y0);
+	const float o1 = -(vertices[0].x * x1) + -(vertices[0].y * y1);
+	const float o2 = -(vertices[1].x * x2) + -(vertices[1].y * y2);
+	
+	const float VV[3][3] = {
+		{ x0, y0, o0 },
+		{ x1, y1, o1 },
+		{ x2, y2, o2 }
+	};
+	const float VV_depth = 1.0f;
+#endif
+	
+	/*for(uint i = 0; i < 3; i++) {
+		printf("[%d] VV%d: %f %f %f\n", triangle_id, i, VV[i][0], VV[i][1], VV[i][2]);
+	}*/
+	
+#if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
 	// clipping / additional culling
 	// NOTE/disclaimer: I wanted to make this nice and put it into a clipping function,
 	// but apparently nobody is capable of writing a c compiler without massive bugs
@@ -280,6 +320,16 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 			}
 		}
 	}
+#elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
+	const float2 aabb_min = fmin(fmin(vertices[0].xy, vertices[1].xy), vertices[2].xy);
+	const float2 aabb_max = fmax(fmax(vertices[0].xy, vertices[1].xy), vertices[2].xy);
+	float2 x_bounds = (float2)(aabb_min.x, aabb_max.x);
+	float2 y_bounds = (float2)(aabb_min.y, aabb_max.y);
+	if(fabs(aabb_min.x - aabb_max.x) < 1.0f ||
+	   fabs(aabb_min.y - aabb_max.y) < 1.0f) {
+		discard();
+	}
+#endif
 	
 	// output:
 	for(unsigned int i = 0u; i < 3u; i++) {
@@ -290,7 +340,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	//printf("[%d] bounds: %f %f -> %f %f\n", triangle_id, x_bounds.x, y_bounds.x, x_bounds.y, y_bounds.y);
 	*tf_data_ptr++ = VV_depth;
 	
-	// TODO: rounding should depend on sampling mode (more samples -> use floor/ceil again)
-	
-	tb_ptr->bounds = (float4)(round(x_bounds), round(y_bounds));
+	// TODO: rounding should depend on sampling mode
+	tb_ptr->bounds = (float4)(floor(x_bounds.x), ceil(x_bounds.y),
+							  floor(y_bounds.x), ceil(y_bounds.y));
 }

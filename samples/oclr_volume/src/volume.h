@@ -31,7 +31,7 @@ public:
 	volume(const unsigned char* volume_data, const uint3& volume_size);
 	~volume();
 	
-	struct __attribute__((packed, aligned(16))) vertex_data {
+	oclraster_struct vertex_data {
 		float4 vertex;
 		float2 tex_coord;
 	};

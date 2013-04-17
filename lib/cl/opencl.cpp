@@ -149,7 +149,7 @@ void opencl_base::check_compilation(const bool ret, const string& filename) {
 }
 
 void opencl_base::reload_kernels() {
-	lock_guard<recursive_mutex> lock(kernels_lock);
+	kernels_lock.lock();
 	destroy_kernels();
 	
 	successful_internal_compilation = true;
@@ -161,6 +161,7 @@ void opencl_base::reload_kernels() {
 										  get<3>(int_kernel)).use_count() > 0,
 						  get<1>(int_kernel));
 	}
+	kernels_lock.unlock();
 	
 	if(successful_internal_compilation) oclr_debug("internal kernels loaded successfully!");
 	else {
@@ -1127,6 +1128,9 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 	// just define this everywhere to make using image support
 	// easier without having to specify this every time
 	options += " -DOCLRASTER_IMAGE_HEADER_SIZE="+size_t2string(image::header_size());
+	
+	// the same goes for the general struct alignment
+	options += " -DOCLRASTER_STRUCT_ALIGNMENT="+uint2string(OCLRASTER_STRUCT_ALIGNMENT);
 	
 	try {
 		if(!additional_options.empty()) {

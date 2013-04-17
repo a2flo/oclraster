@@ -20,16 +20,6 @@
 #include "pipeline.h"
 #include "oclraster.h"
 
-struct __attribute__((packed, aligned(16))) constant_data_tp {
-	float4 camera_position;
-	float4 camera_origin;
-	float4 camera_x_vec;
-	float4 camera_y_vec;
-	float4 camera_forward;
-	array<float4, 3> frustum_normals;
-	uint2 viewport;
-};
-
 transform_stage::transform_stage() : stage_base() {
 }
 

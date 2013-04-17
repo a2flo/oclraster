@@ -30,7 +30,7 @@ public:
 	a2m(const string& filename);
 	~a2m();
 	
-	struct __attribute__((packed, aligned(16))) vertex_data {
+	oclraster_struct vertex_data {
 		float4 vertex;
 		float4 normal;
 		float4 binormal;

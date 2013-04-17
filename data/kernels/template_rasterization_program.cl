@@ -12,6 +12,10 @@
 		float data[10];
 	} transformed_data;
 
+//
+#define OCLRASTER_PROJECTION_PERSPECTIVE
+//#define OCLRASTER_PROJECTION_ORTHOGRAPHIC
+
 	//###OCLRASTER_USER_CODE###
 	
 	//
@@ -94,7 +98,7 @@
 				const uint2 local_xy = (uint2)(fragment_idx % BIN_SIZE, fragment_idx / BIN_SIZE);
 				const unsigned int x = bin_location.x * BIN_SIZE + local_xy.x;
 				const unsigned int y = bin_location.y * BIN_SIZE + local_xy.y;
-				const float2 fragment_coord = (float2)(x, y);
+				const float2 fragment_coord = (float2)(x, y) + 0.5f;
 				if(x >= framebuffer_size.x || y >= framebuffer_size.y) continue;
 				
 				// TODO: handling if there is no depth buffer / depth testing
@@ -143,7 +147,18 @@
 														  mad(fragment_coord.x, VV1.x, mad(fragment_coord.y, VV1.y, VV1.z)),
 														  mad(fragment_coord.x, VV2.x, mad(fragment_coord.y, VV2.y, VV2.z)),
 														  transformed_buffer[triangle_id].data[9]); // .w = computed depth
+							
+#if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
 							if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
+#elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
+							// general case: completely outside the triangle
+							if(barycentric.x < 0.0f || barycentric.y < 0.0f || barycentric.z < 0.0f) continue;
+							
+							// edge/corner case: one barycentrix element "i" is 0 -> test if VVi.x > 0
+							if(barycentric.x == 0.0f && VV0.x <= 0.0f) continue;
+							if(barycentric.y == 0.0f && VV1.x <= 0.0f) continue;
+							if(barycentric.z == 0.0f && VV2.x <= 0.0f) continue;
+#endif
 							
 							// simplified:
 							barycentric /= barycentric.x + barycentric.y + barycentric.z;

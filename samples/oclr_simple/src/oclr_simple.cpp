@@ -95,7 +95,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	const opencl::buffer_object& index_buffer = model->get_index_buffer(0);
 	const opencl::buffer_object& input_attributes = model->get_vertex_buffer();
 	
-	struct __attribute__((packed, aligned(16))) tp_uniforms {
+	oclraster_struct tp_uniforms {
 		matrix4f rotation_scale;
 		matrix4f modelview;
 	} transform_uniforms {
@@ -109,7 +109,7 @@ int main(int argc oclr_unused, char* argv[]) {
 																   (void*)&transform_uniforms);
 	
 	float light_pos = PI, light_dist = 10.0f, light_intensity = 32.0f;
-	struct __attribute__((packed, aligned(16))) rp_uniforms {
+	oclraster_struct rp_uniforms {
 		float4 camera_position;
 		float4 light_position; // .w = light radius ^ 2
 		float4 light_color;
