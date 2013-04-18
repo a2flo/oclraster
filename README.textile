@@ -83,6 +83,9 @@ TODO: all papers
 * "High-Performance Software Rasterization on GPUs":http://research.nvidia.com/sites/default/files/publications/laine2011hpg_paper.pdf
 
 *Screenshots:*
+* progress as of 2013/04/18, running on a GPU in OS X:
+!https://dl.dropbox.com/u/1004620/oclr_clock.png(2D/orthographic rendering)!
+
 * progress as of 2013/04/15, running on a GPU in OS X:
 !https://dl.dropbox.com/u/1004620/triangle_fan.png(render-to-texture + rendering a triangle fan)!
 
