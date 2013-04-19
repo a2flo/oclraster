@@ -144,9 +144,9 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	const float y1 = DY * (vertices[2].x - vertices[0].x);
 	const float y2 = DY * (vertices[0].x - vertices[1].x);
 	
-	const float o0 = -(vertices[2].x * x0) + -(vertices[2].y * y0);
-	const float o1 = -(vertices[0].x * x1) + -(vertices[0].y * y1);
-	const float o2 = -(vertices[1].x * x2) + -(vertices[1].y * y2);
+	const float o0 = -mad(vertices[2].x, x0, (vertices[2].y * y0));
+	const float o1 = -mad(vertices[0].x, x1, (vertices[0].y * y1));
+	const float o2 = -mad(vertices[1].x, x2, (vertices[1].y * y2));
 	
 	const float VV[3][3] = {
 		{ x0, y0, o0 },
@@ -157,7 +157,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 #endif
 	
 	/*for(uint i = 0; i < 3; i++) {
-		printf("[%d] VV%d: %f %f %f\n", triangle_id, i, VV[i][0], VV[i][1], VV[i][2]);
+		printf("[%d] VV%d: %.10f %.10f %.10f\n", triangle_id, i, VV[i][0], VV[i][1], VV[i][2]);
 	}*/
 	
 #if defined(OCLRASTER_PROJECTION_PERSPECTIVE)

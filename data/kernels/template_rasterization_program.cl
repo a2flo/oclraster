@@ -96,6 +96,7 @@
 			for(unsigned int i = 0; i < intra_bin_groups; i++) {
 				const unsigned int fragment_idx = (i * local_size) + local_id;
 				const uint2 local_xy = (uint2)(fragment_idx % BIN_SIZE, fragment_idx / BIN_SIZE);
+				if(local_xy.y >= BIN_SIZE) continue;
 				const unsigned int x = bin_location.x * BIN_SIZE + local_xy.x;
 				const unsigned int y = bin_location.y * BIN_SIZE + local_xy.y;
 				const float2 fragment_coord = (float2)(x, y) + 0.5f;
@@ -124,11 +125,10 @@
 					}
 					
 					//
-					unsigned int last_id = 0;
 					for(unsigned int idx = 0; idx < BATCH_SIZE; idx++) {
-						const unsigned int triangle_id = queue_offset + queue_ptr[idx];
-						if(triangle_id < last_id) break; // end of queue
-						last_id = triangle_id;
+						const unsigned int queue_data = queue_ptr[idx];
+						if(queue_data < idx) break; // end of queue
+						const unsigned int triangle_id = queue_offset + queue_data;
 						
 						//
 						{
@@ -151,13 +151,28 @@
 #if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
 							if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
 #elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
+#define BARYCENTRIC_EPSILON 0.00001f
+							barycentric.xyz = select(barycentric.xyz, (float3)(0.0f),
+													 isless(fabs(barycentric.xyz), (float3)(BARYCENTRIC_EPSILON)));
+							
 							// general case: completely outside the triangle
 							if(barycentric.x < 0.0f || barycentric.y < 0.0f || barycentric.z < 0.0f) continue;
 							
-							// edge/corner case: one barycentrix element "i" is 0 -> test if VVi.x > 0
-							if(barycentric.x == 0.0f && VV0.x <= 0.0f) continue;
-							if(barycentric.y == 0.0f && VV1.x <= 0.0f) continue;
-							if(barycentric.z == 0.0f && VV2.x <= 0.0f) continue;
+							// "consistency rules" (fragment is on the edge of a triangle or on a vertex):
+							// -> at least one barycentrix element "i" is 0
+							// -> valid fragment if: VVi.x must be > 0 or VVi.x must be == 0 and VVi.y must be < 0
+							if(barycentric.x == 0.0f) {
+								if(VV0.x < 0.0f) continue;
+								else if(VV0.x == 0.0f && VV0.y >= 0.0f) continue;
+							}
+							if(barycentric.y == 0.0f) {
+								if(VV1.x < 0.0f) continue;
+								else if(VV1.x == 0.0f && VV1.y >= 0.0f) continue;
+							}
+							if(barycentric.z == 0.0f) {
+								if(VV2.x < 0.0f) continue;
+								else if(VV2.x == 0.0f && VV2.y >= 0.0f) continue;
+							}
 #endif
 							
 							// simplified:
