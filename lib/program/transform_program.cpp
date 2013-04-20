@@ -79,14 +79,14 @@ transform_program::~transform_program() {
 }
 
 string transform_program::specialized_processing(const string& code,
-												 const kernel_image_spec& image_spec) {
+												 const kernel_spec& spec) {
 	// insert (processed) user code into template program
 	string program_code = template_transform_program;
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_CODE###", code);
 	
 	//
 	vector<string> image_decls;
-	const string kernel_parameters { create_user_kernel_parameters(image_spec, image_decls, false) };
+	const string kernel_parameters { create_user_kernel_parameters(spec, image_decls, false) };
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_STRUCTS###", kernel_parameters);
 	
 	// insert main call + prior buffer handling

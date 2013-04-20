@@ -28,13 +28,13 @@ transform_stage::~transform_stage() {
 
 void transform_stage::transform(draw_state& state, const unsigned int& vertex_count) {
 	//
-	oclraster_program::kernel_image_spec image_spec;
-	if(!create_kernel_image_spec(state, *state.transform_prog, image_spec)) {
+	oclraster_program::kernel_spec spec;
+	if(!create_kernel_spec(state, *state.transform_prog, spec)) {
 		return;
 	}
 	
 	// -> 1D kernel, with max #work-items per work-group
-	ocl->use_kernel(state.transform_prog->get_kernel(image_spec));
+	ocl->use_kernel(state.transform_prog->get_kernel(spec));
 	
 	unsigned int argc = 0;
 	if(!bind_user_buffers(state, *state.transform_prog, argc)) return;

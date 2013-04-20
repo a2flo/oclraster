@@ -397,6 +397,7 @@ draw_state::camera_setup& pipeline::get_camera_setup() {
 }
 
 void pipeline::start_orthographic_rendering() {
+	state.projection = PROJECTION::ORTHOGRAPHIC;
 	const float2 fp_framebuffer_size { (float)state.framebuffer_size.x, (float)state.framebuffer_size.y };
 	const float aspect_ratio = fp_framebuffer_size.x / fp_framebuffer_size.y;
 	state.cam_setup.position.set(0.0f, 0.0f, 0.0f);
@@ -409,5 +410,6 @@ void pipeline::start_orthographic_rendering() {
 }
 
 void pipeline::stop_orthographic_rendering() {
+	state.projection = PROJECTION::PERSPECTIVE;
 	set_camera_setup_from_camera(cam);
 }

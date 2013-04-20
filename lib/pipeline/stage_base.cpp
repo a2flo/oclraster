@@ -38,7 +38,7 @@ bool stage_base::bind_user_buffers(const draw_state& state, const oclraster_prog
 		ocl->set_kernel_argument(argc++, &buffer->second);
 	}
 	
-	// TODO: merge this with create_kernel_image_spec ...?
+	// TODO: merge this with create_kernel_spec ...?
 	const framebuffer* fb = state.active_framebuffer;
 	const auto images = program.get_images();
 	for(size_t i = 0, fb_img_idx = 0, img_count = images.image_names.size(); i < img_count; i++) {
@@ -83,8 +83,8 @@ bool stage_base::bind_user_buffers(const draw_state& state, const oclraster_prog
 	return true;
 }
 
-bool stage_base::create_kernel_image_spec(const draw_state& state, const oclraster_program& program,
-										  oclraster_program::kernel_image_spec& image_spec) {
+bool stage_base::create_kernel_spec(const draw_state& state, const oclraster_program& program,
+									oclraster_program::kernel_spec& spec) {
 	const auto images = program.get_images();
 	const framebuffer* fb = state.active_framebuffer;
 	for(size_t i = 0, fb_img_idx = 0, img_count = images.image_names.size(); i < img_count; i++) {
@@ -111,7 +111,7 @@ bool stage_base::create_kernel_image_spec(const draw_state& state, const oclrast
 				oclr_error("framebuffer image \"%s\" not bound!", images.image_names[i]);
 				return false;
 			}
-			image_spec.emplace_back(img->get_image_type());
+			spec.image_spec.emplace_back(img->get_image_type());
 		}
 		else {
 			// image
@@ -121,8 +121,9 @@ bool stage_base::create_kernel_image_spec(const draw_state& state, const oclrast
 				oclr_error("image \"%s\" not bound!", img_name);
 				return false;
 			}
-			image_spec.emplace_back(img->second.get_image_type());
+			spec.image_spec.emplace_back(img->second.get_image_type());
 		}
 	}
+	spec.projection = state.projection;
 	return true;
 }

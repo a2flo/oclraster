@@ -32,7 +32,7 @@ entry_function(entry_function_), build_options(build_options_), kernel_function_
 }
 
 oclraster_program::~oclraster_program() {
-	for(auto& spec : compiled_image_kernels) {
+	for(auto& spec : compiled_kernels) {
 		delete spec;
 	}
 	for(auto& oclr_struct : structs) {
@@ -299,11 +299,11 @@ void oclraster_program::process_program(const string& raw_code) {
 									   "oclraster_user_"+entry_function+"("+entry_function_params+")");
 		
 		// create default/first/hinted image spec, do the final processing and compile
-		kernel_image_spec spec {};
+		kernel_spec spec {};
 		if(!images.image_names.empty()) {
 			// create kernel image spec for the hinted or default image specs
 			for(const auto& hint : images.image_hints) {
-				spec.emplace_back(hint.is_valid() ? hint : image_type { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA });
+				spec.image_spec.emplace_back(hint.is_valid() ? hint : image_type { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA });
 			}
 		}
 		// else: no images in kernel/program -> just one kernel / "empty spec"
@@ -315,14 +315,14 @@ void oclraster_program::process_program(const string& raw_code) {
 	valid = true;
 }
 
-weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_image_spec& spec) {
-	kernel_image_spec* new_spec = new kernel_image_spec(spec);
-	compiled_image_kernels.emplace_back(new_spec);
+weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_spec& spec) {
+	kernel_spec* new_spec = new kernel_spec(spec);
+	compiled_kernels.emplace_back(new_spec);
 	
 	// build image defines string (image functions for each image type are #ifdef'ed)
 	string image_defines = "";
 	set<string> img_types;
-	for(const auto& img_type : spec) {
+	for(const auto& img_type : spec.image_spec) {
 		if(img_type.native) continue;
 		img_types.insert(img_type.to_string());
 	}
@@ -334,17 +334,20 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_ima
 	// note: this should inject the user code into their respective code templates
 	const string program_code { specialized_processing(processed_code, *new_spec) };
 	
+	//
+	const string proj_spec_str = (spec.projection == PROJECTION::PERSPECTIVE ? "perspective" : "orthographic");
 	string img_spec_str = "";
-	for(const auto& type : spec) {
+	for(const auto& type : spec.image_spec) {
 		img_spec_str += "." + type.to_string();
 	}
 	
 	stringstream id_stream;
 	id_stream << dec << this_thread::get_id();
-	const string identifier = "USER_PROGRAM."+kernel_function_name+"."+entry_function+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter())+"."+id_stream.str();
+	const string identifier = "USER_PROGRAM."+kernel_function_name+"."+entry_function+"."+proj_spec_str+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter())+"."+id_stream.str();
 	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, kernel_function_name,
 																 " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 																 " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
+																 " -DOCLRASTER_PROJECTION_"+(spec.projection == PROJECTION::PERSPECTIVE ? "PERSPECTIVE" : "ORTHOGRAPHIC")+
 																 image_defines+
 																 " "+build_options);
 	//oclr_msg("%s:\n%s\n", identifier, program_code);
@@ -376,7 +379,7 @@ string oclraster_program::create_entry_function_parameters() const {
 	return entry_function_params;
 }
 
-string oclraster_program::create_user_kernel_parameters(const kernel_image_spec& image_spec,
+string oclraster_program::create_user_kernel_parameters(const kernel_spec& spec,
 														vector<string>& image_decls,
 														const bool const_output) const {
 	// creates user buffer dependent kernel parameters string (buffers will be called "user_buffer_#")
@@ -402,20 +405,20 @@ string oclraster_program::create_user_kernel_parameters(const kernel_image_spec&
 	}
 	for(size_t i = 0, img_count = images.image_names.size(); i < img_count; i++) {
 		string type_str = "";
-		if(!image_spec[i].native) {
+		if(!spec.image_spec[i].native) {
 			// buffer based image
 			type_str = "global ";
 			if(images.image_specifiers[i] == ACCESS_TYPE::READ &&
 			   !images.is_framebuffer[i]) {
 				type_str += "const ";
 			}
-			if(image_spec[i].data_type == IMAGE_TYPE::FLOAT_16) {
+			if(spec.image_spec[i].data_type == IMAGE_TYPE::FLOAT_16) {
 				// if cl_khr_fp16 is not supported (-> all implementations ...), half vector types are not supported
 				// and structs containing halfs (the workaround) are not allowed as kernel function parameter types
 				// -> use custom half pointer type for distinction and later type-casting (note: type is correctly aligned)
 				type_str += "oclr_";
 			}
-			type_str += image_spec[i].to_string();
+			type_str += spec.image_spec[i].to_string();
 			type_str += "* ";
 			if(images.is_framebuffer[i]) type_str += "oclr_framebuffer_";
 		}
@@ -448,7 +451,7 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 	//
 	vector<IMAGE_VAR_TYPE> image_types;
 	vector<ACCESS_TYPE> image_specifiers;
-	kernel_image_spec image_hints;
+	vector<image_type> image_hints;
 	
 	//
 	for(size_t i = 0, image_count = variable_types.size(); i < image_count; i++) {
@@ -681,24 +684,25 @@ const oclraster_program::oclraster_image_info& oclraster_program::get_images() c
 	return images;
 }
 
-weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_image_spec spec) {
+weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_spec spec) {
 	//
-	if(kernels.empty() || compiled_image_kernels.empty()) {
+	if(kernels.empty() || compiled_kernels.empty()) {
 		oclr_error("no kernel has been compiled for this program!");
 		return opencl::null_kernel_object;
 	}
-	if(spec.size() != compiled_image_kernels[0]->size()) {
+	if(spec.image_spec.size() != compiled_kernels[0]->image_spec.size()) {
 		oclr_error("invalid kernel image spec size (%u) - should be (%u)!",
-				   spec.size(), compiled_image_kernels[0]->size());
+				   spec.image_spec.size(), compiled_kernels[0]->image_spec.size());
 		return opencl::null_kernel_object;
 	}
 	
 	//
-	const size_t spec_size = spec.size();
+	const size_t spec_size = spec.image_spec.size();
 	for(const auto& kernel : kernels) {
+		if(kernel.first->projection != spec.projection) continue;
 		bool spec_found = true;
 		for(size_t i = 0; i < spec_size; i++) {
-			if(spec[i] != (*kernel.first)[i]) {
+			if(spec.image_spec[i] != kernel.first->image_spec[i]) {
 				//oclr_msg("spec: %u != %u @%u", spec[i], (*kernel.first)[i], i);
 				spec_found = false;
 				break;

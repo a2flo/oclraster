@@ -25,10 +25,6 @@ typedef struct __attribute__((packed, aligned(16))) {
 } triangle_bounds;
 
 //
-#define OCLRASTER_PROJECTION_PERSPECTIVE
-//#define OCLRASTER_PROJECTION_ORTHOGRAPHIC
-
-//
 #define discard() { tb_ptr->bounds.x = INFINITY; return; }
 kernel void oclraster_processing(global const unsigned int* index_buffer,
 								 global const float4* transformed_vertex_buffer,

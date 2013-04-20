@@ -38,11 +38,11 @@ void rasterization_stage::rasterize(draw_state& state,
 									const opencl_base::buffer_object* queue_buffer) {
 	////
 	// render / rasterization
-	oclraster_program::kernel_image_spec image_spec;
-	if(!create_kernel_image_spec(state, *state.rasterize_prog, image_spec)) {
+	oclraster_program::kernel_spec spec;
+	if(!create_kernel_spec(state, *state.rasterize_prog, spec)) {
 		return;
 	}
-	ocl->use_kernel(state.rasterize_prog->get_kernel(image_spec));
+	ocl->use_kernel(state.rasterize_prog->get_kernel(spec));
 	
 	// determine per-bin work-group size and how many iterations/splits are necessary per bin
 	const size_t bin_size = state.bin_size.x * state.bin_size.y;

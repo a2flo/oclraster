@@ -28,7 +28,7 @@ processing_stage::~processing_stage() {
 
 void processing_stage::process(draw_state& state, const PRIMITIVE_TYPE type, const unsigned int& primitive_count) {
 	// -> 1D kernel, with max #work-items per work-group
-	ocl->use_kernel("PROCESSING");
+	ocl->use_kernel(string("PROCESSING.") + (state.projection == PROJECTION::PERSPECTIVE ? "PERSPECTIVE" : "ORTHOGRAPHIC"));
 	
 	unsigned int argc = 0;
 	

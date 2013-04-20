@@ -23,6 +23,12 @@
 #include "pipeline/image.h"
 #include "pipeline/image_types.h"
 
+// TODO: this should be in a different header
+enum class PROJECTION : unsigned int {
+	PERSPECTIVE,
+	ORTHOGRAPHIC
+};
+
 class oclraster_program {
 public:
 	oclraster_program(const string& code,
@@ -69,18 +75,30 @@ public:
 	};
 	const vector<oclraster_struct_info*>& get_structs() const;
 	
-	typedef vector<image_type> kernel_image_spec;
+	// kernel specification
+	// defines the specific type and configuration of a kernel (each spec requires a different compiled kernel)
+	struct kernel_spec {
+		vector<image_type> image_spec;
+		PROJECTION projection = PROJECTION::PERSPECTIVE;
+		kernel_spec() {}
+		kernel_spec(const kernel_spec& spec) : image_spec(spec.image_spec), projection(spec.projection) {}
+		kernel_spec(kernel_spec&& spec) : image_spec(), projection(spec.projection) {
+			this->image_spec.swap(spec.image_spec);
+		}
+	};
+	
+	//
 	struct oclraster_image_info {
 		vector<string> image_names;
 		vector<IMAGE_VAR_TYPE> image_types;
 		vector<ACCESS_TYPE> image_specifiers;
 		vector<bool> is_framebuffer;
-		kernel_image_spec image_hints;
+		vector<image_type> image_hints;
 	};
 	const oclraster_image_info& get_images() const;
 	
 	bool is_valid() const;
-	weak_ptr<opencl::kernel_object> get_kernel(const kernel_image_spec spec = kernel_image_spec {});
+	weak_ptr<opencl::kernel_object> get_kernel(const kernel_spec spec = kernel_spec {});
 
 protected:
 	string entry_function = "main";
@@ -89,9 +107,9 @@ protected:
 	
 	//
 	string processed_code = ""; // created once on program creation (pre-specialized processing)
-	vector<kernel_image_spec*> compiled_image_kernels;
-	unordered_map<kernel_image_spec*, weak_ptr<opencl::kernel_object>> kernels;
-	weak_ptr<opencl::kernel_object> build_kernel(const kernel_image_spec& spec);
+	vector<kernel_spec*> compiled_kernels;
+	unordered_map<kernel_spec*, weak_ptr<opencl::kernel_object>> kernels;
+	weak_ptr<opencl::kernel_object> build_kernel(const kernel_spec& spec);
 	
 	//
 	void process_program(const string& code);
@@ -100,11 +118,11 @@ protected:
 							  const vector<string>& variable_specifiers,
 							  const bool is_framebuffer);
 	string create_entry_function_parameters() const;
-	string create_user_kernel_parameters(const kernel_image_spec& image_spec,
+	string create_user_kernel_parameters(const kernel_spec& spec,
 										 vector<string>& image_decls,
 										 const bool const_output) const;
 	virtual string specialized_processing(const string& code,
-										  const kernel_image_spec& image_spec) = 0;
+										  const kernel_spec& spec) = 0;
 	virtual string get_fixed_entry_function_parameters() const = 0;
 	virtual string get_qualifier_for_struct_type(const STRUCT_TYPE& type) const = 0;
 	

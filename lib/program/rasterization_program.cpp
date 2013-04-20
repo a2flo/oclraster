@@ -203,14 +203,14 @@ rasterization_program::~rasterization_program() {
 }
 
 string rasterization_program::specialized_processing(const string& code,
-													 const kernel_image_spec& image_spec) {
+													 const kernel_spec& spec) {
 	// insert (processed) user code into template program
 	string program_code = template_rasterization_program;
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_CODE###", code);
 	
 	//
 	vector<string> image_decls;
-	const string kernel_parameters { create_user_kernel_parameters(image_spec, image_decls, true) };
+	const string kernel_parameters { create_user_kernel_parameters(spec, image_decls, true) };
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_STRUCTS###", kernel_parameters);
 	
 	// insert main call + prior buffer handling
@@ -273,8 +273,8 @@ string rasterization_program::specialized_processing(const string& code,
 			// -> do the appropriate input/output data conversion
 			// NOTE: 32-bit and 64-bit types (both integer and float) will not be converted to float, since
 			// there is no correct conversion for these types and it probably is not wanted in the first place
-			const auto data_type = image_spec[i].data_type;
-			const auto channel_type = image_spec[i].channel_type;
+			const auto data_type = spec.image_spec[i].data_type;
+			const auto channel_type = spec.image_spec[i].channel_type;
 			const string native_data_type_str = image_data_type_to_string(data_type);
 			const string native_channel_type_str = image_channel_type_to_string(channel_type);
 			string native_type = native_data_type_str + native_channel_type_str;

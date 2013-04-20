@@ -48,6 +48,9 @@ struct draw_state {
 		unsigned int flags;
 	};
 	
+	//
+	PROJECTION projection = PROJECTION::PERSPECTIVE;
+	
 	// NOTE: this is just for the internal transformed buffer
 	const unsigned int transformed_primitive_size = 10 * sizeof(float);
 	
@@ -146,7 +149,7 @@ public:
 	
 	// helper function to easily set the camera up for orthographic/2D rendering
 	void start_orthographic_rendering();
-	void stop_orthographic_rendering(); // alternatively: use set_camera(...) or overwrite camera_setup manually
+	void stop_orthographic_rendering();
 	
 protected:
 	draw_state state;

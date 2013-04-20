@@ -11,11 +11,7 @@
 		// depth: 9
 		float data[10];
 	} transformed_data;
-
-//
-#define OCLRASTER_PROJECTION_PERSPECTIVE
-//#define OCLRASTER_PROJECTION_ORTHOGRAPHIC
-
+	
 	//###OCLRASTER_USER_CODE###
 	
 	//

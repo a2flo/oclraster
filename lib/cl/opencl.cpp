@@ -914,9 +914,15 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)),
 			
-			make_tuple("PROCESSING", "processing.cl", "oclraster_processing",
+			make_tuple("PROCESSING.PERSPECTIVE", "processing.cl", "oclraster_processing",
 					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
-					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)),
+					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
+					   " -DOCLRASTER_PROJECTION_PERSPECTIVE"),
+			
+			make_tuple("PROCESSING.ORTHOGRAPHIC", "processing.cl", "oclraster_processing",
+					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
+					   " -DOCLRASTER_PROJECTION_ORTHOGRAPHIC"),
 		};
 		
 		load_internal_kernels();

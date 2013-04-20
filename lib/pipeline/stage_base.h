@@ -34,9 +34,9 @@ protected:
 						   const oclraster_program& prog,
 						   unsigned int& argc);
 	
-	bool create_kernel_image_spec(const draw_state& state,
-								  const oclraster_program& program,
-								  oclraster_program::kernel_image_spec& image_spec);
+	bool create_kernel_spec(const draw_state& state,
+							const oclraster_program& program,
+							oclraster_program::kernel_spec& spec);
 	
 };
 

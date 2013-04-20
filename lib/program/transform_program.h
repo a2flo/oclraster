@@ -32,7 +32,7 @@ public:
 
 protected:
 	virtual string specialized_processing(const string& code,
-										  const kernel_image_spec& image_spec);
+										  const kernel_spec& spec);
 	virtual string get_fixed_entry_function_parameters() const;
 	virtual string get_qualifier_for_struct_type(const STRUCT_TYPE& type) const;
 
