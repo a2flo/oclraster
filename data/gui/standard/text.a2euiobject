@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a2e_ui_object version="1">
+	<state type="normal">
+		<text id="label" position="0" color="TEXT"/>
+	</state>
+	<state type="normal_shade">
+		<text id="label" position="1" color="TEXT_INVERSE"/>
+		<text id="label" position="0" color="TEXT"/>
+	</state>
+	<state type="centered">
+		<text id="label" position="@" color="TEXT"/>
+	</state>
+	<state type="centered_top">
+		<text id="label" position="@,0" color="TEXT"/>
+	</state>
+</a2e_ui_object>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a2e_ui_object version="1">
+	<state type="normal">
+		<rounded_rectangle start="0%" end="100%" radius="3.5pt" corners="all" style="gradient" gradient="vertical" stops="0,0.35,0.65,1" colors="LIGHT;LIGHT;DARK;DARK"/>
+		<rounded_rectangle start="0%" end="100%" radius="3.5pt" corners="all" style="border_fill" thickness="0.75pt" color="BORDER_DARK"/>
+		<rounded_rectangle start="0%" end="100%" radius="3.5pt" corners="all" style="border_fill" thickness="0.5pt" color="BORDER_LIGHT"/>
+		<rounded_rectangle start="0%" end="100%" radius="3.5pt" corners="all" style="gradient" gradient="vertical" stops="0,0.4" colors="LIGHT_OVERLAY_START;LIGHT_OVERLAY_END"/>
+		<text id="label" position="@" color="TEXT"/>
+	</state>
+	<state type="toggled">
+		<rounded_rectangle start="0%" end="100%" radius="3.5pt" corners="all" style="gradient" gradient="vertical" stops="0,0.35,0.65,1" colors="ACTIVE_LIGHT;ACTIVE_LIGHT;ACTIVE_DARK;ACTIVE_DARK"/>
+		<rounded_rectangle start="0%" end="100%" radius="3.5pt" corners="all" style="border_fill" thickness="0.75pt" color="ACTIVE_BORDER_DARK"/>
+		<rounded_rectangle start="0%" end="100%" radius="3.5pt" corners="all" style="border_fill" thickness="0.5pt" color="ACTIVE_BORDER_LIGHT"/>
+		<text id="label" position="@" color="TEXT_INVERSE"/>
+	</state>
+</a2e_ui_object>

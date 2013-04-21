@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a2e_theme version="1" colors="colors.a2escheme"> <!-- TODO: load all *.a2eschemes? -->
+	<!-- add meta info here -->
+	<object type="button" file="button.a2euiobject"/>
+	<object type="toggle_button" file="toggle_button.a2euiobject"/>
+	<object type="pop_up_button" file="pop_up_button.a2euiobject"/>
+	<object type="text" file="text.a2euiobject"/>
+	<object type="input_box" file="input_box.a2euiobject"/>
+	<object type="slider" file="slider.a2euiobject"/>
+	<object type="list_box" file="list_box.a2euiobject"/>
+</a2e_theme>

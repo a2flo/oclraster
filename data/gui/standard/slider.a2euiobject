@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a2e_ui_object version="1">
+	<state type="normal">
+		<rounded_rectangle start="0%,38%" end="100%,62%" radius="2.0pt" corners="all" style="gradient" gradient="vertical" stops="0,1" colors="INPUT_DARK;INPUT_LIGHT"/>
+		<rounded_rectangle start="0%,38%" end="100%,62%" radius="2.0pt" corners="all" style="border_fill" thickness="0.5pt" color="BORDER_LIGHT"/>
+		<text id="label" position="@" color="TEXT"/>
+	</state>
+	<state type="normal_knob">
+		<circle point="50%,50%" radius="6.0pt" style="gradient" gradient="vertical" stops="0,0.35,0.65,1" colors="LIGHTEST;LIGHTER;LIGHT;LIGHT"/>
+		<circle point="50%,50%" radius="6.0pt" style="border_fill" thickness="0.5pt" color="BORDER_DARK"/>
+		<circle point="50%,50%" radius="6.0pt" style="border_fill" thickness="0.5pt" color="BORDER_LIGHT"/>
+	</state>
+	<state type="active_knob">
+		<circle point="50%,50%" radius="6.0pt" style="gradient" gradient="vertical" stops="0,0.35,0.65,1" colors="LIGHTER;LIGHT;DARK;DARK"/>
+		<circle point="50%,50%" radius="6.0pt" style="border_fill" thickness="0.5pt" color="BORDER_DARK"/>
+		<circle point="50%,50%" radius="6.0pt" style="border_fill" thickness="0.5pt" color="BORDER_LIGHT"/>
+	</state>
+</a2e_ui_object>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a2e_color_scheme version="1">
+	<!-- general/normal colors -->
+	<color name="LIGHTEST" value="0.4,0.4,0.4,1.0"/>
+	<color name="LIGHTER" value="0.3,0.3,0.3,1.0"/>
+	<color name="LIGHT" value="0.2,0.2,0.2,1.0"/>
+	<color name="DARK" value="0.125,0.125,0.125,1.0"/>
+	<color name="BORDER_LIGHT" value="0.05,0.05,0.05,1.0"/>
+	<color name="BORDER_DARK" value="0.0,0.0,0.0,1.0"/>
+	<color name="LIGHT_OVERLAY_START" value="0.4,0.4,0.4,0.4"/>
+	<color name="LIGHT_OVERLAY_END" value="0.2,0.2,0.2,0.0"/>
+	<color name="INPUT_LIGHT" value="1.0,1.0,1.0,1.0"/>
+	<color name="INPUT_DARK" value="0.8,0.8,0.8,1.0"/>
+	
+	<!-- active colors -->
+	<color name="ACTIVE_LIGHT" value="0.9,0.9,0.9,1.0"/>
+	<color name="ACTIVE_DARK" value="0.8,0.8,0.8,1.0"/>
+	<color name="ACTIVE_BORDER_LIGHT" value="0.05,0.05,0.05,1.0"/>
+	<color name="ACTIVE_BORDER_DARK" value="0.0,0.0,0.0,1.0"/>
+	<color name="ACTIVE_INPUT_LIGHT" value="0.5,0.5,0.5,0.5"/>
+	<color name="ACTIVE_OVERLAY" value="1.0,1.0,1.0,0.96"/>
+	<color name="ACTIVE_OVERLAY_BORDER" value="0.4,0.4,0.4,0.6"/>
+	<color name="ACTIVE_OVERLAY_START" value="1.0,1.0,1.0,0.4"/>
+	<color name="ACTIVE_OVERLAY_END" value="1.0,1.0,1.0,0.0"/>
+	
+	<!-- text colors -->
+	<color name="TEXT" value="1.0,1.0,1.0,1.0"/>
+	<color name="TEXT_INVERSE" value="0.0,0.0,0.0,1.0"/>
+	
+	<!-- misc -->
+	<color name="TRANSPARENT" value="0,0,0,0"/>
+</a2e_color_scheme>
