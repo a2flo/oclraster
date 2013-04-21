@@ -3,6 +3,7 @@
 #define __OCLRASTER_IMAGE_H__
 
 #include "oclr_global.h"
+#include "oclr_math.h"
 
 // ignore all "unused function" warnings
 #if defined(__clang__)
@@ -32,14 +33,14 @@ unsigned int oclr_get_image_channel_order(global const image_header* img) {
 }
 
 //
-float FUNC_OVERLOAD texel_mix(float x, float y, float a) { return mix(x, y, a); }
-float2 FUNC_OVERLOAD texel_mix(float2 x, float2 y, float a) { return mix(x, y, a); }
-float3 FUNC_OVERLOAD texel_mix(float3 x, float3 y, float a) { return mix(x, y, a); }
-float4 FUNC_OVERLOAD texel_mix(float4 x, float4 y, float a) { return mix(x, y, a); }
-double FUNC_OVERLOAD texel_mix(double x, double y, float a) { return mix(x, y, (double)a); }
-double2 FUNC_OVERLOAD texel_mix(double2 x, double2 y, float a) { return mix(x, y, (double)a); }
-double3 FUNC_OVERLOAD texel_mix(double3 x, double3 y, float a) { return mix(x, y, (double)a); }
-double4 FUNC_OVERLOAD texel_mix(double4 x, double4 y, float a) { return mix(x, y, (double)a); }
+float FUNC_OVERLOAD texel_mix(float x, float y, float a) { return linear_blend(x, y, a); }
+float2 FUNC_OVERLOAD texel_mix(float2 x, float2 y, float a) { return linear_blend(x, y, a); }
+float3 FUNC_OVERLOAD texel_mix(float3 x, float3 y, float a) { return linear_blend(x, y, a); }
+float4 FUNC_OVERLOAD texel_mix(float4 x, float4 y, float a) { return linear_blend(x, y, a); }
+double FUNC_OVERLOAD texel_mix(double x, double y, float a) { return linear_blend(x, y, (double)a); }
+double2 FUNC_OVERLOAD texel_mix(double2 x, double2 y, float a) { return linear_blend(x, y, (double)a); }
+double3 FUNC_OVERLOAD texel_mix(double3 x, double3 y, float a) { return linear_blend(x, y, (double)a); }
+double4 FUNC_OVERLOAD texel_mix(double4 x, double4 y, float a) { return linear_blend(x, y, (double)a); }
 
 #define INT_TEXEL_MIX(type, type_vec, ftype, one) \
 type_vec FUNC_OVERLOAD texel_mix(type_vec x, type_vec y, float a) { \

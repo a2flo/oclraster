@@ -292,6 +292,14 @@ framebuffer* pipeline::get_default_framebuffer() {
 	return &default_framebuffer;
 }
 
+const framebuffer* pipeline::get_bound_framebuffer() const {
+	return state.active_framebuffer;
+}
+
+framebuffer* pipeline::get_bound_framebuffer() {
+	return state.active_framebuffer;
+}
+
 void pipeline::set_camera(camera* cam_) {
 	cam = cam_;
 	set_camera_setup_from_camera(cam);

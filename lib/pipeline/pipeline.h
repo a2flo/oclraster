@@ -122,6 +122,9 @@ public:
 	const framebuffer* get_default_framebuffer() const;
 	framebuffer* get_default_framebuffer();
 	
+	const framebuffer* get_bound_framebuffer() const;
+	framebuffer* get_bound_framebuffer();
+	
 	// "draw calls", range: [first, last)
 	void draw(const PRIMITIVE_TYPE type,
 			  const unsigned int vertex_count,

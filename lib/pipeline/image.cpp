@@ -87,7 +87,9 @@ image image::from_file(const string& filename, const BACKING& backing,
 	const auto fail_return = [&filename, &backing](const string& error_msg) -> image {
 		oclr_error("%s (\"%s\"): %s!", error_msg, filename, SDL_GetError());
 		const unsigned int fail_pixel = 0xDEADBEEF;
-		return image(1, 1, backing, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA, &fail_pixel);
+		auto img = image(1, 1, backing, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA, &fail_pixel);
+		img.invalidate();
+		return img;
 	};
 	if(type >= IMAGE_TYPE::__MAX_TYPE) return fail_return("invalid image type");
 	if(channel_order >= IMAGE_CHANNEL::__MAX_CHANNEL) return fail_return("invalid channel type");
@@ -246,10 +248,12 @@ void image::create_buffer(const void* pixels) {
 #if defined(OCLRASTER_DEBUG)
 	if(data_type >= IMAGE_TYPE::__MAX_TYPE) {
 		oclr_error("invalid image type: %u!", data_type);
+		invalidate();
 		return;
 	}
 	if(channel_order >= IMAGE_CHANNEL::__MAX_CHANNEL) {
 		oclr_error("invalid image channel order type: %u!", channel_order);
+		invalidate();
 		return;
 	}
 #endif
@@ -333,8 +337,13 @@ void image::create_buffer(const void* pixels) {
 											size.x, size.y, (void*)pixels);
 		if(buffer->image_buffer == nullptr) {
 			oclr_error("image buffer creation failed!");
+			invalidate();
+			return;
 		}
 	}
+	
+	// image creation was successful -> set valid state
+	valid = true;
 }
 
 image::~image() {
@@ -349,6 +358,7 @@ image::~image() {
 image::image(image&& img) :
 backing(img.backing), img_type(img.img_type), data_type(img.data_type), channel_order(img.channel_order),
 size(img.size), buffer(img.buffer), native_format(img.native_format) {
+	img.invalidate();
 	img.buffer = nullptr;
 }
 
@@ -574,4 +584,12 @@ bool image::modify_backing(const BACKING& new_backing) {
 	ocl->delete_buffer(old_buffer);
 	
 	return true;
+}
+
+void image::invalidate() {
+	valid = false;
+}
+
+bool image::is_valid() const {
+	return valid;
 }

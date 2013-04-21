@@ -18,6 +18,7 @@
 
 #include "util.h"
 #include "platform.h"
+#include "core/event_objects.h"
 
 #if !defined(__WINDOWS__) || defined(WIN_UNIXENV)
 template <> float converter<string, float>::convert(const string& var) {
@@ -68,4 +69,10 @@ template <> ssize_t converter<string, ssize_t>::convert(const string& var) {
 
 const char* oclraster_exception::what() const throw () {
 	return error_str.c_str();
+}
+
+// from event_objects.h:
+EVENT_TYPE operator&(const EVENT_TYPE& e0, const EVENT_TYPE& e1) {
+	return (EVENT_TYPE)((typename underlying_type<EVENT_TYPE>::type)e0 &
+						(typename underlying_type<EVENT_TYPE>::type)e1);
 }

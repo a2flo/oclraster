@@ -117,6 +117,10 @@ public:
 	const opencl::buffer_object* get_data_buffer() const;
 	opencl::buffer_object* get_data_buffer();
 	
+	//
+	void invalidate();
+	bool is_valid() const;
+	
 protected:
 	BACKING backing;
 	image_type img_type;
@@ -124,6 +128,7 @@ protected:
 	const IMAGE_CHANNEL channel_order;
 	const uint2 size;
 	opencl::buffer_object* buffer = nullptr;
+	bool valid = false;
 	
 	// only used with image based backing
 	cl::ImageFormat native_format;

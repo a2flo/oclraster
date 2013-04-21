@@ -216,8 +216,15 @@ void framebuffer::destroy_images(framebuffer& fb) {
 	for(const auto& img : fb.images) {
 		if(img != nullptr) delete img;
 	}
-	if(fb.depth_buffer != nullptr) delete fb.depth_buffer;
-	if(fb.stencil_buffer != nullptr) delete fb.stencil_buffer;
+	fb.images.clear();
+	if(fb.depth_buffer != nullptr) {
+		delete fb.depth_buffer;
+		fb.depth_buffer = nullptr;
+	}
+	if(fb.stencil_buffer != nullptr) {
+		delete fb.stencil_buffer;
+		fb.stencil_buffer = nullptr;
+	}
 }
 
 framebuffer::framebuffer(const unsigned int& width, const unsigned int& height) : size(width, height) {
