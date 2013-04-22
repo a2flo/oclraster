@@ -21,7 +21,7 @@ oclraster_uniforms text {
 	uint4 data[2048]; // 16 bytes * 2048 = 32k == max
 } text_data;
 
-float4 transform_main() {
+float4 gfx2d_transform() {
 	const uint instance_id = 0; // TODO: !
 	int2 id = (int2)(instance_id / 2, (instance_id % 2) * 2);
 	uint index = ((uint*)&text_data->data[id.x])[id.y];
@@ -59,7 +59,7 @@ oclraster_uniforms rasterize_uniforms {
 } rp_uniforms;
 
 oclraster_images {
-	read_only image2d font_texture;
+	read_only image2d<UINT_8, RGB> font_texture;
 };
 
 oclraster_framebuffer {
@@ -67,7 +67,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void rasterization_main() {
+void gfx2d_rasterization() {
 	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	float3 color = image_read(font_texture, point_sampler, output_attributes->tex_coord.xy).xyz;
 	const float alpha = rp_uniforms->font_color.w * fmax(color.x, fmax(color.y, color.z));

@@ -19,6 +19,7 @@
 #include "gui_list_box.h"
 #include "gui.h"
 #include "font.h"
+#include "oclraster_support.h"
 
 gui_list_box::gui_list_box(const float2& size_, const float2& position_) :
 gui_item_container(size_, position_, GUI_EVENT::LIST_BOX_SELECT) {
@@ -37,8 +38,8 @@ void gui_list_box::draw() {
 	theme->draw("list_box", "normal", position_abs, size_abs);
 	
 	// manual scissor test:
-	glScissor(floorf(position_abs.x), floorf(position_abs.y),
-			  ceilf(size_abs.x), ceilf(size_abs.y));
+	oclraster_support::get_pipeline()->set_scissor_rectangle(floorf(position_abs.x), floorf(position_abs.y),
+															 ceilf(size_abs.x), ceilf(size_abs.y));
 	
 	size_t item_counter = 0;
 	for(const auto& item : display_items) {
@@ -57,7 +58,7 @@ void gui_list_box::draw() {
 					[&item](const string&) -> string { return item->second; });
 	}
 	
-	glScissor(0, 0, oclraster::get_width(), oclraster::get_height());
+	oclraster_support::get_pipeline()->set_scissor_rectangle(0, 0, ~0u, ~0u);
 }
 
 bool gui_list_box::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj oclr_unused, const ipnt& point) {

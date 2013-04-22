@@ -6,16 +6,16 @@
 // transform program
 
 oclraster_in simple_input {
-	float4 vertex;
+	float2 vertex;
 } input_attributes;
 
 oclraster_uniforms transform_uniforms {
 	mat4 modelview_matrix;
 } tp_uniforms;
 
-float4 transform_main() {
+float4 gfx2d_transform() {
 	return mat4_mul_vec4(tp_uniforms->modelview_matrix,
-						 input_attributes->vertex);
+						 (float4)(input_attributes->vertex, 0.0f, 1.0f));
 }
 
 #elif defined(OCLRASTER_RASTERIZATION_PROGRAM)
@@ -61,7 +61,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void rasterization_main() {
+void gfx2d_rasterization() {
 	//const float2 screen_offset = (float2)(-(mvpm[3][0] + 1.0f), -(mvpm[3][1] + 1.0f)) / (float2)(mvpm[0][0], mvpm[1][1]);
 	const float2 screen_offset = (float2)(0.0f, 0.0f); // TODO: !
 	float2 interpolator_dir = (fragment_coord.xy + screen_offset - rp_uniforms->extent.xy) / (rp_uniforms->extent.zw - rp_uniforms->extent.xy);

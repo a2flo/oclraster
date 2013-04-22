@@ -5,16 +5,16 @@
 //////////////////////////////////////////////////////////////////
 // transform program
 oclraster_in simple_input {
-	float4 vertex;
+	float2 vertex;
 } input_attributes;
 
 oclraster_uniforms transform_uniforms {
 	mat4 modelview_matrix;
 } tp_uniforms;
 
-float4 transform_main() {
+float4 gfx2d_transform() {
 	return mat4_mul_vec4(tp_uniforms->modelview_matrix,
-						 input_attributes->vertex);
+						 (float4)(input_attributes->vertex, 0.0f, 1.0f));
 }
 
 #elif defined(OCLRASTER_RASTERIZATION_PROGRAM)
@@ -32,7 +32,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void rasterization_main() {
+void gfx2d_rasterization() {
 	float4 color;
 #if defined(GRADIENT_HORIZONTAL)
 	gradient_horizontal(color);

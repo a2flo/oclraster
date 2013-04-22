@@ -25,6 +25,7 @@ typedef struct __attribute__((packed, aligned(16))) {
 } triangle_bounds;
 
 //
+#define MIN_FRAGMENT_SIZE (1.0f / 256.0f)
 #define discard() { tb_ptr->bounds.x = INFINITY; return; }
 kernel void oclraster_processing(global const unsigned int* index_buffer,
 								 global const float4* transformed_vertex_buffer,
@@ -149,7 +150,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 		{ x1, y1, o1 },
 		{ x2, y2, o2 }
 	};
-	const float VV_depth = 1.0f;
+	const float VV_depth = dot(vertices[0], cross(vertices[1], vertices[2]));
 #endif
 	
 	/*for(uint i = 0; i < 3; i++) {
@@ -237,7 +238,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 									   coord_ys[2] - coord_ys[0]);
 			const float area = -0.5f * (e0.x * e1.y - e0.y * e1.x);
 			// half sample size (TODO: -> check if between sample points; <=1/2^8 sample size seems to be a good threshold?)
-			if(area < 0.00390625f) {
+			if(area < MIN_FRAGMENT_SIZE) {
 				//printf("triangle area culled: %d\n", triangle_id);
 				discard(); // cull
 			}
@@ -321,8 +322,8 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	const float2 aabb_max = fmax(fmax(vertices[0].xy, vertices[1].xy), vertices[2].xy);
 	float2 x_bounds = (float2)(aabb_min.x, aabb_max.x);
 	float2 y_bounds = (float2)(aabb_min.y, aabb_max.y);
-	if(fabs(aabb_min.x - aabb_max.x) < 1.0f ||
-	   fabs(aabb_min.y - aabb_max.y) < 1.0f) {
+	if(fabs(aabb_min.x - aabb_max.x) < MIN_FRAGMENT_SIZE ||
+	   fabs(aabb_min.y - aabb_max.y) < MIN_FRAGMENT_SIZE) {
 		discard();
 	}
 #endif

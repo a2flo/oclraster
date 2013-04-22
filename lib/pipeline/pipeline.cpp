@@ -43,6 +43,10 @@ event_handler_fnctr(this, &pipeline::event_handler) {
 											 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 											 sizeof(constant_camera_data));
 	
+	state.depth_test = 1;
+	state.scissor_test = 0;
+	state.backface_culling = 1;
+	
 	oclraster::get_event()->add_internal_event_handler(event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
 	
 #if defined(OCLRASTER_IOS)
@@ -141,7 +145,7 @@ void pipeline::swap() {
 #if defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 #endif
-	oclraster::start_2d_draw();
+	glViewport(0, 0, oclraster::get_width(), oclraster::get_height());
 	
 	// copy opencl framebuffer to blit framebuffer/texture
 	const uint2 default_fb_size = default_framebuffer.get_size();
@@ -181,8 +185,6 @@ void pipeline::swap() {
 	glUseProgram(0);
 #endif
 	
-	oclraster::stop_2d_draw();
-	
 #if !defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -203,7 +205,6 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 	// initialize draw state
 	state.triangle_count = primitive_count;
 	state.vertex_count = vertex_count;
-	state.depth_test = 1;
 	state.bin_count = {
 		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
 		(state.framebuffer_size.y / state.bin_size.y) + ((state.framebuffer_size.y % state.bin_size.y) != 0 ? 1 : 0)
@@ -281,6 +282,12 @@ void pipeline::bind_framebuffer(framebuffer* fb) {
 	if(new_fb_size.x != state.framebuffer_size.x ||
 	   new_fb_size.y != state.framebuffer_size.y) {
 		state.framebuffer_size = new_fb_size;
+		
+		// the orthographic rendering depends on the framebuffer size
+		// -> if it changes, the camera setup must be recomputed
+		if(state.projection == PROJECTION::ORTHOGRAPHIC) {
+			start_orthographic_rendering();
+		}
 	}
 }
 
@@ -420,4 +427,25 @@ void pipeline::start_orthographic_rendering() {
 void pipeline::stop_orthographic_rendering() {
 	state.projection = PROJECTION::PERSPECTIVE;
 	set_camera_setup_from_camera(cam);
+}
+
+void pipeline::set_scissor_test(const bool scissor_test_state) {
+	state.scissor_test = scissor_test_state;
+}
+
+bool pipeline::get_scissor_test() const {
+	return state.scissor_test;
+}
+
+void pipeline::set_scissor_rectangle(const uint& sx, const uint& sy,
+									 const uint& swidth, const uint& sheight) {
+	state.scissor_rectangle.set(sx, sy, swidth, sheight);
+}
+
+void pipeline::set_scissor_rectangle(const uint2& offset, const uint2& size) {
+	state.scissor_rectangle.set(offset.x, offset.y, size.x, size.y);
+}
+
+const uint4& pipeline::get_scissor_rectangle() const {
+	return state.scissor_rectangle;
 }

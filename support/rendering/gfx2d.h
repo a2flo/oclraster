@@ -300,6 +300,13 @@ struct gfx2d::point_compute_rounded_rectangle {
 															const float& radius,
 															const CORNER corners,
 															const Args&... args) {
+		compute_and_draw(float4 { (float)r.x1, (float)r.y1, (float)r.x2, (float)r.y2 }, radius, corners, args...);
+	}
+	
+	template<typename... Args> static void compute_and_draw(const float4& r,
+															const float& radius,
+															const CORNER corners,
+															const Args&... args) {
 		primitive_properties props(PRIMITIVE_TYPE::TRIANGLE_FAN);
 		props.has_mid_point = 1;
 		
@@ -310,13 +317,13 @@ struct gfx2d::point_compute_rounded_rectangle {
 		}
 		
 		// start off with the mid point
-		const float2 mid_point((r.x1 + r.x2) / 2.0f,
-							   (r.y1 + r.y2) / 2.0f);
+		const float2 mid_point((r.x + r.z) * 0.5f,
+							   (r.y + r.w) * 0.5f);
 		props.points.emplace_back(mid_point);
 		
 		// 0: rt, 90: rb, 180: lb, 270: lt
 		for(ssize_t i = 0; i < 4; i++) {
-			float2 corner_point(i < 2 ? r.x2 : r.x1, (i == 0 || i == 3) ? r.y1 : r.y2);
+			float2 corner_point(i < 2 ? r.z : r.x, (i == 0 || i == 3) ? r.w : r.y);
 			if((unsigned int)corners & (1 << i)) {
 				// if this is a rounded corner, add 90° circle sector for that corner
 				const size_t cur_size = props.points.size();
@@ -324,7 +331,7 @@ struct gfx2d::point_compute_rounded_rectangle {
 												float(i) * 90.0f, float(i+1) * 90.0f);
 				
 				corner_point.x += (i < 2 ? -radius : radius);
-				corner_point.y += (i == 0 || i == 3 ? radius : -radius);
+				corner_point.y += (i == 0 || i == 3 ? -radius : radius);
 				for(size_t j = cur_size; j < props.points.size(); j++) {
 					props.points[j].vertex.x += corner_point.x;
 					props.points[j].vertex.y += corner_point.y;
@@ -341,8 +348,8 @@ struct gfx2d::point_compute_rounded_rectangle {
 		props.has_equal_start_end_point = 1;
 		
 		//
-		props.extent.set(std::min(r.x1, r.x2), std::min(r.y1, r.y2),
-						 std::max(r.x1, r.x2), std::max(r.y1, r.y2));
+		props.extent.set(std::min(r.x, r.z), std::min(r.y, r.w),
+						 std::max(r.x, r.z), std::max(r.y, r.w));
 		
 		draw_style::draw(props, args...);
 		

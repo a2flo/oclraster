@@ -193,10 +193,13 @@ static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
 )OCLRASTER_RAWSTR"};
 #endif
 
-rasterization_program::rasterization_program(const string& code, const string entry_function_, const string build_options_) :
-oclraster_program(code, entry_function_, "-DOCLRASTER_RASTERIZATION_PROGRAM "+build_options_) {
+rasterization_program::rasterization_program(const string& code,
+											 const string entry_function_,
+											 const string build_options_,
+											 const kernel_spec default_spec_) :
+oclraster_program(code, entry_function_, "-DOCLRASTER_RASTERIZATION_PROGRAM "+build_options_, default_spec_) {
 	kernel_function_name = "oclraster_rasterization";
-	process_program(code);
+	process_program(code, default_spec_);
 }
 
 rasterization_program::~rasterization_program() {

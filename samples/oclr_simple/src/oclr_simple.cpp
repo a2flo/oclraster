@@ -69,6 +69,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	//
 	p = new pipeline();
 	p->set_camera(cam);
+	oclraster::set_active_pipeline(p);
 	
 	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
 	//a2m* model = new a2m(oclraster::data_path("blend_test.a2m"));
@@ -216,7 +217,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		
 		oclraster::start_draw();
 		cam->run();
-		p->set_camera(cam);
+		p->set_camera(cam); // update pipeline camera
 		
 		// update uniforms
 		if(update_model) {
@@ -273,7 +274,6 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->bind_image("fp_noise", *fp_noise);
 		p->draw(PRIMITIVE_TYPE::TRIANGLE, model->get_vertex_count(), { 0, model->get_index_count(0) });
 		
-		p->swap();
 		oclraster::stop_draw();
 	}
 	

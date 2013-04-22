@@ -31,9 +31,25 @@ enum class PROJECTION : unsigned int {
 
 class oclraster_program {
 public:
+	// kernel specification
+	// defines the specific type and configuration of a kernel (each spec requires a different compiled kernel)
+	struct kernel_spec {
+		vector<image_type> image_spec;
+		PROJECTION projection;
+		kernel_spec(const kernel_spec& spec) : image_spec(spec.image_spec), projection(spec.projection) {}
+		kernel_spec(kernel_spec&& spec) : image_spec(), projection(spec.projection) {
+			this->image_spec.swap(spec.image_spec);
+		}
+		kernel_spec(const vector<image_type> image_spec_ = vector<image_type> {},
+					const PROJECTION projection_ = PROJECTION::PERSPECTIVE) :
+		image_spec(image_spec_), projection(projection_) {}
+	};
+	
+	//
 	oclraster_program(const string& code,
 					  const string entry_function = "main",
-					  const string build_options = "");
+					  const string build_options = "",
+					  const kernel_spec default_spec = kernel_spec {});
 	virtual ~oclraster_program();
 	oclraster_program(oclraster_program& prog) = delete;
 	oclraster_program& operator=(oclraster_program& prog) = delete;
@@ -75,18 +91,6 @@ public:
 	};
 	const vector<oclraster_struct_info*>& get_structs() const;
 	
-	// kernel specification
-	// defines the specific type and configuration of a kernel (each spec requires a different compiled kernel)
-	struct kernel_spec {
-		vector<image_type> image_spec;
-		PROJECTION projection = PROJECTION::PERSPECTIVE;
-		kernel_spec() {}
-		kernel_spec(const kernel_spec& spec) : image_spec(spec.image_spec), projection(spec.projection) {}
-		kernel_spec(kernel_spec&& spec) : image_spec(), projection(spec.projection) {
-			this->image_spec.swap(spec.image_spec);
-		}
-	};
-	
 	//
 	struct oclraster_image_info {
 		vector<string> image_names;
@@ -112,7 +116,7 @@ protected:
 	weak_ptr<opencl::kernel_object> build_kernel(const kernel_spec& spec);
 	
 	//
-	void process_program(const string& code);
+	void process_program(const string& code, const kernel_spec default_spec);
 	void process_image_struct(const vector<string>& variable_names,
 							  const vector<string>& variable_types,
 							  const vector<string>& variable_specifiers,

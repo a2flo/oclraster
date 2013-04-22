@@ -69,10 +69,13 @@ static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
 )OCLRASTER_RAWSTR"};
 #endif
 
-transform_program::transform_program(const string& code, const string entry_function_, const string build_options_) :
-oclraster_program(code, entry_function_, "-DOCLRASTER_TRANSFORM_PROGRAM "+build_options_) {
+transform_program::transform_program(const string& code,
+									 const string entry_function_,
+									 const string build_options_,
+									 const kernel_spec default_spec_) :
+oclraster_program(code, entry_function_, "-DOCLRASTER_TRANSFORM_PROGRAM "+build_options_, default_spec_) {
 	kernel_function_name = "oclraster_transform";
-	process_program(code);
+	process_program(code, default_spec_);
 }
 
 transform_program::~transform_program() {

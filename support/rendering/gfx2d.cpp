@@ -72,7 +72,7 @@ void gfx2d::compute_ellipsoid_points(vector<primitive_properties::primitive_poin
 		const float fstep = ((float(i) / fsteps) * angle_size) * (2.0f * PI);
 		const float sin_step = sinf(angle_offset + fstep);
 		const float cos_step = cosf(angle_offset + fstep);
-		dst_points.emplace_back(float2(sin_step * radius_lr, cos_step * radius_tb));
+		dst_points.emplace_back(sin_step * radius_lr, cos_step * radius_tb);
 	}
 }
 

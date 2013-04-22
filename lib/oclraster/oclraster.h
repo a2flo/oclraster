@@ -31,17 +31,19 @@
 class opencl_base;
 extern opencl_base* ocl;
 
+class pipeline;
+
 class OCLRASTER_API oclraster {
 public:
 	static void init(const char* callpath_, const char* datapath_);
 	static void destroy();
 	
+	static void set_active_pipeline(pipeline* active_pipeline);
+	static pipeline* get_active_pipeline();
+	
 	// graphic control functions
 	static void start_draw();
 	static void stop_draw();
-	static void start_2d_draw();
-	static void start_2d_draw(const unsigned int width, const unsigned int height);
-	static void stop_2d_draw();
 	static void init_gl();
 	static void resize_window();
 	static void swap();
@@ -120,12 +122,13 @@ protected:
 	
 	static event* evt;
 	static xml* x;
+	static pipeline* active_pipeline;
 	
 	static void init_internal();
 	
 	static struct oclraster_config {
 		// screen
-		size_t width = 1280, height = 720, dpi = 72;
+		size_t width = 1280, height = 720, dpi = 0;
 		bool fullscreen = false, vsync = false, stereo = false;
 		
 		// projection

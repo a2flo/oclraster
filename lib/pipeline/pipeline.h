@@ -37,19 +37,19 @@ struct draw_state {
 	// TODO: store actual flags/data
 	union {
 		struct {
-			unsigned int blending : 1;
 			unsigned int depth_test : 1;
 			unsigned int scissor_test : 1;
 			unsigned int backface_culling : 1;
 			
 			//
-			unsigned int _unused : 28;
+			unsigned int _unused : 29;
 		};
 		unsigned int flags;
 	};
 	
 	//
 	PROJECTION projection = PROJECTION::PERSPECTIVE;
+	uint4 scissor_rectangle { 0u, 0u, ~0u, ~0u };
 	
 	// NOTE: this is just for the internal transformed buffer
 	const unsigned int transformed_primitive_size = 10 * sizeof(float);
@@ -153,6 +153,14 @@ public:
 	// helper function to easily set the camera up for orthographic/2D rendering
 	void start_orthographic_rendering();
 	void stop_orthographic_rendering();
+	
+	// scissor testing
+	void set_scissor_test(const bool scissor_test_state);
+	bool get_scissor_test() const;
+	void set_scissor_rectangle(const uint& sx, const uint& sy,
+							   const uint& swidth, const uint& sheight);
+	void set_scissor_rectangle(const uint2& offset, const uint2& size);
+	const uint4& get_scissor_rectangle() const;
 	
 protected:
 	draw_state state;

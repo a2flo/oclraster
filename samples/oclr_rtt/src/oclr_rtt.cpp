@@ -70,6 +70,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	//
 	p = new pipeline();
+	oclraster::set_active_pipeline(p);
 	
 	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
 	
@@ -270,7 +271,6 @@ int main(int argc oclr_unused, char* argv[]) {
 		p->draw(PRIMITIVE_TYPE::TRIANGLE_STRIP, plane_attributes.size(), { 0, 3 });
 #endif
 		
-		p->swap();
 		oclraster::stop_draw();
 	}
 	

@@ -11,7 +11,7 @@ oclraster_uniforms transform_uniforms {
 	mat4 modelview_matrix;
 } tp_uniforms;
 
-float4 transform_main() {
+float4 gfx2d_transform() {
 	return mat4_mul_vec4(tp_uniforms->modelview_matrix,
 						 (float4)(input_attributes->vertex, 0.0f, 1.0f));
 }
@@ -29,9 +29,9 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void rasterization_main() {
+void gfx2d_rasterization() {
 	// standard and non-texture options
-	float4 color = rp_uniforms->color;
+	const float4 color = rp_uniforms->color;
 	
 	// -> output
 	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color.xyz, color.w);

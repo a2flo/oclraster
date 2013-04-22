@@ -25,7 +25,8 @@ class transform_program : public oclraster_program {
 public:
 	transform_program(const string& code,
 					  const string entry_function = "main",
-					  const string build_options = "");
+					  const string build_options = "",
+					  const kernel_spec default_spec = kernel_spec {});
 	virtual ~transform_program();
 	transform_program(transform_program& prog) = delete;
 	transform_program& operator=(transform_program& prog) = delete;

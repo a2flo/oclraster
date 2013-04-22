@@ -175,7 +175,8 @@
 							barycentric /= barycentric.x + barycentric.y + barycentric.z;
 							
 							// depth test + ignore negative depth:
-							if(barycentric.w < 0.0f || barycentric.w >= *fragment_depth) continue;
+							//if(barycentric.w < 0.0f || barycentric.w >= *fragment_depth) continue;
+							if(barycentric.w < 0.0f || barycentric.w > *fragment_depth) continue;
 							
 							// reset depth (note: fragment_color will contain the last valid color)
 							*fragment_depth = barycentric.w;
@@ -185,7 +186,8 @@
 					}
 					
 					// write framebuffer output (if depth has changed)
-					if(*fragment_depth < input_depth || false) {
+					//if(*fragment_depth < input_depth || false) {
+					if(*fragment_depth <= input_depth || false) {
 						//###OCLRASTER_FRAMEBUFFER_WRITE###
 					}
 				}

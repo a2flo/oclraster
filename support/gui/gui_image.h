@@ -40,7 +40,6 @@ public:
 
 	void set_scaling(bool state);
 	bool get_scaling();
-	void set_gui_img(bool state);
 
 	unsigned int get_width();
 	unsigned int get_height();
@@ -53,7 +52,6 @@ protected:
 	const image* tex = nullptr;
 
 	bool scale = true;
-	bool gui_img = false;
 
 	unsigned int color = 0xFFFFFF;
 

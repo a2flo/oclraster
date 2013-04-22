@@ -20,6 +20,7 @@
 #include "font.h"
 #include "gui.h"
 #include "threading/task.h"
+#include "oclraster_support.h"
 
 gui_input_box::gui_input_box(const float2& size_, const float2& position_) :
 gui_object(size_, position_) {
@@ -46,9 +47,9 @@ void gui_input_box::draw() {
 	
 	// draw the text
 	// note: scissor will be reset in the next theme draw
-	glScissor(floorf(position_abs.x + input_text_margin.x),
-			  floorf(position_abs.y + input_text_margin.y),
-			  ceilf(input_size_abs.x), ceilf(input_size_abs.y));
+	oclraster_support::get_pipeline()->set_scissor_rectangle(floorf(position_abs.x + input_text_margin.x),
+															 floorf(position_abs.y + input_text_margin.y),
+															 ceilf(input_size_abs.x), ceilf(input_size_abs.y));
 	fnt->draw_cached(input, input_text_position, theme->get_color_scheme().get("TEXT_INVERSE"));
 	
 	// draw blink character

@@ -27,7 +27,8 @@ extern "C" {
 
 oclraster_program::oclraster_program(const string& code oclr_unused,
 									 const string entry_function_,
-									 const string build_options_) :
+									 const string build_options_,
+									 const kernel_spec default_spec_ oclr_unused) :
 entry_function(entry_function_), build_options(build_options_), kernel_function_name("oclraster_program") {
 }
 
@@ -45,7 +46,7 @@ oclraster_program::~oclraster_program() {
 	}
 }
 
-void oclraster_program::process_program(const string& raw_code) {
+void oclraster_program::process_program(const string& raw_code, const kernel_spec default_spec) {
 	// preprocess
 	const string code = preprocess_code(raw_code);
 	
@@ -299,12 +300,19 @@ void oclraster_program::process_program(const string& raw_code) {
 									   "oclraster_user_"+entry_function+"("+entry_function_params+")");
 		
 		// create default/first/hinted image spec, do the final processing and compile
-		kernel_spec spec {};
-		if(!images.image_names.empty()) {
+		kernel_spec spec { default_spec };
+		if(!images.image_names.empty() && spec.image_spec.size() != images.image_names.size()) {
 			// create kernel image spec for the hinted or default image specs
-			for(const auto& hint : images.image_hints) {
-				spec.image_spec.emplace_back(hint.is_valid() ? hint : image_type { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA });
+			// note: if default_spec already contains some image_spec entries, only insert the remaining ones
+			for(size_t i = spec.image_spec.size(); i < images.image_names.size(); i++) {
+				spec.image_spec.emplace_back(images.image_hints[i].is_valid() ?
+											 images.image_hints[i] :
+											 image_type { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA });
 			}
+		}
+		else if(images.image_names.empty() && !spec.image_spec.empty()) {
+			// default spec contains image_spec entries, but the are no images -> clear
+			spec.image_spec.clear();
 		}
 		// else: no images in kernel/program -> just one kernel / "empty spec"
 		build_kernel(spec);

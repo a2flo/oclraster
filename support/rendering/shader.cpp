@@ -19,6 +19,7 @@
 
 #include "shader.h"
 #include <oclraster/threading/task.h>
+#include <oclraster/program/oclraster_program.h>
 
 pipeline* shader_helper::oclr_pipeline = nullptr;
 
@@ -57,9 +58,10 @@ shader_helper::oclr_shader::oclr_shader(const string& tp_filename,
 	for(const auto& option : options) {
 		oclr_msg("compiling %s / %s ...", option.first, option.second);
 		pair<transform_program*, rasterization_program*>* shader = &shaders[option.first];
+		static const oclraster_program::kernel_spec default_spec { {}, PROJECTION::ORTHOGRAPHIC };
 		task::spawn([this, tp_str, rp_str, shader, option]() {
-			shader->first = new transform_program(tp_str, "transform_main", "-D"+option.second);
-			shader->second = new rasterization_program(rp_str, "rasterization_main", "-D"+option.second);
+			shader->first = new transform_program(tp_str, "gfx2d_transform", "-D"+option.second, default_spec);
+			shader->second = new rasterization_program(rp_str, "gfx2d_rasterization", "-D"+option.second, default_spec);
 			if(!shader->first->is_valid()) compilation_failure = true;
 			if(!shader->second->is_valid()) compilation_failure = true;
 			compiled_shaders++;

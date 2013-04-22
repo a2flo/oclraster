@@ -60,6 +60,7 @@ int main(int argc, char* argv[]) {
 	//
 	p = new pipeline();
 	p->set_camera(cam);
+	oclraster::set_active_pipeline(p);
 	
 	// add event handlers
 	event::handler key_handler_fnctr(&key_handler);
@@ -165,7 +166,6 @@ int main(int argc, char* argv[]) {
 		p->bind_image("tf_texture", *tf_texture);
 		p->draw(PRIMITIVE_TYPE::TRIANGLE, (unsigned int)vol->get_vertex_count(axis), { 0, vol->get_index_count(axis) });
 		
-		p->swap();
 		oclraster::stop_draw();
 	}
 	

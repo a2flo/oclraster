@@ -19,6 +19,7 @@
 #include "framebuffer.h"
 #include "oclraster.h"
 #include "oclraster_program.h"
+#include "pipeline.h"
 
 //
 static constexpr char template_framebuffer_program[] { u8R"OCLRASTER_RAWSTR(
@@ -48,10 +49,14 @@ static constexpr char template_framebuffer_program[] { u8R"OCLRASTER_RAWSTR(
 								  const uint2 framebuffer_size,
 								  const ulong4 clear_color_value,
 								  const float clear_depth_value,
-								  const ulong clear_stencil_value) {
-		const unsigned int x = get_global_id(0);
-		const unsigned int y = get_global_id(1);
-		if(x >= framebuffer_size.x || y >= framebuffer_size.y) return;
+								  const ulong clear_stencil_value,
+								  const uint4 scissor_rectangle) { // note: scissor_rectangle contains absolute coordinates
+		const unsigned int x = get_global_id(0) + scissor_rectangle.x;
+		const unsigned int y = get_global_id(1) + scissor_rectangle.y;
+		if(x >= framebuffer_size.x || y >= framebuffer_size.y ||
+		   x >= scissor_rectangle.z || y >= scissor_rectangle.w) {
+			return;
+		}
 		const unsigned int offset = y * framebuffer_size.x + x;
 		
 		//###OCLRASTER_FRAMEBUFFER_CLEAR_CALLS###
@@ -388,7 +393,22 @@ void framebuffer::clear(const vector<size_t> image_indices, const bool depth_cle
 	ocl->set_kernel_argument(argc++, clear_color);
 	ocl->set_kernel_argument(argc++, clear_depth);
 	ocl->set_kernel_argument(argc++, clear_stencil);
-	ocl->set_kernel_range(ocl->compute_kernel_ranges(size.x, size.y));
+	
+	//
+	uint4 scissor_rectangle { 0u, 0u, ~0u, ~0u };
+	const auto active_pipeline = oclraster::get_active_pipeline();
+	if(active_pipeline != nullptr && active_pipeline->get_scissor_test()) {
+		scissor_rectangle = active_pipeline->get_scissor_rectangle();
+		const uint2 scissor_size { scissor_rectangle.z, scissor_rectangle.w };
+		scissor_rectangle.z += scissor_rectangle.x; // make absolute coordinates
+		scissor_rectangle.w += scissor_rectangle.y;
+		ocl->set_kernel_range(ocl->compute_kernel_ranges(std::min(size.x, scissor_size.x),
+														 std::min(size.y, scissor_size.y)));
+	}
+	else {
+		ocl->set_kernel_range(ocl->compute_kernel_ranges(size.x, size.y));
+	}
+	ocl->set_kernel_argument(argc++, scissor_rectangle);
 	ocl->run_kernel();
 }
 

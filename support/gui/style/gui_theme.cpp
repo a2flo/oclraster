@@ -508,8 +508,8 @@ void gui_theme::draw(const string& type, const string& state,
 	
 	// set scissor test rect
 	if(scissor) {
-		glScissor(floorf(offset.x), floorf(offset.y),
-				  ceilf(size.x), ceilf(size.y));
+		oclraster_support::get_pipeline()->set_scissor_rectangle(floorf(offset.x), floorf(offset.y),
+																 ceilf(size.x), ceilf(size.y));
 	}
 	if(clear) {
 		oclraster_support::get_pipeline()->get_bound_framebuffer()->clear();
@@ -795,7 +795,7 @@ void gui_theme::draw(const string& type, const string& state,
 	
 	// reset scissor rect
 	if(scissor) {
-		glScissor(0, 0, oclraster::get_width(), oclraster::get_height());
+		oclraster_support::get_pipeline()->set_scissor_rectangle(0, 0, ~0u, ~0u);
 	}
 }
 

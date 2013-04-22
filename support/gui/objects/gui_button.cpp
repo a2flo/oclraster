@@ -36,7 +36,6 @@ void gui_button::draw() {
 				[this](const string& str oclr_unused) { return label; });
 }
 
-
 bool gui_button::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj, const ipnt& point oclr_unused) {
 	if(!state.visible || !state.enabled) return false;
 	switch(type) {

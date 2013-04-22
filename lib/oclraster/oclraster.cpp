@@ -20,6 +20,7 @@
 #include "cl/opencl.h"
 #include "core/gl_support.h"
 #include "pipeline/framebuffer.h"
+#include "pipeline/pipeline.h"
 
 #if defined(__APPLE__)
 #if !defined(OCLRASTER_IOS)
@@ -32,6 +33,7 @@
 // init statics
 event* oclraster::evt = nullptr;
 xml* oclraster::x = nullptr;
+pipeline* oclraster::active_pipeline = nullptr;
 opencl_base* ocl = nullptr;
 
 struct oclraster::oclraster_config oclraster::config;
@@ -554,6 +556,9 @@ void oclraster::start_draw() {
  */
 void oclraster::stop_draw() {
 	//
+	if(active_pipeline != nullptr) {
+		active_pipeline->swap();
+	}
 	swap();
 	
 	GLenum error = glGetError();
@@ -622,22 +627,17 @@ const char* oclraster::get_caption() {
 /*! opengl initialization function
  */
 void oclraster::init_gl() {
-	// set clear color
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	// depth buffer setup
+	
 	glClearDepth(1.0f);
-	// enable depth testing
 	glEnable(GL_DEPTH_TEST);
-	// less/equal depth test
 	glDepthFunc(GL_LESS);
-	// enable backface culling
-	glCullFace(GL_BACK);
-	glEnable(GL_CULL_FACE);
-	glFrontFace(GL_CCW);
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	glDisable(GL_STENCIL_TEST);
+	
+	glFrontFace(GL_CW);
+	glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
 }
 
 /* function to reset our viewport after a window resize
@@ -645,29 +645,6 @@ void oclraster::init_gl() {
 void oclraster::resize_window() {
 	// set the viewport
 	glViewport(0, 0, (GLsizei)config.width, (GLsizei)config.height);
-}
-
-/*! starts drawing the 2d elements and initializes the opengl functions for that
- */
-void oclraster::start_2d_draw() {
-	start_2d_draw((unsigned int)config.width, (unsigned int)config.height);
-}
-
-void oclraster::start_2d_draw(const unsigned int width, const unsigned int height) {
-	glViewport(0, 0, width, height);
-	
-	glFrontFace(GL_CW);
-	glDisable(GL_CULL_FACE);
-	
-	// shaders are using pre-multiplied alpha
-	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-/*! stops drawing the 2d elements
- */
-void oclraster::stop_2d_draw() {
-	glFrontFace(GL_CCW);
-	glEnable(GL_CULL_FACE);
 }
 
 /*! sets the cursors visibility to state
@@ -924,4 +901,12 @@ bool oclraster::get_gl_sharing() {
 
 bool oclraster::get_log_binaries() {
 	return config.log_binaries;
+}
+
+void oclraster::set_active_pipeline(pipeline* active_pipeline_) {
+	active_pipeline = active_pipeline_;
+}
+
+pipeline* oclraster::get_active_pipeline() {
+	return active_pipeline;
 }

@@ -131,9 +131,9 @@ gui::~gui() {
 void gui::draw() {
 	gl_timer::mark("GUI_START");
 	
-	// TODO: scissor test + LEQUAL depth test
-	//glEnable(GL_SCISSOR_TEST);
-	//glScissor(0, 0, aa_fbo->draw_width, aa_fbo->draw_height);
+	// TODO: LEQUAL depth test
+	oclr_pipeline->set_scissor_test(true);
+	oclr_pipeline->set_scissor_rectangle({ 0, 0 }, main_fbo.get_size());
 	
 	//////////////////////////////////////////////////////////////////
 	// draw individual surfaces
@@ -195,13 +195,16 @@ void gui::draw() {
 	// stop
 	oclr_pipeline->bind_framebuffer(nullptr);
 	
-	// TODO: reset state: no scissor test + LESS depth test
+	// TODO: reset state: LESS depth test
+	oclr_pipeline->set_scissor_test(false);
 	
 	//////////////////////////////////////////////////////////////////
 	// blend with scene buffer and draw result to the main framebuffer
 	
 	shader_helper::blend_shd->use("#", false, nullptr);
 	oclr_pipeline->bind_image("src_buffer", *main_fbo.get_image(0));
+	oclr_pipeline->bind_buffer("index_buffer", *fullscreen_indices);
+	oclr_pipeline->bind_buffer("input_attributes", *fullscreen_vertices);
 	
 	oclr_pipeline->draw(PRIMITIVE_TYPE::TRIANGLE_STRIP, 4, { 0, 2 });
 	
@@ -425,11 +428,12 @@ void gui::recreate_buffers(const size2 size) {
 	}
 	
 	//
+	const auto default_fb_size = oclr_pipeline->get_default_framebuffer()->get_size();
 	array<float4, 4> vertices {{
-		float4(0.0f, (float)size.y),
-		float4(0.0f, 0.0f),
-		float4((float)size.x, (float)size.y),
-		float4((float)size.x, 0.0f),
+		float4(0.0f, (float)default_fb_size.y, 0.0f, 1.0f),
+		float4(0.0f, 0.0f, 0.0f, 1.0f),
+		float4((float)default_fb_size.x, (float)default_fb_size.y, 0.0f, 1.0f),
+		float4((float)default_fb_size.x, 0.0f, 0.0f, 1.0f),
 	}};
 	ocl->write_buffer(fullscreen_vertices, &vertices[0]);
 }
