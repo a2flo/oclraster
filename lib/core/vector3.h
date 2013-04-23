@@ -21,6 +21,7 @@
 
 #include "core/cpp_headers.h"
 #include "core/matrix4.h"
+#include "core/vector2.h"
 
 template <typename T> class vector3;
 typedef vector3<float> float3;
@@ -204,6 +205,11 @@ public:
 	vector3 faceforward(const vector3& I, const vector3& Nref) const;
 	vector3 reflect(const vector3& I) const;
 	vector3 refract(const vector3& I, const T& eta) const;
+	
+	//
+	vector2<T> xy() const { return vector2<T> { x, y }; }
+	vector2<T> xz() const { return vector2<T> { x, z }; }
+	vector2<T> yz() const { return vector2<T> { y, z }; }
 	
 };
 

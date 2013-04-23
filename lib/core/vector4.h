@@ -124,6 +124,12 @@ public:
 	// cross equals the vector3 cross function
 	
 	// no need for a separate "+-*/" vector4 definition at the moment
+	
+	//
+	vector2<T> xw() const { return vector2<T> { this->x, w }; }
+	vector2<T> yw() const { return vector2<T> { this->y, w }; }
+	vector2<T> zw() const { return vector2<T> { this->z, w }; }
+	vector3<T> xyz() const { return vector3<T> { this->x, this->y, this->z }; }
 
 };
 

@@ -400,6 +400,7 @@ void framebuffer::clear(const vector<size_t> image_indices, const bool depth_cle
 	if(active_pipeline != nullptr && active_pipeline->get_scissor_test()) {
 		scissor_rectangle = active_pipeline->get_scissor_rectangle();
 		const uint2 scissor_size { scissor_rectangle.z, scissor_rectangle.w };
+		if(scissor_size.x == 0 || scissor_size.y == 0) return;
 		scissor_rectangle.z += scissor_rectangle.x; // make absolute coordinates
 		scissor_rectangle.w += scissor_rectangle.y;
 		ocl->set_kernel_range(ocl->compute_kernel_ranges(std::min(size.x, scissor_size.x),

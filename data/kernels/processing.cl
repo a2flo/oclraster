@@ -33,7 +33,8 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 								 global triangle_bounds* triangle_bounds_buffer,
 								 constant constant_data* cdata,
 								 const unsigned int primitive_type,
-								 const unsigned int primitive_count) {
+								 const unsigned int primitive_count,
+								 const uint4 scissor_rectangle) {
 	const unsigned int triangle_id = get_global_id(0);
 	// global work size is greater than the actual primitive count
 	// -> check for primitive_count instead of get_global_size(0)
@@ -327,6 +328,17 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 		discard();
 	}
 #endif
+	const float4 bounds = (float4)(floor(x_bounds.x), ceil(x_bounds.y),
+								   floor(y_bounds.x), ceil(y_bounds.y));
+	
+#if defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
+	// scissor test
+	const uint4 ubounds = convert_uint4(bounds);
+	if(scissor_rectangle.x > ubounds.y || ubounds.x > scissor_rectangle.z ||
+	   scissor_rectangle.y > ubounds.w || ubounds.z > scissor_rectangle.w) {
+		discard();
+	}
+#endif
 	
 	// output:
 	for(unsigned int i = 0u; i < 3u; i++) {
@@ -338,6 +350,5 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	*tf_data_ptr++ = VV_depth;
 	
 	// TODO: rounding should depend on sampling mode
-	tb_ptr->bounds = (float4)(floor(x_bounds.x), ceil(x_bounds.y),
-							  floor(y_bounds.x), ceil(y_bounds.y));
+	tb_ptr->bounds = bounds;
 }

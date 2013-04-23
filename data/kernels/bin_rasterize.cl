@@ -11,6 +11,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 						  global ulong* bin_queues,
 						  const uint2 bin_count,
 						  const unsigned int bin_count_lin,
+						  const uint2 bin_offset,
 						  const unsigned int batch_count,
 						  const unsigned int triangle_count,
 						  
@@ -31,7 +32,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	
 	const unsigned int global_id = get_global_id(0);
 	const unsigned int bin_idx = local_id;
-	const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x);
+	const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x) + bin_offset;
 	
 	// init counter
 	if(global_id == 0) {
@@ -82,7 +83,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	
 	const unsigned int local_size = get_local_size(0);
 	const unsigned int bin_idx = get_group_id(0);
-	const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x);
+	const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x) + bin_offset;
 	
 	// note: opencl does not require this to be aligned, but certain implementations do
 	uchar triangle_queue[BATCH_SIZE] __attribute__((aligned(8)));

@@ -46,6 +46,7 @@ void processing_stage::process(draw_state& state, const PRIMITIVE_TYPE type, con
 	ocl->set_kernel_argument(argc++, state.camera_buffer);
 	ocl->set_kernel_argument(argc++, (underlying_type<PRIMITIVE_TYPE>::type)type);
 	ocl->set_kernel_argument(argc++, primitive_count);
+	ocl->set_kernel_argument(argc++, state.scissor_rectangle_abs);
 	ocl->set_kernel_range(ocl->compute_kernel_ranges(primitive_count));
 	ocl->run_kernel();
 }

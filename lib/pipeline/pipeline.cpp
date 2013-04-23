@@ -202,13 +202,38 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 	}
 	const auto primitive_count = element_range.second - element_range.first;
 	
+	if(state.scissor_test &&
+	   (state.scissor_rectangle.z == 0 || state.scissor_rectangle.w == 0 ||
+		state.scissor_rectangle.x >= state.framebuffer_size.x ||
+		state.scissor_rectangle.y >= state.framebuffer_size.y)) {
+		return; // scissor rectangle size is 0 or offset is beyond the framebuffer size
+	}
+	
 	// initialize draw state
 	state.triangle_count = primitive_count;
 	state.vertex_count = vertex_count;
-	state.bin_count = {
-		(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
-		(state.framebuffer_size.y / state.bin_size.y) + ((state.framebuffer_size.y % state.bin_size.y) != 0 ? 1 : 0)
-	};
+	
+	if(!state.scissor_test) {
+		state.scissor_rectangle_abs = { 0u, 0u, ~0u, ~0u };
+		state.bin_offset = { 0u, 0u };
+		state.bin_count = {
+			(state.framebuffer_size.x / state.bin_size.x) + ((state.framebuffer_size.x % state.bin_size.x) != 0 ? 1 : 0),
+			(state.framebuffer_size.y / state.bin_size.y) + ((state.framebuffer_size.y % state.bin_size.y) != 0 ? 1 : 0)
+		};
+	}
+	else {
+		// compute absolute, inclusive and clamped scissor rectangle
+		state.scissor_rectangle_abs.set(state.scissor_rectangle.x, state.scissor_rectangle.y,
+										state.scissor_rectangle.x + (state.scissor_rectangle.z == 0 ? 0 : (state.scissor_rectangle.z - 1)),
+										state.scissor_rectangle.y + (state.scissor_rectangle.w == 0 ? 0 : (state.scissor_rectangle.w - 1)));
+		state.scissor_rectangle_abs.z = std::min(state.scissor_rectangle_abs.z, state.framebuffer_size.x - 1);
+		state.scissor_rectangle_abs.w = std::min(state.scissor_rectangle_abs.w, state.framebuffer_size.y - 1);
+		
+		const uint2 start_bin = state.scissor_rectangle_abs.xy() / state.bin_size;
+		const uint2 end_bin = state.scissor_rectangle_abs.zw() / state.bin_size;
+		state.bin_count = end_bin - start_bin + 1;
+		state.bin_offset = start_bin;
+	}
 	state.batch_count = ((state.triangle_count / state.batch_size) +
 						 ((state.triangle_count % state.batch_size) != 0 ? 1 : 0));
 	

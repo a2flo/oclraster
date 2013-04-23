@@ -25,11 +25,13 @@
 										
 										const uint2 bin_count,
 										const unsigned int bin_count_lin,
+										const uint2 bin_offset,
 										const unsigned int batch_count,
 										const unsigned int intra_bin_groups,
 										
 										const unsigned int primitive_type,
-										const uint2 framebuffer_size) {
+										const uint2 framebuffer_size,
+										const uint4 scissor_rectangle) {
 		const unsigned int local_id = get_local_id(0);
 		const unsigned int local_size = get_local_size(0);
 		
@@ -88,7 +90,7 @@
 #endif
 			
 			//
-			const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x);
+			const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x) + bin_offset;
 			for(unsigned int i = 0; i < intra_bin_groups; i++) {
 				const unsigned int fragment_idx = (i * local_size) + local_id;
 				const uint2 local_xy = (uint2)(fragment_idx % BIN_SIZE, fragment_idx / BIN_SIZE);
@@ -96,11 +98,13 @@
 				const unsigned int x = bin_location.x * BIN_SIZE + local_xy.x;
 				const unsigned int y = bin_location.y * BIN_SIZE + local_xy.y;
 				const float2 fragment_coord = (float2)(x, y) + 0.5f;
-				if(x >= framebuffer_size.x || y >= framebuffer_size.y) continue;
+				if(x >= framebuffer_size.x || y >= framebuffer_size.y ||
+				   x < scissor_rectangle.x || x > scissor_rectangle.z ||
+				   y < scissor_rectangle.y || y > scissor_rectangle.w) {
+					continue;
+				}
 				
 				// TODO: handling if there is no depth buffer / depth testing
-				// TODO: stencil testing
-				// TODO: scissor testing
 				
 				//###OCLRASTER_FRAMEBUFFER_READ###
 				

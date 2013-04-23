@@ -50,6 +50,7 @@ struct draw_state {
 	//
 	PROJECTION projection = PROJECTION::PERSPECTIVE;
 	uint4 scissor_rectangle { 0u, 0u, ~0u, ~0u };
+	uint4 scissor_rectangle_abs { 0u, 0u, ~0u, ~0u }; // absolute, inclusive
 	
 	// NOTE: this is just for the internal transformed buffer
 	const unsigned int transformed_primitive_size = 10 * sizeof(float);
@@ -73,6 +74,7 @@ struct draw_state {
 	//
 	const uint2 bin_size { OCLRASTER_BIN_SIZE };
 	uint2 bin_count { 1, 1 };
+	uint2 bin_offset { 0, 0 };
 	const unsigned int batch_size { OCLRASTER_BATCH_SIZE };
 	unsigned int batch_count { 0 };
 	unsigned int triangle_count { 0 };
