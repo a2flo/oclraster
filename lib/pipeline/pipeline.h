@@ -62,7 +62,7 @@ struct draw_state {
 	//
 	opencl::buffer_object* transformed_vertices_buffer = nullptr;
 	opencl::buffer_object* transformed_buffer = nullptr;
-	opencl::buffer_object* triangle_bounds_buffer = nullptr;
+	opencl::buffer_object* primitive_bounds_buffer = nullptr;
 	unordered_map<string, const opencl_base::buffer_object&> user_buffers;
 	unordered_map<string, const image&> user_images;
 	vector<opencl::buffer_object*> user_transformed_buffers;
@@ -77,8 +77,11 @@ struct draw_state {
 	uint2 bin_offset { 0, 0 };
 	const unsigned int batch_size { OCLRASTER_BATCH_SIZE };
 	unsigned int batch_count { 0 };
-	unsigned int triangle_count { 0 };
+	unsigned int primitive_count { 0 };
+	unsigned int instance_primitive_count { 0 };
+	unsigned int instance_index_count { 0 };
 	unsigned int vertex_count { 0 };
+	unsigned int instance_count { 1 };
 	
 	//
 	struct camera_setup {
@@ -131,6 +134,10 @@ public:
 	void draw(const PRIMITIVE_TYPE type,
 			  const unsigned int vertex_count,
 			  const pair<unsigned int, unsigned int> element_range);
+	void draw_instanced(const PRIMITIVE_TYPE type,
+						const unsigned int vertex_count,
+						const pair<unsigned int, unsigned int> element_range,
+						const unsigned int instance_count);
 	
 	// camera
 	// NOTE: the camera class and these functions are only provided to make things easier.

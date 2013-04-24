@@ -22,7 +22,7 @@ typedef struct __attribute__((packed, aligned(4))) {
 
 typedef struct __attribute__((packed, aligned(16))) {
 	float4 bounds; // (.x = INFINITY if culled)
-} triangle_bounds;
+} primitive_bounds;
 
 //
 #define MIN_FRAGMENT_SIZE (1.0f / 256.0f)
@@ -30,18 +30,23 @@ typedef struct __attribute__((packed, aligned(16))) {
 kernel void oclraster_processing(global const unsigned int* index_buffer,
 								 global const float4* transformed_vertex_buffer,
 								 global transformed_data* transformed_buffer,
-								 global triangle_bounds* triangle_bounds_buffer,
+								 global primitive_bounds* primitive_bounds_buffer,
 								 constant constant_data* cdata,
 								 const unsigned int primitive_type,
 								 const unsigned int primitive_count,
+								 const unsigned int instance_primitive_count,
+								 const unsigned int instance_index_count,
 								 const uint4 scissor_rectangle) {
-	const unsigned int triangle_id = get_global_id(0);
+	const unsigned int primitive_id = get_global_id(0);
 	// global work size is greater than the actual primitive count
 	// -> check for primitive_count instead of get_global_size(0)
-	if(triangle_id >= primitive_count) return;
-	global transformed_data* tf_ptr = &transformed_buffer[triangle_id];
-	global triangle_bounds* tb_ptr = &triangle_bounds_buffer[triangle_id];
+	if(primitive_id >= primitive_count) return;
+	
+	global transformed_data* tf_ptr = &transformed_buffer[primitive_id];
+	global primitive_bounds* tb_ptr = &primitive_bounds_buffer[primitive_id];
 	global float* tf_data_ptr = tf_ptr->data;
+	const unsigned int instance_id = primitive_id / instance_primitive_count;
+	const unsigned int instance_index_offset = instance_id * instance_index_count;
 	
 	//
 	MAKE_PRIMITIVE_INDICES(indices);
@@ -65,23 +70,23 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 		transformed_vertex_buffer[indices[2]].xyz
 	};
 	
-	// check if any vertex has been discarded (-> discard the triangle)
+	// check if any vertex has been discarded (-> discard the primitive)
 	for(unsigned int i = 0; i < 3; i++) {
 		if(vertices[i].x == INFINITY) discard();
 	}
 	
 #if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
 	// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
-	const float triangle_near_clipping[3] = {
+	const float primitive_near_clipping[3] = {
 		dot(vertices[0], forward),
 		dot(vertices[1], forward),
 		dot(vertices[2], forward)
 	};
 	
-	// if xyz < 0, don't add the triangle in the first place
-	if(triangle_near_clipping[0] < 0.0f &&
-	   triangle_near_clipping[1] < 0.0f &&
-	   triangle_near_clipping[2] < 0.0f) {
+	// if xyz < 0, don't add the primitive in the first place
+	if(primitive_near_clipping[0] < 0.0f &&
+	   primitive_near_clipping[1] < 0.0f &&
+	   primitive_near_clipping[2] < 0.0f) {
 		// all vertices are behind the camera
 		discard();
 	}
@@ -122,7 +127,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	const float y20 = dot(DY, c20);
 	const float y12 = dot(DY, c12);
 	
-	// TODO: compute triangle area through dx/dy -> vertices diff?
+	// TODO: compute primitive area through dx/dy -> vertices diff?
 	
 	//
 	const float VV[3][3] = {
@@ -155,7 +160,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 #endif
 	
 	/*for(uint i = 0; i < 3; i++) {
-		printf("[%d] VV%d: %.10f %.10f %.10f\n", triangle_id, i, VV[i][0], VV[i][1], VV[i][2]);
+		printf("[%d] VV%d: %.10f %.10f %.10f\n", primitive_id, i, VV[i][0], VV[i][1], VV[i][2]);
 	}*/
 	
 #if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
@@ -181,12 +186,12 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 		 (fabs(VV[0][2]) + fabs(VV[1][0])) +
 		 (fabs(VV[1][1]) + fabs(VV[1][2])) +
 		 (fabs(VV[2][0]) + fabs(VV[2][1]) + fabs(VV[2][2]))) <= VV_EPSILON_9) {
-		 //printf("imprecision culled (tp1): %d\n", triangle_id);
+		 //printf("imprecision culled (tp1): %d\n", primitive_id);
 		 return;
 		 }*/
 		
-		// triangle area and backface culling:
-		// note: in this stage, this requires the triangle to be completely visible (no clipping)
+		// primitive area and backface culling:
+		// note: in this stage, this requires the primitive to be completely visible (no clipping)
 		
 #define viewport_test(coord, axis) ((coord < 0.0f || coord >= fscreen_size[axis]) ? -1.0f : coord)
 		float coord_xs[9];
@@ -201,9 +206,9 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 			const unsigned int i1 = (i == 2u ? 1u : 2u);
 			
 			const float d = 1.0f / (VV[i0][0] * VV[i1][1] - VV[i0][1] * VV[i1][0]);
-			coord_xs[i] = (triangle_near_clipping[i] < 0.0f ? -1.0f :
+			coord_xs[i] = (primitive_near_clipping[i] < 0.0f ? -1.0f :
 						   (VV[i0][1] * VV[i1][2] - VV[i0][2] * VV[i1][1]) * d);
-			coord_ys[i] = (triangle_near_clipping[i] < 0.0f ? -1.0f :
+			coord_ys[i] = (primitive_near_clipping[i] < 0.0f ? -1.0f :
 						   (VV[i0][2] * VV[i1][0] - VV[i0][0] * VV[i1][2]) * d);
 			coord_xs[i] = viewport_test(coord_xs[i], 0);
 			coord_ys[i] = viewport_test(coord_ys[i], 1);
@@ -232,7 +237,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 		}
 		
 		if(valid_coords == 3) {
-			// compute triangle area if all vertices pass
+			// compute primitive area if all vertices pass
 			const float2 e0 = (float2)(coord_xs[1] - coord_xs[0],
 									   coord_ys[1] - coord_ys[0]);
 			const float2 e1 = (float2)(coord_xs[2] - coord_xs[0],
@@ -240,7 +245,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 			const float area = -0.5f * (e0.x * e1.y - e0.y * e1.x);
 			// half sample size (TODO: -> check if between sample points; <=1/2^8 sample size seems to be a good threshold?)
 			if(area < MIN_FRAGMENT_SIZE) {
-				//printf("triangle area culled: %d\n", triangle_id);
+				//printf("primitive area culled: %d\n", primitive_id);
 				discard(); // cull
 			}
 		}
@@ -253,7 +258,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 		   (coord_ys[0] == 0.0f || coord_ys[0] == -1.0f) &&
 		   (coord_ys[1] == 0.0f || coord_ys[1] == -1.0f) &&
 		   (coord_ys[2] == 0.0f || coord_ys[2] == -1.0f)) {
-			//printf("imprecision culled (tp2): %d\n", triangle_id);
+			//printf("imprecision culled (tp2): %d\n", primitive_id);
 			discard();
 		}
 		
@@ -346,7 +351,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 		*tf_data_ptr++ = VV[i][1];
 		*tf_data_ptr++ = VV[i][2];
 	}
-	//printf("[%d] bounds: %f %f -> %f %f\n", triangle_id, x_bounds.x, y_bounds.x, x_bounds.y, y_bounds.y);
+	//printf("[%d] bounds: %f %f -> %f %f\n", primitive_id, x_bounds.x, y_bounds.x, x_bounds.y, y_bounds.y);
 	*tf_data_ptr++ = VV_depth;
 	
 	// TODO: rounding should depend on sampling mode

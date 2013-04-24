@@ -128,16 +128,16 @@ fm(fm_), filenames(filenames_)
 	cache(BMP_BLOCK::LATIN_1_SUPPLEMENT);
 	
 	// create necessary glyph vbo and ubo
-	const float2 glyph_quad[] {
-		float2(0.0f, 1.0f),
-		float2(0.0f, 0.0f),
-		float2(1.0f, 1.0f),
-		float2(1.0f, 0.0f),
+	const float4 glyph_quad[] {
+		{ 0.0f, 1.0f, 0.0f, 1.0f },
+		{ 0.0f, 0.0f, 0.0f, 1.0f },
+		{ 1.0f, 1.0f, 0.0f, 1.0f },
+		{ 1.0f, 0.0f, 0.0f, 1.0f }
 	};
 	glyph_vbo = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 								   opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
 								   opencl::BUFFER_FLAG::INITIAL_COPY,
-								   4 * sizeof(float2), &glyph_quad[0]);
+								   4 * sizeof(float4), &glyph_quad[0]);
 	
 	text_ubo = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 								  opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
@@ -298,15 +298,20 @@ void font::cache(const unsigned int& start_code, const unsigned int& end_code) {
 			
 			// copy glyph bitmap rows to a correctly sized bitmap (display_font_size^2 or max glyph size^2),
 			// this is necessary, because of row padding "provided" by freetype
-			const size_t glyph_mem_size(display_font_size * display_font_size * 3);
+			const size_t glyph_mem_size(display_font_size * display_font_size * 4);
 			unsigned char* glyph_buffer = new unsigned char[glyph_mem_size];
 			memset(glyph_buffer, 0, glyph_mem_size);
 			
-			const size_t row_data_length(display_font_size * 3);
+			const size_t row_data_length(display_font_size * 4);
 			for(size_t row = 0; row < (size_t)slot->bitmap.rows; row++) {
-				memcpy(glyph_buffer + (row * row_data_length),
-					   slot->bitmap.buffer + (row * slot->bitmap.pitch),
-					   slot->bitmap.width);
+				unsigned char* glyph_ptr = glyph_buffer + (row * row_data_length);
+				unsigned char* bitmap_ptr = slot->bitmap.buffer + (row * slot->bitmap.pitch);
+				for(size_t column = 0; column < (size_t)slot->bitmap.width; column+=3) {
+					*glyph_ptr++ = *bitmap_ptr++;
+					*glyph_ptr++ = *bitmap_ptr++;
+					*glyph_ptr++ = *bitmap_ptr++;
+					*glyph_ptr++ = 255u;
+				}
 			}
 			
 			tex_array->write(glyph_buffer,
@@ -373,7 +378,7 @@ void font::recreate_texture_array(const size_t& layers) {
 	
 	//
 	if(tex_array == nullptr) {
-		tex_array = new image(font_texture_size, font_texture_size, image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGB, tex_data);
+		tex_array = new image(font_texture_size, font_texture_size, image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA, tex_data);
 	}
 	
 	// TODO: see above
@@ -652,12 +657,10 @@ void font::draw_cached(const opencl::buffer_object* ubo, const size_t& character
 	oclr_pipeline->bind_buffer("text_data", *ubo);
 	
 	// note: ubo data size / character_count (actual) != codes size / #characters in text (wanted)
-	//glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, (GLsizei)character_count);
-	
 	oclr_pipeline->bind_buffer("index_buffer", *_tmp_indices);
 	oclr_pipeline->bind_buffer("input_attributes", *glyph_vbo);
 	
-	oclr_pipeline->draw(PRIMITIVE_TYPE::TRIANGLE_STRIP, 4, { 0, 2 }); // TODO: instancing (-> character_count * 2 primitives)
+	oclr_pipeline->draw_instanced(PRIMITIVE_TYPE::TRIANGLE_STRIP, 4, { 0, 2 }, (unsigned int)character_count);
 }
 
 void font::set_size(const unsigned int& size) {
@@ -682,4 +685,8 @@ const vector<string> font::get_available_styles() const {
 		ret.emplace_back(face.first);
 	}
 	return ret;
+}
+
+const image* font::_get_image() const {
+	return tex_array;
 }

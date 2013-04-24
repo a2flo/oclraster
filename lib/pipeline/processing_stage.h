@@ -31,8 +31,7 @@ public:
 	
 	//
 	void process(draw_state& state,
-				 const PRIMITIVE_TYPE type,
-				 const unsigned int& primitive_count);
+				 const PRIMITIVE_TYPE type);
 	
 protected:
 

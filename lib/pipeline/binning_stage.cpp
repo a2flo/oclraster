@@ -59,9 +59,9 @@ const opencl::buffer_object* binning_stage::bin(draw_state& state) {
 	ocl->set_kernel_argument(argc++, (unsigned int)bin_count_lin);
 	ocl->set_kernel_argument(argc++, state.bin_offset);
 	ocl->set_kernel_argument(argc++, state.batch_count);
-	ocl->set_kernel_argument(argc++, (unsigned int)state.triangle_count);
+	ocl->set_kernel_argument(argc++, state.primitive_count);
 	
-	ocl->set_kernel_argument(argc++, state.triangle_bounds_buffer);
+	ocl->set_kernel_argument(argc++, state.primitive_bounds_buffer);
 	ocl->set_kernel_argument(argc++, state.framebuffer_size);
 	
 	if(ocl->get_active_device()->type >= opencl::DEVICE_TYPE::CPU0 &&

@@ -14,7 +14,7 @@ oclraster_uniforms transform_uniforms {
 } tp_uniforms;
 
 oclraster_in simple_input {
-	float2 vertex;
+	float4 vertex;
 } input_attributes;
 
 oclraster_uniforms text {
@@ -22,13 +22,12 @@ oclraster_uniforms text {
 } text_data;
 
 float4 gfx2d_transform() {
-	const uint instance_id = 0; // TODO: !
-	int2 id = (int2)(instance_id / 2, (instance_id % 2) * 2);
+	int2 id = (int2)(instance_index / 2, (instance_index % 2) * 2);
 	uint index = ((uint*)&text_data->data[id.x])[id.y];
 	uint pos = ((uint*)&text_data->data[id.x])[id.y + 1];
 	uint2 upos = (uint2)(pos & 0xFFFFu, (pos >> 16u) & 0xFFFFu);
 	
-	float2 vertex = input_attributes->vertex * tp_uniforms->glyph_size;
+	float2 vertex = input_attributes->vertex.xy * tp_uniforms->glyph_size;
 	// TODO: !
 	// kinda sick, but it does it's job (there is no other way to emulate a packed short int)
 	vertex.x += (float)(upos.x >= 0x8000u ? -(int)((~upos.x & 0xFFFFu) + 1u) : (int)(upos.x));
@@ -41,8 +40,8 @@ float4 gfx2d_transform() {
 	output_attributes->tex_coord.x = index % tp_uniforms->glyph_count.x;
 	output_attributes->tex_coord.y = index / tp_uniforms->glyph_count.x;
 	output_attributes->tex_coord.xy *= tp_uniforms->glyph_size;
-	output_attributes->tex_coord.xy += input_attributes->vertex * tp_uniforms->glyph_size;
-	output_attributes->tex_coord.xy -= input_attributes->vertex / tp_uniforms->page_size; // - 1 texel
+	output_attributes->tex_coord.xy += input_attributes->vertex.xy * tp_uniforms->glyph_size;
+	output_attributes->tex_coord.xy -= input_attributes->vertex.xy / tp_uniforms->page_size; // - 1 texel
 	output_attributes->tex_coord.xy /= tp_uniforms->page_size;
 	output_attributes->tex_coord.w = 0.0f;
 	
@@ -69,11 +68,13 @@ oclraster_framebuffer {
 
 void gfx2d_rasterization() {
 	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
-	float3 color = image_read(font_texture, point_sampler, output_attributes->tex_coord.xy).xyz;
-	const float alpha = rp_uniforms->font_color.w * fmax(color.x, fmax(color.y, color.z));
-	color.xyz *= rp_uniforms->font_color.xyz;
-	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color, alpha);
-	framebuffer->color.w = alpha + (framebuffer->color.w * (1.0f - alpha));
+	const float3 color = image_read(font_texture, point_sampler, output_attributes->tex_coord.xy).xyz * rp_uniforms->font_color.w;
+	const float3 color_sign = sign(color); // sign = 0 if color = 0, otherwise 1
+	const float max_alpha = (color_sign.x * color_sign.y * color_sign.z) * rp_uniforms->font_color.w; // 0 or font color alpha
+	if(max_alpha > 0.0f) {
+		framebuffer->color.xyz = (framebuffer->color.xyz * (1.0f - color)) + (color * rp_uniforms->font_color.xyz);
+		framebuffer->color.w = max_alpha + (framebuffer->color.w * (1.0f - max_alpha));
+	}
 }
 
 #endif

@@ -29,8 +29,7 @@ public:
 	virtual ~transform_stage();
 	
 	//
-	void transform(draw_state& state,
-				   const unsigned int& vertex_count);
+	void transform(draw_state& state);
 
 protected:
 

@@ -26,7 +26,7 @@ processing_stage::processing_stage() : stage_base() {
 processing_stage::~processing_stage() {
 }
 
-void processing_stage::process(draw_state& state, const PRIMITIVE_TYPE type, const unsigned int& primitive_count) {
+void processing_stage::process(draw_state& state, const PRIMITIVE_TYPE type) {
 	// -> 1D kernel, with max #work-items per work-group
 	ocl->use_kernel(string("PROCESSING.") + (state.projection == PROJECTION::PERSPECTIVE ? "PERSPECTIVE" : "ORTHOGRAPHIC"));
 	
@@ -42,11 +42,13 @@ void processing_stage::process(draw_state& state, const PRIMITIVE_TYPE type, con
 	// internal buffer / kernel parameters
 	ocl->set_kernel_argument(argc++, state.transformed_vertices_buffer);
 	ocl->set_kernel_argument(argc++, state.transformed_buffer);
-	ocl->set_kernel_argument(argc++, state.triangle_bounds_buffer);
+	ocl->set_kernel_argument(argc++, state.primitive_bounds_buffer);
 	ocl->set_kernel_argument(argc++, state.camera_buffer);
 	ocl->set_kernel_argument(argc++, (underlying_type<PRIMITIVE_TYPE>::type)type);
-	ocl->set_kernel_argument(argc++, primitive_count);
+	ocl->set_kernel_argument(argc++, state.primitive_count);
+	ocl->set_kernel_argument(argc++, state.instance_primitive_count);
+	ocl->set_kernel_argument(argc++, state.instance_index_count);
 	ocl->set_kernel_argument(argc++, state.scissor_rectangle_abs);
-	ocl->set_kernel_range(ocl->compute_kernel_ranges(primitive_count));
+	ocl->set_kernel_range(ocl->compute_kernel_ranges(state.primitive_count));
 	ocl->run_kernel();
 }

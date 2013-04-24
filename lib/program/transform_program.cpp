@@ -109,7 +109,7 @@ string transform_program::specialized_processing(const string& code,
 				buffer_handling_code += oclr_struct->name + " user_buffer_element_" + cur_user_buffer_str + ";\n";
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				for(const auto& var : oclr_struct->variables) {
-					output_handling_code += "user_buffer_" + cur_user_buffer_str + "[vertex_id]." + var + " = ";
+					output_handling_code += "user_buffer_" + cur_user_buffer_str + "[instance_vertex_id]." + var + " = ";
 					output_handling_code += "user_buffer_element_" + cur_user_buffer_str + "." + var + ";\n";
 				}
 				break;
@@ -126,7 +126,7 @@ string transform_program::specialized_processing(const string& code,
 	for(const auto& img : images.image_names) {
 		main_call_parameters += img + ", ";
 	}
-	main_call_parameters += "vertex_id, camera_position"; // the same for all transform programs
+	main_call_parameters += "vertex_id, instance_id, camera_position"; // the same for all transform programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_PRE_MAIN_CALL###", buffer_handling_code);
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
 						   "oclraster_user_"+entry_function+"("+main_call_parameters+");");
@@ -143,7 +143,7 @@ string transform_program::specialized_processing(const string& code,
 }
 
 string transform_program::get_fixed_entry_function_parameters() const {
-	return "const int vertex_index, const float3 camera_position";
+	return "const unsigned int vertex_index, const unsigned int instance_index, const float3 camera_position";
 }
 
 string transform_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type) const {

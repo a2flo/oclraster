@@ -196,11 +196,18 @@ void pipeline::swap() {
 void pipeline::draw(const PRIMITIVE_TYPE type,
 					const unsigned int vertex_count,
 					const pair<unsigned int, unsigned int> element_range) {
+	draw_instanced(type, vertex_count, element_range, 1);
+}
+
+void pipeline::draw_instanced(const PRIMITIVE_TYPE type,
+							  const unsigned int vertex_count,
+							  const pair<unsigned int, unsigned int> element_range,
+							  const unsigned int instance_count) {
+	if(instance_count == 0) return;
 	if(element_range.second <= element_range.first) {
 		oclr_error("invalid element range: %u - %u", element_range.first, element_range.second);
 		return;
 	}
-	const auto primitive_count = element_range.second - element_range.first;
 	
 	if(state.scissor_test &&
 	   (state.scissor_rectangle.z == 0 || state.scissor_rectangle.w == 0 ||
@@ -210,8 +217,19 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 	}
 	
 	// initialize draw state
-	state.triangle_count = primitive_count;
+	state.instance_count = instance_count;
+	state.instance_primitive_count = (element_range.second - element_range.first);
+	state.primitive_count = state.instance_primitive_count * state.instance_count;
 	state.vertex_count = vertex_count;
+	switch(type) {
+		case PRIMITIVE_TYPE::TRIANGLE:
+			state.instance_index_count = state.instance_primitive_count * 3;
+			break;
+		case PRIMITIVE_TYPE::TRIANGLE_STRIP:
+		case PRIMITIVE_TYPE::TRIANGLE_FAN:
+			state.instance_index_count = state.instance_primitive_count + 2;
+			break;
+	}
 	
 	if(!state.scissor_test) {
 		state.scissor_rectangle_abs = { 0u, 0u, ~0u, ~0u };
@@ -234,19 +252,19 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 		state.bin_count = end_bin - start_bin + 1;
 		state.bin_offset = start_bin;
 	}
-	state.batch_count = ((state.triangle_count / state.batch_size) +
-						 ((state.triangle_count % state.batch_size) != 0 ? 1 : 0));
+	state.batch_count = ((state.primitive_count / state.batch_size) +
+						 ((state.primitive_count % state.batch_size) != 0 ? 1 : 0));
 	
 	// TODO: this should be static!
-	// note: internal transformed buffer size must be a multiple of "batch size" triangles (necessary for the binner)
-	const unsigned int tc_mod_batch_size = (state.triangle_count % OCLRASTER_BATCH_SIZE);
-	const unsigned int triangle_padding = (tc_mod_batch_size == 0 ? 0 : OCLRASTER_BATCH_SIZE - tc_mod_batch_size);
+	// note: internal transformed buffer size must be a multiple of "batch size" primitives (necessary for the binner)
+	const unsigned int pc_mod_batch_size = (state.primitive_count % OCLRASTER_BATCH_SIZE);
+	const unsigned int primitive_padding = (pc_mod_batch_size == 0 ? 0 : OCLRASTER_BATCH_SIZE - pc_mod_batch_size);
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-												  state.transformed_primitive_size * (state.triangle_count + triangle_padding));
-	state.triangle_bounds_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-													  sizeof(float) * 4 * (state.triangle_count + triangle_padding));
+												  state.transformed_primitive_size * (state.primitive_count + primitive_padding));
+	state.primitive_bounds_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
+													   sizeof(float) * 4 * (state.primitive_count + primitive_padding));
 	state.transformed_vertices_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
-														   sizeof(float) * 4 * state.vertex_count);
+														   sizeof(float) * 4 * state.vertex_count * state.instance_count);
 	
 	// create user transformed buffers (transform program outputs)
 	const auto active_device = ocl->get_active_device();
@@ -254,15 +272,15 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 		if(tp_struct->type == oclraster_program::STRUCT_TYPE::OUTPUT) {
 			opencl::buffer_object* buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 															   // get device specific size from program
-															   tp_struct->device_infos.at(active_device).struct_size * vertex_count);
+															   tp_struct->device_infos.at(active_device).struct_size * vertex_count * state.instance_count);
 			state.user_transformed_buffers.push_back(buffer);
 			bind_buffer(tp_struct->object_name, *buffer);
 		}
 	}
 	
 	// pipeline
-	transform.transform(state, state.vertex_count);
-	processing.process(state, type, state.triangle_count);
+	transform.transform(state);
+	processing.process(state, type);
 	const auto queue_buffer = binning.bin(state);
 	
 	// TODO: pipelining/splitting
@@ -270,7 +288,7 @@ void pipeline::draw(const PRIMITIVE_TYPE type,
 	
 	//
 	ocl->delete_buffer(state.transformed_buffer);
-	ocl->delete_buffer(state.triangle_bounds_buffer);
+	ocl->delete_buffer(state.primitive_bounds_buffer);
 	ocl->delete_buffer(state.transformed_vertices_buffer);
 	
 	// delete user transformed buffers

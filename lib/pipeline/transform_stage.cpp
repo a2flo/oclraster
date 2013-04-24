@@ -26,7 +26,7 @@ transform_stage::transform_stage() : stage_base() {
 transform_stage::~transform_stage() {
 }
 
-void transform_stage::transform(draw_state& state, const unsigned int& vertex_count) {
+void transform_stage::transform(draw_state& state) {
 	//
 	oclraster_program::kernel_spec spec;
 	if(!create_kernel_spec(state, *state.transform_prog, spec)) {
@@ -42,7 +42,8 @@ void transform_stage::transform(draw_state& state, const unsigned int& vertex_co
 	// internal buffer / kernel parameters
 	ocl->set_kernel_argument(argc++, state.transformed_vertices_buffer);
 	ocl->set_kernel_argument(argc++, state.camera_buffer);
-	ocl->set_kernel_argument(argc++, vertex_count);
-	ocl->set_kernel_range(ocl->compute_kernel_ranges(vertex_count));
+	ocl->set_kernel_argument(argc++, state.vertex_count);
+	ocl->set_kernel_argument(argc++, state.instance_count);
+	ocl->set_kernel_range(ocl->compute_kernel_ranges(state.vertex_count * state.instance_count));
 	ocl->run_kernel();
 }

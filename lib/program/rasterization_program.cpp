@@ -254,14 +254,15 @@ string rasterization_program::specialized_processing(const string& code,
 	}
 	if(has_output_structs) {
 		// reading indices is only necessary when transform stage output variables must be interpolated
-		buffer_handling_code = "MAKE_PRIMITIVE_INDICES(indices);\n" + buffer_handling_code;
+		buffer_handling_code = ("const unsigned int instance_index_offset = instance_id * instance_index_count;\nMAKE_PRIMITIVE_INDICES(indices);\n" +
+								buffer_handling_code);
 	}
 	for(size_t i = 0, img_count = image_decls.size(); i < img_count; i++) {
 		// framebuffer is passed in separately
 		if(images.is_framebuffer[i]) continue;
 		main_call_parameters += images.image_names[i] + ", ";
 	}
-	main_call_parameters += "&framebuffer, fragment_coord, barycentric.xyz"; // the same for all rasterization programs
+	main_call_parameters += "&framebuffer, fragment_coord, barycentric.xyz, primitive_id, instance_id"; // the same for all rasterization programs
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
 						   buffer_handling_code+"oclraster_user_"+entry_function+"("+main_call_parameters+");");
 	
@@ -363,7 +364,7 @@ string rasterization_program::specialized_processing(const string& code,
 }
 
 string rasterization_program::get_fixed_entry_function_parameters() const {
-	return "oclraster_framebuffer* framebuffer, const float2 fragment_coord, const float3 barycentric";
+	return "oclraster_framebuffer* framebuffer, const float2 fragment_coord, const float3 barycentric, const unsigned int primitive_index, const unsigned int instance_index";
 }
 
 string rasterization_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type) const {

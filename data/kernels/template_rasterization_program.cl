@@ -30,6 +30,9 @@
 										const unsigned int intra_bin_groups,
 										
 										const unsigned int primitive_type,
+										const unsigned int instance_primitive_count,
+										const unsigned int instance_index_count,
+										
 										const uint2 framebuffer_size,
 										const uint4 scissor_rectangle) {
 		const unsigned int local_id = get_local_id(0);
@@ -54,7 +57,7 @@
 		// -1 b/c the local memory is also used for other things
 		//#define LOCAL_MEM_BATCH_COUNT ((LOCAL_MEM_SIZE / BATCH_SIZE) - 1)
 		#define LOCAL_MEM_BATCH_COUNT 32u
-		local uchar triangle_queue[LOCAL_MEM_BATCH_COUNT * BATCH_SIZE] __attribute__((aligned(16)));
+		local uchar primitive_queue[LOCAL_MEM_BATCH_COUNT * BATCH_SIZE] __attribute__((aligned(16)));
 #endif
 		
 #if !defined(NO_BARRIER)
@@ -81,7 +84,7 @@
 #if defined(LOCAL_MEM_COPY)
 			// read all batches into local memory at once
 			const size_t offset = (bin_idx * batch_count) * BATCH_SIZE;
-			event_t event = async_work_group_copy(&triangle_queue[0],
+			event_t event = async_work_group_copy(&primitive_queue[0],
 												  (global const uchar*)(bin_queues + offset),
 												  batch_count * BATCH_SIZE, 0);
 			wait_group_events(1, &event);
@@ -115,7 +118,7 @@
 					batch_idx < batch_count;
 					batch_idx++, queue_offset += BATCH_SIZE) {
 #if defined(LOCAL_MEM_COPY)
-					local const uchar* queue_ptr = &triangle_queue[queue_offset];
+					local const uchar* queue_ptr = &primitive_queue[queue_offset];
 #else
 					global const uchar* queue_ptr = &bin_queues[global_queue_offset + queue_offset];
 #endif
@@ -128,25 +131,26 @@
 					for(unsigned int idx = 0; idx < BATCH_SIZE; idx++) {
 						const unsigned int queue_data = queue_ptr[idx];
 						if(queue_data < idx) break; // end of queue
-						const unsigned int triangle_id = queue_offset + queue_data;
+						const unsigned int primitive_id = queue_offset + queue_data;
+						const unsigned int instance_id = primitive_id / instance_primitive_count;
 						
 						//
 						{
-							const float3 VV0 = (float3)(transformed_buffer[triangle_id].data[0],
-														transformed_buffer[triangle_id].data[1],
-														transformed_buffer[triangle_id].data[2]);
-							const float3 VV1 = (float3)(transformed_buffer[triangle_id].data[3],
-														transformed_buffer[triangle_id].data[4],
-														transformed_buffer[triangle_id].data[5]);
-							const float3 VV2 = (float3)(transformed_buffer[triangle_id].data[6],
-														transformed_buffer[triangle_id].data[7],
-														transformed_buffer[triangle_id].data[8]);
+							const float3 VV0 = (float3)(transformed_buffer[primitive_id].data[0],
+														transformed_buffer[primitive_id].data[1],
+														transformed_buffer[primitive_id].data[2]);
+							const float3 VV1 = (float3)(transformed_buffer[primitive_id].data[3],
+														transformed_buffer[primitive_id].data[4],
+														transformed_buffer[primitive_id].data[5]);
+							const float3 VV2 = (float3)(transformed_buffer[primitive_id].data[6],
+														transformed_buffer[primitive_id].data[7],
+														transformed_buffer[primitive_id].data[8]);
 							
 							//
 							float4 barycentric = (float4)(mad(fragment_coord.x, VV0.x, mad(fragment_coord.y, VV0.y, VV0.z)),
 														  mad(fragment_coord.x, VV1.x, mad(fragment_coord.y, VV1.y, VV1.z)),
 														  mad(fragment_coord.x, VV2.x, mad(fragment_coord.y, VV2.y, VV2.z)),
-														  transformed_buffer[triangle_id].data[9]); // .w = computed depth
+														  transformed_buffer[primitive_id].data[9]); // .w = computed depth
 							
 #if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
 							if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
@@ -155,10 +159,10 @@
 							barycentric.xyz = select(barycentric.xyz, (float3)(0.0f),
 													 isless(fabs(barycentric.xyz), (float3)(BARYCENTRIC_EPSILON)));
 							
-							// general case: completely outside the triangle
+							// general case: completely outside the primitive
 							if(barycentric.x < 0.0f || barycentric.y < 0.0f || barycentric.z < 0.0f) continue;
 							
-							// "consistency rules" (fragment is on the edge of a triangle or on a vertex):
+							// "consistency rules" (fragment is on the edge of a primitive or on a vertex):
 							// -> at least one barycentrix element "i" is 0
 							// -> valid fragment if: VVi.x must be > 0 or VVi.x must be == 0 and VVi.y must be < 0
 							if(barycentric.x == 0.0f) {

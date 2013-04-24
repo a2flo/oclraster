@@ -89,7 +89,7 @@ public:
 	//void clear_cache();
 	
 	// texture cache info
-	static constexpr unsigned int font_texture_size = 2048;
+	static constexpr unsigned int font_texture_size = 1024;
 	
 	// unicode -> texture index
 	struct glyph_data {
@@ -97,6 +97,9 @@ public:
 		const int4 layout;
 		const int2 size;
 	};
+	
+	// for debugging purposes
+	const image* _get_image() const;
 	
 protected:
 	font_manager* fm = nullptr;

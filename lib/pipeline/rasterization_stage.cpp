@@ -76,6 +76,8 @@ void rasterization_stage::rasterize(draw_state& state,
 	ocl->set_kernel_argument(argc++, state.batch_count);
 	ocl->set_kernel_argument(argc++, intra_bin_groups);
 	ocl->set_kernel_argument(argc++, (underlying_type<PRIMITIVE_TYPE>::type)type);
+	ocl->set_kernel_argument(argc++, state.instance_primitive_count);
+	ocl->set_kernel_argument(argc++, state.instance_index_count);
 	ocl->set_kernel_argument(argc++, state.framebuffer_size);
 	ocl->set_kernel_argument(argc++, state.scissor_rectangle_abs);
 	
