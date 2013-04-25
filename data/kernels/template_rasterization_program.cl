@@ -80,6 +80,7 @@
 			}
 #else
 		const unsigned int bin_idx = get_group_id(0);
+		const unsigned int valid_batch_count = batch_count;
 		{
 #endif
 			
