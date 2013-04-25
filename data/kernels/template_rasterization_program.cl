@@ -58,6 +58,8 @@
 		//#define LOCAL_MEM_BATCH_COUNT ((LOCAL_MEM_SIZE / BATCH_SIZE) - 1)
 		#define LOCAL_MEM_BATCH_COUNT 32u
 		local uchar primitive_queue[LOCAL_MEM_BATCH_COUNT * BATCH_SIZE] __attribute__((aligned(16)));
+		unsigned int triangle_offsets[LOCAL_MEM_BATCH_COUNT]; // stores the triangle id offsets for valid batches
+		event_t events[LOCAL_MEM_BATCH_COUNT];
 #endif
 		
 #if !defined(NO_BARRIER)
@@ -82,12 +84,29 @@
 #endif
 			
 #if defined(LOCAL_MEM_COPY)
-			// read all batches into local memory at once
-			const size_t offset = (bin_idx * batch_count) * BATCH_SIZE;
-			event_t event = async_work_group_copy(&primitive_queue[0],
-												  (global const uchar*)(bin_queues + offset),
-												  batch_count * BATCH_SIZE, 0);
-			wait_group_events(1, &event);
+			// only read batches into local memory when they're non-empty
+			// note that this doesn't require any synchronization, since it's the same for all work-items
+			unsigned int valid_batch_count = 0;
+			size_t batch_offset = (bin_idx * batch_count) * BATCH_SIZE;
+			for(unsigned int batch_idx = 0; batch_idx < batch_count; batch_idx++, batch_offset += BATCH_SIZE) {
+				if(bin_queues[batch_offset] == 0xFF && bin_queues[batch_offset + 1] == 0xFF) {
+					continue;
+				}
+				
+				events[valid_batch_count] = async_work_group_copy(&primitive_queue[valid_batch_count * BATCH_SIZE],
+																  (global const uchar*)(bin_queues + batch_offset),
+																  BATCH_SIZE, 0);
+				triangle_offsets[valid_batch_count] = batch_idx * BATCH_SIZE;
+				valid_batch_count++;
+			}
+			
+			// early-out when there are no valid batches
+			if(valid_batch_count == 0) continue;
+			
+			// since we're not immediately waiting on all batch copies to finish, wait here
+			for(unsigned int batch_idx = 0; batch_idx < valid_batch_count; batch_idx++) {
+				wait_group_events(1, &events[batch_idx]);
+			}
 #else
 			const size_t global_queue_offset = (bin_idx * batch_count) * BATCH_SIZE;
 #endif
@@ -115,23 +134,28 @@
 				
 				//
 				for(unsigned int batch_idx = 0, queue_offset = 0;
-					batch_idx < batch_count;
+					batch_idx < valid_batch_count;
 					batch_idx++, queue_offset += BATCH_SIZE) {
 #if defined(LOCAL_MEM_COPY)
 					local const uchar* queue_ptr = &primitive_queue[queue_offset];
 #else
 					global const uchar* queue_ptr = &bin_queues[global_queue_offset + queue_offset];
-#endif
+					
 					// check if queue is empty
 					if(queue_ptr[0] == 0xFF && queue_ptr[1] == 0xFF) {
 						continue;
 					}
+#endif
 					
 					//
 					for(unsigned int idx = 0; idx < BATCH_SIZE; idx++) {
 						const unsigned int queue_data = queue_ptr[idx];
 						if(queue_data < idx) break; // end of queue
+#if defined(LOCAL_MEM_COPY)
+						const unsigned int primitive_id = triangle_offsets[batch_idx] + queue_data;
+#else
 						const unsigned int primitive_id = queue_offset + queue_data;
+#endif
 						const unsigned int instance_id = primitive_id / instance_primitive_count;
 						
 						//
