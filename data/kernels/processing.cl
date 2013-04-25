@@ -58,7 +58,6 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	const float3 DY = cdata->camera_y_vec.xyz;
 	const float3 forward = cdata->camera_forward.xyz;
 #elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
-	const float2 D0 = cdata->camera_origin.xy;
 	const float DX = cdata->camera_x_vec.x;
 	const float DY = cdata->camera_y_vec.y;
 #endif
@@ -137,8 +136,6 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	};
 	const float VV_depth = dot(vertices[0], c12);
 #elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
-	// TODO: D0 offset
-	
 	const float x0 = DX * (vertices[2].y - vertices[1].y);
 	const float x1 = DX * (vertices[0].y - vertices[2].y);
 	const float x2 = DX * (vertices[1].y - vertices[0].y);

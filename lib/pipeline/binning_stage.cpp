@@ -71,6 +71,8 @@ const opencl::buffer_object* binning_stage::bin(draw_state& state) {
 	}
 	else {
 		// gpu
+		const size_t intra_bin_groups = (bin_count_lin / bin_local_size) + (bin_count_lin % bin_local_size != 0 ? 1 : 0);
+		ocl->set_kernel_argument(argc++, (unsigned int)intra_bin_groups);
 		ocl->set_kernel_range({ unit_count * bin_local_size, bin_local_size });
 	}
 	ocl->run_kernel();

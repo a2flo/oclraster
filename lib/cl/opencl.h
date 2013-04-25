@@ -97,7 +97,7 @@ public:
 		GPU5,
 		GPU6,
 		GPU7,
-		GPU255 = GPU0+254,
+		GPU255 = GPU0+255,
 		CPU0,
 		CPU1,
 		CPU2,
@@ -106,7 +106,7 @@ public:
 		CPU5,
 		CPU6,
 		CPU7,
-		CPU255 = CPU0+254
+		CPU255 = CPU0+255
 	};
 	device_object* get_device(const DEVICE_TYPE& device);
 	device_object* get_active_device();
