@@ -624,15 +624,20 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		// Note that if a CPU device is specified, the CGL share group must also include the GL float renderer;
 		// Otherwise CL_INVALID_DEVICE will be returned."
 		// -> create a vector of all cpu devices and create the context
-		vector<cl::Device> cpu_devices;
-		if(device_restriction.empty() || device_restriction.count("CPU") > 0) {
-			for(const auto& device : internal_devices) {
-				if(device.getInfo<CL_DEVICE_TYPE>() == CL_DEVICE_TYPE_CPU) {
-					cpu_devices.emplace_back(device);
+		vector<cl::Device> cl_devices;
+		if(apple_gl_sharing) {
+			if(device_restriction.empty() || device_restriction.count("CPU") > 0) {
+				for(const auto& device : internal_devices) {
+					if(device.getInfo<CL_DEVICE_TYPE>() == CL_DEVICE_TYPE_CPU) {
+						cl_devices.emplace_back(device);
+					}
 				}
 			}
 		}
-		context = new cl::Context(cpu_devices, cl_properties, clLogMessagesToStdoutAPPLE, nullptr, &ierr);
+		else {
+			cl_devices = internal_devices;
+		}
+		context = new cl::Context(cl_devices, cl_properties, clLogMessagesToStdoutAPPLE, nullptr, &ierr);
 		
 #else
 		// context with gl share group (cl/gl interop)

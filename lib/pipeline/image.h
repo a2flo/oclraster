@@ -96,17 +96,18 @@ public:
 	};
 	
 	// image header when a buffer is used
-	struct __attribute__((packed, aligned(128))) header {
+#define OCLRASTER_IMAGE_HEADER_SIZE 4096
+	struct __attribute__((packed, aligned(OCLRASTER_IMAGE_HEADER_SIZE))) header {
 		IMAGE_TYPE type;
 		IMAGE_CHANNEL channel_order;
 		unsigned short int width;
 		unsigned short int height;
-		unsigned char _unused[120];
+		unsigned char _unused[OCLRASTER_IMAGE_HEADER_SIZE - 8];
 	};
 	static constexpr size_t header_size() {
-		// opencl requires an address alignment of 128 bytes (16 * 64-bit value)
-		static_assert(sizeof(header) == (16*8), "invalid image header size!");
-		return (16*8);
+		// device specific address alignment (min 128 bytes, but can be up to 4096 -> use 4096)
+		static_assert(sizeof(header) == (OCLRASTER_IMAGE_HEADER_SIZE), "invalid image header size!");
+		return (OCLRASTER_IMAGE_HEADER_SIZE);
 	}
 	
 	//

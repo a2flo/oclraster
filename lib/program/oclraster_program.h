@@ -28,6 +28,43 @@ enum class PROJECTION : unsigned int {
 	PERSPECTIVE,
 	ORTHOGRAPHIC
 };
+enum class DEPTH_FUNCTION : unsigned int {
+	NEVER,
+	LESS,
+	EQUAL,
+	LESS_OR_EQUAL,
+	GREATER,
+	NOT_EQUAL,
+	GREATER_OR_EQUAL,
+	ALWAYS,
+	CUSTOM
+};
+struct depth_state {
+	DEPTH_FUNCTION depth_func;
+	string custom_depth_func;
+	bool depth_test;
+	bool depth_override;
+	
+	depth_state(const depth_state& state) :
+	depth_func(state.depth_func), custom_depth_func(state.custom_depth_func), depth_test(state.depth_test), depth_override(state.depth_override) {}
+	depth_state(const DEPTH_FUNCTION depth_func_ = DEPTH_FUNCTION::LESS,
+				const string custom_depth_func_ = "",
+				const bool depth_test_ = true,
+				const bool depth_override_ = false) :
+	depth_func(depth_func_), custom_depth_func(depth_func_ == DEPTH_FUNCTION::CUSTOM ? custom_depth_func_ : ""),
+	depth_test(depth_test_), depth_override(depth_override_) {}
+	
+	bool operator==(const depth_state& state) const {
+		if(state.depth_func != depth_func) return false;
+		if(state.depth_test != depth_test) return false;
+		if(state.depth_override != depth_override) return false;
+		if(state.depth_func == DEPTH_FUNCTION::CUSTOM && state.custom_depth_func != custom_depth_func) return false;
+		return true;
+	}
+	bool operator!=(const depth_state& state) const {
+		return !(*this == state);
+	}
+};
 
 class oclraster_program {
 public:
@@ -36,13 +73,35 @@ public:
 	struct kernel_spec {
 		vector<image_type> image_spec;
 		PROJECTION projection;
-		kernel_spec(const kernel_spec& spec) : image_spec(spec.image_spec), projection(spec.projection) {}
-		kernel_spec(kernel_spec&& spec) : image_spec(), projection(spec.projection) {
+		depth_state depth;
+		
+		kernel_spec(const kernel_spec& spec) :
+		image_spec(spec.image_spec), projection(spec.projection), depth(spec.depth) {}
+		kernel_spec(kernel_spec&& spec) : image_spec(), projection(spec.projection), depth(spec.depth) {
 			this->image_spec.swap(spec.image_spec);
 		}
 		kernel_spec(const vector<image_type> image_spec_ = vector<image_type> {},
-					const PROJECTION projection_ = PROJECTION::PERSPECTIVE) :
-		image_spec(image_spec_), projection(projection_) {}
+					const PROJECTION projection_ = PROJECTION::PERSPECTIVE,
+					const DEPTH_FUNCTION depth_func_ = DEPTH_FUNCTION::LESS,
+					const string custom_depth_func_ = "",
+					const bool depth_test_ = true,
+					const bool depth_override_ = false) :
+		image_spec(image_spec_), projection(projection_),
+		depth(depth_func_, depth_func_ == DEPTH_FUNCTION::CUSTOM ? custom_depth_func_ : "",
+			  depth_test_, depth_override_) {}
+		
+		bool operator==(const kernel_spec& spec) const {
+			if(spec.projection != projection) return false;
+			if(spec.depth != depth) return false;
+			if(spec.image_spec.size() != spec.image_spec.size()) return false;
+			for(size_t i = 0, spec_size = image_spec.size(); i < spec_size; i++) {
+				if(image_spec[i] != spec.image_spec[i]) return false;
+			}
+			return true;
+		}
+		bool operator!=(const kernel_spec& spec) const {
+			return !(*this == spec);
+		}
 	};
 	
 	//

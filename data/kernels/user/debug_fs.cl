@@ -23,7 +23,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void rasterize_main() {
+bool rasterize_main() {
 	//framebuffer->color = (float4)(fragment_coord.x, fragment_coord.y, framebuffer->depth, 1.0f);
 #if 0
 	int depth_exp = 0;
@@ -46,4 +46,5 @@ void rasterize_main() {
 	framebuffer->color.xyz += frag_add;
 	framebuffer->color.w = 1.0f;
 #endif
+	return true;
 }

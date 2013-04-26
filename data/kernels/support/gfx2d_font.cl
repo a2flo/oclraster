@@ -66,7 +66,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void gfx2d_rasterization() {
+bool gfx2d_rasterization() {
 	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	const float3 color = image_read(font_texture, point_sampler, output_attributes->tex_coord.xy).xyz * rp_uniforms->font_color.w;
 	const float3 color_sign = sign(color); // sign = 0 if color = 0, otherwise 1
@@ -75,6 +75,7 @@ void gfx2d_rasterization() {
 		framebuffer->color.xyz = (framebuffer->color.xyz * (1.0f - color)) + (color * rp_uniforms->font_color.xyz);
 		framebuffer->color.w = max_alpha + (framebuffer->color.w * (1.0f - max_alpha));
 	}
+	return true;
 }
 
 #endif

@@ -58,7 +58,11 @@ shader_helper::oclr_shader::oclr_shader(const string& tp_filename,
 	for(const auto& option : options) {
 		oclr_msg("compiling %s / %s ...", option.first, option.second);
 		pair<transform_program*, rasterization_program*>* shader = &shaders[option.first];
-		static const oclraster_program::kernel_spec default_spec { {}, PROJECTION::ORTHOGRAPHIC };
+		static const oclraster_program::kernel_spec default_spec {
+			{},
+			PROJECTION::ORTHOGRAPHIC,
+			DEPTH_FUNCTION::LESS_OR_EQUAL
+		};
 		task::spawn([this, tp_str, rp_str, shader, option]() {
 			shader->first = new transform_program(tp_str, "gfx2d_transform", "-D"+option.second, default_spec);
 			shader->second = new rasterization_program(rp_str, "gfx2d_rasterization", "-D"+option.second, default_spec);

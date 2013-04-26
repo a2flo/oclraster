@@ -29,13 +29,15 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void gfx2d_rasterization() {
+bool gfx2d_rasterization() {
 	// standard and non-texture options
 	const float4 color = rp_uniforms->color;
 	
 	// -> output
 	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color.xyz, color.w);
 	framebuffer->color.w = color.w + (framebuffer->color.w * (1.0f - color.w));
+	
+	return true;
 }
 
 #endif

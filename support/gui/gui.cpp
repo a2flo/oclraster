@@ -131,7 +131,9 @@ gui::~gui() {
 void gui::draw() {
 	gl_timer::mark("GUI_START");
 	
-	// TODO: LEQUAL depth test
+	const auto saved_depth_state = oclr_pipeline->get_depth_state();
+	oclr_pipeline->set_depth_test(true);
+	oclr_pipeline->set_depth_function(DEPTH_FUNCTION::LESS_OR_EQUAL);
 	oclr_pipeline->set_scissor_test(true);
 	oclr_pipeline->set_scissor_rectangle({ 0, 0 }, main_fbo.get_size());
 	
@@ -195,8 +197,9 @@ void gui::draw() {
 	// stop
 	oclr_pipeline->bind_framebuffer(nullptr);
 	
-	// TODO: reset state: LESS depth test
+	// reset state
 	oclr_pipeline->set_scissor_test(false);
+	oclr_pipeline->set_depth_state(saved_depth_state);
 	
 	//////////////////////////////////////////////////////////////////
 	// blend with scene buffer and draw result to the main framebuffer

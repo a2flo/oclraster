@@ -61,7 +61,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void gfx2d_rasterization() {
+bool gfx2d_rasterization() {
 	//const float2 screen_offset = (float2)(-(mvpm[3][0] + 1.0f), -(mvpm[3][1] + 1.0f)) / (float2)(mvpm[0][0], mvpm[1][1]);
 	const float2 screen_offset = (float2)(0.0f, 0.0f); // TODO: !
 	float2 interpolator_dir = (fragment_coord.xy + screen_offset - rp_uniforms->extent.xy) / (rp_uniforms->extent.zw - rp_uniforms->extent.xy);
@@ -108,6 +108,7 @@ void gfx2d_rasterization() {
 #if defined(TEXTURE_PASSTHROUGH)
 	framebuffer->color = color;
 #endif
+	return true;
 }
 
 #endif

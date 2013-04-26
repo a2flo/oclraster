@@ -262,9 +262,10 @@ string rasterization_program::specialized_processing(const string& code,
 		if(images.is_framebuffer[i]) continue;
 		main_call_parameters += images.image_names[i] + ", ";
 	}
-	main_call_parameters += "&framebuffer, fragment_coord, barycentric.xyz, primitive_id, instance_id"; // the same for all rasterization programs
+	main_call_parameters += "&framebuffer, fragment_coord, barycentric.w, barycentric.xyz, primitive_id, instance_id"; // the same for all rasterization programs
+	const string main_call = "if(!oclraster_user_"+entry_function+"("+main_call_parameters+")) continue;";
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_MAIN_CALL###",
-						   buffer_handling_code+"oclraster_user_"+entry_function+"("+main_call_parameters+");");
+						   buffer_handling_code+main_call);
 	
 	// image and framebuffer handling
 	string framebuffer_read_code = "", framebuffer_write_code = "";
@@ -348,7 +349,6 @@ string rasterization_program::specialized_processing(const string& code,
 			}
 			if(images.image_types[i] == IMAGE_VAR_TYPE::DEPTH_IMAGE) {
 				framebuffer_read_code += "float* fragment_depth = &framebuffer."+images.image_names[i]+";\n";
-				framebuffer_read_code += "const float input_depth = *fragment_depth;\n";
 			}
 			
 			fb_img_idx++;
@@ -364,7 +364,7 @@ string rasterization_program::specialized_processing(const string& code,
 }
 
 string rasterization_program::get_fixed_entry_function_parameters() const {
-	return "oclraster_framebuffer* framebuffer, const float2 fragment_coord, const float3 barycentric, const unsigned int primitive_index, const unsigned int instance_index";
+	return "oclraster_framebuffer* framebuffer, const float2 fragment_coord, const float fragment_depth, const float3 barycentric, const unsigned int primitive_index, const unsigned int instance_index";
 }
 
 string rasterization_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type) const {

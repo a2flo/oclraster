@@ -15,7 +15,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void rasterize_main() {
+bool rasterize_main() {
 	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	const sampler_t linear_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
 	
@@ -25,4 +25,5 @@ void rasterize_main() {
 	const float blend_factor = color.w, blend_factor_n = 1.0f - blend_factor;
 	framebuffer->color.xyz = clamp(color.xyz * blend_factor + framebuffer->color.xyz * blend_factor_n, 0.0f, 1.0f);
 	framebuffer->color.w = 1.0f;
+	return true;
 }

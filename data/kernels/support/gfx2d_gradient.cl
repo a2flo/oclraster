@@ -32,7 +32,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void gfx2d_rasterization() {
+bool gfx2d_rasterization() {
 	float4 color;
 #if defined(GRADIENT_HORIZONTAL)
 	gradient_horizontal(color);
@@ -46,5 +46,7 @@ void gfx2d_rasterization() {
 	
 	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color.xyz, color.w);
 	framebuffer->color.w = color.w + (framebuffer->color.w * (1.0f - color.w));
+	
+	return true;
 }
 #endif

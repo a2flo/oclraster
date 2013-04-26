@@ -99,6 +99,7 @@
 		5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cudacl.h; sourceTree = "<group>"; };
 		5CCCDD7116BF023800C14D3C /* simple_texturing_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_texturing_fs.cl; sourceTree = "<group>"; };
 		5CCCDD7216BF023800C14D3C /* simple_texturing_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_texturing_vs.cl; sourceTree = "<group>"; };
+		5CDCB7E0172AF14E001ADC50 /* oclr_framebuffer_clear.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_framebuffer_clear.h; sourceTree = "<group>"; };
 		5CE91CED16F00F050044C264 /* debug_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_fs.cl; sourceTree = "<group>"; };
 		5CE91CEE16F00F050044C264 /* debug_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_vs.cl; sourceTree = "<group>"; };
 		5CEF6CC616F4FA440044E2DF /* template_rasterization_program.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_rasterization_program.cl; sourceTree = "<group>"; };
@@ -237,6 +238,7 @@
 				5C2D23CB16D50C1700013DBF /* oclr_image.h */,
 				5C55F7F016E4F92E0050946C /* oclr_image_support.h */,
 				5CC688FC1716D050006BD36B /* oclr_primitive_assembly.h */,
+				5CDCB7E0172AF14E001ADC50 /* oclr_framebuffer_clear.h */,
 				5CCC967B1641BF72005C3DE4 /* cutil_math.h */,
 				5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */,
 				5C9165111666946B00626436 /* bin_rasterize.cl */,

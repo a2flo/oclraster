@@ -34,21 +34,20 @@
 
 // internal pipeline/draw state to handle rendering across different stages and draw calls
 struct draw_state {
-	// TODO: store actual flags/data
 	union {
 		struct {
-			unsigned int depth_test : 1;
 			unsigned int scissor_test : 1;
 			unsigned int backface_culling : 1;
 			
 			//
-			unsigned int _unused : 29;
+			unsigned int _unused : 30;
 		};
 		unsigned int flags;
 	};
 	
 	//
 	PROJECTION projection = PROJECTION::PERSPECTIVE;
+	depth_state depth;
 	uint4 scissor_rectangle { 0u, 0u, ~0u, ~0u };
 	uint4 scissor_rectangle_abs { 0u, 0u, ~0u, ~0u }; // absolute, inclusive
 	
@@ -163,11 +162,33 @@ public:
 	void start_orthographic_rendering();
 	void stop_orthographic_rendering();
 	
+	// depth testing
+	// if a custom depth function is used, this must be a function or macro defintion called "depth_test"
+	// that takes the incoming fragment depth and the currently stored fragment depth and returns true
+	// if the test succeeds (i.e. the fragment passes)
+	// example for LESS: "#define depth_test(incoming, current) (incoming < current)"
+	void set_depth_function(const DEPTH_FUNCTION depth_func,
+							const string custom_depth_func = "");
+	DEPTH_FUNCTION get_depth_function() const;
+	const string& get_custom_depth_function() const;
+	
+	void set_depth_test(const bool depth_test_state);
+	bool get_depth_test() const;
+	
+	// enable depth-override when you're writing the framebuffer depth inside a rasterization program
+	// note that this is highly discouraged, since it will disable early depth testing
+	void set_depth_override(const bool depth_override_state);
+	bool get_depth_override() const;
+	
+	// set/get the complete depth state at once
+	void set_depth_state(const depth_state& state);
+	const depth_state& get_depth_state() const;
+	
 	// scissor testing
 	void set_scissor_test(const bool scissor_test_state);
 	bool get_scissor_test() const;
-	void set_scissor_rectangle(const uint& sx, const uint& sy,
-							   const uint& swidth, const uint& sheight);
+	void set_scissor_rectangle(const unsigned int& sx, const unsigned int& sy,
+							   const unsigned int& swidth, const unsigned int& sheight);
 	void set_scissor_rectangle(const uint2& offset, const uint2& size);
 	const uint4& get_scissor_rectangle() const;
 	

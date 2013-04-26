@@ -12,12 +12,12 @@
 #endif
 
 //
-typedef struct __attribute__((packed, aligned(128))) {
+typedef struct __attribute__((packed, aligned(OCLRASTER_IMAGE_HEADER_SIZE))) {
 	const ushort type;
 	const ushort channel_order;
 	const ushort width;
 	const ushort height;
-	const unsigned char _unused[120];
+	const unsigned char _unused[OCLRASTER_IMAGE_HEADER_SIZE - 8];
 } image_header;
 typedef global const image_header* image_header_ptr;
 

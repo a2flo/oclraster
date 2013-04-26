@@ -125,5 +125,6 @@ bool stage_base::create_kernel_spec(const draw_state& state, const oclraster_pro
 		}
 	}
 	spec.projection = state.projection;
+	spec.depth = state.depth;
 	return true;
 }

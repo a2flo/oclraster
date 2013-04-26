@@ -82,11 +82,6 @@ void gfx2d::upload_points_and_draw(const primitive_properties& props) {
 		oclr_error("too many primitives!");
 		return;
 	}
-	/*cout << "points: " << endl;
-	for(const auto& point : props.points) {
-		cout << point << " ";
-	}
-	cout << endl;*/
 	
 	//
 	const unsigned int vertex_count = (unsigned int)props.points.size();

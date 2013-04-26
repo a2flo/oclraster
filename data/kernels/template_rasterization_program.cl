@@ -11,8 +11,13 @@
 		// depth: 9
 		float data[10];
 	} transformed_data;
-	
+
+	// shortcut for the opengl folks
+	#define discard() { return false; }
 	//###OCLRASTER_USER_CODE###
+
+	//###OCLRASTER_DEPTH_TEST###
+	#define depth_test(incoming, current) (incoming <= current)
 	
 	//
 	kernel void oclraster_rasterization(//###OCLRASTER_USER_STRUCTS###
@@ -39,9 +44,9 @@
 		const unsigned int local_size = get_local_size(0);
 		
 #if defined(CPU)
-#define NO_BARRIER 1
+#define NO_BARRIER
 #else
-#define LOCAL_MEM_COPY 1
+#define LOCAL_MEM_COPY
 #endif
 		
 #if !defined(NO_BARRIER)
@@ -127,11 +132,11 @@
 					continue;
 				}
 				
-				// TODO: handling if there is no depth buffer / depth testing
-				
 				//###OCLRASTER_FRAMEBUFFER_READ###
 				
-				//if(queue_entries > 0) framebuffer.color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
+				// simple counter/flag that signals if fragments have passed
+				// (actual value doesn't matter, only if it's 0.0f or not)
+				float fragments_passed = 0.0f;
 				
 				//
 				for(unsigned int batch_idx = 0, queue_offset = 0;
@@ -181,6 +186,7 @@
 							if(barycentric.x >= 0.0f || barycentric.y >= 0.0f || barycentric.z >= 0.0f) continue;
 #elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
 #define BARYCENTRIC_EPSILON 0.00001f
+							// this is sadly necessary, due to fp imprecision (this proved to be the most stable/consistent solution)
 							barycentric.xyz = select(barycentric.xyz, (float3)(0.0f),
 													 isless(fabs(barycentric.xyz), (float3)(BARYCENTRIC_EPSILON)));
 							
@@ -207,20 +213,42 @@
 							// simplified:
 							barycentric /= barycentric.x + barycentric.y + barycentric.z;
 							
-							// depth test + ignore negative depth:
-							//if(barycentric.w < 0.0f || barycentric.w >= *fragment_depth) continue;
-							if(barycentric.w < 0.0f || barycentric.w > *fragment_depth) continue;
+							// ignore fragments with negative depth
+							if(barycentric.w < 0.0f) continue;
 							
-							// reset depth (note: fragment_color will contain the last valid color)
-							*fragment_depth = barycentric.w;
+#if !defined(OCLRASTER_NO_DEPTH) && !defined(OCLRASTER_NO_DEPTH_TEST)
+#if !defined(OCLRASTER_DEPTH_OVERRIDE)
+							// early depth test
+							if(!depth_test(barycentric.w, *fragment_depth)) continue;
+#else
+							// need to save the old depth value if the user overwrites the framebuffer depth
+							const float prev_depth = *fragment_depth;
+#endif
+#endif
 							
+							// note: if a fragment is discarded, this will "continue"
+							// -> depth is not updated and fragment counter is not increased
 							//###OCLRASTER_USER_MAIN_CALL###
+							
+#if !defined(OCLRASTER_NO_DEPTH) && !defined(OCLRASTER_NO_DEPTH_TEST)
+#if !defined(OCLRASTER_DEPTH_OVERRIDE)
+							// set framebuffer depth for this fragment (-> user doesn't set it)
+							*fragment_depth = barycentric.w;
+#else
+							// depth test when "depth-override" is active, i.e. the depth is written by the user program
+							if(!depth_test(*fragment_depth, prev_depth)) {
+								*fragment_depth = prev_depth; // restore previous depth value
+								continue;
+							}
+#endif
+#endif
+							
+							fragments_passed += 1.0f;
 						}
 					}
 					
-					// write framebuffer output (if depth has changed)
-					//if(*fragment_depth < input_depth || false) {
-					if(*fragment_depth <= input_depth || false) {
+					// write framebuffer output (if any fragment has passed)
+					if(fragments_passed != 0.0f) {
 						//###OCLRASTER_FRAMEBUFFER_WRITE###
 					}
 				}

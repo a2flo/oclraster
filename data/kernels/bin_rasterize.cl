@@ -24,7 +24,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	const unsigned int local_id = get_local_id(0);
 	const unsigned int local_size = get_local_size(0);
 	
-	// TODO: already read depth from framebuffer in here -> cull if greater depth
+	// TODO: already read depth from framebuffer in here -> cull if depth test fails
 	
 	// -> each work-item: 1 bin + private mem queue (gpu version) or 1 batch + private mem queue (cpu version)
 	// -> iterate over 256 primitives (batch size: 256)

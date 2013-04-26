@@ -19,7 +19,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void rasterize_main() {
+bool rasterize_main() {
 	// check if lit by light (compute attenuation)
 	float3 light_dir = rp_uniforms->light_position.xyz - output_attributes->vertex.xyz;
 	light_dir /= rp_uniforms->light_position.w;
@@ -43,4 +43,5 @@ void rasterize_main() {
 		
 		framebuffer->color = (float4)(diff_color + spec_color, 1.0f);
 	}
+	return true;
 }

@@ -29,7 +29,7 @@ oclraster_framebuffer {
 	depth_image depth;
 };
 
-void rasterize_main() {
+bool rasterize_main() {
 	// parallax mapping
 	const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
 	const float parallax = 0.03f; // determines the "deepness"
@@ -85,4 +85,5 @@ void rasterize_main() {
 		color.xyz *= 0.5f + (noise * 0.5f);
 		framebuffer->color = color;
 	}
+	return true;
 }

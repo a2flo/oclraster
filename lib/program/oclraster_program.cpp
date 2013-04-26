@@ -338,6 +338,35 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_spe
 		image_defines += " -DOCLRASTER_IMAGE_" + core::str_to_upper(img_type);
 	}
 	
+	//
+	string framebuffer_options = "";
+	bool has_framebuffer_depth = false;
+	for(size_t i = 0, img_count = images.image_names.size(); i < img_count; i++) {
+		if(images.is_framebuffer[i] && images.image_types[i] == IMAGE_VAR_TYPE::DEPTH_IMAGE) {
+			has_framebuffer_depth = true;
+			break;
+		}
+	}
+	if(!has_framebuffer_depth) framebuffer_options += " -DOCLRASTER_NO_DEPTH";
+	if(!spec.depth.depth_test) framebuffer_options += " -DOCLRASTER_NO_DEPTH_TEST";
+	if(spec.depth.depth_override) framebuffer_options += " -DOCLRASTER_DEPTH_OVERRIDE";
+	
+	string depth_spec_str = "";
+	depth_spec_str += (spec.depth.depth_test ? ".depth_test" : ".no_depth_test");
+	depth_spec_str += ".";
+	switch(spec.depth.depth_func) {
+		case DEPTH_FUNCTION::NEVER: depth_spec_str += "never"; break;
+		case DEPTH_FUNCTION::LESS: depth_spec_str += "less"; break;
+		case DEPTH_FUNCTION::EQUAL: depth_spec_str += "equal"; break;
+		case DEPTH_FUNCTION::LESS_OR_EQUAL: depth_spec_str += "lequal"; break;
+		case DEPTH_FUNCTION::GREATER: depth_spec_str += "greater"; break;
+		case DEPTH_FUNCTION::NOT_EQUAL: depth_spec_str += "nequal"; break;
+		case DEPTH_FUNCTION::GREATER_OR_EQUAL: depth_spec_str += "gequal"; break;
+		case DEPTH_FUNCTION::ALWAYS: depth_spec_str += "always"; break;
+		case DEPTH_FUNCTION::CUSTOM: depth_spec_str += "custom"; break;
+	}
+	depth_spec_str += (spec.depth.depth_override ? ".depth_override" : "");
+	
 	// finally: call the specialized processing function of inheriting classes/programs
 	// note: this should inject the user code into their respective code templates
 	const string program_code { specialized_processing(processed_code, *new_spec) };
@@ -351,12 +380,15 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_spe
 	
 	stringstream id_stream;
 	id_stream << dec << this_thread::get_id();
-	const string identifier = "USER_PROGRAM."+kernel_function_name+"."+entry_function+"."+proj_spec_str+img_spec_str+"."+ull2string(SDL_GetPerformanceCounter())+"."+id_stream.str();
+	const string identifier = ("USER_PROGRAM."+kernel_function_name+"."+entry_function+"."+
+							   proj_spec_str+depth_spec_str+img_spec_str+"."+
+							   ull2string(SDL_GetPerformanceCounter())+"."+id_stream.str());
 	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, kernel_function_name,
 																 " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 																 " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
 																 " -DOCLRASTER_PROJECTION_"+(spec.projection == PROJECTION::PERSPECTIVE ? "PERSPECTIVE" : "ORTHOGRAPHIC")+
 																 image_defines+
+																 framebuffer_options+
 																 " "+build_options);
 	//oclr_msg("%s:\n%s\n", identifier, program_code);
 #if defined(OCLRASTER_DEBUG)
@@ -705,18 +737,8 @@ weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_spec 
 	}
 	
 	//
-	const size_t spec_size = spec.image_spec.size();
 	for(const auto& kernel : kernels) {
-		if(kernel.first->projection != spec.projection) continue;
-		bool spec_found = true;
-		for(size_t i = 0; i < spec_size; i++) {
-			if(spec.image_spec[i] != kernel.first->image_spec[i]) {
-				//oclr_msg("spec: %u != %u @%u", spec[i], (*kernel.first)[i], i);
-				spec_found = false;
-				break;
-			}
-		}
-		if(!spec_found) continue;
+		if(*kernel.first != spec) continue;
 		return kernel.second;
 	}
 	// new kernel image spec -> compile new kernel

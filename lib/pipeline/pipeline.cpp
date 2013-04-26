@@ -43,7 +43,6 @@ event_handler_fnctr(this, &pipeline::event_handler) {
 											 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 											 sizeof(constant_camera_data));
 	
-	state.depth_test = 1;
 	state.scissor_test = 0;
 	state.backface_culling = 1;
 	
@@ -480,8 +479,8 @@ bool pipeline::get_scissor_test() const {
 	return state.scissor_test;
 }
 
-void pipeline::set_scissor_rectangle(const uint& sx, const uint& sy,
-									 const uint& swidth, const uint& sheight) {
+void pipeline::set_scissor_rectangle(const unsigned int& sx, const unsigned int& sy,
+									 const unsigned int& swidth, const unsigned int& sheight) {
 	state.scissor_rectangle.set(sx, sy, swidth, sheight);
 }
 
@@ -491,4 +490,42 @@ void pipeline::set_scissor_rectangle(const uint2& offset, const uint2& size) {
 
 const uint4& pipeline::get_scissor_rectangle() const {
 	return state.scissor_rectangle;
+}
+
+void pipeline::set_depth_function(const DEPTH_FUNCTION depth_func,
+								  const string custom_depth_func) {
+	state.depth.depth_func = depth_func;
+	state.depth.custom_depth_func = (depth_func == DEPTH_FUNCTION::CUSTOM ? custom_depth_func : "");
+}
+
+DEPTH_FUNCTION pipeline::get_depth_function() const {
+	return state.depth.depth_func;
+}
+
+const string& pipeline::get_custom_depth_function() const {
+	return state.depth.custom_depth_func;
+}
+
+void pipeline::set_depth_test(const bool depth_test_state) {
+	state.depth.depth_test = depth_test_state;
+}
+
+bool pipeline::get_depth_test() const {
+	return state.depth.depth_test;
+}
+
+void pipeline::set_depth_override(const bool depth_override_state) {
+	state.depth.depth_override = depth_override_state;
+}
+
+bool pipeline::get_depth_override() const {
+	return state.depth.depth_override;
+}
+
+void pipeline::set_depth_state(const depth_state& dstate) {
+	state.depth = dstate;
+}
+
+const depth_state& pipeline::get_depth_state() const {
+	return state.depth;
 }
