@@ -14,10 +14,8 @@
 
 	// shortcut for the opengl folks
 	#define discard() { return false; }
+	//###OCLRASTER_DEPTH_TEST_FUNCTION###
 	//###OCLRASTER_USER_CODE###
-
-	//###OCLRASTER_DEPTH_TEST###
-	#define depth_test(incoming, current) (incoming <= current)
 	
 	//
 	kernel void oclraster_rasterization(//###OCLRASTER_USER_STRUCTS###

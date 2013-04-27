@@ -188,6 +188,7 @@ protected:
 										  const kernel_spec& spec) = 0;
 	virtual string get_fixed_entry_function_parameters() const = 0;
 	virtual string get_qualifier_for_struct_type(const STRUCT_TYPE& type) const = 0;
+	virtual string create_depth_test_function(const kernel_spec& spec) const;
 	
 	atomic<bool> valid { false };
 	void invalidate(const string error_info = "");

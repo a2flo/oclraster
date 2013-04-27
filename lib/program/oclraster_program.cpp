@@ -773,3 +773,22 @@ string oclraster_program::preprocess_code(const string& raw_code) {
 	//oclr_msg("preprocessed code: %s", ret_code);
 	return ret_code;
 }
+
+string oclraster_program::create_depth_test_function(const kernel_spec& spec) const {
+	if(spec.depth.depth_func == DEPTH_FUNCTION::CUSTOM) return spec.depth.custom_depth_func;
+	
+	string depth_test_func = "#define depth_test(incoming, current) (";
+	switch(spec.depth.depth_func) {
+		case DEPTH_FUNCTION::NEVER: depth_test_func += "false"; break;
+		case DEPTH_FUNCTION::LESS: depth_test_func += "incoming < current"; break;
+		case DEPTH_FUNCTION::EQUAL: depth_test_func += "incoming == current"; break;
+		case DEPTH_FUNCTION::LESS_OR_EQUAL: depth_test_func += "incoming <= current"; break;
+		case DEPTH_FUNCTION::GREATER: depth_test_func += "incoming > current"; break;
+		case DEPTH_FUNCTION::NOT_EQUAL: depth_test_func += "incoming != current"; break;
+		case DEPTH_FUNCTION::GREATER_OR_EQUAL: depth_test_func += "incoming >= current"; break;
+		case DEPTH_FUNCTION::ALWAYS: depth_test_func += "true"; break;
+		case DEPTH_FUNCTION::CUSTOM: oclr_unreachable();
+	}
+	depth_test_func += ")";
+	return depth_test_func;
+}

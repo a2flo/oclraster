@@ -83,35 +83,38 @@ TODO: all papers
 * "High-Performance Software Rasterization on GPUs":http://research.nvidia.com/sites/default/files/publications/laine2011hpg_paper.pdf
 
 *Screenshots:*
+* progress as of 2013/04/27, running on a GPU in OS X:
+!https://dl.dropboxusercontent.com/u/1004620/oclr_programmable_depth_testing.png(programmable depth testing: fmod(incoming, 0.1f) > 0.05f)!
+
 * progress as of 2013/04/24, running on a GPU in OS X:
-!https://dl.dropbox.com/u/1004620/oclr_ui.png(combined 3D and 2D GUI rendering (provided by oclraster_support))!
+!https://dl.dropboxusercontent.com/u/1004620/oclr_ui.png(combined 3D and 2D GUI rendering (provided by oclraster_support))!
 
 * progress as of 2013/04/18, running on a GPU in OS X:
-!https://dl.dropbox.com/u/1004620/oclr_clock.png(2D/orthographic rendering)!
+!https://dl.dropboxusercontent.com/u/1004620/oclr_clock.png(2D/orthographic rendering)!
 
 * progress as of 2013/04/15, running on a GPU in OS X:
-!https://dl.dropbox.com/u/1004620/triangle_fan.png(render-to-texture + rendering a triangle fan)!
+!https://dl.dropboxusercontent.com/u/1004620/triangle_fan.png(render-to-texture + rendering a triangle fan)!
 
 * progress as of 2013/04/04, running on a GPU in OS X:
-!https://dl.dropbox.com/u/1004620/volume1.png(sliced volume rendering)!
-!https://dl.dropbox.com/u/1004620/volume2.png(sliced volume rendering)!
+!https://dl.dropboxusercontent.com/u/1004620/volume1.png(sliced volume rendering)!
+!https://dl.dropboxusercontent.com/u/1004620/volume2.png(sliced volume rendering)!
 
 * progress as of 2013/04/03, running on a GPU in OS X:
-!https://dl.dropbox.com/u/1004620/rtt.png(render-to-texture / multi-framebuffer support)!
+!https://dl.dropboxusercontent.com/u/1004620/rtt.png(render-to-texture / multi-framebuffer support)!
 
 * progress as of 2013/03/28, running on a GPU in OS X:
-!https://dl.dropbox.com/u/1004620/blending1.png(programmable blending)!
-!https://dl.dropbox.com/u/1004620/blending2.png(programmable blending)!
-!https://dl.dropbox.com/u/1004620/parallax%2Bfp_noise.png(more image functionality: native and buffer images, sampling a 32-bit float noise texture, ...)!
+!https://dl.dropboxusercontent.com/u/1004620/blending1.png(programmable blending)!
+!https://dl.dropboxusercontent.com/u/1004620/blending2.png(programmable blending)!
+!https://dl.dropboxusercontent.com/u/1004620/parallax%2Bfp_noise.png(more image functionality: native and buffer images, sampling a 32-bit float noise texture, ...)!
 
 * progress as of 2013/02/21, running on a CPU in OS X and on a dual-core ARM CPU in iOS:
-!https://dl.dropbox.com/u/1004620/osx_blender_monkey_1.png(subdivided blender monkey with parallax mapping)!
-!https://dl.dropbox.com/u/1004620/osx_blender_monkey_2.png(subdivided blender monkey with parallax mapping)!
-!https://dl.dropbox.com/u/1004620/ios_blender_monkey.png(note: framebuffer is upscaled by 2x and there are lots of issues with OpenCL on iOS -> defect depth testing)!
+!https://dl.dropboxusercontent.com/u/1004620/osx_blender_monkey_1.png(subdivided blender monkey with parallax mapping)!
+!https://dl.dropboxusercontent.com/u/1004620/osx_blender_monkey_2.png(subdivided blender monkey with parallax mapping)!
+!https://dl.dropboxusercontent.com/u/1004620/ios_blender_monkey.png(note: framebuffer is upscaled by 2x and there are lots of issues with OpenCL on iOS -> defect depth testing)!
 
 * progress as of 2013/01/19, running on a GPU in OS X and inside a Window VM on a CPU:
-!https://dl.dropbox.com/u/1004620/Screen%20Shot%202013-01-19%20at%2012.04.45%20PM.png(moar bunnies)!
-!https://dl.dropbox.com/u/1004620/Screen%20Shot%202013-01-19%20at%2012.08.39%20PM.png(bunny on windows)!
+!https://dl.dropboxusercontent.com/u/1004620/Screen%20Shot%202013-01-19%20at%2012.04.45%20PM.png(moar bunnies)!
+!https://dl.dropboxusercontent.com/u/1004620/Screen%20Shot%202013-01-19%20at%2012.08.39%20PM.png(bunny on windows)!
 
 * progress as of 2012/12/06, running on the CPU:
-!https://dl.dropbox.com/u/1004620/Screen%20Shot%202012-12-06%20at%2010.40.05%20AM.png(a bunny of course)!
+!https://dl.dropboxusercontent.com/u/1004620/Screen%20Shot%202012-12-06%20at%2010.40.05%20AM.png(a bunny of course)!

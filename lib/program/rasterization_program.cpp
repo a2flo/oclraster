@@ -211,6 +211,11 @@ string rasterization_program::specialized_processing(const string& code,
 	string program_code = template_rasterization_program;
 	core::find_and_replace(program_code, "//###OCLRASTER_USER_CODE###", code);
 	
+	// insert depth test function
+	if(spec.depth.depth_test) {
+		core::find_and_replace(program_code, "//###OCLRASTER_DEPTH_TEST_FUNCTION###", create_depth_test_function(spec));
+	}
+	
 	//
 	vector<string> image_decls;
 	const string kernel_parameters { create_user_kernel_parameters(spec, image_decls, true) };
