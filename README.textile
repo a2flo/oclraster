@@ -35,7 +35,7 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * after a submodule update / pull: git submodule update
 
 on Linux:
-* install all necessary libraries (-> Credits; freetype2 and a2elight are not required/used, CUDA is optional)
+* install all necessary libraries (-> Credits; a2elight is not required/used, CUDA is optional)
 * install clang 3.2+ and libc++ (currently 1101)
 * run ./premake.sh
 * make
@@ -47,7 +47,7 @@ on Linux:
 on Windows/MinGW:
 * install custom MinGW builds "gcc-dw2-4.6":http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/rubenvb/gcc-dw2-4.6-release/ and "clang-3.2":http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/rubenvb/clang-3.2-release/ (thanks to "rubenvb":https://github.com/rubenvb for providing these!)
 * install "MSYS":http://sourceforge.net/projects/mingw-w64/files/External%20binary%20packages%20%28Win64%20hosted%29/MSYS%20%2832-bit%29/ to your MinGW folder
-* build/install all necessary libraries (-> Credits; freetype2 and a2elight are not required/used, CUDA is optional)
+* build/install all necessary libraries (-> Credits; a2elight is not required/used, CUDA is optional)
 * add a Windows system environment variable called "MINGW_ROOT" and set it to your MinGW root folder (e.g. "/c/mingw/mingw32/")
 * run ./premake.sh
 * make
@@ -84,32 +84,42 @@ TODO: all papers
 
 *Screenshots:*
 * progress as of 2013/04/27, running on a GPU in OS X:
+_programmable depth testing using a custom depth test function:_
+<pre><code>#define depth_test(incoming, current) (fmod(incoming, 0.1f) > 0.05f)</code></pre>
 !https://dl.dropboxusercontent.com/u/1004620/oclr_programmable_depth_testing.png(programmable depth testing: fmod(incoming, 0.1f) > 0.05f)!
 
 * progress as of 2013/04/24, running on a GPU in OS X:
+_combined 3D and 2D GUI rendering (provided by oclraster_support)_
 !https://dl.dropboxusercontent.com/u/1004620/oclr_ui.png(combined 3D and 2D GUI rendering (provided by oclraster_support))!
 
 * progress as of 2013/04/18, running on a GPU in OS X:
+_2D/orthographic rendering_
 !https://dl.dropboxusercontent.com/u/1004620/oclr_clock.png(2D/orthographic rendering)!
 
 * progress as of 2013/04/15, running on a GPU in OS X:
+_render-to-texture + rendering a triangle fan_
 !https://dl.dropboxusercontent.com/u/1004620/triangle_fan.png(render-to-texture + rendering a triangle fan)!
 
 * progress as of 2013/04/04, running on a GPU in OS X:
+_sliced volume rendering_
 !https://dl.dropboxusercontent.com/u/1004620/volume1.png(sliced volume rendering)!
 !https://dl.dropboxusercontent.com/u/1004620/volume2.png(sliced volume rendering)!
 
 * progress as of 2013/04/03, running on a GPU in OS X:
+_render-to-texture / multi-framebuffer support_
 !https://dl.dropboxusercontent.com/u/1004620/rtt.png(render-to-texture / multi-framebuffer support)!
 
 * progress as of 2013/03/28, running on a GPU in OS X:
+_programmable blending and more image functionality: native and buffer images, sampling a 32-bit float noise texture, ..._
 !https://dl.dropboxusercontent.com/u/1004620/blending1.png(programmable blending)!
 !https://dl.dropboxusercontent.com/u/1004620/blending2.png(programmable blending)!
 !https://dl.dropboxusercontent.com/u/1004620/parallax%2Bfp_noise.png(more image functionality: native and buffer images, sampling a 32-bit float noise texture, ...)!
 
 * progress as of 2013/02/21, running on a CPU in OS X and on a dual-core ARM CPU in iOS:
+_subdivided blender monkey with parallax mapping_
 !https://dl.dropboxusercontent.com/u/1004620/osx_blender_monkey_1.png(subdivided blender monkey with parallax mapping)!
 !https://dl.dropboxusercontent.com/u/1004620/osx_blender_monkey_2.png(subdivided blender monkey with parallax mapping)!
+_note: framebuffer is upscaled by 2x and there are lots of issues with OpenCL on iOS -> defect depth testing_
 !https://dl.dropboxusercontent.com/u/1004620/ios_blender_monkey.png(note: framebuffer is upscaled by 2x and there are lots of issues with OpenCL on iOS -> defect depth testing)!
 
 * progress as of 2013/01/19, running on a GPU in OS X and inside a Window VM on a CPU:
