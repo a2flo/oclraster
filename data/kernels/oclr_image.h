@@ -37,10 +37,12 @@ float FUNC_OVERLOAD texel_mix(float x, float y, float a) { return linear_blend(x
 float2 FUNC_OVERLOAD texel_mix(float2 x, float2 y, float a) { return linear_blend(x, y, a); }
 float3 FUNC_OVERLOAD texel_mix(float3 x, float3 y, float a) { return linear_blend(x, y, a); }
 float4 FUNC_OVERLOAD texel_mix(float4 x, float4 y, float a) { return linear_blend(x, y, a); }
+#if defined(OCLRASTER_DOUBLE_SUPPORT)
 double FUNC_OVERLOAD texel_mix(double x, double y, float a) { return linear_blend(x, y, (double)a); }
 double2 FUNC_OVERLOAD texel_mix(double2 x, double2 y, float a) { return linear_blend(x, y, (double)a); }
 double3 FUNC_OVERLOAD texel_mix(double3 x, double3 y, float a) { return linear_blend(x, y, (double)a); }
 double4 FUNC_OVERLOAD texel_mix(double4 x, double4 y, float a) { return linear_blend(x, y, (double)a); }
+#endif
 
 #define INT_TEXEL_MIX(type, type_vec, ftype, one) \
 type_vec FUNC_OVERLOAD texel_mix(type_vec x, type_vec y, float a) { \
@@ -52,18 +54,20 @@ INT_TEXEL_MIX(uint, uint, float, 1.0f)
 INT_TEXEL_MIX(uint, uint2, float, 1.0f)
 INT_TEXEL_MIX(uint, uint3, float, 1.0f)
 INT_TEXEL_MIX(uint, uint4, float, 1.0f)
-INT_TEXEL_MIX(ulong, ulong, double, 1.0)
-INT_TEXEL_MIX(ulong, ulong2, double, 1.0)
-INT_TEXEL_MIX(ulong, ulong3, double, 1.0)
-INT_TEXEL_MIX(ulong, ulong4, double, 1.0)
 INT_TEXEL_MIX(int, int, float, 1.0f)
 INT_TEXEL_MIX(int, int2, float, 1.0f)
 INT_TEXEL_MIX(int, int3, float, 1.0f)
 INT_TEXEL_MIX(int, int4, float, 1.0f)
+#if defined(OCLRASTER_DOUBLE_SUPPORT)
+INT_TEXEL_MIX(ulong, ulong, double, 1.0)
+INT_TEXEL_MIX(ulong, ulong2, double, 1.0)
+INT_TEXEL_MIX(ulong, ulong3, double, 1.0)
+INT_TEXEL_MIX(ulong, ulong4, double, 1.0)
 INT_TEXEL_MIX(long, long, double, 1.0)
 INT_TEXEL_MIX(long, long2, double, 1.0)
 INT_TEXEL_MIX(long, long3, double, 1.0)
 INT_TEXEL_MIX(long, long4, double, 1.0)
+#endif
 
 // image_read (implicit float) -> image_read_float_nearest / image_read_float_linear
 // image_read_int -> image_read_int_nearest / image_read_int_linear

@@ -48,6 +48,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	evt = oclraster::get_event();
 	//ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_CPU);
 	ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_GPU);
+	//ocl->set_active_device(opencl_base::DEVICE_TYPE::GPU0);
 	
 	//
 	cam = new camera();

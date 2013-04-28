@@ -327,6 +327,18 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_spe
 	kernel_spec* new_spec = new kernel_spec(spec);
 	compiled_kernels.emplace_back(new_spec);
 	
+	// if any device doesn't support doubles and the user tries to use a double image format,
+	// fail immediately and return a null kernel (better here than crashing during compilation)
+	if(!ocl->is_full_double_support()) {
+		for(const auto& img_type : spec.image_spec) {
+			if(img_type.data_type == IMAGE_TYPE::FLOAT_64) {
+				oclr_error("can't use a double/FLOAT_64 image format when one or more opencl devices do not support doubles!");
+				kernels.emplace(new_spec, opencl::null_kernel_object);
+				return opencl::null_kernel_object;
+			}
+		}
+	}
+	
 	// build image defines string (image functions for each image type are #ifdef'ed)
 	string image_defines = "";
 	set<string> img_types;
@@ -338,7 +350,7 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_spe
 		image_defines += " -DOCLRASTER_IMAGE_" + core::str_to_upper(img_type);
 	}
 	
-	//
+	// depth defines
 	string framebuffer_options = "";
 	bool has_framebuffer_depth = false;
 	for(size_t i = 0, img_count = images.image_names.size(); i < img_count; i++) {

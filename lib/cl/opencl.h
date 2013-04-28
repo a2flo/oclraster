@@ -79,9 +79,10 @@ public:
 	opencl_base();
 	virtual ~opencl_base();
 	
-	bool is_supported() { return supported; }
-	bool is_cpu_support();
-	bool is_gpu_support();
+	bool is_supported() const { return supported; }
+	bool is_cpu_support() const;
+	bool is_gpu_support() const;
+	bool is_full_double_support() const;
 	
 	enum class DEVICE_TYPE : unsigned int {
 		NONE,
@@ -387,6 +388,7 @@ public:
 		size2 max_img_2d { 0, 0 };
 		size3 max_img_3d { 0, 0, 0 };
 		bool img_support = false;
+		bool double_support = false;
 		
 		device_object() {}
 		~device_object() {}
@@ -399,6 +401,7 @@ public:
 protected:
 	SDL_Window* sdl_wnd;
 	bool supported = true;
+	bool full_double_support = false;
 	
 	string build_options;
 	string nv_build_options;

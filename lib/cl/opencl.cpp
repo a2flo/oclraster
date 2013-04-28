@@ -108,12 +108,12 @@ void opencl_base::destroy_kernels() {
 	kernels_lock.unlock();
 }
 
-bool opencl_base::is_cpu_support() {
+bool opencl_base::is_cpu_support() const {
 	// if a fastest cpu exists, we do have cpu support
 	return (fastest_cpu != nullptr);
 }
 
-bool opencl_base::is_gpu_support() {
+bool opencl_base::is_gpu_support() const {
 	// if a fastest gpu exists, we do have gpu support
 	return (fastest_gpu != nullptr);
 }
@@ -415,6 +415,10 @@ void opencl_base::unlock() {
 
 bool opencl_base::try_lock() {
 	return execution_lock.try_lock();
+}
+
+bool opencl_base::is_full_double_support() const {
+	return full_double_support;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -777,12 +781,13 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			device->max_wg_size = internal_device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
 			const auto max_wi_sizes = internal_device.getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>();
 			device->max_wi_sizes.set(max_wi_sizes[0], max_wi_sizes[1], max_wi_sizes[2]);
-			device->img_support = internal_device.getInfo<CL_DEVICE_IMAGE_SUPPORT>() == 1;
+			device->img_support = (internal_device.getInfo<CL_DEVICE_IMAGE_SUPPORT>() == 1);
 			device->max_img_2d.set(internal_device.getInfo<CL_DEVICE_IMAGE2D_MAX_WIDTH>(),
 								   internal_device.getInfo<CL_DEVICE_IMAGE2D_MAX_HEIGHT>());
 			device->max_img_3d.set(internal_device.getInfo<CL_DEVICE_IMAGE3D_MAX_WIDTH>(),
 								   internal_device.getInfo<CL_DEVICE_IMAGE3D_MAX_HEIGHT>(),
 								   internal_device.getInfo<CL_DEVICE_IMAGE3D_MAX_DEPTH>());
+			device->double_support = (internal_device.getInfo<CL_DEVICE_DOUBLE_FP_CONFIG>() != 0);
 			
 			oclr_msg("address space size: %u", internal_device.getInfo<CL_DEVICE_ADDRESS_BITS>());
 			oclr_msg("max mem alloc: %u bytes / %u MB",
@@ -797,6 +802,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			oclr_msg("max_wi_sizes: %v", device->max_wi_sizes);
 			oclr_msg("max_wg_size: %u", device->max_wg_size);
 			oclr_msg("max param size: %u", internal_device.getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>());
+			oclr_msg("double support: %b", device->double_support);
 #if defined(CL_VERSION_1_2)
 			if(platform_cl_version >= CL_VERSION::CL_1_2) {
 				const unsigned long long int printf_buffer_size = internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>();
@@ -897,6 +903,15 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		// no supported devices found
 		if(devices.empty()) {
 			throw oclraster_exception("no supported device found for this platform!");
+		}
+		
+		// check if all devices support doubles
+		full_double_support = true;
+		for(const auto& device : devices) {
+			if(!device->double_support) {
+				full_double_support = false;
+				break;
+			}
 		}
 		
 		// create a (single) command queue for each device
@@ -1201,6 +1216,7 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 			
 			device_options += " -DPLATFORM_"+platform_vendor_to_str(platform_vendor);
 			device_options += " -DLOCAL_MEM_SIZE="+ull2string(device->local_mem_size);
+			if(device->double_support) device_options += " -DOCLRASTER_DOUBLE_SUPPORT";
 			
 			kernel_ptr->program->build({ device->device }, (options+device_options).c_str());
 		}

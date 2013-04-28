@@ -97,11 +97,16 @@ for type in "${defs[@]}"; do
 		fi
 		if [[ ${img_type} == "double" ]]; then
 			is_double_type=1
+			CLEAR_CODE+="#if defined(OCLRASTER_DOUBLE_SUPPORT)\n"
 		fi
 		
 		CLEAR_CODE+=$(clang -E -DIMG_TYPE_VEC=${img_type_vec} -DIMG_TYPE=${img_type} -DCHANNEL_COUNT=${i} \
 					  -DIS_HALF_TYPE=${is_half_type} -DIS_FLOAT_TYPE=${is_float_type} -DIS_DOUBLE_TYPE=${is_double_type} \
 					  framebuffer_clear_template.h | grep -v "#")
+		
+		if [[ ${img_type} == "double" ]]; then
+			CLEAR_CODE+="\n#endif"
+		fi
 		CLEAR_CODE+="\n\n"
 	done
 done

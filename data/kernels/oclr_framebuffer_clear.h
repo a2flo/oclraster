@@ -164,21 +164,29 @@ void FUNC_OVERLOAD clear_image(global float4* img, const uint offset, const ulon
  img[offset] = as_float4(convert_uint4(clear_color.xyzw & 0xFFFFFFFFu));
 }
 
+#if defined(OCLRASTER_DOUBLE_SUPPORT)
 void FUNC_OVERLOAD clear_image(global double* img, const uint offset, const ulong4 clear_color) {
  img[offset] = as_double(clear_color.x);
 }
+#endif
 
+#if defined(OCLRASTER_DOUBLE_SUPPORT)
 void FUNC_OVERLOAD clear_image(global double2* img, const uint offset, const ulong4 clear_color) {
  img[offset] = as_double2(clear_color.xy);
 }
+#endif
 
+#if defined(OCLRASTER_DOUBLE_SUPPORT)
 void FUNC_OVERLOAD clear_image(global double3* img, const uint offset, const ulong4 clear_color) {
  img[offset] = as_double3(clear_color.xyz);
 }
+#endif
 
+#if defined(OCLRASTER_DOUBLE_SUPPORT)
 void FUNC_OVERLOAD clear_image(global double4* img, const uint offset, const ulong4 clear_color) {
  img[offset] = as_double4(clear_color.xyzw);
 }
+#endif
 
 
 #endif
