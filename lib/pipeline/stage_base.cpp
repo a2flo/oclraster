@@ -28,14 +28,26 @@ stage_base::~stage_base() {
 
 bool stage_base::bind_user_buffers(const draw_state& state, const oclraster_program& program, unsigned int& argc) {
 	// set user buffers
-	for(const auto& user_struct : program.get_structs()) {
-		const auto buffer = state.user_buffers.find(user_struct->object_name);
+	const auto find_and_bind_buffer = [&](const string& name) -> bool {
+		const auto buffer = state.user_buffers.find(name);
 		// TODO: only check this in debug mode?
 		if(buffer == state.user_buffers.cend()) {
-			oclr_error("buffer \"%s\" not bound!", user_struct->object_name);
+			oclr_error("buffer \"%s\" not bound!", name);
 			return false;
 		}
 		ocl->set_kernel_argument(argc++, &buffer->second);
+		return true;
+	};
+	
+	for(const auto& user_struct : program.get_structs()) {
+		if(user_struct->type != oclraster_program::STRUCT_TYPE::BUFFERS) {
+			if(!find_and_bind_buffer(user_struct->object_name)) return false;
+		}
+		else {
+			for(size_t i = 0, buffer_entries = user_struct->variables.size(); i < buffer_entries; i++) {
+				if(!find_and_bind_buffer(user_struct->variables[i])) return false;
+			}
+		}
 	}
 	
 	// TODO: merge this with create_kernel_spec ...?

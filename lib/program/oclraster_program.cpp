@@ -51,11 +51,12 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 	const string code = preprocess_code(raw_code);
 	
 	// parse
-	static const array<const pair<const char*, const STRUCT_TYPE>, 5> oclraster_struct_types {
+	static const array<const pair<const char*, const STRUCT_TYPE>, 6> oclraster_struct_types {
 		{
 			{ u8"oclraster_in", STRUCT_TYPE::INPUT },
 			{ u8"oclraster_out", STRUCT_TYPE::OUTPUT },
 			{ u8"oclraster_uniforms", STRUCT_TYPE::UNIFORMS },
+			{ u8"oclraster_buffers", STRUCT_TYPE::BUFFERS },
 			{ u8"oclraster_images", STRUCT_TYPE::IMAGES },
 			{ u8"oclraster_framebuffer", STRUCT_TYPE::FRAMEBUFFER }
 		}
@@ -161,7 +162,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 						variable_specifiers.emplace_back(var_spec);
 					}
 					else {
-						const string var_type = regex_replace(var_decl.substr(0, name_start_pos), rx_space, "");
+						const string var_type = core::trim(var_decl.substr(0, name_start_pos));
 						//oclr_msg("type: >%s<", var_type);
 						variable_types.emplace_back(var_type);
 						variable_specifiers.emplace_back("");
@@ -201,6 +202,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 		// process found structs
 		for(auto& oclr_struct : structs) {
 			if(oclr_struct->empty) continue;
+			if(oclr_struct->type == STRUCT_TYPE::BUFFERS) continue;
 			generate_struct_info_cl_program(*oclr_struct);
 		}
 		
@@ -254,7 +256,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 				processed_code.erase(oclr_struct.code_pos.x,
 									 oclr_struct.code_pos.y - oclr_struct.code_pos.x);
 				
-				if(!oclr_struct.empty) {
+				if(!oclr_struct.empty && oclr_struct.type != STRUCT_TYPE::BUFFERS) {
 					string struct_code = "";
 					switch(oclr_struct.type) {
 						case STRUCT_TYPE::INPUT:
@@ -266,6 +268,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 						case STRUCT_TYPE::UNIFORMS:
 							struct_code += "oclraster_uniforms";
 							break;
+						case STRUCT_TYPE::BUFFERS:
 						case STRUCT_TYPE::IMAGES:
 						case STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
 					}
@@ -416,9 +419,16 @@ string oclraster_program::create_entry_function_parameters() const {
 	const string fixed_params = get_fixed_entry_function_parameters();
 	string entry_function_params = "";
 	for(size_t i = 0, struct_count = structs.size(); i < struct_count; i++) {
-		const string qualifier = get_qualifier_for_struct_type(structs[i]->type);
-		if(qualifier != "") entry_function_params += qualifier + " ";
-		entry_function_params += structs[i]->name + "* " + structs[i]->object_name + ", ";
+		if(structs[i]->type != STRUCT_TYPE::BUFFERS) {
+			const string qualifier = get_qualifier_for_struct_type(structs[i]->type);
+			if(qualifier != "") entry_function_params += qualifier + " ";
+			entry_function_params += structs[i]->name + "* " + structs[i]->object_name + ", ";
+		}
+		else {
+			for(size_t j = 0, buffer_entries = structs[i]->variables.size(); j < buffer_entries; j++) {
+				entry_function_params += "global " + structs[i]->variable_types[j] + " " + structs[i]->variables[j] + ", ";
+			}
+		}
 	}
 	for(size_t i = 0, image_count = images.image_names.size(); i < image_count; i++) {
 		// framebuffer is passed in separately
@@ -438,6 +448,16 @@ string oclraster_program::create_user_kernel_parameters(const kernel_spec& spec,
 	string kernel_parameters = "";
 	size_t user_buffer_count = 0;
 	for(const auto& oclr_struct : structs) {
+		//
+		if(oclr_struct->type == oclraster_program::STRUCT_TYPE::BUFFERS) {
+			for(size_t i = 0, buffer_entries = oclr_struct->variables.size(); i < buffer_entries; i++) {
+				kernel_parameters += "global " + oclr_struct->variable_types[i] + " user_buffer_"+size_t2string(user_buffer_count)+",\n";
+				user_buffer_count++;
+			}
+			continue;
+		}
+		
+		//
 		switch(oclr_struct->type) {
 			case oclraster_program::STRUCT_TYPE::INPUT:
 				kernel_parameters += "global const ";
@@ -449,6 +469,7 @@ string oclraster_program::create_user_kernel_parameters(const kernel_spec& spec,
 			case oclraster_program::STRUCT_TYPE::UNIFORMS:
 				kernel_parameters += "constant ";
 				break;
+			case oclraster_program::STRUCT_TYPE::BUFFERS:
 			case oclraster_program::STRUCT_TYPE::IMAGES:
 			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
 		}

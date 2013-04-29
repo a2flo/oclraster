@@ -14,10 +14,10 @@
 	} constant_data;
 	
 	//
+	#define discard() { return (float4)(INFINITY); }
 	//###OCLRASTER_USER_CODE###
 
 	//
-	#define discard() { transformed_vertex_buffer[vertex_id] = (float4)(INFINITY); return; }
 	kernel void oclraster_transform(//###OCLRASTER_USER_STRUCTS###
 									global float4* transformed_vertex_buffer,
 									constant constant_data* cdata,
@@ -36,12 +36,16 @@
 		const float3 camera_position = cdata->camera_position.xyz;
 		
 		//###OCLRASTER_USER_PRE_MAIN_CALL###
-		float4 user_vertex = //###OCLRASTER_USER_MAIN_CALL###
-		user_vertex.xyz -= camera_position;
-		transformed_vertex_buffer[instance_vertex_id] = user_vertex;
-		
-		// note: this is isn't the most space efficient way to do this,
-		// but it doesn't require any index -> triangle id mapping or
-		// multiple dependent memory lookups (-> faster in the end)
-		//###OCLRASTER_USER_OUTPUT_COPY###
+		const float4 user_vertex = //###OCLRASTER_USER_MAIN_CALL###
+		if(user_vertex.x != INFINITY) {
+			transformed_vertex_buffer[instance_vertex_id] = (float4)(user_vertex.xyz - camera_position, 1.0f);
+			
+			// note: this is isn't the most space efficient way to do this,
+			// but it doesn't require any index -> triangle id mapping or
+			// multiple dependent memory lookups (-> faster in the end)
+			//###OCLRASTER_USER_OUTPUT_COPY###
+		}
+		else {
+			transformed_vertex_buffer[instance_vertex_id] = (float4)(INFINITY);
+		}
 	}

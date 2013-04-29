@@ -8,16 +8,16 @@
 	dst_color = (float4)(0.0f); \
 	/* built-in step function can not be trusted -> branch instead ... */ \
 	if(interpolator < rp_uniforms->stops.y) { \
-		float interp = smoothstep(rp_uniforms->stops.x, rp_uniforms->stops.y, interpolator); \
-		dst_color += mix(rp_uniforms->gradients[0], rp_uniforms->gradients[1], interp); \
+		const float interp = smoothstep(rp_uniforms->stops.x, rp_uniforms->stops.y, interpolator); \
+		dst_color += linear_blend(rp_uniforms->gradients[0], rp_uniforms->gradients[1], interp); \
 	} \
 	else if(interpolator < rp_uniforms->stops.z) { \
-		float interp = smoothstep(rp_uniforms->stops.y, rp_uniforms->stops.z, interpolator); \
-		dst_color += mix(rp_uniforms->gradients[1], rp_uniforms->gradients[2], interp); \
+		const float interp = smoothstep(rp_uniforms->stops.y, rp_uniforms->stops.z, interpolator); \
+		dst_color += linear_blend(rp_uniforms->gradients[1], rp_uniforms->gradients[2], interp); \
 	} \
 	else if(interpolator <= rp_uniforms->stops.w) { \
-		float interp = smoothstep(rp_uniforms->stops.z, rp_uniforms->stops.w, interpolator); \
-		dst_color += mix(rp_uniforms->gradients[2], rp_uniforms->gradients[3], interp); \
+		const float interp = smoothstep(rp_uniforms->stops.z, rp_uniforms->stops.w, interpolator); \
+		dst_color += linear_blend(rp_uniforms->gradients[2], rp_uniforms->gradients[3], interp); \
 	} \
 }
 

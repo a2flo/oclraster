@@ -771,6 +771,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			device->clock = internal_device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>();
 			device->mem_size = internal_device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
 			device->local_mem_size = internal_device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>();
+			device->constant_mem_size = internal_device.getInfo<CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE>();
 			device->name = internal_device.getInfo<CL_DEVICE_NAME>();
 			device->vendor = internal_device.getInfo<CL_DEVICE_VENDOR>();
 			device->version = internal_device.getInfo<CL_DEVICE_VERSION>();
@@ -793,9 +794,10 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			oclr_msg("max mem alloc: %u bytes / %u MB",
 					 device->max_alloc,
 					 device->max_alloc / 1024ULL / 1024ULL);
-			oclr_msg("mem size: %u MB (global), %u KB (local)",
+			oclr_msg("mem size: %u MB (global), %u KB (local), %u KB (constant)",
 					 device->mem_size / 1024ULL / 1024ULL,
-					 device->local_mem_size / 1024ULL);
+					 device->local_mem_size / 1024ULL,
+					 device->constant_mem_size / 1024ULL);
 			oclr_msg("mem base address alignment: %u", internal_device.getInfo<CL_DEVICE_MEM_BASE_ADDR_ALIGN>());
 			oclr_msg("min data type alignment size: %u", internal_device.getInfo<CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE>());
 			oclr_msg("host unified memory: %u", internal_device.getInfo<CL_DEVICE_HOST_UNIFIED_MEMORY>());

@@ -17,18 +17,16 @@ oclraster_in simple_input {
 	float4 vertex;
 } input_attributes;
 
-oclraster_uniforms text {
-	uint4 data[2048]; // 16 bytes * 2048 = 32k == max
-} text_data;
+oclraster_buffers {
+	const unsigned int* text_data;
+};
 
 float4 gfx2d_transform() {
-	int2 id = (int2)(instance_index / 2, (instance_index % 2) * 2);
-	uint index = ((uint*)&text_data->data[id.x])[id.y];
-	uint pos = ((uint*)&text_data->data[id.x])[id.y + 1];
-	uint2 upos = (uint2)(pos & 0xFFFFu, (pos >> 16u) & 0xFFFFu);
+	uint index = text_data[instance_index * 2];
+	const uint pos = text_data[(instance_index * 2) + 1];
+	const uint2 upos = (uint2)(pos & 0xFFFFu, (pos >> 16u) & 0xFFFFu);
 	
 	float2 vertex = input_attributes->vertex.xy * tp_uniforms->glyph_size;
-	// TODO: !
 	// kinda sick, but it does it's job (there is no other way to emulate a packed short int)
 	vertex.x += (float)(upos.x >= 0x8000u ? -(int)((~upos.x & 0xFFFFu) + 1u) : (int)(upos.x));
 	vertex.y += (float)(upos.y >= 0x8000u ? -(int)((~upos.y & 0xFFFFu) + 1u) : (int)(upos.y));

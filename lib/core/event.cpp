@@ -169,7 +169,7 @@ void event::handle_events() {
 		}
 		else if(event_type == SDL_MOUSEMOTION ||
 				event_type == SDL_MOUSEWHEEL) {
-			switch (event_type) {
+			switch(event_type) {
 				case SDL_MOUSEMOTION: {
 					const int2 abs_pos = int2(event_handle.motion.x, event_handle.motion.y);
 					const int2 rel_move = int2(event_handle.motion.xrel, event_handle.motion.yrel);

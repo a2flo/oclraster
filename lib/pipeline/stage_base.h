@@ -23,7 +23,6 @@
 #include "program/oclraster_program.h"
 
 struct draw_state;
-class oclraster_program;
 class stage_base {
 public:
 	stage_base();

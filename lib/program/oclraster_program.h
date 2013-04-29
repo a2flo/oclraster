@@ -117,6 +117,7 @@ public:
 		INPUT,
 		OUTPUT,
 		UNIFORMS,
+		BUFFERS,
 		IMAGES,
 		FRAMEBUFFER
 	};

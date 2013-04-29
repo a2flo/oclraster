@@ -99,7 +99,7 @@ string transform_program::specialized_processing(const string& code,
 	size_t cur_user_buffer = 0;
 	for(const auto& oclr_struct : structs) {
 		const string cur_user_buffer_str = size_t2string(cur_user_buffer);
-		switch (oclr_struct->type) {
+		switch(oclr_struct->type) {
 			case oclraster_program::STRUCT_TYPE::INPUT:
 				buffer_handling_code += oclr_struct->name + " user_buffer_element_" + cur_user_buffer_str +
 										 " = user_buffer_"+cur_user_buffer_str+"[vertex_id];\n";
@@ -118,6 +118,17 @@ string transform_program::specialized_processing(const string& code,
 										 cur_user_buffer_str + " = *user_buffer_" + cur_user_buffer_str + ";\n");
 				main_call_parameters += "&user_buffer_element_" + cur_user_buffer_str + ", ";
 				break;
+			case oclraster_program::STRUCT_TYPE::BUFFERS: {
+				const size_t buffer_entries = oclr_struct->variables.size();
+				if(buffer_entries > 0) {
+					for(size_t i = 0; i < buffer_entries; i++) {
+						main_call_parameters += "user_buffer_" + size_t2string(cur_user_buffer) + ", ";
+						cur_user_buffer++;
+					}
+					cur_user_buffer--; // prevent double-increase
+				}
+			}
+			break;
 			case oclraster_program::STRUCT_TYPE::IMAGES:
 			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
 		}
@@ -154,6 +165,7 @@ string transform_program::get_qualifier_for_struct_type(const STRUCT_TYPE& type)
 		case STRUCT_TYPE::OUTPUT:
 			// private memory
 			return "";
+		case oclraster_program::STRUCT_TYPE::BUFFERS:
 		case oclraster_program::STRUCT_TYPE::IMAGES:
 		case oclraster_program::STRUCT_TYPE::FRAMEBUFFER:
 			return "";

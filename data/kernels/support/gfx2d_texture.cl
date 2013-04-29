@@ -94,7 +94,7 @@ bool gfx2d_rasterization() {
 	gradient_diagonal_rl(gradient_color);
 #endif
 	
-	color = mix(color * rp_uniforms->mul_color, gradient_color, rp_uniforms->gradient_mul_interpolator);
+	color = linear_blend(color * rp_uniforms->mul_color, gradient_color, rp_uniforms->gradient_mul_interpolator);
 	color += rp_uniforms->add_color;
 	color += gradient_color * rp_uniforms->gradient_add_interpolator;
 #endif

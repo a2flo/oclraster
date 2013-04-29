@@ -375,6 +375,7 @@ public:
 		unsigned int clock = 0;
 		cl_ulong mem_size = 0;
 		cl_ulong local_mem_size = 0;
+		cl_ulong constant_mem_size = 0;
 		cl_device_type internal_type = 0;
 		string name = "";
 		string vendor = "";

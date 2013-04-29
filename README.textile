@@ -7,20 +7,22 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 
 *Software Requirements and Important Information:*
 * on Windows:
-** if you have an AMD GPU/CPU or an Intel CPU: please install the "Intel OpenCL SDK for Windows (64-bit)":http://software.intel.com/en-us/vcsource/tools/opencl-sdk
-** alternatively (although not recommended due to performance issues): install the AMD APP SDK ("AMD APP SDK":http://developer.amd.com/tools/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/#one)
+** if you have an AMD or Intel CPU: please install the "Intel OpenCL SDK for Windows (64-bit)":http://software.intel.com/en-us/vcsource/tools/opencl-sdk
+** alternatively, or if you have an AMD GPU (not recommended CPU devices due to performance issues): install the AMD APP SDK ("AMD APP SDK":http://developer.amd.com/tools/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/#one)
+** if you have a Nvidia GPU: please install the "latest graphics drivers":http://www.nvidia.com/Download/index.aspx?lang=en-us
 ** make sure to select the correct opencl platform in config.xml
 * on OS X:
 ** please install the "latest XQuartz":http://xquartz.macosforge.org
-** 10.7: OpenCL on 10.7.5 on non-CPU devices is broken, please use a CPU device for now or use an earlier version of OS X (or 10.8)
-** 10.8: update to at least 10.8.3 (prior versions are majorly bugged)
+** 10.7: OpenCL on 10.7.5 on non-CPU devices is broken, please use a CPU device for now or use an earlier version of OS X (or upgrade to 10.8)
+** 10.8: update to at least 10.8.3 (prior versions are majorly broken)
 ** -if you have a Nvidia GPU, you can also use "CUDA":https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda")- currently defunct
 
 *Requirements:*
 * Windows: NT 6.0+ x86 (Vista/7/8/2008/2008R2/2012), NT 5.1/5.2 x86 (XP/2003) support is uncertain
 * OS X: 10.7+
 * Linux: any x64 distribution that supports the AMD, Intel or Nvidia OpenCL SDK/drivers
-* OpenGL 3.2+ and OpenCL 1.1+ capable GPU/CPU and platform (GeForce 400+, Radeon HD5+, Core2+, Athlon64+?)
+* OpenGL 2.0+ (with support for ARB_framebuffer_object or EXT_framebuffer_object + EXT_framebuffer_blit) or OpenGL 3.2+ Core
+* OpenCL 1.1+ capable GPU/CPU and platform (GeForce 400+, Radeon HD5+, Core2+, Athlon64+)
 * OpenCL extension support for:
 ** cl_khr_global_int32_base_atomics
 ** cl_khr_global_int32_extended_atomics
@@ -80,7 +82,7 @@ on OS X:
 *Papers:*
 TODO: all papers
 * "3D Rasterization: A Bridge between Rasterization and Ray Casting":http://cg.ibds.kit.edu/publications/p2012/3dr/gi2012.pdf
-* "High-Performance Software Rasterization on GPUs":http://research.nvidia.com/sites/default/files/publications/laine2011hpg_paper.pdf
+* "High-Performance Software Rasterization on GPUs":https://mediatech.aalto.fi/~samuli/publications/laine2011hpg_paper.pdf
 
 *Screenshots:*
 * progress as of 2013/04/27, running on a GPU in OS X:
