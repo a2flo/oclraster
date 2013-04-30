@@ -49,8 +49,6 @@
 #define __CL_ENABLE_EXCEPTIONS
 #include "cl/cl.hpp"
 
-#define CLINFO_STR_SIZE 65536*2
-
 //
 #if defined(OCLRASTER_CUDA_CL)
 #if defined(__APPLE__)
@@ -62,12 +60,10 @@
 #endif
 #endif
 
-/*! @class opencl_base
- *  @brief opencl_base interface
- */
-
 enum class IMAGE_TYPE : unsigned short int;
 enum class IMAGE_CHANNEL : unsigned short int;
+
+// opencl base interface
 class OCLRASTER_API opencl_base {
 public:
 	struct kernel_object;
@@ -134,13 +130,12 @@ public:
 	enum class VENDOR {
 		NVIDIA,
 		INTEL,
-		ATI,
 		AMD,
 		APPLE,
 		UNKNOWN
 	};
 	
-	//! buffer flags (associated kernel => buffer has been set as a kernel argument, at least once and the latest one for an index)
+	//! buffer flags
 	enum class BUFFER_FLAG : unsigned int {
 		NONE				= (0u),
 		READ				= (1u << 0u),			//!< enum read only buffer (kernel POV)
@@ -472,9 +467,7 @@ template<typename T> bool opencl_base::set_kernel_argument(const unsigned int& i
 	return true;
 }
 	
-/*! @class opencl
- *  @brief opencl interface
- */
+// actual opencl implementation
 class OCLRASTER_API opencl : public opencl_base {
 public:
 	//
@@ -603,13 +596,10 @@ protected:
 };
 
 #if defined(OCLRASTER_CUDA_CL)
-/*! @class cudacl
- *  @brief cudacl interface
- */
+// opencl_base implementation on top of cuda
 struct cuda_kernel_object;
 class OCLRASTER_API cudacl : public opencl_base {
 public:
-	//
 	cudacl(const char* kernel_path_, SDL_Window* wnd_, const bool clear_cache_);
 	virtual ~cudacl();
 	
@@ -750,4 +740,4 @@ protected:
 };
 #endif
 
-#endif // __OPENCL_H__
+#endif

@@ -24,6 +24,8 @@
 #include "ios/ios_helper.h"
 #endif
 
+#define CLINFO_STR_SIZE (65536*2)
+
 shared_ptr<opencl::kernel_object> opencl_base::null_kernel_object { nullptr };
 
 // 2d array: [IMAGE_TYPE][IMAGE_CHANNEL] -> cl::ImageFormat (-> will be (0, 0) if not supported)
@@ -821,11 +823,9 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			if(strstr(vendor_str.c_str(), "nvidia") != nullptr) {
 				device->vendor_type = VENDOR::NVIDIA;
 			}
-			else if(strstr(vendor_str.c_str(), "amd") != nullptr) {
+			else if(strstr(vendor_str.c_str(), "amd") != nullptr ||
+					strstr(vendor_str.c_str(), "ati") != nullptr) {
 				device->vendor_type = VENDOR::AMD;
-			}
-			else if(strstr(vendor_str.c_str(), "ati") != nullptr) {
-				device->vendor_type = VENDOR::ATI;
 			}
 			else if(strstr(vendor_str.c_str(), "intel") != nullptr) {
 				device->vendor_type = VENDOR::INTEL;
@@ -847,6 +847,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 					cpu_score = device->units * device->clock;
 					if(cpu_score > fastest_cpu_score) {
 						fastest_cpu = device;
+						fastest_cpu_score = cpu_score;
 					}
 				}
 			}
@@ -863,6 +864,7 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 					gpu_score = device->units * device->clock;
 					if(gpu_score > fastest_gpu_score) {
 						fastest_gpu = device;
+						fastest_gpu_score = gpu_score;
 					}
 				}
 			}
@@ -1195,9 +1197,6 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 				case VENDOR::NVIDIA:
 					device_options += nv_build_options;
 					device_options += " -DNVIDIA";
-					break;
-				case VENDOR::ATI:
-					device_options += " -DATI";
 					break;
 				case VENDOR::INTEL:
 					device_options += " -DINTEL";

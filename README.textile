@@ -41,7 +41,7 @@ on Linux:
 * install clang 3.2+ and libc++ (currently 1101)
 * run ./premake.sh
 * make
-* there is a install script located in lib/ which should be executed from that folder (will install to /usr/local/)
+* there is an install script located in lib/ which should be executed from that folder (will install to /usr/local/)
 * alternatively:
 ** sudo ln -sf /path/to/oclraster/bin/liboclraster{,d}.{a,so} /usr/local/lib/
 ** sudo ln -sf /path/to/oclraster/lib /usr/local/include/oclraster
@@ -49,11 +49,12 @@ on Linux:
 on Windows/MinGW:
 * install custom MinGW builds "gcc-dw2-4.6":http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/rubenvb/gcc-dw2-4.6-release/ and "clang-3.2":http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/rubenvb/clang-3.2-release/ (thanks to "rubenvb":https://github.com/rubenvb for providing these!)
 * install "MSYS":http://sourceforge.net/projects/mingw-w64/files/External%20binary%20packages%20%28Win64%20hosted%29/MSYS%20%2832-bit%29/ to your MinGW folder
-* build/install all necessary libraries (-> Credits; a2elight is not required/used, CUDA is optional)
+* build/install all necessary libraries, including libc++ (-> Credits; a2elight is not required/used, CUDA is optional)
 * add a Windows system environment variable called "MINGW_ROOT" and set it to your MinGW root folder (e.g. "/c/mingw/mingw32/")
+* add the "mingw/bin" path to the Windows system environment variable called "PATH"
 * run ./premake.sh
 * make
-* libraries and headers will be automatically installed to your set MinGW folder
+* libraries and headers will be automatically installed to your previously set MinGW folder
 * note: to make things easier, I might provide a full MinGW package containing all required libraries at a later point
 
 on OS X:

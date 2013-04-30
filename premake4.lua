@@ -339,8 +339,8 @@ project "oclr_volume"
 			buildoptions { "-gdwarf-2" }
 		end
 
--- oclraster_support lib
---[[ project "liboclraster_support"
+-- oclraster_support lib and samples
+project "liboclraster_support"
 	-- project settings
 	targetname "liboclraster_support"
 	kind "SharedLib"
@@ -355,6 +355,7 @@ project "oclr_volume"
 				  "support/gui/",
 				  "/usr/include/oclraster",
 				  "/usr/local/include/oclraster" }
+	links { "freetype" }
 	
 	if(not os.is("windows") or win_unixenv) then
 		prebuildcommands { "./build_version.sh" }
@@ -394,6 +395,7 @@ project "oclr_ui"
 				  "/usr/local/include/oclraster",
 				  "/usr/local/include/oclraster_support",
 				  "samples/oclr_ui/src/" }
+	links { "freetype" }
 
 	configuration "Release"
 		links { "oclraster", "oclraster_support" }
@@ -412,4 +414,4 @@ project "oclr_ui"
 		if(not os.is("windows") or win_unixenv) then
 			buildoptions { "-gdwarf-2" }
 		end
-]]--
+
