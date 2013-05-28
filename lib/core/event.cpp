@@ -206,13 +206,13 @@ void event::handle_events() {
 			const unsigned long long int finger_id = event_handle.tfinger.fingerId;
 			
 			if(event_type == SDL_FINGERDOWN) {
-				if(event_handle.tfinger.state == SDL_PRESSED) {
+				if(event_handle.tfinger.type == SDL_FINGERDOWN) {
 					handle_event(EVENT_TYPE::FINGER_DOWN,
 								 make_shared<finger_down_event>(cur_ticks, finger_coord, pressure, finger_id));
 				}
 			}
 			else if(event_type == SDL_FINGERUP) {
-				if(event_handle.tfinger.state == SDL_RELEASED) {
+				if(event_handle.tfinger.type == SDL_FINGERUP) {
 					handle_event(EVENT_TYPE::FINGER_UP,
 								 make_shared<finger_up_event>(cur_ticks, finger_coord, pressure, finger_id));
 				}

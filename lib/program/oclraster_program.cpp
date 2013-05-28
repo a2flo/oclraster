@@ -317,7 +317,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 			// default spec contains image_spec entries, but the are no images -> clear
 			spec.image_spec.clear();
 		}
-		// else: no images in kernel/program -> just one kernel / "empty spec"
+		// else: no images in kernel/program -> just one kernel / "empty image spec"
 		build_kernel(spec);
 	}
 	catch(oclraster_exception& ex) {

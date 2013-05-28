@@ -20,8 +20,8 @@ oclraster_out simple_output {
 } output_attributes;
 
 oclraster_uniforms transform_uniforms {
-	mat4 rotation_scale_matrix;
 	mat4 modelview_matrix;
+	mat4 rotation_matrix;
 } tp_uniforms;
 
 float4 transform_main() {
@@ -31,11 +31,11 @@ float4 transform_main() {
 	
 	//
 	mat3 nbt_mat;
-	nbt_mat.m[0] = normalize(mat4_mul_vec3(tp_uniforms->rotation_scale_matrix,
+	nbt_mat.m[0] = normalize(mat4_mul_vec3(tp_uniforms->rotation_matrix,
 										   input_attributes->tangent.xyz));
-	nbt_mat.m[1] = normalize(mat4_mul_vec3(tp_uniforms->rotation_scale_matrix,
+	nbt_mat.m[1] = normalize(mat4_mul_vec3(tp_uniforms->rotation_matrix,
 										   input_attributes->binormal.xyz));
-	nbt_mat.m[2] = normalize(mat4_mul_vec3(tp_uniforms->rotation_scale_matrix,
+	nbt_mat.m[2] = normalize(mat4_mul_vec3(tp_uniforms->rotation_matrix,
 										   input_attributes->normal.xyz));
 	
 	output_attributes->view_vec = (float4)(vec3_mul_mat3(camera_position - mv_vertex.xyz, nbt_mat), 1.0f);

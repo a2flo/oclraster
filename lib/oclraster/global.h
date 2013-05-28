@@ -27,7 +27,7 @@
 // amount of primitives per batch (in the binner) - don't change this!
 #define OCLRASTER_BATCH_SIZE (256u)
 
-// uses kernel templates from the data/kernels/ folder instead of the internal one
+// uses kernel templates from the data/kernels/ folder instead of the internal ones
 #if !defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 //#define OCLRASTER_INTERNAL_PROGRAM_DEBUG (1)
 #endif
@@ -35,5 +35,10 @@
 // this defines the minimum alignment for all oclraster structs (should at least be 16)
 #define OCLRASTER_STRUCT_ALIGNMENT (16)
 #define oclraster_struct struct __attribute__((packed, aligned(OCLRASTER_STRUCT_ALIGNMENT)))
+
+// if this is enabled, the pipeline will do a FXAA pass in the swap function
+#if !defined(OCLRASTER_FXAA)
+//#define OCLRASTER_FXAA (1)
+#endif
 
 #endif

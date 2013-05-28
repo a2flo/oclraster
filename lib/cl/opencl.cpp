@@ -947,6 +947,11 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
 					   " -DOCLRASTER_PROJECTION_ORTHOGRAPHIC"),
+			
+#if defined(OCLRASTER_FXAA)
+			make_tuple("FXAA.LUMA", "luma_pass.cl", "framebuffer_luma", ""),
+			make_tuple("FXAA", "fxaa_pass.cl", "framebuffer_fxaa", ""),
+#endif
 		};
 		
 		load_internal_kernels();

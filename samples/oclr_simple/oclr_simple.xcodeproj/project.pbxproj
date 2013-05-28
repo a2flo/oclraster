@@ -53,6 +53,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5C201511174BD8E7006CFF5B /* fxaa_pass.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = fxaa_pass.cl; sourceTree = "<group>"; };
+		5C201512174BD8E7006CFF5B /* luma_pass.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = luma_pass.cl; sourceTree = "<group>"; };
 		5C2D23CB16D50C1700013DBF /* oclr_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_image.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.opencl; };
 		5C47267016A69E1200F7EA21 /* simple_shader_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_fs.cl; sourceTree = "<group>"; };
 		5C47267116A69E1200F7EA21 /* simple_shader_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_shader_vs.cl; sourceTree = "<group>"; };
@@ -78,6 +80,9 @@
 		5C5C189B16C24F2D00AB23E6 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Default.png; path = ios/Default.png; sourceTree = SOURCE_ROOT; };
 		5C5C189C16C24F2D00AB23E6 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "ios/Default@2x.png"; sourceTree = SOURCE_ROOT; };
 		5C5C18A016C24F4600AB23E6 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = ios/en.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
+		5C6D20D9173A1D4700F123B0 /* simple_parallax_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_parallax_fs.cl; sourceTree = "<group>"; };
+		5C6D20DA173A1D4700F123B0 /* simple_parallax_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_parallax_vs.cl; sourceTree = "<group>"; };
+		5C6D20DB173A1D4700F123B0 /* simple_texturing.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_texturing.cl; sourceTree = "<group>"; };
 		5C91650E166685EA00626436 /* oclr_global.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_global.h; sourceTree = "<group>"; };
 		5C91650F166685EA00626436 /* oclr_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_math.h; sourceTree = "<group>"; };
 		5C916510166685EA00626436 /* oclr_matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_matrix.h; sourceTree = "<group>"; };
@@ -97,8 +102,6 @@
 		5CCC96771641BAF3005C3DE4 /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = Library/Frameworks/SDL2_image.framework; sourceTree = SDKROOT; };
 		5CCC967B1641BF72005C3DE4 /* cutil_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cutil_math.h; sourceTree = "<group>"; };
 		5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cudacl.h; sourceTree = "<group>"; };
-		5CCCDD7116BF023800C14D3C /* simple_texturing_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_texturing_fs.cl; sourceTree = "<group>"; };
-		5CCCDD7216BF023800C14D3C /* simple_texturing_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_texturing_vs.cl; sourceTree = "<group>"; };
 		5CDCB7E0172AF14E001ADC50 /* oclr_framebuffer_clear.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_framebuffer_clear.h; sourceTree = "<group>"; };
 		5CE91CED16F00F050044C264 /* debug_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_fs.cl; sourceTree = "<group>"; };
 		5CE91CEE16F00F050044C264 /* debug_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_vs.cl; sourceTree = "<group>"; };
@@ -245,6 +248,8 @@
 				5CC688F91715C167006BD36B /* processing.cl */,
 				5CEF6CC616F4FA440044E2DF /* template_rasterization_program.cl */,
 				5CEF6CC716F4FA440044E2DF /* template_transform_program.cl */,
+				5C201511174BD8E7006CFF5B /* fxaa_pass.cl */,
+				5C201512174BD8E7006CFF5B /* luma_pass.cl */,
 				5CEC5B641699719F00C464D5 /* user */,
 			);
 			name = kernels;
@@ -256,8 +261,9 @@
 			children = (
 				5C47267116A69E1200F7EA21 /* simple_shader_vs.cl */,
 				5C47267016A69E1200F7EA21 /* simple_shader_fs.cl */,
-				5CCCDD7216BF023800C14D3C /* simple_texturing_vs.cl */,
-				5CCCDD7116BF023800C14D3C /* simple_texturing_fs.cl */,
+				5C6D20DB173A1D4700F123B0 /* simple_texturing.cl */,
+				5C6D20DA173A1D4700F123B0 /* simple_parallax_vs.cl */,
+				5C6D20D9173A1D4700F123B0 /* simple_parallax_fs.cl */,
 				5CE91CEE16F00F050044C264 /* debug_vs.cl */,
 				5CE91CED16F00F050044C264 /* debug_fs.cl */,
 			);

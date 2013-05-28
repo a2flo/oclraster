@@ -30,7 +30,8 @@ oclraster_framebuffer {
 };
 
 bool gfx2d_rasterization() {
-	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+	// TODO: proper downsample/upsample version of this when the dst and src image dimensions don't match
+	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
 	const float4 src_color = image_read(src_buffer, point_sampler,
 										(float2)(output_attributes->tex_coord.x,
 												 1.0f - output_attributes->tex_coord.y));

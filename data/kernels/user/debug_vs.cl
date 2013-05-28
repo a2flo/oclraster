@@ -17,7 +17,6 @@ oclraster_out simple_output {
 } output_attributes;
 
 oclraster_uniforms transform_uniforms {
-	mat4 rotation_scale_matrix;
 	mat4 modelview_matrix;
 } tp_uniforms;
 

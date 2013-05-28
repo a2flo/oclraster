@@ -192,6 +192,10 @@ public:
 	void set_scissor_rectangle(const uint2& offset, const uint2& size);
 	const uint4& get_scissor_rectangle() const;
 	
+	//
+	void _set_fxaa_state(const bool state);
+	bool _get_fxaa_state() const;
+	
 protected:
 	draw_state state;
 	transform_stage transform;
@@ -203,15 +207,16 @@ protected:
 	void create_framebuffers(const uint2& size);
 	void destroy_framebuffers();
 	framebuffer default_framebuffer;
+	bool fxaa_state { true };
 	
 	// map/copy fbo
-	GLuint copy_fbo_id = 0, copy_fbo_tex_id = 0;
+	GLuint copy_fbo_id { 0 }, copy_fbo_tex_id { 0 };
 #if defined(OCLRASTER_IOS)
-	GLuint vbo_fullscreen_triangle = 0;
+	GLuint vbo_fullscreen_triangle { 0 };
 #endif
 	
 	// camera
-	camera* cam = nullptr;
+	camera* cam { nullptr };
 	
 	// event handler
 	event::handler event_handler_fnctr;
@@ -226,7 +231,6 @@ template <class program_type> void pipeline::bind_program(const program_type& pr
 	static_assert(is_base_of<transform_program, program_type>::value ||
 				  is_base_of<rasterization_program, program_type>::value,
 				  "invalid program type (must be a transform_program or rasterization_program or a derived class)!");
-	// static_if would be nice
 	if(is_base_of<transform_program, program_type>::value) {
 		state.transform_prog = (transform_program*)&program;
 	}

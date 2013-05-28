@@ -192,7 +192,6 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 		config.height = config_doc.get<size_t>("config.screen.height", 720);
 		config.fullscreen = config_doc.get<bool>("config.screen.fullscreen", false);
 		config.vsync = config_doc.get<bool>("config.screen.vsync", false);
-		config.stereo = config_doc.get<bool>("config.screen.stereo", false);
 		
 		config.fov = config_doc.get<float>("config.projection.fov", 72.0f);
 		config.near_far_plane.x = config_doc.get<float>("config.projection.near", 1.0f);
@@ -306,9 +305,12 @@ void oclraster::init_internal() {
 	
 #if !defined(OCLRASTER_IOS)
 #if defined(__APPLE__) // only default to opengl 3.2 core on os x for now (opengl version doesn't really matter on other platforms)
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 #endif
 #else
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
@@ -741,10 +743,6 @@ bool oclraster::get_fullscreen() {
 
 bool oclraster::get_vsync() {
 	return config.vsync;
-}
-
-bool oclraster::get_stereo() {
-	return config.stereo;
 }
 
 unsigned int oclraster::get_width() {

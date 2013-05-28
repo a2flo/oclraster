@@ -368,3 +368,7 @@ float core::rand(const float& min, const float& max) {
 	uniform_real_distribution<> dist(min, max);
 	return dist(gen);
 }
+
+void core::set_random_seed(const unsigned int& seed) {
+	gen.seed(seed);
+}

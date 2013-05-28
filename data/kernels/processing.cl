@@ -51,17 +51,6 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	//
 	MAKE_PRIMITIVE_INDICES(indices);
 	
-	//
-#if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
-	const float3 D0 = cdata->camera_origin.xyz;
-	const float3 DX = cdata->camera_x_vec.xyz;
-	const float3 DY = cdata->camera_y_vec.xyz;
-	const float3 forward = cdata->camera_forward.xyz;
-#elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
-	const float DX = cdata->camera_x_vec.x;
-	const float DY = cdata->camera_y_vec.y;
-#endif
-	
 	// read user transformed vertices
 	const float3 vertices[3] = {
 		transformed_vertex_buffer[indices[0]].xyz,
@@ -73,6 +62,17 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	for(unsigned int i = 0; i < 3; i++) {
 		if(vertices[i].x == INFINITY) discard();
 	}
+	
+	//
+#if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
+	const float3 D0 = cdata->camera_origin.xyz;
+	const float3 DX = cdata->camera_x_vec.xyz;
+	const float3 DY = cdata->camera_y_vec.xyz;
+	const float3 forward = cdata->camera_forward.xyz;
+#elif defined(OCLRASTER_PROJECTION_ORTHOGRAPHIC)
+	const float DX = cdata->camera_x_vec.x;
+	const float DY = cdata->camera_y_vec.y;
+#endif
 	
 #if defined(OCLRASTER_PROJECTION_PERSPECTIVE)
 	// if component < 0 => vertex is behind cam, == 0 => on the near plane, > 0 => in front of the cam
@@ -92,6 +92,7 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 	
 	// frustum culling using the "p/n-test"
 	// also thx to ryg for figuring out this optimized version of the p/n-test
+	// http://fgiesen.wordpress.com/2010/10/17/view-frustum-culling/
 	const float3 aabb_min = fmin(fmin(vertices[0], vertices[1]), vertices[2]);
 	const float3 aabb_max = fmax(fmax(vertices[0], vertices[1]), vertices[2]);
 	const float3 aabb_center = (aabb_max + aabb_min); // note: actual scale doesn't matter (-> no *0.5f)
@@ -240,9 +241,10 @@ kernel void oclraster_processing(global const unsigned int* index_buffer,
 			const float2 e1 = (float2)(coord_xs[2] - coord_xs[0],
 									   coord_ys[2] - coord_ys[0]);
 			const float area = -0.5f * (e0.x * e1.y - e0.y * e1.x);
+			//printf("[%d] area: %f\n", primitive_id, area);
 			// half sample size (TODO: -> check if between sample points; <=1/2^8 sample size seems to be a good threshold?)
 			if(area < MIN_FRAGMENT_SIZE) {
-				//printf("primitive area culled: %d\n", primitive_id);
+				//printf("primitive area culled: %d (%f)\n", primitive_id, area);
 				discard(); // cull
 			}
 		}

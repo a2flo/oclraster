@@ -62,13 +62,14 @@ public:
 	}
 	
 	static float wrap(const float& var, const float& max) {
-		return (var <= 0.0f ? (max - fmodf(fabs(var), max)) : fmodf(var, max));
+		return (var < 0.0f ? (max - fmodf(fabs(var), max)) : fmodf(var, max));
 	}
 	
 	static int rand(const int& max);
 	static int rand(const int& min, const int& max);
 	static float rand(const float& max);
 	static float rand(const float& min, const float& max);
+	static void set_random_seed(const unsigned int& seed);
 	
 	template<typename T> static set<T> power_set(set<T> input_set) {
 		if(input_set.empty()) return set<T> {};

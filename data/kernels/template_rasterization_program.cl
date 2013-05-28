@@ -58,8 +58,8 @@
 		
 #if defined(LOCAL_MEM_COPY)
 		// -1 b/c the local memory is also used for other things
-		//#define LOCAL_MEM_BATCH_COUNT ((LOCAL_MEM_SIZE / BATCH_SIZE) - 1)
-		#define LOCAL_MEM_BATCH_COUNT 32u
+		#define LOCAL_MEM_BATCH_COUNT ((LOCAL_MEM_SIZE / BATCH_SIZE) - 1)
+		//#define LOCAL_MEM_BATCH_COUNT 32u
 		local uchar primitive_queue[LOCAL_MEM_BATCH_COUNT * BATCH_SIZE] __attribute__((aligned(16)));
 		unsigned int triangle_offsets[LOCAL_MEM_BATCH_COUNT]; // stores the triangle id offsets for valid batches
 		event_t events[LOCAL_MEM_BATCH_COUNT];
@@ -244,11 +244,11 @@
 							fragments_passed += 1.0f;
 						}
 					}
-					
-					// write framebuffer output (if any fragment has passed)
-					if(fragments_passed != 0.0f) {
-						//###OCLRASTER_FRAMEBUFFER_WRITE###
-					}
+				}
+				
+				// write framebuffer output (if any fragment has passed)
+				if(fragments_passed != 0.0f) {
+					//###OCLRASTER_FRAMEBUFFER_WRITE###
 				}
 			}
 		}

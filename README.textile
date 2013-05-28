@@ -8,7 +8,7 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 *Software Requirements and Important Information:*
 * on Windows:
 ** if you have an AMD or Intel CPU: please install the "Intel OpenCL SDK for Windows (64-bit)":http://software.intel.com/en-us/vcsource/tools/opencl-sdk
-** alternatively, or if you have an AMD GPU (not recommended CPU devices due to performance issues): install the AMD APP SDK ("AMD APP SDK":http://developer.amd.com/tools/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/#one)
+** alternatively, or if you have an AMD GPU (not recommended for CPU devices due to performance issues): install the AMD APP SDK ("AMD APP SDK":http://developer.amd.com/tools/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/downloads/#one)
 ** if you have a Nvidia GPU: please install the "latest graphics drivers":http://www.nvidia.com/Download/index.aspx?lang=en-us
 ** make sure to select the correct opencl platform in config.xml
 * on OS X:

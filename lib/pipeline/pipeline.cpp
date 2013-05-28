@@ -140,6 +140,26 @@ void pipeline::destroy_framebuffers() {
 }
 
 void pipeline::swap() {
+	const uint2 default_fb_size = default_framebuffer.get_size();
+	image* fbo_img = default_framebuffer.get_image(0);
+	
+#if defined(OCLRASTER_FXAA)
+	if(fxaa_state) {
+		// fxaa
+		ocl->use_kernel("FXAA.LUMA");
+		ocl->set_kernel_argument(0, fbo_img->get_buffer());
+		ocl->set_kernel_argument(1, default_fb_size);
+		ocl->set_kernel_range(ocl->compute_kernel_ranges(default_fb_size.x, default_fb_size.y));
+		ocl->run_kernel();
+		
+		ocl->use_kernel("FXAA");
+		ocl->set_kernel_argument(0, fbo_img->get_buffer());
+		ocl->set_kernel_argument(1, default_fb_size);
+		ocl->set_kernel_range(ocl->compute_kernel_ranges(default_fb_size.x, default_fb_size.y));
+		ocl->run_kernel();
+	}
+#endif
+	
 	// draw/blit to screen
 #if defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
@@ -147,8 +167,6 @@ void pipeline::swap() {
 	glViewport(0, 0, oclraster::get_width(), oclraster::get_height());
 	
 	// copy opencl framebuffer to blit framebuffer/texture
-	const uint2 default_fb_size = default_framebuffer.get_size();
-	image* fbo_img = default_framebuffer.get_image(0);
 	auto fbo_data = fbo_img->map(opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
 #if !defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
@@ -528,4 +546,12 @@ void pipeline::set_depth_state(const depth_state& dstate) {
 
 const depth_state& pipeline::get_depth_state() const {
 	return state.depth;
+}
+
+void pipeline::_set_fxaa_state(const bool state_) {
+	fxaa_state = state_;
+}
+
+bool pipeline::_get_fxaa_state() const {
+	return fxaa_state;
 }

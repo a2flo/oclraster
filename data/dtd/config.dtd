@@ -5,7 +5,6 @@
 	height CDATA #REQUIRED
 	fullscreen CDATA #REQUIRED
 	vsync CDATA #REQUIRED
-	stereo CDATA #REQUIRED
 	dpi CDATA #REQUIRED
 >
 <!ELEMENT projection (#PCDATA)*>

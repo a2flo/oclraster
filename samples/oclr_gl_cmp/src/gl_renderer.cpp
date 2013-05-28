@@ -16,52 +16,157 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#if defined(__clang__)
-// someone decided to recursively define boolean values ...
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
-#endif
-
-#include "ios_helper.h"
-#include "core/logger.h"
-#include "core/core.h"
+#include "gl_renderer.h"
+#include <oclraster/oclraster.h>
+#include <oclraster/core/gl_support.h>
+#include <oclraster/core/camera.h>
 #include <regex>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_syswm.h>
-#include <OpenGLES/EAGL.h>
+//
+struct shader_object {
+	struct internal_shader_object {
+		unsigned int program;
+		unsigned int vertex_shader;
+		unsigned int fragment_shader;
+		
+		struct shader_variable {
+			size_t location;
+			size_t size;
+			size_t type;
+			shader_variable(size_t location_, size_t size_, GLenum type_) : location(location_), size(size_), type(type_) {}
+		};
+		unordered_map<string, shader_variable> uniforms;
+		unordered_map<string, shader_variable> attributes;
+		unordered_map<string, size_t> samplers;
+		
+		internal_shader_object() : program(0), vertex_shader(0), fragment_shader(0), uniforms(), attributes(), samplers() {}
+		~internal_shader_object() {
+			uniforms.clear();
+			attributes.clear();
+			samplers.clear();
+		}
+	};
+	const string name;
+	internal_shader_object program;
+	
+	shader_object(const string& shd_name) : name(shd_name) {}
+	~shader_object() {}
+};
+static void compile_shaders();
+static shader_object* get_shader(const string& name);
 
 static unordered_map<string, shader_object*> shader_objects;
+static GLuint index_buffer = 0;
+static GLuint vertex_buffer = 0;
+static unsigned int triangle_count = 0;
+static GLuint copy_fbo_id = 0;
+static GLuint copy_fbo_tex_id = 0;
+static GLuint depth_buffer = 0;
 
-void* ios_helper::get_eagl_sharegroup() {
-	return [[EAGLContext currentContext] sharegroup];
+//
+void init_gl_renderer() {
+	compile_shaders();
+	
+	// create a fbo for copying the color framebuffer every frame and displaying it
+	glGenFramebuffers(1, &copy_fbo_id);
+	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
+	glGenTextures(1, &copy_fbo_tex_id);
+	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, oclraster::get_width(), oclraster::get_height(),
+				 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
+	
+	glGenRenderbuffers(1, &depth_buffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, oclraster::get_width(), oclraster::get_height());
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-static void log_pretty_print(const char* log, const char* code) {
-	static const regex rx_log_line("\\w+: 0:(\\d+):.*");
-	smatch regex_result;
-	
-	const vector<string> lines { core::tokenize(string(log), '\n') };
-	const vector<string> code_lines { core::tokenize(string(code), '\n') };
-	for(const string& line : lines) {
-		if(line.size() == 0) continue;
-		oclr_log("## \033[31m%s\033[m", line);
-		
-		// find code line and print it (+/- 1 line)
-		if(regex_match(line, regex_result, rx_log_line)) {
-			const size_t src_line_num = string2size_t(regex_result[1]) - 1;
-			if(src_line_num < code_lines.size()) {
-				if(src_line_num != 0) {
-					oclr_log("\033[37m%s\033[m", code_lines[src_line_num-1]);
-				}
-				oclr_log("\033[31m%s\033[m", code_lines[src_line_num]);
-				if(src_line_num+1 < code_lines.size()) {
-					oclr_log("\033[37m%s\033[m", code_lines[src_line_num+1]);
-				}
-			}
-			oclr_log("");
-		}
+void destroy_gl_renderer() {
+	if(index_buffer != 0) {
+		glDeleteBuffers(1, &index_buffer);
+		index_buffer = 0;
 	}
+	if(vertex_buffer != 0) {
+		glDeleteBuffers(1, &vertex_buffer);
+		vertex_buffer = 0;
+	}
+}
+
+void create_gl_buffers(const size_t& indices_size, const void* indices,
+					   const size_t& vertex_data_size, const void* vertex_data) {
+	glGenBuffers(1, &index_buffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	
+	glGenBuffers(1, &vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, vertex_data_size, vertex_data, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	triangle_count = (unsigned int)(indices_size / (sizeof(unsigned int)));
+}
+
+void gl_render(camera* cam) {
+	// draw
+	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	const float aspect_ratio = float(oclraster::get_width()) / float(oclraster::get_height());
+	const float angle_ratio = tanf(DEG2RAD(oclraster::get_fov() * 0.5f)) * 2.0f;
+	
+	constexpr float z_near = 0.01f, z_far = 1000.0f;
+	matrix4f pm {
+		1.0f / (angle_ratio * aspect_ratio), 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f / (angle_ratio), 0.0f, 0.0f,
+		0.0f, 0.0f, (z_far + z_near) / (z_near - z_far), -1.0f,
+		0.0f, 0.0f, (2.0f * z_far * z_near) / (z_near - z_far), 0.0f
+	};
+	
+	matrix4f mvm = (matrix4f().translate(-cam->get_position().x, -cam->get_position().y, -cam->get_position().z) *
+					(matrix4f().rotate_y(cam->get_rotation().y) * matrix4f().rotate_x(360.0f - cam->get_rotation().x)));
+	matrix4f mvpm = mvm * pm;
+	
+	shader_object* shd = get_shader("GL_CMP");
+	glUseProgram(shd->program.program);
+	glUniformMatrix4fv((GLint)shd->program.uniforms.find("mvpm")->second.location, 1, false, (GLfloat*)&mvpm);
+	
+	glFrontFace(GL_CCW);
+	glDisable(GL_CULL_FACE);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer((GLint)shd->program.attributes.find("in_vertex")->second.location, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+	glDrawElements(GL_TRIANGLES, triangle_count, GL_UNSIGNED_INT, nullptr);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	
+	glDisableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glUseProgram(0);
+	
+	// blit
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, copy_fbo_id);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBlitFramebuffer(0, 0, oclraster::get_width(), oclraster::get_height(),
+					  0, 0, oclraster::get_width(), oclraster::get_height(),
+					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+}
+
+static void log_pretty_print(const char* log, const char* code oclr_unused) {
+	oclr_log("%s", log);
 }
 
 static bool is_gl_sampler_type(const GLenum& type) {
@@ -73,7 +178,7 @@ static bool is_gl_sampler_type(const GLenum& type) {
 	return false;
 }
 
-#define OCLRASTER_SHADER_LOG_SIZE 65535
+#define OCLRASTER_SHADER_LOG_SIZE (65535)
 static void compile_shader(shader_object& shd, const char* vs_text, const char* fs_text) {
 	// success flag (if it's 1 (true), we successfully created a shader object)
 	GLint success = 0;
@@ -197,34 +302,39 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 	glUseProgram(0);
 }
 
-void ios_helper::compile_shaders() {
+void compile_shaders() {
 	static constexpr char blit_vs_text[] { u8R"OCLRASTER_RAWSTR(
-		attribute vec2 in_vertex;
-		varying lowp vec2 tex_coord;
+		uniform mat4 mvpm;
+		attribute vec4 in_vertex;
+		varying vec4 out_vertex;
+		varying vec4 color;
 		void main() {
-			gl_Position = vec4(in_vertex.x, in_vertex.y, 0.0, 1.0);
-			tex_coord = in_vertex * 0.5 + 0.5;
+			vec4 mv_vertex = mvpm * vec4(in_vertex.x, in_vertex.y,
+										 -0.375, // -1 / (z * aspect * 2) ... damn camera setup
+										 1.0);
+			out_vertex = mv_vertex;
+			gl_Position = mv_vertex;
+			color = vec4(in_vertex.w == 0.0 ? 1.0 : 0.0,
+						 in_vertex.w == 2.0 ? 1.0 : 0.0,
+						 in_vertex.w == 1.0 ? 1.0 : 0.0,
+						 1.0);
 		}
 	)OCLRASTER_RAWSTR"};
 	static constexpr char blit_fs_text[] { u8R"OCLRASTER_RAWSTR(
-		uniform sampler2D tex;
-		varying lowp vec2 tex_coord;
+		varying vec4 out_vertex;
+		varying vec4 color;
 		void main() {
-			gl_FragColor = texture2D(tex, tex_coord);
+			gl_FragColor = color;
 		}
 	)OCLRASTER_RAWSTR"};
-		
-	shader_object* shd = new shader_object("BLIT");
+	
+	shader_object* shd = new shader_object("GL_CMP");
 	compile_shader(*shd, blit_vs_text, blit_fs_text);
-	shader_objects.emplace("BLIT", shd);
+	shader_objects.emplace("GL_CMP", shd);
 }
 
-shader_object* ios_helper::get_shader(const string& name) {
+shader_object* get_shader(const string& name) {
 	const auto iter = shader_objects.find(name);
 	if(iter == shader_objects.end()) return nullptr;
 	return iter->second;
 }
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif

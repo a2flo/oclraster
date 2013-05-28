@@ -28,7 +28,7 @@ binning_stage::binning_stage() {
 	queue_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 									  opencl::BUFFER_FLAG::BLOCK_ON_READ |
 									  opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-									  64 * 1024 * 1024); // TODO: actual size
+									  128 * 1024 * 1024); // TODO: actual size
 }
 
 binning_stage::~binning_stage() {

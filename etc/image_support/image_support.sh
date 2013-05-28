@@ -5,27 +5,29 @@
 
 declare -a channels=("" "2" "3" "4")
 declare -a defs=(
-	uchar:"float uint":") / 255.0f)"
-	ushort:"float uint":") / 65535.0f)"
-	uint:"uint":"))"
-	ulong:"ulong":"))"
+	uchar:"float uint":") / 255.0f)":" * 255.0f)))"
+	ushort:"float uint":") / 65535.0f)":" * 65535.0f)))"
+	uint:"uint":"))":")))"
+	ulong:"ulong":"))":")))"
 	
-	char:"float int":" + 128.0f) / 255.0f) * 2.0f - 1.0f"
-	short:"float int":" + 32768.0f) / 65535.0f) * 2.0f - 1.0f"
-	int:"int":"))"
-	long:"long":"))"
+	char:"float int":" + 128.0f) / 255.0f) * 2.0f - 1.0f":" + 1.0f) * 0.5f) * 255.0f) - 128.0f"
+	short:"float int":" + 32768.0f) / 65535.0f) * 2.0f - 1.0f":" + 1.0f) * 0.5f) * 65535.0f) - 32768.0f"
+	int:"int":"))":")))"
+	long:"long":"))":")))"
 	
-	oclr_half:"float":"))"
-	float:"float":"))"
-	double:"double":"))"
+	oclr_half:"float":"))":")))"
+	float:"float":"))":")))"
+	double:"double":"))":")))"
 )
 
 CODE=""
 CLEAR_CODE=""
 for type in "${defs[@]}"; do
 	img_type=${type%%:*}
-	img_norm=${type#*:*:}
-	declare -a return_types=($(sed -E "s/(.*):(.*):(.*)/\2/" <<< ${type}))
+	declare -a return_types=($(sed -E "s/(.*):(.*):(.*):(.*)/\2/" <<< "${type}"))
+	img_norm=$(sed -E "s/(.*):(.*):(.*):(.*)/\3/" <<< "${type}")
+	img_denorm=$(sed -E "s/(.*):(.*):(.*):(.*)/\4/" <<< "${type}")
+	echo "type:$img_type"
 	
 	# read functions
 	for return_type in "${return_types[@]}"; do
@@ -70,11 +72,33 @@ for type in "${defs[@]}"; do
 				template_file="image_support_template_fp16.h"
 			fi
 			
+			channel_count=$(expr $i + 1)
+			# fp types need special handling
+			is_half_type=0
+			is_float_type=0
+			is_double_type=0
+			if [[ ${return_type} == "oclr_half" ]]; then
+				is_half_type=1
+			fi
+			if [[ ${return_type} == "float" ]]; then
+				is_float_type=1
+			fi
+			if [[ ${return_type} == "double" ]]; then
+				is_double_type=1
+			fi
+			
+			needs_convert=0
+			if [[ ${img_denorm} != ")))" ]]; then
+				needs_convert=1
+			fi
+			
 			img_type_vec_upper=$(echo "${img_type_vec}" | tr "[:lower:]" "[:upper:]")
 			CODE+="#if defined(OCLRASTER_IMAGE_${img_type_vec_upper})\n"
 			CODE+=$(clang -E -DRETURN_TYPE=${return_type} -DRETURN_TYPE_VEC=${return_type_vec} -DRETURN_TYPE_VEC4=${return_type_vec4} -DIMG_TYPE=${img_type_vec} \
 					-DIMG_CONVERT_FUNC=convert_${return_type_vec} -DIMG_NORMALIZATION="${img_normalization}" -DIMG_ZERO=${img_zero} -DIMG_ONE=${img_one} \
-					-DFUNC_RETURN_NAME=${func_return_name} -DVEC4_FILL=${vec4_fill} ${template_file} -DVECN=${channels[$i]} | grep -v "#")
+					-DIS_HALF_TYPE=${is_half_type} -DIS_FLOAT_TYPE=${is_float_type} -DIS_DOUBLE_TYPE=${is_double_type} -DCHANNEL_COUNT=${channel_count} \
+					-DIMG_DENORMALIZATION=${img_denorm} -DNEEDS_CONVERT=${needs_convert} \
+					-DFUNC_RETURN_NAME=${func_return_name} -DVEC4_FILL=${vec4_fill} -DVECN=${channels[$i]} ${template_file} | grep -v "#")
 			CODE+="\n#endif\n\n"
 		done
 		IFS=" "

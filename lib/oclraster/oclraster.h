@@ -88,7 +88,6 @@ public:
 	static uint2 get_screen_size();
 	static bool get_fullscreen();
 	static bool get_vsync();
-	static bool get_stereo();
 	static const size_t& get_dpi();
 	
 	static void set_width(const unsigned int& width);
@@ -129,7 +128,7 @@ protected:
 	static struct oclraster_config {
 		// screen
 		size_t width = 1280, height = 720, dpi = 0;
-		bool fullscreen = false, vsync = false, stereo = false;
+		bool fullscreen = false, vsync = false;
 		
 		// projection
 		float fov = 72.0f;

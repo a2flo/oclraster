@@ -11,13 +11,17 @@
 #pragma clang diagnostic ignored "-Wunused"
 #endif
 
-//
+// note that the image (header) is actually 4096-byte aligned,
+// but certain implementations (amd) can't handle aligned values > 128
+#if !defined(PLATFORM_AMD)
 typedef struct __attribute__((packed, aligned(OCLRASTER_IMAGE_HEADER_SIZE))) {
+#else
+typedef struct __attribute__((packed, aligned(128))) {
+#endif
 	const ushort type;
 	const ushort channel_order;
 	const ushort width;
 	const ushort height;
-	const unsigned char _unused[OCLRASTER_IMAGE_HEADER_SIZE - 8];
 } image_header;
 typedef global const image_header* image_header_ptr;
 
@@ -69,11 +73,10 @@ INT_TEXEL_MIX(long, long3, double, 1.0)
 INT_TEXEL_MIX(long, long4, double, 1.0)
 #endif
 
-// image_read (implicit float) -> image_read_float_nearest / image_read_float_linear
-// image_read_int -> image_read_int_nearest / image_read_int_linear
-// image_read_uint -> image_read_uint_nearest / image_read_uint_linear
+// image_read* and image_write* functions for buffer-based images
 #include "oclr_image_support.h"
 
+// image read functions for native images
 float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imagef(img, sampler, coord);
 }
@@ -96,6 +99,17 @@ uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sam
 float4 FUNC_OVERLOAD image_read_float_nearest(read_only image2d_t img, const float2 coord) {
 	const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	return read_imagef(img, sampler, coord);
+}
+
+// image write functions for native images
+void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const float4 color) {
+	return write_imagef(img, convert_int2(coord), color);
+}
+void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const int4 color) {
+	return write_imagei(img, convert_int2(coord), color);
+}
+void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const uint4 color) {
+	return write_imageui(img, convert_int2(coord), color);
 }
 
 //
