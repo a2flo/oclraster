@@ -559,7 +559,7 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 			}
 			
 			string cuda_source = "";
-			cudacl_translate(tmp_name, src.c_str(), options, cuda_source, kernels_info);
+			cudacl_translate(src.c_str(), options, cuda_source, kernels_info);
 			
 			// create tmp cu file
 			fstream cu_file(tmp_name+".cu", fstream::out);

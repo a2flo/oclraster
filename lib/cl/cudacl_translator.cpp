@@ -22,6 +22,7 @@
 #include "core/core.h"
 #include "core/gl_support.h"
 #include <regex>
+#include "oclraster.h"
 
 #if defined(__APPLE__)
 #include <CUDA/cuda.h>
@@ -30,6 +31,11 @@
 #include <cuda.h>
 #include <cudaGL.h>
 #endif
+
+#include "libtcc.h"
+extern "C" {
+#include "tcc.h"
+}
 
 // parameter mappings
 struct param_address_space_type_map { const char* type_str; CUDACL_PARAM_ADDRESS_SPACE type; };
@@ -64,8 +70,7 @@ static constexpr array<const param_access_type_map, 6> access_mapping {
 	}
 };
 
-void cudacl_translate(const string& tmp_name,
-					  const string& cl_source,
+void cudacl_translate(const string& cl_source,
 					  const string& preprocess_options,
 					  string& cuda_source,
 					  vector<cudacl_kernel_info>& kernels) {
@@ -76,25 +81,39 @@ void cudacl_translate(const string& tmp_name,
 	
 	// get kernel signatures:
 	// to do this, copy the currently processed "cuda source",
-	// preprocess the source with clang,
+	// preprocess the source with tccpp,
 	// replace all whitespace by a single ' ' (basicly putting everything in one line),
 	// and do some regex magic to get the final info
 	
-	// preprocess cl source with cc/gcc/clang
-	fstream c_file(tmp_name+".c", fstream::out);
-	c_file << cuda_source << endl;
-	c_file.close();
-	
-	//
+	// preprocess cl source with tccpp
 	string kernel_source = "";
-	string preprocess_call = "clang -E -I /usr/local/cuda/include/ "+preprocess_options+" -pipe "+tmp_name+".c";
-	//oclr_msg("preprocess_call: %s", preprocess_call);
-	core::system(preprocess_call, kernel_source);
+	{
+		// init
+		TCCState* state = tcc_new();
+		state->output_type = TCC_OUTPUT_PREPROCESS;
+		
+		// split build options and let tcc parse them
+		const string build_options = ("-I" + core::strip_path(oclraster::kernel_path("")) + " " +
+									  "-I /usr/local/cuda/include/ " + preprocess_options);
+		const auto build_option_args = core::tokenize(build_options, ' ');
+		const size_t argc = build_option_args.size();
+		vector<const char*> argv;
+		for(const auto& arg : build_option_args) {
+			argv.emplace_back(arg.data());
+		}
+		tcc_parse_args(state, (int)argc, &argv[0]);
+		
+		// in-memory preprocessing
+		const uint8_t* code_input = (const uint8_t*)cuda_source.c_str();
+		tcc_in_memory_preprocess(state, code_input, cuda_source.length(), &kernel_source,
+								 [](const char* str, void* ret) -> void {
+									 *(string*)ret += str;
+								 });
+		
+		// cleanup + return
+		tcc_delete(state);
+	}
 	cuda_source = cuda_header + kernel_source; // use preprocessed source
-	
-	//
-	string rm_output = "";
-	core::system("rm "+tmp_name+".c", rm_output);
 	
 	// replace "__kernel" by "kernel"
 	static const regex rx_kernel_name("__kernel");
