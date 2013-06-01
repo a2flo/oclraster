@@ -335,19 +335,19 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 					break;
 				case 1:
 					switch(cc.second) {
-						case 0:
+						case 0: // g80
 							cc_target_str = "10";
 							cc_target = CU_TARGET_COMPUTE_10;
 							break;
-						case 1:
+						case 1: // g8x, g9x
 							cc_target_str = "11";
 							cc_target = CU_TARGET_COMPUTE_11;
 							break;
-						case 2:
+						case 2: // gt20x (low/mid end, <= gt 240)
 							cc_target_str = "12";
 							cc_target = CU_TARGET_COMPUTE_12;
 							break;
-						case 3:
+						case 3: // gt20x (high end, >= gtx 260)
 						default: // ignore invalid ones ...
 							cc_target_str = "13";
 							cc_target = CU_TARGET_COMPUTE_13;
@@ -356,12 +356,12 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 					break;
 				case 2:
 					switch(cc.second) {
-						case 0:
+						case 0: // gf100/gf110
 							cc_target_str = "20";
 							cc_target = CU_TARGET_COMPUTE_20;
 							break;
-						case 1:
-						default: // ignore invalid ones ...
+						case 1: // gf10x/gf11x (x != 0)
+						default: // ignore invalid ones / default to 2.1
 							cc_target_str = "21";
 							cc_target = CU_TARGET_COMPUTE_21;
 							break;
@@ -370,17 +370,17 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 				case 3:
 				default: // default higher ones to highest 3.x (drivers already mention sm_40 and sm_50)
 					switch(cc.second) {
-						case 0:
+						case 0: // gk10x
 							cc_target_str = "30";
 							cc_target = CU_TARGET_COMPUTE_30;
 							break;
-						case 2:
+						case 2: // unknown?
 							// this is inofficial, but support it anyways ...
 							cc_target_str = "30";
 							cc_target = CU_TARGET_COMPUTE_30;
 							break;
-						case 5:
-						default: // ignore invalid ones ...
+						case 5: // gk110
+						default: // ignore invalid ones / default to 3.5
 							cc_target_str = "35";
 							cc_target = CU_TARGET_COMPUTE_35;
 							break;
@@ -516,9 +516,24 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 		//const string lsl_str = " -DLOCAL_SIZE_LIMIT="+size_t2string(local_size_limit);
 		
 		internal_kernels = { // first time init:
-			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "bin_rasterize",
+			make_tuple("BIN_RASTERIZE", "bin_rasterize.cl", "oclraster_bin",
 					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
 					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)),
+			
+			make_tuple("PROCESSING.PERSPECTIVE", "processing.cl", "oclraster_processing",
+					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
+					   " -DOCLRASTER_PROJECTION_PERSPECTIVE"),
+			
+			make_tuple("PROCESSING.ORTHOGRAPHIC", "processing.cl", "oclraster_processing",
+					   " -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+					   " -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
+					   " -DOCLRASTER_PROJECTION_ORTHOGRAPHIC"),
+			
+#if defined(OCLRASTER_FXAA)
+			make_tuple("FXAA.LUMA", "luma_pass.cl", "framebuffer_luma", ""),
+			make_tuple("FXAA", "fxaa_pass.cl", "framebuffer_fxaa", ""),
+#endif
 		};
 		
 		load_internal_kernels();

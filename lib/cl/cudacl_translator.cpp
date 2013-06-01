@@ -74,8 +74,14 @@ void cudacl_translate(const string& cl_source,
 					  const string& preprocess_options,
 					  string& cuda_source,
 					  vector<cudacl_kernel_info>& kernels) {
-	static constexpr char cuda_preprocess_header[] { u8"#include \"oclr_cudacl.h\"\n" };
-	static constexpr char cuda_header[] { u8"#include <cuda_runtime.h>\n#include \"cutil_math.h\"\n" };
+	static constexpr char cuda_preprocess_header[] { u8R"OCLRASTER_RAWSTR(
+		#include "oclr_cudacl.h"
+	)OCLRASTER_RAWSTR"};
+	static constexpr char cuda_header[] { u8R"OCLRASTER_RAWSTR(
+		#include <cuda_runtime.h>
+		#include "cutil_math.h"
+		#undef signbit // must undef cudas signbit define to extend functionality to vector types
+	)OCLRASTER_RAWSTR"};
 	
 	cuda_source = cuda_preprocess_header + cl_source;
 	
