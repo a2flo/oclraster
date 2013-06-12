@@ -50,9 +50,10 @@ static constexpr array<const param_address_space_type_map, 6> address_space_mapp
 	}
 };
 struct param_type_type_map { const char* type_str; CUDACL_PARAM_TYPE type; };
-static constexpr array<const param_type_type_map, 4> type_mapping {
+static constexpr array<const param_type_type_map, 5> type_mapping {
 	{
 		{ "*", CUDACL_PARAM_TYPE::BUFFER },
+		{ "image1d_t", CUDACL_PARAM_TYPE::IMAGE_1D },
 		{ "image2d_t", CUDACL_PARAM_TYPE::IMAGE_2D },
 		{ "image3d_t", CUDACL_PARAM_TYPE::IMAGE_3D },
 		{ "sampler_t", CUDACL_PARAM_TYPE::SAMPLER },
@@ -74,14 +75,16 @@ void cudacl_translate(const string& cl_source,
 					  const string& preprocess_options,
 					  string& cuda_source,
 					  vector<cudacl_kernel_info>& kernels) {
-	static constexpr char cuda_preprocess_header[] { u8R"OCLRASTER_RAWSTR(
-		#include "oclr_cudacl.h"
-	)OCLRASTER_RAWSTR"};
-	static constexpr char cuda_header[] { u8R"OCLRASTER_RAWSTR(
-		#include <cuda_runtime.h>
-		#include "cutil_math.h"
-		#undef signbit // must undef cudas signbit define to extend functionality to vector types
-	)OCLRASTER_RAWSTR"};
+#define OCLRASTER_REGEX_MARKER "$$$OCLRASTER_REGEX_MARKER$$$"
+	static constexpr char cuda_preprocess_header[] {
+		"#include \"oclr_cudacl.h\"\n"
+		OCLRASTER_REGEX_MARKER "\n"
+	};
+	static constexpr char cuda_header[] {
+		"#include <cuda_runtime.h>\n"
+		"#include \"cutil_math.h\"\n"
+		"#undef signbit\n" // must undef cudas signbit define to extend functionality to vector types
+	};
 	
 	cuda_source = cuda_preprocess_header + cl_source;
 	
@@ -119,25 +122,30 @@ void cudacl_translate(const string& cl_source,
 		// cleanup + return
 		tcc_delete(state);
 	}
-	cuda_source = cuda_header + kernel_source; // use preprocessed source
+	
+	// in preprocessed source: find regex marker, erase it, only apply regex on actual user code (add cuda header stuff later)
+	const size_t regex_marker_pos = kernel_source.find(OCLRASTER_REGEX_MARKER);
+	kernel_source.erase(regex_marker_pos, sizeof(OCLRASTER_REGEX_MARKER));
+	string cl_kernel_source = kernel_source.substr(regex_marker_pos);
+	cuda_source = cl_kernel_source;
 	
 	// replace "__kernel" by "kernel"
-	static const regex rx_kernel_name("__kernel");
-	kernel_source = regex_replace(kernel_source, rx_kernel_name, "kernel");
+	static const regex rx_kernel_name("__kernel", regex::optimize);
+	cl_kernel_source = regex_replace(cl_kernel_source, rx_kernel_name, "kernel");
 	
-	static const regex rx_space("\\s+");
-	static const regex rx_comment("#(.*)");
-	static const regex rx_kernel("kernel([\\w ]+)\\(([^\\)]*)\\)");
-	static const regex rx_identifier("[_a-zA-Z]\\w*");
-	static const regex rx_identifier_neg("\\W");
-	static const regex rx_attributes("__attribute__([\\s]*)\\(\\((.*)\\)\\)");
+	static const regex rx_space("\\s+", regex::optimize);
+	static const regex rx_comment("#(.*)", regex::optimize);
+	static const regex rx_kernel("kernel([\\w ]+)\\(([^\\)]*)\\)", regex::optimize);
+	static const regex rx_identifier("[_a-zA-Z]\\w*", regex::optimize);
+	static const regex rx_identifier_neg("\\W", regex::optimize);
+	static const regex rx_attributes("__attribute__([\\s]*)\\(\\((.*)\\)\\)", regex::optimize);
 	
-	kernel_source = regex_replace(kernel_source, rx_attributes, "");
-	kernel_source = regex_replace(kernel_source, rx_comment, "");
-	kernel_source = regex_replace(kernel_source, rx_space, " ");
+	cl_kernel_source = regex_replace(cl_kernel_source, rx_attributes, "");
+	cl_kernel_source = regex_replace(cl_kernel_source, rx_comment, "");
+	cl_kernel_source = regex_replace(cl_kernel_source, rx_space, " ");
 	
 	size_t ws_pos = 0;
-	for(sregex_iterator iter(kernel_source.begin(), kernel_source.end(), rx_kernel), end; iter != end; iter++) {
+	for(sregex_iterator iter(cl_kernel_source.begin(), cl_kernel_source.end(), rx_kernel), end; iter != end; iter++) {
 		if(iter->size() == 3) {
 			const string params_str = (*iter)[2];
 			
@@ -185,32 +193,29 @@ void cudacl_translate(const string& cl_source,
 	}
 	
 	// replace opencl keywords with cuda keywords
-	static const regex rx_cl2cuda_0("# ");
-	static const regex rx_cl2cuda_1("(__)?global ");
-	static const regex rx_cl2cuda_2("(__)?local ");
-	static const regex rx_cl2cuda_3("(__)?private ");
-	static const regex rx_cl2cuda_4("(__)?constant ");
-	static const regex rx_cl2cuda_5("#pragma");
-	static const regex rx_cl2cuda_6("(__)?read_only ");
-	static const regex rx_cl2cuda_7("(__)?write_only ");
-	static const regex rx_cl2cuda_8("image2d_t");
-	static const regex rx_cl2cuda_9("image3d_t");
-	static const regex rx_shared_in_inline_func("(inline __device__ )([\\w ]+)\\(([^\\)]*)(__shared__ )([^\\)]*)\\)");
-	
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_0, "// ");
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_1, " ");
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_2, "__shared__ ");
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_3, " ");
-	//cuda_source = regex_replace(cuda_source, rx_cl2cuda_4, "__constant__ ");
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_4, " ");
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_5, "// #pragma");
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_6, " ");
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_7, " ");
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_8, "texture<uchar, 4, 0>"); // TODO
-	cuda_source = regex_replace(cuda_source, rx_cl2cuda_9, "texture<uchar, 4, 0>"); // TODO
+	static const vector<pair<const regex, const string>> rx_cl2cuda {
+		{
+			{ regex("# ", regex::optimize), "// " },
+			{ regex("([^\\w_]+)global ", regex::optimize), "$1 " },
+			{ regex("([^\\w_]+)local ", regex::optimize), "$1__shared__  " },
+			{ regex("([^\\w_]+)private ", regex::optimize), "$1 " },
+			{ regex("([^\\w_]+)constant ", regex::optimize), "$1 " }, // "__constant__ "
+			{ regex("#pragma", regex::optimize), "// #pragma" },
+			{ regex("(__)?read_only ", regex::optimize), " " },
+			{ regex("(__)?write_only ", regex::optimize), " " },
+			{ regex("image1d_t", regex::optimize), "texture<uchar, 4, 0" }, // TODO
+			{ regex("image2d_t", regex::optimize), "texture<uchar, 4, 0" }, // TODO
+			{ regex("image3d_t", regex::optimize), "texture<uchar, 4, 0" }, // TODO
+		}
+	};
+		
+	for(const auto& cl2cuda : rx_cl2cuda) {
+		cuda_source = regex_replace(cuda_source, cl2cuda.first, cl2cuda.second);
+	}
 	cuda_source = regex_replace(cuda_source, rx_attributes, "");
 	
 	// replace as long as there are changes/matches (-> better method for this?)
+	static const regex rx_shared_in_inline_func("(inline __device__ )([\\w ]+)\\(([^\\)]*)(__shared__ )([^\\)]*)\\)", regex::optimize);
 	size_t src_size = 0;
 	do {
 		src_size = cuda_source.size();
@@ -218,7 +223,7 @@ void cudacl_translate(const string& cl_source,
 	} while(src_size != cuda_source.size());
 	
 	// replace "kernel" function by "__global__"
-	static const regex rx_cl2cuda_kernel("(__)?kernel");
+	static const regex rx_cl2cuda_kernel("(__)?kernel", regex::optimize);
 	cuda_source = regex_replace(cuda_source, rx_cl2cuda_kernel, "__global__");
 	
 	// mark all kernels as extern "C" to prevent name mangling
@@ -233,15 +238,15 @@ void cudacl_translate(const string& cl_source,
 	// replace all vector constructors
 	static const vector<pair<const regex, const string>> rx_vec_types {
 		{
-			{ regex("\\(float2\\)"), "make_float2" },
-			{ regex("\\(float3\\)"), "make_float3" },
-			{ regex("\\(float4\\)"), "make_float4" },
-			{ regex("\\(int2\\)"), "make_int2" },
-			{ regex("\\(int3\\)"), "make_int3" },
-			{ regex("\\(int4\\)"), "make_int4" },
-			{ regex("\\(uint2\\)"), "make_uint2" },
-			{ regex("\\(uint3\\)"), "make_uint3" },
-			{ regex("\\(uint4\\)"), "make_uint4" },
+			{ regex("\\(float2\\)", regex::optimize), "make_float2" },
+			{ regex("\\(float3\\)", regex::optimize), "make_float3" },
+			{ regex("\\(float4\\)", regex::optimize), "make_float4" },
+			{ regex("\\(int2\\)", regex::optimize), "make_int2" },
+			{ regex("\\(int3\\)", regex::optimize), "make_int3" },
+			{ regex("\\(int4\\)", regex::optimize), "make_int4" },
+			{ regex("\\(uint2\\)", regex::optimize), "make_uint2" },
+			{ regex("\\(uint3\\)", regex::optimize), "make_uint3" },
+			{ regex("\\(uint4\\)", regex::optimize), "make_uint4" },
 		}
 	};
 	for(const auto& rx_vec_type : rx_vec_types) {
@@ -249,20 +254,54 @@ void cudacl_translate(const string& cl_source,
 	}
 	
 	// replace vector accesses
-	static const vector<pair<const regex, const string>> rx_vec_accessors {
+	static const vector<pair<const regex, const string>> rx_vector_op {
 		{
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+).xyz ([\\+\\-\\*/]*)="), "*((float3*)&$1) $2=" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+).xy ([\\+\\-\\*/]*)="), "*((float2*)&$1) $2=" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+).xyz"), "make_float3($1)" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+).xy"), "make_float2($1)" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\((.*)\\).xyz"), "make_float3($1($2))" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\((.*)\\).xy"), "make_float2($1($2))" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+).zw"), "make_float2($1.z, $1.w)" },
+			// TODO: find a better (stable) solution for this!
+			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.xyzw ([\\+\\-\\*/]*)=", regex::optimize), "*((float4*)&$1) $2=" },
+			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.xyz ([\\+\\-\\*/]*)=", regex::optimize), "*((float3*)&$1) $2=" },
+			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.xy ([\\+\\-\\*/]*)=", regex::optimize), "*((float2*)&$1) $2=" },
+		}
+	};
+	for(const auto& rx_vec_op : rx_vector_op) {
+		cuda_source = regex_replace(cuda_source, rx_vec_op.first, rx_vec_op.second);
+	}
+		
+	static const vector<tuple<const regex, const size_t, const string>> rx_vec_accessors {
+		{
+			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, "$1" },
+			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, "$1" },
+			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, "$1" },
+			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, "$1($2)" },
+			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, "$1($2)" },
+			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, "$1($2)" },
 		}
 	};
 	for(const auto& rx_vec_access : rx_vec_accessors) {
-		cuda_source = regex_replace(cuda_source, rx_vec_access.first, rx_vec_access.second);
+		smatch match;
+		while(regex_search(cuda_source, match, get<0>(rx_vec_access))) {
+			const size_t components = get<1>(rx_vec_access);
+			if(match.size() < (components + 2)) {
+				continue;
+			}
+			
+			string repl = "get_vector_components_"+size_t2string(components)+"<";
+			
+			vector<size_t> component_nums(components);
+			const auto comp_str_to_num = [](const string& comp_str) -> string {
+				return (comp_str == "x" ? "0" : (comp_str == "y" ? "1" : (comp_str == "z" ? "2" : "3")));
+			};
+			for(size_t i = 0; i < components; i++) {
+				repl += comp_str_to_num(match[2 + i]);
+				if(i+1 < components) repl += ", ";
+			}
+			repl += ">(" + match.str(1) + ")";
+			
+			cuda_source.replace(match.position(), match.length(), repl);
+		}
 	}
+	
+	// add cuda header source
+	cuda_source.insert(0, cuda_header + kernel_source.substr(0, regex_marker_pos));
 }
 
 #endif

@@ -297,17 +297,20 @@ void image::create_buffer(const void* pixels) {
 		const size_t pixel_size = img_type.pixel_size();
 		const size_t data_size = size.x * size.y * pixel_size;
 		const size_t buffer_size = header_size() + data_size;
-		buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
-									opencl::BUFFER_FLAG::BLOCK_ON_READ |
-									opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-									buffer_size);
+		
+		auto buffer_ptrs = ocl->create_and_map_buffer(opencl::BUFFER_FLAG::READ_WRITE |
+													  opencl::BUFFER_FLAG::BLOCK_ON_READ |
+													  opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
+													  buffer_size,
+													  nullptr,
+													  opencl::MAP_BUFFER_FLAG::WRITE_INVALIDATE |
+													  opencl::MAP_BUFFER_FLAG::BLOCK,
+													  0,
+													  pixels == nullptr ? header_size() : buffer_size);
+		buffer = buffer_ptrs.first;
+		auto mapped_ptr = buffer_ptrs.second;
 		
 		// init buffer
-		auto mapped_ptr = ocl->map_buffer(buffer,
-										  opencl::MAP_BUFFER_FLAG::WRITE_INVALIDATE |
-										  opencl::MAP_BUFFER_FLAG::BLOCK,
-										  0, pixels == nullptr ? header_size() : buffer_size);
-		
 		header* header_ptr = (header*)mapped_ptr;
 		header_ptr->type = data_type;
 		header_ptr->channel_order = channel_order;
@@ -332,7 +335,7 @@ void image::create_buffer(const void* pixels) {
 		buffer = ocl->create_image2d_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 											opencl::BUFFER_FLAG::BLOCK_ON_READ |
 											opencl::BUFFER_FLAG::BLOCK_ON_WRITE |
-											(pixels != NULL ? opencl::BUFFER_FLAG::INITIAL_COPY : opencl::BUFFER_FLAG::NONE),
+											(pixels != nullptr ? opencl::BUFFER_FLAG::INITIAL_COPY : opencl::BUFFER_FLAG::NONE),
 											native_format.image_channel_order, native_format.image_channel_data_type,
 											size.x, size.y, (void*)pixels);
 		if(buffer->image_buffer == nullptr) {

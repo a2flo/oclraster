@@ -7,9 +7,11 @@
 #undef __APPLE__
 #endif
 
-#if (!defined(CPU) && !defined(OCLRASTER_CUDA_CL)) || false
+#if (!defined(CPU) && !defined(OCLRASTER_CUDA_CL))
+#if !(defined(OS_X_VERSION) && (OS_X_VERSION >= 1090))
 #undef printf
 #define printf(x, ...)
+#endif
 #endif
 
 #if !defined(OCLRASTER_CUDA_CL)
@@ -32,15 +34,22 @@
 #endif
 
 #if defined(PLATFORM_APPLE)
-// TODO: in recent os x version this has be changed to cl_khr_gl_sharing, even though it's not
-// explicitly supported/exposed by the driver/runtime
-//#pragma OPENCL EXTENSION cl_APPLE_gl_sharing : enable
-#pragma OPENCL EXTENSION cl_khr_gl_sharing : enable
+
+// the required gl_sharing extension has changed to cl_khr_gl_sharing in 10.8.3,
+// even though it's not explicitly supported/exposed by the driver/runtime
+#if (OS_X_VERSION < 1083)
+#pragma OPENCL EXTENSION cl_APPLE_gl_sharing : enable
 #else
+#pragma OPENCL EXTENSION cl_khr_gl_sharing : enable
+#endif
+
+#else
+
 // note: amd devices support this, but don't expose the extension and won't compile if this is enabled
 #if !defined(PLATFORM_AMD)
 #pragma OPENCL EXTENSION cl_khr_gl_sharing : enable
 #endif
+
 #endif
 
 // these are part of OpenCL 1.2 core now

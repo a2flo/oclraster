@@ -17,13 +17,13 @@
 
 /////////////////
 // read functions
-RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_READ_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const uint offset) {
+RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const uint offset) {
 	global const half* img_data_ptr = (global const half*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
 	const RETURN_TYPE_VEC texel = HALF_VEC_LOAD(offset, img_data_ptr);
 	return (RETURN_TYPE_VEC4)(texel VEC4_FILL);
 }
 
-RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_READ_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const float2 coord) {
+RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const float2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
 	const float2 fimg_size = convert_float2(img_size) - 1.0f;
 
@@ -33,12 +33,12 @@ RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_READ_FUNC_FILTER_NAME(nearest)(global const I
 	return IMG_READ_FUNC_FILTER_NAME(nearest)(img, ui_tc.y * img_size.x + ui_tc.x);
 }
 
-RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_READ_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const uint2 coord) {
+RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_FILTER_NAME(nearest)(global const IMG_TYPE* img, const uint2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
 	return IMG_READ_FUNC_FILTER_NAME(nearest)(img, coord.y * img_size.x + coord.x);
 }
 
-RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_READ_FUNC_FILTER_NAME(linear)(global const IMG_TYPE* img, const float2 coord) {
+RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_FILTER_NAME(linear)(global const IMG_TYPE* img, const float2 coord) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
 	global const half* img_data_ptr = (global const half*)((global const uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);
 	const float2 fimg_size = convert_float2(img_size) - 1.0f;
@@ -72,14 +72,14 @@ RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_READ_FUNC_FILTER_NAME(linear)(global const IM
 				  weights.y) VEC4_FILL);
 }
 
-RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_READ_FUNC_NAME()(global const IMG_TYPE* img, const sampler_t sampler, const float2 coord) {
+RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_NAME()(global const IMG_TYPE* img, const sampler_t sampler, const float2 coord) {
 	// need to check linear first (CLK_FILTER_NEAREST might be 0)
 	if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return IMG_READ_FUNC_FILTER_NAME(linear)(img, coord);
 	else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return IMG_READ_FUNC_FILTER_NAME(nearest)(img, coord);
 	return (RETURN_TYPE_VEC4)(IMG_ZERO, IMG_ZERO, IMG_ZERO, IMG_ONE);
 }
 
-RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_READ_FUNC_NAME()(global const IMG_TYPE* img, const sampler_t sampler, const uint2 coord) {
+RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_NAME()(global const IMG_TYPE* img, const sampler_t sampler, const uint2 coord) {
 	// filter must be set to CLK_FILTER_NEAREST
 	if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return IMG_READ_FUNC_FILTER_NAME(nearest)(img, coord);
 	return (RETURN_TYPE_VEC4)(IMG_ZERO, IMG_ZERO, IMG_ZERO, IMG_ONE);
@@ -87,7 +87,7 @@ RETURN_TYPE_VEC4 FUNC_OVERLOAD IMG_READ_FUNC_NAME()(global const IMG_TYPE* img, 
 
 //////////////////
 // write functions
-void FUNC_OVERLOAD IMG_WRITE_FUNC_NAME()(global IMG_TYPE* img, const uint2 coord, const RETURN_TYPE_VEC4 color) {
+void FUNC_OVERLOAD OCLRASTER_FUNC IMG_WRITE_FUNC_NAME()(global IMG_TYPE* img, const uint2 coord, const RETURN_TYPE_VEC4 color) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
 	const uint offset = coord.y * img_size.x + coord.x;
 	global IMG_TYPE* img_data_ptr = (global IMG_TYPE*)((global uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);

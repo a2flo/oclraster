@@ -2,39 +2,12 @@
 #ifndef __OCLRASTER_CUDACL_H__
 #define __OCLRASTER_CUDACL_H__
 
-// defines
-#define OCLRASTER_FUNC inline __device__
-#define OCLRASTER_CUDA_CL 1
-
-// types
-typedef unsigned int uint;
-typedef struct {
-	float4 lo;
-	float4 hi;
-} float8;
-typedef struct {
-	float8 lo;
-	float8 hi;
-} float16;
-typedef struct {
-	uint4 lo;
-	uint4 hi;
-} uint8;
-typedef struct {
-	uint8 lo;
-	uint8 hi;
-} uint16;
-typedef struct {
-	ulong4 lo;
-	ulong4 hi;
-} ulong8;
-typedef struct {
-	ulong8 lo;
-	ulong8 hi;
-} ulong16;
-
-typedef unsigned char uchar;
-typedef unsigned long long int ulong;
+// note: the oclr_cuda_base.h header contains mostly cuda related functions or wrappers,
+// while this header implements most of the opencl built-in functions
+// exceptions:
+//  * type conversions and reinterpretations (oclr_cuda_conversion.h, already included by oclr_cuda_base.h)
+//  * clamp (implemented in oclr_cuda_base.h, as it's required earlier)
+#include "oclr_cuda_base.h"
 
 // global/local work item/dim functions
 OCLRASTER_FUNC uint get_work_dim() {
@@ -105,6 +78,63 @@ OCLRASTER_FUNC size_t get_group_id(uint dimindx) {
 
 OCLRASTER_FUNC size_t get_global_offset(uint dimindx) {
 	return 0; // not required/supported by opencl
+}
+
+// vector helper functions
+template<size_t component_index_0,
+		 class vec_type,
+		 class ret_vec_type = typename vector_mapping<vec_type, 1>::type,
+		 class single_type = typename vector_mapping<vec_type, 1>::type>
+OCLRASTER_FUNC ret_vec_type get_vector_components_1(const vec_type& vec) {
+	return ((const single_type*)&vec)[component_index_0];
+}
+
+template<size_t component_index_0, size_t component_index_1,
+		 class vec_type,
+		 class ret_vec_type = typename vector_mapping<vec_type, 2>::type,
+		 class single_type = typename vector_mapping<vec_type, 1>::type>
+OCLRASTER_FUNC ret_vec_type get_vector_components_2(const vec_type& vec) {
+	ret_vec_type ret;
+	ret.x = ((const single_type*)&vec)[component_index_0];
+	ret.y = ((const single_type*)&vec)[component_index_1];
+	return ret;
+}
+
+template<size_t component_index_0, size_t component_index_1, size_t component_index_2,
+		 class vec_type,
+		 class ret_vec_type = typename vector_mapping<vec_type, 3>::type,
+		 class single_type = typename vector_mapping<vec_type, 1>::type>
+OCLRASTER_FUNC ret_vec_type get_vector_components_3(const vec_type& vec) {
+	ret_vec_type ret;
+	ret.x = ((const single_type*)&vec)[component_index_0];
+	ret.y = ((const single_type*)&vec)[component_index_1];
+	ret.z = ((const single_type*)&vec)[component_index_2];
+	return ret;
+}
+
+template<size_t component_index_0, size_t component_index_1, size_t component_index_2, size_t component_index_3,
+		 class vec_type,
+		 class ret_vec_type = typename vector_mapping<vec_type, 4>::type,
+		 class single_type = typename vector_mapping<vec_type, 1>::type>
+OCLRASTER_FUNC ret_vec_type get_vector_components_4(const vec_type& vec) {
+	ret_vec_type ret;
+	ret.x = ((const single_type*)&vec)[component_index_0];
+	ret.y = ((const single_type*)&vec)[component_index_1];
+	ret.z = ((const single_type*)&vec)[component_index_2];
+	ret.w = ((const single_type*)&vec)[component_index_3];
+	return ret;
+}
+
+// TODO: !
+template<class dst_vec_type, class single_type, class src_vec_type,
+		 size_t component_index_0, size_t component_index_1, size_t component_index_2, size_t component_index_3>
+OCLRASTER_FUNC void set_vector_components_4(const dst_vec_type& dst, const src_vec_type& src) {
+	ret_vec_type ret;
+	ret.x = ((const single_type*)&vec)[component_index_0];
+	ret.y = ((const single_type*)&vec)[component_index_1];
+	ret.z = ((const single_type*)&vec)[component_index_2];
+	ret.w = ((const single_type*)&vec)[component_index_3];
+	return ret;
 }
 
 // barriers/fences/sync
@@ -191,6 +221,15 @@ OCLRASTER_FUNC int all(const int4& val) {
 	return ((val.x & 1) && (val.y & 1) && (val.z & 1) && (val.w & 1));
 }
 
+// smoothstep
+template<class gentype,
+		 typename enable_if<is_floating_point<gentype>::value, int>::type = 0,
+		 class single_type = typename vector_mapping<gentype, 1>::type>
+OCLRASTER_FUNC gentype smoothstep(const gentype edge0, const gentype edge1, const gentype x) {
+	const gentype t = clamp((x - edge0) / (edge1 - edge0), (single_type)0, (single_type)1);
+	return t * t * (((single_type)3) - ((single_type)2) * t);
+}
+
 // for mad instructions: let the compiler decide what to do
 OCLRASTER_FUNC float mad(const float a, const float b, const float c) {
 	return a * b + c;
@@ -235,16 +274,16 @@ OCLRASTER_FUNC float4 make_float4(float4 vec) {
 
 // atomics (note: cuda atomic inc/dec works differently -> use add/sub)
 #define atomic_inc(a) atomicAdd(a, 1)
-#define atomic_dec(a) AtomicSub(a, 1)
-#define atomic_add(a, v) AtomicAdd(a, v)
-#define atomic_sub(a, v) AtomicSub(a, v)
-#define atomic_xchg(a, v) AtomicExch(a, v)
-#define atomic_cmpxchg(a, c, v) AtomicCAS(a, c, v)
-#define atomic_min(a, v) AtomicMin(a, v)
-#define atomic_max(a, v) AtomicMax(a, v)
-#define atomic_and(a, v) AtomicAnd(a, v)
-#define atomic_or(a, v) AtomicOr(a, v)
-#define atomic_xor(a, v) AtomicXor(a, v)
+#define atomic_dec(a) atomicSub(a, 1)
+#define atomic_add(a, v) atomicAdd(a, v)
+#define atomic_sub(a, v) atomicSub(a, v)
+#define atomic_xchg(a, v) atomicExch(a, v)
+#define atomic_cmpxchg(a, c, v) atomicCAS(a, c, v)
+#define atomic_min(a, v) atomicMin(a, v)
+#define atomic_max(a, v) atomicMax(a, v)
+#define atomic_and(a, v) atomicAnd(a, v)
+#define atomic_or(a, v) atomicOr(a, v)
+#define atomic_xor(a, v) atomicXor(a, v)
 
 // async function emulation
 typedef int event_t;
@@ -285,16 +324,6 @@ OCLRASTER_FUNC void wait_group_events(int num_events, event_t* event_list) {
 	__syncthreads();
 }
 
-// conversion functions
-// note that round-to-zero (rz/rtz) is the default for conversions to integer
-OCLRASTER_FUNC unsigned int convert_uint(const float val) { return __float2uint_rz(val); }
-OCLRASTER_FUNC uint4 convert_uint4(const float4 val) {
-	return make_uint4(__float2uint_rz(val.x), __float2uint_rz(val.y), __float2uint_rz(val.z), __float2uint_rz(val.w));
-}
-OCLRASTER_FUNC unsigned char convert_uchar(const float val) { return (unsigned char)__float2uint_rz(val); }
-OCLRASTER_FUNC unsigned char convert_uchar_sat(const float val) { return (unsigned char)clamp(__float2uint_rz(val), 0u, 255u); }
-OCLRASTER_FUNC float convert_float(const unsigned int val) { return __uint2float_rz(val); }
-
 // vload* / vstore*
 template <typename gentype, typename gentypen, size_t N> OCLRASTER_FUNC void vstoren(const gentypen& data, const size_t& offset, gentype* ptr) {
 	const gentype* data_ptr = (const gentype*)&data;
@@ -318,6 +347,34 @@ template <typename gentype, typename gentypen> OCLRASTER_FUNC void vstore8(const
 }
 template <typename gentype, typename gentypen> OCLRASTER_FUNC void vstore16(const gentypen& data, const size_t& offset, gentype* ptr) {
 	vstoren<gentype, gentypen, 16>(data, offset, ptr);
+}
+
+// half (gentype: half, gentypen: floatn)
+template <typename gentypen, size_t N> OCLRASTER_FUNC void vstore_halfn(const gentypen& data, const size_t& offset, half* ptr) {
+	const float* data_ptr = (const float*)&data;
+	half* write_ptr = ptr + (offset * N);
+#pragma unroll
+	for(int i = 0; i < N; i++) {
+		*write_ptr++ = __float2half_rn(*data_ptr++);
+	}
+}
+OCLRASTER_FUNC void vstore_half(const float& data, const size_t& offset, half* ptr) {
+	vstore_halfn<float, 1>(data, offset, ptr);
+}
+OCLRASTER_FUNC void vstore_half2(const float2& data, const size_t& offset, half* ptr) {
+	vstore_halfn<float2, 2>(data, offset, ptr);
+}
+OCLRASTER_FUNC void vstore_half3(const float3& data, const size_t& offset, half* ptr) {
+	vstore_halfn<float3, 3>(data, offset, ptr);
+}
+OCLRASTER_FUNC void vstore_half4(const float4& data, const size_t& offset, half* ptr) {
+	vstore_halfn<float4, 4>(data, offset, ptr);
+}
+OCLRASTER_FUNC void vstore_half8(const float8& data, const size_t& offset, half* ptr) {
+	vstore_halfn<float8, 8>(data, offset, ptr);
+}
+OCLRASTER_FUNC void vstore_half16(const float16& data, const size_t& offset, half* ptr) {
+	vstore_halfn<float16, 16>(data, offset, ptr);
 }
 
 #endif

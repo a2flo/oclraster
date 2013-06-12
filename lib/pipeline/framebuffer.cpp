@@ -27,20 +27,20 @@ static constexpr char template_framebuffer_program[] { u8R"OCLRASTER_RAWSTR(
 	#include "oclr_framebuffer_clear.h"
 	
 	//
-	void clear_depth(global float* depth_image, const uint offset, const float clear_depth) {
+	void OCLRASTER_FUNC clear_depth(global float* depth_image, const uint offset, const float clear_depth) {
 		depth_image[offset] = clear_depth;
 	}
 	
-	void FUNC_OVERLOAD clear_stencil(global uchar* stencil_image, const uint offset, const ulong clear_stencil) {
+	void FUNC_OVERLOAD OCLRASTER_FUNC clear_stencil(global uchar* stencil_image, const uint offset, const ulong clear_stencil) {
 		stencil_image[offset] = clear_stencil;
 	}
-	void FUNC_OVERLOAD clear_stencil(global ushort* stencil_image, const uint offset, const ulong clear_stencil) {
+	void FUNC_OVERLOAD OCLRASTER_FUNC clear_stencil(global ushort* stencil_image, const uint offset, const ulong clear_stencil) {
 		stencil_image[offset] = clear_stencil;
 	}
-	void FUNC_OVERLOAD clear_stencil(global uint* stencil_image, const uint offset, const ulong clear_stencil) {
+	void FUNC_OVERLOAD OCLRASTER_FUNC clear_stencil(global uint* stencil_image, const uint offset, const ulong clear_stencil) {
 		stencil_image[offset] = clear_stencil;
 	}
-	void FUNC_OVERLOAD clear_stencil(global ulong* stencil_image, const uint offset, const ulong clear_stencil) {
+	void FUNC_OVERLOAD OCLRASTER_FUNC clear_stencil(global ulong* stencil_image, const uint offset, const ulong clear_stencil) {
 		stencil_image[offset] = clear_stencil;
 	}
 	

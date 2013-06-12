@@ -22,6 +22,12 @@
 #include "cudacl_translator.h"
 #include "zlib.h"
 
+#if defined(__APPLE__)
+#if !defined(OCLRASTER_IOS)
+#include "osx/osx_helper.h"
+#endif
+#endif
+
 //
 struct cuda_kernel_object {
 	CUmodule* module = nullptr;
@@ -61,7 +67,6 @@ struct cuda_kernel_object {
 #define __ERROR_CODE_INFO(F) \
 F(CUDA_SUCCESS) \
 F(CUDA_ERROR_INVALID_VALUE) \
-F(CUDA_ERROR_OUT_OF_MEMORY) \
 F(CUDA_ERROR_NOT_INITIALIZED) \
 F(CUDA_ERROR_DEINITIALIZED) \
 F(CUDA_ERROR_PROFILER_DISABLED) \
@@ -110,9 +115,14 @@ F(CUDA_ERROR_UNKNOWN)
 
 #define __DECLARE_ERROR_CODE_TO_STRING(code) case code: return #code;
 
-const char* cudacl::error_code_to_string(cl_int error_code) const {
+string cudacl::error_code_to_string(cl_int error_code) const {
 	switch(error_code) {
 		__ERROR_CODE_INFO(__DECLARE_ERROR_CODE_TO_STRING);
+		case CUDA_ERROR_OUT_OF_MEMORY: {
+			size_t free_mem = 0, total_mem = 0;
+			cuMemGetInfo(&free_mem, &total_mem);
+			return "CUDA_ERROR_OUT_OF_MEMORY (" + size_t2string(free_mem) + "/" + size_t2string(total_mem) + ")";
+		}
 		default:
 			return "UNKNOWN CUDA ERROR";
 	}
@@ -152,7 +162,7 @@ catch(cudacl_exception err) {													\
 	/* check if call was successful, or if cuda is already shutting down, */	\
 	/* in which case we just pretend nothing happened and continue ...    */	\
 	if(_cu_err != CUDA_SUCCESS && _cu_err != CUDA_ERROR_DEINITIALIZED) {		\
-		oclr_error("cuda driver error #%i: %s (%s)",								\
+		oclr_error("cuda driver error #%i: %s (%s)",							\
 				  _cu_err, error_code_to_string(_cu_err), #_CUDA_CALL);			\
 		throw cudacl_exception(CL_OUT_OF_RESOURCES, "cuda driver error");		\
 	}																			\
@@ -171,6 +181,13 @@ opencl_base(), cc_target(CU_TARGET_COMPUTE_10) {
 	fastest_gpu = nullptr;
 	
 	build_options = "-I " + kernel_path_str;
+	build_options += " -D OCLRASTER_CUDA_CL";
+	
+#if defined(__APPLE__)
+	// add defines for the compile-time and run-time os x versions
+	build_options += " -D OS_X_VERSION_COMPILED=" + size_t2string(osx_helper::get_compiled_system_version());
+	build_options += " -D OS_X_VERSION=" + size_t2string(osx_helper::get_system_version());
+#endif
 	
 	// clear cuda cache
 	if(clear_cache_) {
@@ -303,6 +320,7 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 	if(!supported) return;
 	
 	platform_vendor = PLATFORM_VENDOR::NVIDIA;
+	platform_cl_version = CL_VERSION::CL_1_2;
 	
 	//
 	try {
@@ -453,8 +471,9 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 			device->mem_size = global_mem;
 			device->name = dev_name;
 			device->vendor = "NVIDIA";
-			device->version = "OpenCL 1.1";
-			device->driver_version = "CLH 1.0";
+			device->version = "OpenCL 1.2";
+			device->driver_version = "CUDACL 1.2";
+			device->cl_c_version = CL_VERSION::CL_1_2;
 			device->extensions = extensions;
 			device->vendor_type = VENDOR::NVIDIA;
 			device->type = (opencl_base::DEVICE_TYPE)cur_device;
@@ -583,6 +602,10 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 			
 			// nvcc compile
 			build_cmd = "/usr/local/cuda/bin/nvcc --ptx --machine 64 -arch sm_" + cc_target_str + " -O3";
+			build_cmd += " --compiler-bindir /usr/bin/llvm-g++";
+			// clang frontend seems to be supported, but without c++11 support (fails to compile due to libc++ requiring c++11)
+			//build_cmd += " --compiler-bindir /usr/bin/clang++";
+			//build_cmd += " --cudafe-options \"--clang -D__GXX_EXPERIMENTAL_CXX0X__\"";
 			build_cmd += " " + options;
 			build_cmd += " -D NVIDIA";
 			build_cmd += " -D GPU";
@@ -642,9 +665,8 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 			kernels_info.emplace_back(info_kernel_name, kernel_parameters);
 			kernel_info = &kernels_info.back();
 		}
-		kernel->args_passed.insert(kernel->args_passed.begin(),
-								   kernel->arg_count,
-								   false);
+		kernel->args_passed.insert(kernel->args_passed.begin(), kernel->arg_count, false);
+		kernel->buffer_args.insert(kernel->buffer_args.begin(), kernel->arg_count, nullptr);
 		
 		// create cuda module (== opencl program)
 		array<CUjit_option, 1> jit_options { { CU_JIT_TARGET } };
@@ -834,12 +856,10 @@ opencl_base::buffer_object* cudacl::create_buffer(const opencl_base::BUFFER_FLAG
 
 
 opencl_base::buffer_object* cudacl::create_sub_buffer(const buffer_object* parent_buffer,
-													  const BUFFER_FLAG type oclr_unused,
+													  const BUFFER_FLAG type,
 													  const size_t offset,
 													  const size_t size) {
-	assert(false && "create_sub_buffer not implemented yet!");
-	
-	if(parent_buffer == nullptr || parent_buffer->buffer == nullptr) {
+	if(parent_buffer == nullptr || parent_buffer->image_type != buffer_object::IMAGE_TYPE::IMAGE_NONE) {
 		oclr_error("invalid buffer object!");
 		return nullptr;
 	}
@@ -854,11 +874,18 @@ opencl_base::buffer_object* cudacl::create_sub_buffer(const buffer_object* paren
 	}
 	
 	try {
-		/*buffer_object* sub_buffer = create_buffer_object(type, nullptr);
+		CUdeviceptr* parent_cuda_mem = cuda_buffers.at((buffer_object*)parent_buffer);
+		
+		buffer_object* sub_buffer = create_buffer_object(type, nullptr);
 		if(sub_buffer == nullptr) return nullptr;
 		
-		const auto region = cl_buffer_region { offset, size };
-		sub_buffer->buffer = new cl::Buffer(parent_buffer->buffer->createSubBuffer(sub_buffer->flags, CL_BUFFER_CREATE_TYPE_REGION, &region));*/
+		sub_buffer->size = size;
+		sub_buffer->buffer = nullptr;
+		
+		CUdeviceptr* cuda_mem = new CUdeviceptr();
+		*cuda_mem = *parent_cuda_mem + offset;
+		cuda_buffers[sub_buffer] = cuda_mem;
+		return sub_buffer;
 	}
 	__HANDLE_CL_EXCEPTION("create_sub_buffer")
 	return nullptr;
@@ -867,17 +894,9 @@ opencl_base::buffer_object* cudacl::create_sub_buffer(const buffer_object* paren
 opencl_base::buffer_object* cudacl::create_image2d_buffer(const opencl_base::BUFFER_FLAG type oclr_unused,
 														  const cl_channel_order channel_order oclr_unused, const cl_channel_type channel_type oclr_unused,
 														  const size_t width oclr_unused, const size_t height oclr_unused, const void* data oclr_unused) {
+	assert(false && "create_image2d_buffer not implemented yet!");
 	// TODO
 	/*try {
-		buffer_object* buffer_obj = create_buffer_object(type, data);
-		if(buffer_obj == nullptr) return nullptr;
-		
-		buffer_obj->format.image_channel_order = channel_order;
-		buffer_obj->format.image_channel_data_type = channel_type;
-		buffer_obj->origin.set(0, 0, 0);
-		buffer_obj->region.set(width, height, 1); // depth must be 1 for 2d images
-		buffer_obj->image_buffer = new cl::Image2D(*context, buffer_obj->flags, buffer_obj->format, width, height, 0, data, &ierr);
-		return buffer_obj;
 	}
 	__HANDLE_CL_EXCEPTION("create_image2d_buffer")*/
 	return nullptr;
@@ -886,17 +905,9 @@ opencl_base::buffer_object* cudacl::create_image2d_buffer(const opencl_base::BUF
 opencl_base::buffer_object* cudacl::create_image3d_buffer(const opencl_base::BUFFER_FLAG type oclr_unused,
 														  const cl_channel_order channel_order oclr_unused, const cl_channel_type channel_type oclr_unused,
 														  const size_t width oclr_unused, const size_t height oclr_unused, const size_t depth oclr_unused, const void* data oclr_unused) {
+	assert(false && "create_image3d_buffer not implemented yet!");
 	// TODO
 	/*try {
-		buffer_object* buffer_obj = create_buffer_object(type, data);
-		if(buffer_obj == nullptr) return nullptr;
-		
-		buffer_obj->format.image_channel_order = channel_order;
-		buffer_obj->format.image_channel_data_type = channel_type;
-		buffer_obj->origin.set(0, 0, 0);
-		buffer_obj->region.set(width, height, depth);
-		buffer_obj->image_buffer = new cl::Image3D(*context, buffer_obj->flags, buffer_obj->format, width, height, depth, 0, 0, data, &ierr);
-		return buffer_obj;
 	}
 	__HANDLE_CL_EXCEPTION("create_image3d_buffer")*/
 	return nullptr;
@@ -950,86 +961,18 @@ opencl_base::buffer_object* cudacl::create_ogl_buffer(const opencl_base::BUFFER_
 }
 
 opencl_base::buffer_object* cudacl::create_ogl_image2d_buffer(BUFFER_FLAG type oclr_unused, GLuint texture oclr_unused, GLenum target oclr_unused) {
+	assert(false && "create_ogl_image2d_buffer not implemented yet!");
 	// TODO
 	/*try {
-		opencl_base::buffer_object* buffer = new opencl_base::buffer_object();
-		buffers.push_back(buffer);
-		
-		// type/flag validity check
-		unsigned int vtype = 0;
-		if(type & BUFFER_FLAG::DELETE_AFTER_USE) vtype |= BUFFER_FLAG::DELETE_AFTER_USE;
-		if(type & BUFFER_FLAG::BLOCK_ON_READ) vtype |= BUFFER_FLAG::BLOCK_ON_READ;
-		if(type & BUFFER_FLAG::BLOCK_ON_WRITE) vtype |= BUFFER_FLAG::BLOCK_ON_WRITE;
-		
-		cl_mem_flags flags = 0;
-		switch((BUFFER_FLAG)(type & 0x03)) {
-			case BUFFER_FLAG::READ_WRITE:
-				vtype |= BT_READ_WRITE;
-				flags |= CL_MEM_READ_WRITE;
-				break;
-			case BUFFER_FLAG::READ:
-				vtype |= BT_READ;
-				flags |= CL_MEM_READ_ONLY;
-				break;
-			case BUFFER_FLAG::WRITE:
-				vtype |= BT_WRITE;
-				flags |= CL_MEM_WRITE_ONLY;
-				break;
-			default:
-				break;
-		}
-		
-		vtype |= BT_OPENGL_BUFFER;
-		
-		buffer->type = vtype;
-		buffer->ogl_buffer = texture;
-		buffer->data = nullptr;
-		buffer->size = 0;
-		buffer->image_buffer = new cl::Image2DGL(*context, flags, target, 0, texture, &ierr);
-		return buffer;
 	}
 	__HANDLE_CL_EXCEPTION("create_ogl_image2d_buffer")*/
 	return nullptr;
 }
 
 opencl_base::buffer_object* cudacl::create_ogl_image2d_renderbuffer(BUFFER_FLAG type oclr_unused, GLuint renderbuffer oclr_unused) {
+	assert(false && "create_ogl_image2d_renderbuffer not implemented yet!");
 	// TODO
 	/*try {
-		opencl_base::buffer_object* buffer = new opencl_base::buffer_object();
-		buffers.push_back(buffer);
-		
-		// type/flag validity check
-		unsigned int vtype = 0;
-		if(type & BUFFER_FLAG::DELETE_AFTER_USE) vtype |= BUFFER_FLAG::DELETE_AFTER_USE;
-		if(type & BUFFER_FLAG::BLOCK_ON_READ) vtype |= BUFFER_FLAG::BLOCK_ON_READ;
-		if(type & BUFFER_FLAG::BLOCK_ON_WRITE) vtype |= BUFFER_FLAG::BLOCK_ON_WRITE;
-		
-		cl_mem_flags flags = 0;
-		switch((BUFFER_FLAG)(type & 0x03)) {
-			case BUFFER_FLAG::READ_WRITE:
-				vtype |= BT_READ_WRITE;
-				flags |= CL_MEM_READ_WRITE;
-				break;
-			case BUFFER_FLAG::READ:
-				vtype |= BT_READ;
-				flags |= CL_MEM_READ_ONLY;
-				break;
-			case BUFFER_FLAG::WRITE:
-				vtype |= BT_WRITE;
-				flags |= CL_MEM_WRITE_ONLY;
-				break;
-			default:
-				break;
-		}
-		
-		vtype |= BT_OPENGL_BUFFER;
-		
-		buffer->type = vtype;
-		buffer->ogl_buffer = renderbuffer;
-		buffer->data = nullptr;
-		buffer->size = 0;
-		buffer->buffer = new cl::BufferRenderGL(*context, flags, renderbuffer, &ierr);
-		return buffer;
 	}
 	__HANDLE_CL_EXCEPTION("create_ogl_image2d_renderbuffer")*/
 	return nullptr;
@@ -1064,6 +1007,17 @@ void cudacl::delete_buffer(opencl_base::buffer_object* buffer_obj) {
 		cuda_buffers.erase(buffer_iter);
 	}
 	
+	// array/image buffer
+	const auto image_iter = cuda_images.find(buffer_obj);
+	if(image_iter != cuda_images.end()) {
+		CUarray* cuda_img = image_iter->second;
+		if(cuda_img != nullptr && *cuda_img != 0) {
+			CU(cuArrayDestroy(*cuda_img));
+			delete cuda_img;
+		}
+		cuda_images.erase(image_iter);
+	}
+	
 	// unregister resource (+potential unmap)
 	const auto gl_buffer_iter = cuda_gl_buffers.find(buffer_obj);
 	if(gl_buffer_iter != cuda_gl_buffers.end()) {
@@ -1079,8 +1033,7 @@ void cudacl::delete_buffer(opencl_base::buffer_object* buffer_obj) {
 		cuda_gl_buffers.erase(gl_buffer_iter);
 	}
 	
-	// TODO: image buffers
-	//if(buffer_obj->image_buffer != nullptr) delete buffer_obj->image_buffer;
+	// remove from cl class
 	const auto iter = find(begin(buffers), end(buffers), buffer_obj);
 	if(iter != end(buffers)) buffers.erase(iter);
 	delete buffer_obj;
@@ -1239,6 +1192,216 @@ void cudacl::read_image(void* dst oclr_unused, const opencl::buffer_object* buff
 	__HANDLE_CL_EXCEPTION("read_image")
 }
 
+void* __attribute__((aligned(128))) cudacl::map_buffer(opencl_base::buffer_object* buffer_obj,
+													   const MAP_BUFFER_FLAG access_type,
+													   const size_t offset,
+													   const size_t size) {
+	try {
+		const bool blocking { (access_type & MAP_BUFFER_FLAG::BLOCK) != MAP_BUFFER_FLAG::NONE };
+		
+		if((access_type & MAP_BUFFER_FLAG::READ_WRITE) != MAP_BUFFER_FLAG::NONE &&
+		   (access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
+			oclr_error("READ or WRITE access and WRITE_INVALIDATE are mutually exclusive!");
+			return nullptr;
+		}
+		
+		size_t map_size = size;
+		if(map_size == 0) {
+			if(buffer_obj->size == 0) {
+				oclr_error("can't map 0 bytes (size of 0)!");
+				return nullptr;
+			}
+			else map_size = buffer_obj->size;
+		}
+		
+		size_t map_offset = offset;
+		if(map_offset >= buffer_obj->size) {
+			oclr_error("map offset (%d) out of bound!", map_offset);
+			return nullptr;
+		}
+		if(map_offset+map_size > buffer_obj->size) {
+			oclr_error("map offset (%d) or map size (%d) is too big - using map size of (%d) instead!",
+					   map_offset, map_size, (buffer_obj->size - map_offset));
+			map_size = buffer_obj->size - map_offset;
+		}
+		
+		cl_map_flags map_flags = ((access_type & (MAP_BUFFER_FLAG::READ_WRITE | MAP_BUFFER_FLAG::WRITE_INVALIDATE)) ==
+								  MAP_BUFFER_FLAG::NONE) ? CL_MAP_READ : 0; // if no access type is specified, use read-only
+		switch(access_type & MAP_BUFFER_FLAG::READ_WRITE) {
+			case MAP_BUFFER_FLAG::READ_WRITE: map_flags = CL_MAP_READ | CL_MAP_WRITE; break;
+			case MAP_BUFFER_FLAG::READ: map_flags = CL_MAP_READ; break;
+			case MAP_BUFFER_FLAG::WRITE: map_flags = CL_MAP_WRITE; break;
+			default: break;
+		}
+		if((access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
+			map_flags |= CL_MAP_WRITE_INVALIDATE_REGION;
+		}
+		
+		alignas(128) void* map_ptr = nullptr;
+		if(buffer_obj->image_type == buffer_object::IMAGE_TYPE::IMAGE_NONE) {
+			CUdeviceptr* cuda_mem = cuda_buffers[buffer_obj];
+			CUdeviceptr device_mem_ptr = *cuda_mem + map_offset;
+			const CUdevice* device = device_map[active_device];
+			CUstream stream = *cuda_queues[device];
+			
+			// TODO: handle buffers that already reside in host memory (were host allocated and are page-locked)!
+			
+			// cuda has no way of mapping device memory -> use a host buffer and write the results back later
+			alignas(128) unsigned char* host_buffer = new unsigned char[map_size] alignas(128);
+			if((map_flags & CL_MAP_READ) != 0) {
+				// read back to host buffer
+				if(blocking) {
+					CU(cuMemcpyDtoH(host_buffer, device_mem_ptr, map_size));
+				}
+				else {
+					CU(cuMemcpyDtoHAsync(host_buffer, device_mem_ptr, map_size, stream));
+				}
+			}
+			
+			// add to active mappings
+			cuda_mem_mappings.emplace(host_buffer, cuda_mem_map_data {
+				device,
+				device_mem_ptr,
+				buffer_obj,
+				map_flags,
+				map_offset,
+				map_size,
+				blocking
+			});
+			map_ptr = host_buffer;
+		}
+		else {
+			// image
+			oclr_error("use map_image to map an image buffer object!");
+			return nullptr;
+		}
+		return map_ptr;
+	}
+	__HANDLE_CL_EXCEPTION("map_buffer")
+	return nullptr;
+}
+
+void* __attribute__((aligned(128))) cudacl::map_image(opencl_base::buffer_object* buffer_obj oclr_unused,
+													  const MAP_BUFFER_FLAG access_type oclr_unused,
+													  const size3 origin oclr_unused,
+													  const size3 region oclr_unused,
+													  size_t* image_row_pitch oclr_unused,
+													  size_t* image_slice_pitch oclr_unused) {
+	// TODO
+	return nullptr;
+}
+
+pair<opencl::buffer_object*, void*> cudacl::create_and_map_buffer(const BUFFER_FLAG type,
+																  const size_t size,
+																  const void* data,
+																  const MAP_BUFFER_FLAG access_type,
+																  const size_t map_offset,
+																  const size_t map_size) {
+	// TODO: optimize?
+	auto buffer_obj = create_buffer(type, size, data);
+	auto mapped_ptr = map_buffer(buffer_obj, access_type, map_offset, map_size);
+	return { buffer_obj, mapped_ptr };
+}
+
+void cudacl::unmap_buffer(opencl_base::buffer_object* buffer_obj, void* map_ptr) {
+	try {
+		if(buffer_obj->image_type == buffer_object::IMAGE_TYPE::IMAGE_NONE) {
+			// unmap buffer
+			const auto map_iter = cuda_mem_mappings.find(map_ptr);
+			if(map_iter == cuda_mem_mappings.end()) {
+				oclr_error("map_ptr is not a valid memory mapping pointer!");
+				return;
+			}
+			
+			//
+			const auto& mapping = map_iter->second;
+			if((mapping.flags & CL_MAP_WRITE) != 0 ||
+			   (mapping.flags & CL_MAP_WRITE_INVALIDATE_REGION) != 0) {
+				// always blocking! non-blocking would require the host pointer to be page-locked,
+				// which is not desirable in this case (as the buffer might be very large)
+				CU(cuMemcpyHtoD(mapping.device_mem_ptr, map_ptr, mapping.size));
+			}
+			// else: nothing to do for read-only buffers
+			
+			// delete host memory buffer again + remove from mappings map
+			delete [] (unsigned char*)map_iter->first;
+			cuda_mem_mappings.erase(map_iter);
+		}
+		else {
+			// TODO: unmap image
+			assert(false && "unmap_buffer not implemented for images yet!");
+		}
+	}
+	__HANDLE_CL_EXCEPTION("unmap_buffer")
+}
+
+void cudacl::_fill_buffer(buffer_object* buffer_obj,
+						  const void* pattern,
+						  const size_t& pattern_size,
+						  const size_t offset,
+						  const size_t size) {
+	//
+	if((offset % pattern_size) != 0) {
+		oclr_error("offset must be a multiple of pattern_size!");
+		return;
+	}
+	if((size % pattern_size) != 0) {
+		oclr_error("size must be a multiple of pattern_size!");
+		return;
+	}
+	
+	//
+	size_t fill_size = size;
+	if(fill_size == 0) {
+		if(buffer_obj->size == 0) {
+			oclr_error("can't fill 0 byte buffer (size of 0)!");
+			return;
+		}
+		else fill_size = buffer_obj->size;
+	}
+	
+	size_t fill_offset = offset;
+	if(fill_offset >= buffer_obj->size) {
+		oclr_error("fill offset (%d) out of bound!", fill_offset);
+		return;
+	}
+	if(fill_offset+fill_size > buffer_obj->size) {
+		oclr_error("fill offset (%d) or fill size (%d) is too big - using fill size of (%d) instead!",
+				   fill_offset, fill_size, (buffer_obj->size - fill_offset));
+		fill_size = buffer_obj->size - fill_offset;
+	}
+	
+	try {
+		CUdeviceptr* cuda_mem = cuda_buffers[buffer_obj];
+		CUdeviceptr device_mem_ptr = *cuda_mem + fill_offset;
+		const size_t pattern_count = fill_size / pattern_size;
+		switch(pattern_size) {
+			case 1:
+				CU(cuMemsetD8(device_mem_ptr, *(unsigned char*)pattern, pattern_count));
+				break;
+			case 2:
+				CU(cuMemsetD16(device_mem_ptr, *(unsigned short*)pattern, pattern_count));
+				break;
+			case 4:
+				CU(cuMemsetD32(device_mem_ptr, *(unsigned int*)pattern, pattern_count));
+				break;
+			default:
+				// not a pattern size that allows a fast memset
+				// -> create a host buffer with the pattern and upload it
+				unsigned char* pattern_buffer = new unsigned char[fill_size];
+				unsigned char* write_ptr = pattern_buffer;
+				for(size_t i = 0; i < pattern_count; i++) {
+					memcpy(write_ptr, pattern, pattern_size);
+					write_ptr += pattern_size;
+				}
+				CU(cuMemcpyHtoD(device_mem_ptr, pattern_buffer, fill_size));
+				delete [] pattern_buffer;
+				break;
+		}
+	}
+	__HANDLE_CL_EXCEPTION("fill_buffer")
+}
+
 void cudacl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 	auto kernel_ptr = kernel_obj.lock();
 	if(kernel_ptr == nullptr) {
@@ -1269,6 +1432,7 @@ void cudacl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 		// pre kernel-launch stuff:
 		vector<opencl_base::buffer_object*> gl_objects;
 		for(const auto& buffer_arg : kernel_ptr->buffer_args) {
+			if(buffer_arg == nullptr) continue;
 			if((buffer_arg->type & BUFFER_FLAG::COPY_ON_USE) != BUFFER_FLAG::NONE) {
 				write_buffer(buffer_arg, buffer_arg->data);
 			}
@@ -1312,6 +1476,7 @@ void cudacl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 		
 		// post kernel-run stuff:
 		for(const auto& buffer_arg : kernel_ptr->buffer_args) {
+			if(buffer_arg == nullptr) continue;
 			if((buffer_arg->type & BUFFER_FLAG::READ_BACK_RESULT) != BUFFER_FLAG::NONE) {
 				read_buffer(buffer_arg->data, buffer_arg);
 			}
@@ -1319,6 +1484,7 @@ void cudacl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 		
 		for_each(begin(kernel_ptr->buffer_args), end(kernel_ptr->buffer_args),
 				 [this](buffer_object* buffer_arg) {
+					 if(buffer_arg == nullptr) return;
 					 if((buffer_arg->type & BUFFER_FLAG::DELETE_AFTER_USE) != BUFFER_FLAG::NONE) {
 						 this->delete_buffer(buffer_arg);
 					 }
@@ -1383,14 +1549,20 @@ bool cudacl::set_kernel_argument(const unsigned int& index, size_t size, void* a
 		
 		switch(kernel->info.get_parameter_type(index)) {
 			case CUDACL_PARAM_TYPE::BUFFER:
+			case CUDACL_PARAM_TYPE::IMAGE_1D:
 			case CUDACL_PARAM_TYPE::IMAGE_2D:
 			case CUDACL_PARAM_TYPE::IMAGE_3D:
 				kernel_arg.size = sizeof(void*);
-				if(arg != NULL) {
+				if(arg != nullptr) {
 					kernel_arg.free_ptr = false;
 					opencl_base::buffer_object* buffer = (opencl_base::buffer_object*)arg;
 					if(buffer->ogl_buffer == 0) {
-						kernel_arg.ptr = (void*)cuda_buffers[buffer];
+						if(buffer->image_type == buffer_object::IMAGE_TYPE::IMAGE_NONE) {
+							kernel_arg.ptr = (void*)cuda_buffers[buffer];
+						}
+						else {
+							kernel_arg.ptr = (void*)cuda_images[buffer];
+						}
 					}
 					else {
 						CUgraphicsResource* res = cuda_gl_buffers[buffer];
@@ -1431,41 +1603,6 @@ bool cudacl::set_kernel_argument(const unsigned int& index, size_t size, void* a
 	}
 	__HANDLE_CL_EXCEPTION("set_kernel_argument")
 	return false;
-}
-
-void* __attribute__((aligned(128))) cudacl::map_buffer(opencl_base::buffer_object* buffer_obj oclr_unused,
-													   const MAP_BUFFER_FLAG access_type oclr_unused,
-													   const size_t offset oclr_unused, const size_t size oclr_unused) {
-	// TODO
-	/*try {
-	}
-	__HANDLE_CL_EXCEPTION("map_buffer")*/
-	return nullptr;
-}
-
-void* __attribute__((aligned(128))) cudacl::map_image(opencl_base::buffer_object* buffer_obj oclr_unused,
-													  const MAP_BUFFER_FLAG access_type oclr_unused,
-													  const size3 origin oclr_unused,
-													  const size3 region oclr_unused,
-													  size_t* image_row_pitch oclr_unused,
-													  size_t* image_slice_pitch oclr_unused) {
-	// TODO
-	return nullptr;
-}
-
-void cudacl::unmap_buffer(opencl_base::buffer_object* buffer_obj oclr_unused, void* map_ptr oclr_unused) {
-	// TODO
-	/*try {
-	}
-	__HANDLE_CL_EXCEPTION("unmap_buffer")*/
-}
-
-void cudacl::_fill_buffer(buffer_object* buffer_obj oclr_unused,
-						  const void* pattern oclr_unused,
-						  const size_t& pattern_size oclr_unused,
-						  const size_t offset oclr_unused,
-						  const size_t size oclr_unused) {
-	// TODO
 }
 
 size_t cudacl::get_kernel_work_group_size() const {

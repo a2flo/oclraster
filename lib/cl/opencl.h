@@ -49,6 +49,10 @@
 #define __CL_ENABLE_EXCEPTIONS
 #include "cl/cl.hpp"
 
+#if !defined(CL_MAP_WRITE_INVALIDATE_REGION)
+#define CL_MAP_WRITE_INVALIDATE_REGION (1 << 2)
+#endif
+
 //
 #if defined(OCLRASTER_CUDA_CL)
 #if defined(__APPLE__)
@@ -219,6 +223,7 @@ public:
 													 const GLuint texture,
 													 const GLenum target = GL_TEXTURE_2D) = 0;
 	virtual buffer_object* create_ogl_image2d_renderbuffer(const BUFFER_FLAG type, const GLuint renderbuffer) = 0;
+	
 	virtual void delete_buffer(buffer_object* buffer_obj) = 0;
 	
 	// write
@@ -278,6 +283,15 @@ public:
 														  const size3 region = { 0, 0, 0 },
 														  size_t* image_row_pitch = nullptr,
 														  size_t* image_slice_pitch = nullptr) = 0;
+	
+	virtual pair<buffer_object*, void*> create_and_map_buffer(const BUFFER_FLAG type,
+															  const size_t size,
+															  const void* data = nullptr,
+															  const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::WRITE_INVALIDATE |
+																								   MAP_BUFFER_FLAG::BLOCK),
+															  const size_t map_offset = 0,
+															  const size_t map_size = 0) = 0;
+	
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr) = 0;
 	
 	//
@@ -351,11 +365,12 @@ public:
 		unordered_map<shared_ptr<kernel_object>, vector<unsigned int>> associated_kernels;
 		
 		enum class IMAGE_TYPE : unsigned int {
+			IMAGE_NONE,
 			IMAGE_1D,
 			IMAGE_2D,
 			IMAGE_3D,
 		};
-		IMAGE_TYPE image_type = IMAGE_TYPE::IMAGE_2D;
+		IMAGE_TYPE image_type = IMAGE_TYPE::IMAGE_NONE;
 		
 		buffer_object() {}
 		~buffer_object() {}
@@ -411,7 +426,7 @@ protected:
 	
 	bool has_vendor_device(VENDOR vendor_type);
 	
-	virtual const char* error_code_to_string(cl_int error_code) const = 0;
+	virtual string error_code_to_string(cl_int error_code) const = 0;
 		
 	bool check_image_origin_and_size(const buffer_object* image_obj, cl::size_t<3>& origin, cl::size_t<3>& region) const;
 	
@@ -571,6 +586,15 @@ public:
 														  const size3 region = { 0, 0, 0 },
 														  size_t* image_row_pitch = nullptr,
 														  size_t* image_slice_pitch = nullptr);
+	
+	virtual pair<buffer_object*, void*> create_and_map_buffer(const BUFFER_FLAG type,
+															  const size_t size,
+															  const void* data = nullptr,
+															  const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::WRITE_INVALIDATE |
+																								   MAP_BUFFER_FLAG::BLOCK),
+															  const size_t map_offset = 0,
+															  const size_t map_size = 0);
+	
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	
 	virtual void _fill_buffer(buffer_object* buffer_obj,
@@ -591,7 +615,7 @@ public:
 protected:
 	virtual buffer_object* create_buffer_object(const BUFFER_FLAG type, const void* data = nullptr);
 	virtual void log_program_binary(const shared_ptr<kernel_object> kernel);
-	virtual const char* error_code_to_string(cl_int error_code) const;
+	virtual string error_code_to_string(cl_int error_code) const;
 	
 };
 
@@ -700,6 +724,15 @@ public:
 														  const size3 region = { 0, 0, 0 },
 														  size_t* image_row_pitch = nullptr,
 														  size_t* image_slice_pitch = nullptr);
+	
+	virtual pair<buffer_object*, void*> create_and_map_buffer(const BUFFER_FLAG type,
+															  const size_t size,
+															  const void* data = nullptr,
+															  const MAP_BUFFER_FLAG access_type = (MAP_BUFFER_FLAG::WRITE_INVALIDATE |
+																								   MAP_BUFFER_FLAG::BLOCK),
+															  const size_t map_offset = 0,
+															  const size_t map_size = 0);
+	
 	virtual void unmap_buffer(buffer_object* buffer_obj, void* map_ptr);
 	
 	virtual void _fill_buffer(buffer_object* buffer_obj,
@@ -728,14 +761,27 @@ protected:
 	unordered_map<const CUdevice*, CUcontext*> cuda_contexts;
 	unordered_map<const CUdevice*, CUstream*> cuda_queues;
 	unordered_map<opencl_base::buffer_object*, CUdeviceptr*> cuda_buffers;
+	unordered_map<opencl_base::buffer_object*, CUarray*> cuda_images;
 	unordered_map<opencl_base::buffer_object*, CUgraphicsResource*> cuda_gl_buffers;
 	unordered_map<CUgraphicsResource*, CUdeviceptr*> cuda_mapped_gl_buffers;
 	unordered_map<shared_ptr<opencl_base::kernel_object>, cuda_kernel_object*> cuda_kernels;
 	
+	// active (host) memory mappings
+	struct cuda_mem_map_data {
+		const CUdevice* device;
+		const CUdeviceptr device_mem_ptr;
+		opencl_base::buffer_object* buffer;
+		const cl_map_flags flags;
+		const size_t offset;
+		const size_t size;
+		const bool blocking;
+	};
+	unordered_map<void*, cuda_mem_map_data> cuda_mem_mappings;
+	
 	//
 	virtual buffer_object* create_buffer_object(const BUFFER_FLAG type, const void* data = nullptr);
 	virtual void log_program_binary(shared_ptr<kernel_object> kernel);
-	virtual const char* error_code_to_string(cl_int error_code) const;
+	virtual string error_code_to_string(cl_int error_code) const;
 	
 };
 #endif

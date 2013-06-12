@@ -38,7 +38,7 @@
 #endif
 
 
-void FUNC_OVERLOAD clear_image(global IMG_TYPE_VEC* img, const uint offset, const ulong4 clear_color) {
+void FUNC_OVERLOAD OCLRASTER_FUNC clear_image(global IMG_TYPE_VEC* img, const uint offset, const ulong4 clear_color) {
 #if (IS_HALF_TYPE == 0) && (IS_FLOAT_TYPE == 0) && (IS_DOUBLE_TYPE == 0)
 	// for unsigned and signed integer formats simply do a saturated convert:
 	img[offset] = CONVERT_FUNC_NAME()(CLEAR_COLOR_COMP);
@@ -47,10 +47,10 @@ void FUNC_OVERLOAD clear_image(global IMG_TYPE_VEC* img, const uint offset, cons
 	// for fp formats do a as_type reinterpretation:
 #if (IS_HALF_TYPE == 1)
 	// half
-	VSTORE_FUNC_NAME()(AS_TYPEN(float)(UINT_N()(CLEAR_COLOR_COMP & 0xFFFFFFFFu)), offset, (global half*)img);
+	VSTORE_FUNC_NAME()(AS_TYPEN(float)(UINT_N()(CLEAR_COLOR_COMP)), offset, (global half*)img);
 #elif (IS_FLOAT_TYPE == 1)
 	// float
-	img[offset] = AS_TYPEN(float)(UINT_N()(CLEAR_COLOR_COMP & 0xFFFFFFFFu));
+	img[offset] = AS_TYPEN(float)(UINT_N()(CLEAR_COLOR_COMP));
 #else
 	// double
 	img[offset] = AS_TYPEN(double)(CLEAR_COLOR_COMP);

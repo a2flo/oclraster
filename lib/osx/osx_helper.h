@@ -30,6 +30,8 @@ public:
 	static size_t get_dpi(SDL_Window* wnd);
 	static float get_scale_factor(SDL_Window* wnd);
 	static float get_menu_bar_height();
+	static size_t get_system_version();
+	static size_t get_compiled_system_version();
 	
 };
 

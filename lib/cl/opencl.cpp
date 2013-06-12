@@ -20,8 +20,12 @@
 #include "pipeline/image.h"
 #include "oclraster.h"
 
+#if defined(__APPLE__)
 #if defined(OCLRASTER_IOS)
 #include "ios/ios_helper.h"
+#else
+#include "osx/osx_helper.h"
+#endif
 #endif
 
 #define CLINFO_STR_SIZE (65536*2)
@@ -381,6 +385,9 @@ bool opencl_base::check_image_origin_and_size(const opencl_base::buffer_object* 
 		case buffer_object::IMAGE_TYPE::IMAGE_3D:
 			image_dim = 3;
 			break;
+		case buffer_object::IMAGE_TYPE::IMAGE_NONE:
+			oclr_error("this is not an image object!");
+			return false;
 	}
 	
 	for(unsigned int dim = 0; dim < image_dim; dim++) {
@@ -495,7 +502,7 @@ F(CL_INVALID_DEVICE_PARTITION_COUNT)
 
 #define __DECLARE_ERROR_CODE_TO_STRING(code) case code: return #code;
 
-const char* opencl::error_code_to_string(cl_int error_code) const {
+string opencl::error_code_to_string(cl_int error_code) const {
 	switch(error_code) {
 		__ERROR_CODE_INFO(__DECLARE_ERROR_CODE_TO_STRING);
 		default:
@@ -544,6 +551,10 @@ opencl::opencl(const char* kernel_path, SDL_Window* wnd, const bool clear_cache)
 	//nv_build_options += " -nvptx-mad-enable -inline-all";
 #else
 	build_options += " -cl-auto-vectorize-enable";
+	
+	// add defines for the compile-time and run-time os x versions
+	build_options += " -DOS_X_VERSION_COMPILED=" + size_t2string(osx_helper::get_compiled_system_version());
+	build_options += " -DOS_X_VERSION=" + size_t2string(osx_helper::get_system_version());
 #endif
 	
 	// clear opencl cache
@@ -855,13 +866,28 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 				device->type = (opencl::DEVICE_TYPE)gpu_counter;
 				gpu_counter++;
 				dev_type_str += "GPU ";
+				const auto compute_gpu_score = [](const device_object& dev) -> unsigned int {
+					unsigned int multiplier = 1;
+					switch(dev.vendor_type) {
+						case VENDOR::NVIDIA:
+							// fermi or kepler+ card if wg size is >= 1024
+							multiplier = (dev.max_wg_size >= 1024 ? 32 : 8);
+							break;
+						case VENDOR::AMD:
+							multiplier = 16;
+							break;
+						// none for INTEL
+						default: break;
+					}
+					return multiplier * (dev.units * dev.clock);
+				};
 				
 				if(fastest_gpu == nullptr) {
 					fastest_gpu = device;
-					fastest_gpu_score = device->units * device->clock;
+					fastest_gpu_score = compute_gpu_score(*device);
 				}
 				else {
-					gpu_score = device->units * device->clock;
+					gpu_score = compute_gpu_score(*device);
 					if(gpu_score > fastest_gpu_score) {
 						fastest_gpu = device;
 						fastest_gpu_score = gpu_score;
@@ -2063,17 +2089,12 @@ void* __attribute__((aligned(128))) opencl::map_buffer(opencl::buffer_object* bu
 			default: break;
 		}
 		if((access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
-#if defined(CL_VERSION_1_2)
 			if(get_platform_cl_version() >= CL_VERSION::CL_1_2) {
 				map_flags |= CL_MAP_WRITE_INVALIDATE_REGION;
 			}
 			else {
-#else
 				map_flags |= CL_MAP_WRITE;
-#endif
-#if defined(CL_VERSION_1_2)
 			}
-#endif
 		}
 		
 		void* __attribute__((aligned(128))) map_ptr = nullptr;
@@ -2122,17 +2143,12 @@ void* __attribute__((aligned(128))) opencl::map_image(opencl_base::buffer_object
 			default: break;
 		}
 		if((access_type & MAP_BUFFER_FLAG::WRITE_INVALIDATE) != MAP_BUFFER_FLAG::NONE) {
-#if defined(CL_VERSION_1_2)
 			if(get_platform_cl_version() >= CL_VERSION::CL_1_2) {
 				map_flags |= CL_MAP_WRITE_INVALIDATE_REGION;
 			}
 			else {
-#else
 				map_flags |= CL_MAP_WRITE;
-#endif
-#if defined(CL_VERSION_1_2)
 			}
-#endif
 		}
 		
 		void* __attribute__((aligned(128))) map_ptr = nullptr;
@@ -2153,6 +2169,17 @@ void* __attribute__((aligned(128))) opencl::map_image(opencl_base::buffer_object
 	}
 	__HANDLE_CL_EXCEPTION("map_image")
 	return nullptr;
+}
+
+pair<opencl::buffer_object*, void*> opencl::create_and_map_buffer(const BUFFER_FLAG type,
+																  const size_t size,
+																  const void* data,
+																  const MAP_BUFFER_FLAG access_type,
+																  const size_t map_offset,
+																  const size_t map_size) {
+	auto buffer_obj = create_buffer(type, size, data);
+	auto mapped_ptr = map_buffer(buffer_obj, access_type, map_offset, map_size);
+	return { buffer_obj, mapped_ptr };
 }
 
 void opencl::unmap_buffer(opencl::buffer_object* buffer_obj, void* map_ptr) {

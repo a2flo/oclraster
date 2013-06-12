@@ -102,7 +102,7 @@ public:
 		IMAGE_CHANNEL channel_order;
 		unsigned short int width;
 		unsigned short int height;
-		unsigned char _unused[OCLRASTER_IMAGE_HEADER_SIZE - 8];
+		// (unused ...)
 	};
 	static constexpr size_t header_size() {
 		// device specific address alignment (min 128 bytes, but can be up to 4096 -> use 4096)

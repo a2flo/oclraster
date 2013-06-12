@@ -67,9 +67,6 @@ int main(int argc oclr_unused, char* argv[]) {
 	cam->set_rotation_speed(cam->get_rotation_speed() * 1.5f);
 	cam->set_wasd_input(true);
 	
-	const int some_val = 0;
-	cout << some_val << ": " << ((some_val - 1) % 3) << endl;
-	
 	// create the pipeline, set the active camera and
 	// notify oclraster that this is the active pipeline
 	p = new pipeline();

@@ -32,6 +32,7 @@ enum class CUDACL_PARAM_ADDRESS_SPACE : unsigned int {
 enum class CUDACL_PARAM_TYPE : unsigned int {
 	NONE,
 	BUFFER,
+	IMAGE_1D,
 	IMAGE_2D,
 	IMAGE_3D,
 	SAMPLER,

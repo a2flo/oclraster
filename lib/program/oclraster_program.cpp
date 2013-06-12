@@ -118,11 +118,11 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 				//oclr_msg("struct interior:\n\t%s\n", struct_interior);
 				
 				// strip unnecessary whitespace and comments, and condense
-				static const regex rx_space("\\s+");
-				static const regex rx_semicolon_space("[ ]*;[ ]*");
-				static const regex rx_newline("\n|\r");
-				static const regex rx_comments_sl("//(.*)");
-				static const regex rx_comments_ml("/\\*(.*)\\*/");
+				static const regex rx_space("\\s+", regex::optimize);
+				static const regex rx_semicolon_space("[ ]*;[ ]*", regex::optimize);
+				static const regex rx_newline("\n|\r", regex::optimize);
+				static const regex rx_comments_sl("//(.*)", regex::optimize);
+				static const regex rx_comments_ml("/\\*(.*)\\*/", regex::optimize);
 
 				struct_interior = regex_replace(struct_interior, rx_comments_sl, "");
 				struct_interior = regex_replace(struct_interior, rx_newline, "");
@@ -295,7 +295,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 		const string entry_function_params = create_entry_function_parameters();
 		
 		// check if entry function exists, and if so, replace it with a modified function name
-		const regex rx_entry_function("("+entry_function+")\\s*\\(\\s*\\)");
+		const regex rx_entry_function("("+entry_function+")\\s*\\(\\s*\\)", regex::optimize);
 		if(!regex_search(code, rx_entry_function)) {
 			throw oclraster_exception("entry function \""+entry_function+"\" not found!");
 		}
