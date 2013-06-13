@@ -300,7 +300,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 			throw oclraster_exception("entry function \""+entry_function+"\" not found!");
 		}
 		processed_code = regex_replace(processed_code, rx_entry_function,
-									   "oclraster_user_"+entry_function+"("+entry_function_params+")");
+									   "OCLRASTER_FUNC oclraster_user_"+entry_function+"("+entry_function_params+")");
 		
 		// create default/first/hinted image spec, do the final processing and compile
 		kernel_spec spec { default_spec };
@@ -674,8 +674,8 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	kernel_code += "atomic_xchg(&info_buffer[index++], (int)sizeof("+struct_info.name+"));\n";
 	for(const auto& var : struct_info.variables) {
 		// standard c ftw
-		kernel_code += "atomic_xchg(&info_buffer[index++], (int)sizeof(("+struct_info.name+"*)0)->"+var+");\n"; // size
-		kernel_code += "atomic_xchg(&info_buffer[index++], (int)&((("+struct_info.name+"*)0)->"+var+"));\n"; // offset
+		kernel_code += "atomic_xchg(&info_buffer[index++], (int)((size_t)sizeof(("+struct_info.name+"*)0)->"+var+"));\n"; // size
+		kernel_code += "atomic_xchg(&info_buffer[index++], (int)((size_t)&((("+struct_info.name+"*)0)->"+var+")));\n"; // offset
 	}
 	kernel_code += "}"; // eol
 	

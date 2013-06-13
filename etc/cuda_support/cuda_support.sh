@@ -129,7 +129,7 @@ IFS=""
 echo -e "// NOTE: this is an automatically generated file!\n// If you need to change anything in here, please have a look at etc/cuda_support/cuda_support.sh" > oclr_cuda_vector_helper.h
 echo -e "// don't include this header on it's own, but rather include oclr_cuda_base.h\n" >> oclr_cuda_vector_helper.h
 echo -e "#ifndef __OCLRASTER_CUDA_VECTOR_HELPER_H__\n#define __OCLRASTER_CUDA_VECTOR_HELPER_H__\n" >> oclr_cuda_vector_helper.h
-echo -e "template<class vec_type, size_t target_size> struct vector_mapping {\n\ttypedef void target;\n\ttypedef void src_type;\n\tstatic const size_t vec_size = 1;\n\tstatic const size_t src_vec_size = 1;\n};\n" >> oclr_cuda_vector_helper.h
+echo -e "template<class vec_type, size_t target_size> struct vector_mapping {\n\ttypedef void type;\n\ttypedef void src_type;\n\tstatic const size_t vec_size = 1;\n\tstatic const size_t src_vec_size = 1;\n};\n" >> oclr_cuda_vector_helper.h
 echo -e $VEC_HELPER_CODE >> oclr_cuda_vector_helper.h
 echo -e "\n#endif" >> oclr_cuda_vector_helper.h
 

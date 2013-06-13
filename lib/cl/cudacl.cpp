@@ -21,6 +21,7 @@
 #include "opencl.h"
 #include "cudacl_translator.h"
 #include "zlib.h"
+#include "pipeline/image.h"
 
 #if defined(__APPLE__)
 #if !defined(OCLRASTER_IOS)
@@ -566,7 +567,17 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 
 weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identifier, const string& src, const string& func_name, const string additional_options) {
 	oclr_debug("compiling \"%s\" kernel!", identifier);
+	
+	//
 	string options = build_options;
+	
+	// just define this everywhere to make using image support
+	// easier without having to specify this every time
+	options += " -DOCLRASTER_IMAGE_HEADER_SIZE="+size_t2string(image::header_size());
+	
+	// the same goes for the general struct alignment
+	options += " -DOCLRASTER_STRUCT_ALIGNMENT="+uint2string(OCLRASTER_STRUCT_ALIGNMENT);
+	
 	string nvcc_log = "";
 	string build_cmd = "";
 	const string tmp_name = "/tmp/cudacl_tmp_"+identifier+"_"+size_t2string(SDL_GetPerformanceCounter());
@@ -1068,28 +1079,10 @@ void cudacl::write_buffer(opencl_base::buffer_object* buffer_obj, const void* sr
 		// blocking write: wait until everything has completed in the cmdqueue
 		finish();
 		
-		//
-		if(offset == 0) {
-			CU(cuMemcpyHtoD(*cuda_mem, src, write_size));
-		}
-		else {
-			// if there is an offset, we have to call the cuda runtime to copy the memory
-			//unsigned char* dptr = ((unsigned char*)cuda_mem) + write_offset;
-			//CURT(cudaMemcpy(dptr, src, write_size, cudaMemcpyHostToDevice));
-			assert(false && "write_buffer with offset not implemented yet!");
-		}
+		CU(cuMemcpyHtoD(*cuda_mem + offset, src, write_size));
 	}
 	else {
-		//
-		if(offset == 0) {
-			CU(cuMemcpyHtoDAsync(*cuda_mem, src, write_size, stream));
-		}
-		else {
-			// if there is an offset, we have to call the cuda runtime to copy the memory
-			//unsigned char* dptr = ((unsigned char*)cuda_mem) + write_offset;
-			//CURT(cudaMemcpyAsync(dptr, src, write_size, cudaMemcpyHostToDevice, stream));
-			assert(false && "write_buffer with offset not implemented yet!");
-		}
+		CU(cuMemcpyHtoDAsync(*cuda_mem + offset, src, write_size, stream));
 	}
 }
 
@@ -1162,10 +1155,22 @@ void cudacl::copy_image_to_buffer(const buffer_object* src_buffer oclr_unused, b
 	__HANDLE_CL_EXCEPTION("copy_image_to_buffer")
 }
 
-void cudacl::read_buffer(void* dst oclr_unused, const opencl_base::buffer_object* buffer_obj oclr_unused, const size_t offset oclr_unused, const size_t size oclr_unused) {
+void cudacl::read_buffer(void* dst, const opencl_base::buffer_object* buffer_obj, const size_t offset, const size_t size_) {
 	try {
-		// TODO
-		assert(false && "read_buffer not implemented yet!");
+		const size_t size = (size_ == 0 ? buffer_obj->size : size_);
+		
+		//
+		CUdeviceptr* cuda_mem = cuda_buffers[(opencl_base::buffer_object*)buffer_obj];
+		CUstream stream = *cuda_queues[device_map[active_device]];
+		if((buffer_obj->type & BUFFER_FLAG::BLOCK_ON_READ) != BUFFER_FLAG::NONE) {
+			// blocking read: wait until everything has completed in the cmdqueue
+			finish();
+			
+			CU(cuMemcpyDtoH(dst, *cuda_mem + offset, size));
+		}
+		else {
+			CU(cuMemcpyDtoHAsync(dst, *cuda_mem + offset, size, stream));
+		}
 	}
 	__HANDLE_CL_EXCEPTION("read_buffer")
 }

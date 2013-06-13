@@ -196,16 +196,24 @@ void cudacl_translate(const string& cl_source,
 	static const vector<pair<const regex, const string>> rx_cl2cuda {
 		{
 			{ regex("# ", regex::optimize), "// " },
+			
+			// remove "global" and "local" qualifiers from pointers (cuda doesn't care)
+			{ regex("([^\\w_]+)global([\\w\\s]+)(\\*)", regex::optimize), "$1$2$3" },
+			{ regex("([^\\w_]+)local([\\w\\s]+)(\\*)", regex::optimize), "$1$2$3" },
+			
+			// actual storage declarations, or other address spaces that don't matter:
 			{ regex("([^\\w_]+)global ", regex::optimize), "$1 " },
-			{ regex("([^\\w_]+)local ", regex::optimize), "$1__shared__  " },
+			{ regex("([^\\w_]+)local ", regex::optimize), "$1__shared__ " },
 			{ regex("([^\\w_]+)private ", regex::optimize), "$1 " },
 			{ regex("([^\\w_]+)constant ", regex::optimize), "$1 " }, // "__constant__ "
+			
+			// misc
 			{ regex("#pragma", regex::optimize), "// #pragma" },
 			{ regex("(__)?read_only ", regex::optimize), " " },
 			{ regex("(__)?write_only ", regex::optimize), " " },
-			{ regex("image1d_t", regex::optimize), "texture<uchar, 4, 0" }, // TODO
-			{ regex("image2d_t", regex::optimize), "texture<uchar, 4, 0" }, // TODO
-			{ regex("image3d_t", regex::optimize), "texture<uchar, 4, 0" }, // TODO
+			{ regex("image1d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
+			//{ regex("image2d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
+			{ regex("image3d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
 		}
 	};
 		
@@ -257,23 +265,24 @@ void cudacl_translate(const string& cl_source,
 	static const vector<pair<const regex, const string>> rx_vector_op {
 		{
 			// TODO: find a better (stable) solution for this!
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.xyzw ([\\+\\-\\*/]*)=", regex::optimize), "*((float4*)&$1) $2=" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.xyz ([\\+\\-\\*/]*)=", regex::optimize), "*((float3*)&$1) $2=" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.xy ([\\+\\-\\*/]*)=", regex::optimize), "*((float2*)&$1) $2=" },
+			{ regex("([\\w\\[\\]\\.\\->]+)\\.xyzw ([\\+\\-\\*/]*)=", regex::optimize), "*((float4*)&$1) $2=" },
+			{ regex("([\\w\\[\\]\\.\\->]+)\\.xyz ([\\+\\-\\*/]*)=", regex::optimize), "*((float3*)&$1) $2=" },
+			{ regex("([\\w\\[\\]\\.\\->]+)\\.xy ([\\+\\-\\*/]*)=", regex::optimize), "*((float2*)&$1) $2=" },
 		}
 	};
 	for(const auto& rx_vec_op : rx_vector_op) {
 		cuda_source = regex_replace(cuda_source, rx_vec_op.first, rx_vec_op.second);
 	}
-		
-	static const vector<tuple<const regex, const size_t, const string>> rx_vec_accessors {
+	
+	// <regex, components, function?>
+	static const vector<tuple<const regex, const size_t, const bool>> rx_vec_accessors {
 		{
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, "$1" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, "$1" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, "$1" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, "$1($2)" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, "$1($2)" },
-			{ regex("([A-Za-z0-9_\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, "$1($2)" },
+			{ regex("([\\w\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, false },
+			{ regex("([\\w\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, false },
+			{ regex("([\\w\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, false },
+			{ regex("([\\w\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, true },
+			{ regex("([\\w\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, true },
+			{ regex("([\\w\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, true },
 		}
 	};
 	for(const auto& rx_vec_access : rx_vec_accessors) {
@@ -284,17 +293,18 @@ void cudacl_translate(const string& cl_source,
 				continue;
 			}
 			
-			string repl = "get_vector_components_"+size_t2string(components)+"<";
+			string repl = "get_vector_components_" + size_t2string(components) + "<";
 			
 			vector<size_t> component_nums(components);
 			const auto comp_str_to_num = [](const string& comp_str) -> string {
 				return (comp_str == "x" ? "0" : (comp_str == "y" ? "1" : (comp_str == "z" ? "2" : "3")));
 			};
+			const size_t offset = match.size() - components + 1;
 			for(size_t i = 0; i < components; i++) {
-				repl += comp_str_to_num(match[2 + i]);
+				repl += comp_str_to_num(match[offset + i]);
 				if(i+1 < components) repl += ", ";
 			}
-			repl += ">(" + match.str(1) + ")";
+			repl += ">(" + match.str(1) + (get<2>(rx_vec_access) ? ("(" + match.str(2) + ")") : "") + ")";
 			
 			cuda_source.replace(match.position(), match.length(), repl);
 		}

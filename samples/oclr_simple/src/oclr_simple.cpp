@@ -151,11 +151,12 @@ int main(int argc oclr_unused, char* argv[]) {
 		}
 	};
 	
+	static constexpr auto image_backing = image::BACKING::BUFFER; // or image::BACKING::IMAGE
 	array<array<shared_ptr<image>, textures_per_material>, material_count> materials;
 	for(size_t i = 0; i < material_count; i++) {
 		for(size_t j = 0; j < textures_per_material; j++) {
 			materials[i][j] = make_shared<image>(image::from_file(oclraster::data_path(texture_names[(i * textures_per_material) + j]+".png"),
-																  image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA));
+																  image_backing, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA));
 		}
 	}
 	

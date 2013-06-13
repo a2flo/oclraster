@@ -158,6 +158,10 @@ inline __host__ __device__ float4 make_float4(float3 a, float w)
 {
     return make_float4(a.x, a.y, a.z, w);
 }
+inline __host__ __device__ float4 make_float4(float2 a, float2 b)
+{
+    return make_float4(a.x, a.y, b.x, b.y);
+}
 inline __host__ __device__ float4 make_float4(int4 a)
 {
     return make_float4(float(a.x), float(a.y), float(a.z), float(a.w));
@@ -166,6 +170,7 @@ inline __host__ __device__ float4 make_float4(uint4 a)
 {
     return make_float4(float(a.x), float(a.y), float(a.z), float(a.w));
 }
+inline __host__ __device__ float4 make_float4(float4 a) { return a; }
 
 inline __host__ __device__ int4 make_int4(int s)
 {
@@ -187,6 +192,7 @@ inline __host__ __device__ int4 make_int4(float4 a)
 {
     return make_int4(int(a.x), int(a.y), int(a.z), int(a.w));
 }
+inline __host__ __device__ int4 make_int4(int4 a) { return a; }
 
 
 inline __host__ __device__ uint4 make_uint4(uint s)
@@ -205,6 +211,7 @@ inline __host__ __device__ uint4 make_uint4(int4 a)
 {
     return make_uint4(uint(a.x), uint(a.y), uint(a.z), uint(a.w));
 }
+inline __host__ __device__ uint4 make_uint4(uint4 a) { return a; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // negate
@@ -1077,6 +1084,27 @@ inline __host__ __device__ uint4 operator/(uint b, uint4 a)
     return make_uint4(b / a.x, b / a.y, b / a.z, b / a.w);
 }
 
+// misc
+inline __device__ int2 operator/(int b, int2 a) {
+    return make_int2(b / a.x, b / a.y);
+}
+inline __device__ int3 operator/(int b, int3 a) {
+    return make_int3(b / a.x, b / a.y, b / a.z);
+}
+inline __device__ int4 operator/(int b, int4 a) {
+    return make_int4(b / a.x, b / a.y, b / a.z, b / a.w);
+}
+
+inline __device__ int2 operator/(int2 a, int b) {
+    return make_int2(a.x / b, a.y / b);
+}
+inline __device__ int3 operator/(int3 a, int b) {
+    return make_int3(a.x / b, a.y / b, a.z / b);
+}
+inline __device__ int4 operator/(int4 a, int b) {
+    return make_int4(a.x / b, a.y / b, a.z / b, a.w / b);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // min
 ////////////////////////////////////////////////////////////////////////////////
@@ -1269,15 +1297,15 @@ inline __host__ __device__ float4 normalize(float4 v)
 // floor
 ////////////////////////////////////////////////////////////////////////////////
 
-inline __host__ __device__ float2 floorf(float2 v)
+inline __host__ __device__ float2 floor(float2 v)
 {
     return make_float2(floorf(v.x), floorf(v.y));
 }
-inline __host__ __device__ float3 floorf(float3 v)
+inline __host__ __device__ float3 floor(float3 v)
 {
-    return make_float3(floorf(v.x), floorf(v.y), floorf(v.z));
+    return make_float3(floorf(v.x), floor(v.y), floorf(v.z));
 }
-inline __host__ __device__ float4 floorf(float4 v)
+inline __host__ __device__ float4 floor(float4 v)
 {
     return make_float4(floorf(v.x), floorf(v.y), floorf(v.z), floorf(v.w));
 }
@@ -1286,36 +1314,40 @@ inline __host__ __device__ float4 floorf(float4 v)
 // frac - returns the fractional portion of a scalar or each vector component
 ////////////////////////////////////////////////////////////////////////////////
 
-inline __host__ __device__ float fracf(float v)
+inline __host__ __device__ float frac(float v)
 {
     return v - floorf(v);
 }
-inline __host__ __device__ float2 fracf(float2 v)
+inline __host__ __device__ float2 frac(float2 v)
 {
-    return make_float2(fracf(v.x), fracf(v.y));
+    return make_float2(frac(v.x), frac(v.y));
 }
-inline __host__ __device__ float3 fracf(float3 v)
+inline __host__ __device__ float3 frac(float3 v)
 {
-    return make_float3(fracf(v.x), fracf(v.y), fracf(v.z));
+    return make_float3(frac(v.x), frac(v.y), frac(v.z));
 }
-inline __host__ __device__ float4 fracf(float4 v)
+inline __host__ __device__ float4 frac(float4 v)
 {
-    return make_float4(fracf(v.x), fracf(v.y), fracf(v.z), fracf(v.w));
+    return make_float4(frac(v.x), frac(v.y), frac(v.z), frac(v.w));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // fmod
 ////////////////////////////////////////////////////////////////////////////////
 
-inline __host__ __device__ float2 fmodf(float2 a, float2 b)
+inline __host__ __device__ float fmod(float a, float b)
+{
+    return fmodf(a, b);
+}
+inline __host__ __device__ float2 fmod(float2 a, float2 b)
 {
     return make_float2(fmodf(a.x, b.x), fmodf(a.y, b.y));
 }
-inline __host__ __device__ float3 fmodf(float3 a, float3 b)
+inline __host__ __device__ float3 fmod(float3 a, float3 b)
 {
     return make_float3(fmodf(a.x, b.x), fmodf(a.y, b.y), fmodf(a.z, b.z));
 }
-inline __host__ __device__ float4 fmodf(float4 a, float4 b)
+inline __host__ __device__ float4 fmod(float4 a, float4 b)
 {
     return make_float4(fmodf(a.x, b.x), fmodf(a.y, b.y), fmodf(a.z, b.z), fmodf(a.w, b.w));
 }

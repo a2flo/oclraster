@@ -26,30 +26,30 @@ typedef struct __attribute__((packed, aligned(128))) {
 typedef global const image_header* image_header_ptr;
 
 //
-uint2 oclr_get_image_size(global const image_header* img) {
+OCLRASTER_FUNC uint2 oclr_get_image_size(global const image_header* img) {
 	return (uint2)(img->width, img->height);
 }
-unsigned int oclr_get_image_type(global const image_header* img) {
+OCLRASTER_FUNC unsigned int oclr_get_image_type(global const image_header* img) {
 	return img->type;
 }
-unsigned int oclr_get_image_channel_order(global const image_header* img) {
+OCLRASTER_FUNC unsigned int oclr_get_image_channel_order(global const image_header* img) {
 	return img->channel_order;
 }
 
 //
-float FUNC_OVERLOAD texel_mix(float x, float y, float a) { return linear_blend(x, y, a); }
-float2 FUNC_OVERLOAD texel_mix(float2 x, float2 y, float a) { return linear_blend(x, y, a); }
-float3 FUNC_OVERLOAD texel_mix(float3 x, float3 y, float a) { return linear_blend(x, y, a); }
-float4 FUNC_OVERLOAD texel_mix(float4 x, float4 y, float a) { return linear_blend(x, y, a); }
+OCLRASTER_FUNC float FUNC_OVERLOAD texel_mix(float x, float y, float a) { return linear_blend(x, y, a); }
+OCLRASTER_FUNC float2 FUNC_OVERLOAD texel_mix(float2 x, float2 y, float a) { return linear_blend(x, y, a); }
+OCLRASTER_FUNC float3 FUNC_OVERLOAD texel_mix(float3 x, float3 y, float a) { return linear_blend(x, y, a); }
+OCLRASTER_FUNC float4 FUNC_OVERLOAD texel_mix(float4 x, float4 y, float a) { return linear_blend(x, y, a); }
 #if defined(OCLRASTER_DOUBLE_SUPPORT)
-double FUNC_OVERLOAD texel_mix(double x, double y, float a) { return linear_blend(x, y, (double)a); }
-double2 FUNC_OVERLOAD texel_mix(double2 x, double2 y, float a) { return linear_blend(x, y, (double)a); }
-double3 FUNC_OVERLOAD texel_mix(double3 x, double3 y, float a) { return linear_blend(x, y, (double)a); }
-double4 FUNC_OVERLOAD texel_mix(double4 x, double4 y, float a) { return linear_blend(x, y, (double)a); }
+OCLRASTER_FUNC double FUNC_OVERLOAD texel_mix(double x, double y, float a) { return linear_blend(x, y, (double)a); }
+OCLRASTER_FUNC double2 FUNC_OVERLOAD texel_mix(double2 x, double2 y, float a) { return linear_blend(x, y, (double)a); }
+OCLRASTER_FUNC double3 FUNC_OVERLOAD texel_mix(double3 x, double3 y, float a) { return linear_blend(x, y, (double)a); }
+OCLRASTER_FUNC double4 FUNC_OVERLOAD texel_mix(double4 x, double4 y, float a) { return linear_blend(x, y, (double)a); }
 #endif
 
 #define INT_TEXEL_MIX(type, type_vec, ftype, one) \
-type_vec FUNC_OVERLOAD texel_mix(type_vec x, type_vec y, float a) { \
+OCLRASTER_FUNC type_vec FUNC_OVERLOAD texel_mix(type_vec x, type_vec y, float a) { \
 	const ftype inv_a = one / (ftype)a; \
 	const ftype inv_b = one / (one - (ftype)a); \
 	return (x / (type)inv_a) + (y / (type)inv_b); \
@@ -77,39 +77,39 @@ INT_TEXEL_MIX(long, long4, double, 1.0)
 #include "oclr_image_support.h"
 
 // image read functions for native images
-float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imagef(img, sampler, coord);
 }
-float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
 	return read_imagef(img, sampler, convert_int2(coord));
 }
-int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imagei(img, sampler, coord);
 }
-int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
 	return read_imagei(img, sampler, convert_int2(coord));
 }
-uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imageui(img, sampler, coord);
 }
-uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
 	return read_imageui(img, sampler, convert_int2(coord));
 }
 
-float4 FUNC_OVERLOAD image_read_float_nearest(read_only image2d_t img, const float2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_float_nearest(read_only image2d_t img, const float2 coord) {
 	const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	return read_imagef(img, sampler, coord);
 }
 
 // image write functions for native images
-void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const float4 color) {
-	return write_imagef(img, convert_int2(coord), color);
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const float4 color) {
+	write_imagef(img, convert_int2(coord), color);
 }
-void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const int4 color) {
-	return write_imagei(img, convert_int2(coord), color);
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const int4 color) {
+	write_imagei(img, convert_int2(coord), color);
 }
-void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const uint4 color) {
-	return write_imageui(img, convert_int2(coord), color);
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const uint4 color) {
+	write_imageui(img, convert_int2(coord), color);
 }
 
 //

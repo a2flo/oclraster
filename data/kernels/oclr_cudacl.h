@@ -221,13 +221,70 @@ OCLRASTER_FUNC int all(const int4& val) {
 	return ((val.x & 1) && (val.y & 1) && (val.z & 1) && (val.w & 1));
 }
 
-// smoothstep
 template<class gentype,
 		 typename enable_if<is_floating_point<gentype>::value, int>::type = 0,
 		 class single_type = typename vector_mapping<gentype, 1>::type>
 OCLRASTER_FUNC gentype smoothstep(const gentype edge0, const gentype edge1, const gentype x) {
 	const gentype t = clamp((x - edge0) / (edge1 - edge0), (single_type)0, (single_type)1);
 	return t * t * (((single_type)3) - ((single_type)2) * t);
+}
+
+// TODO: macro this (+floor)
+template<class src_typen,
+		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 2, int>::type = 0>
+OCLRASTER_FUNC src_typen trunc(const src_typen vec) {
+	src_typen ret;
+	ret.x = trunc(vec.x);
+	ret.y = trunc(vec.y);
+	return ret;
+}
+template<class src_typen,
+		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 3, int>::type = 0>
+OCLRASTER_FUNC src_typen trunc(const src_typen vec) {
+	src_typen ret;
+	ret.x = trunc(vec.x);
+	ret.y = trunc(vec.y);
+	ret.z = trunc(vec.z);
+	return ret;
+}
+template<class src_typen,
+		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 4, int>::type = 0>
+OCLRASTER_FUNC src_typen trunc(const src_typen vec) {
+	src_typen ret;
+	ret.x = trunc(vec.x);
+	ret.y = trunc(vec.y);
+	ret.z = trunc(vec.z);
+	ret.w = trunc(vec.w);
+	return ret;
+}
+
+
+template<class src_typen,
+		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 2, int>::type = 0>
+OCLRASTER_FUNC src_typen ceil(const src_typen vec) {
+	src_typen ret;
+	ret.x = ceil(vec.x);
+	ret.y = ceil(vec.y);
+	return ret;
+}
+template<class src_typen,
+		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 3, int>::type = 0>
+OCLRASTER_FUNC src_typen ceil(const src_typen vec) {
+	src_typen ret;
+	ret.x = ceil(vec.x);
+	ret.y = ceil(vec.y);
+	ret.z = ceil(vec.z);
+	return ret;
+}
+template<class src_typen,
+		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 4, int>::type = 0>
+OCLRASTER_FUNC src_typen ceil(const src_typen vec) {
+	src_typen ret;
+	ret.x = ceil(vec.x);
+	ret.y = ceil(vec.y);
+	ret.z = ceil(vec.z);
+	ret.w = ceil(vec.w);
+	return ret;
 }
 
 // for mad instructions: let the compiler decide what to do
@@ -242,6 +299,24 @@ OCLRASTER_FUNC float3 mad(const float3 a, const float3 b, const float3 c) {
 }
 OCLRASTER_FUNC float4 mad(const float4 a, const float4 b, const float4 c) {
 	return make_float4(a.x * b.x + c.x, a.y * b.y + c.y, a.z * b.z + c.z, a.w * b.w + c.w);
+}
+OCLRASTER_FUNC float2 mad(const float2 a, const float b, const float2 c) {
+	return make_float2(a.x * b + c.x, a.y * b + c.y);
+}
+OCLRASTER_FUNC float3 mad(const float3 a, const float b, const float3 c) {
+	return make_float3(a.x * b + c.x, a.y * b + c.y, a.z * b + c.z);
+}
+OCLRASTER_FUNC float4 mad(const float4 a, const float b, const float4 c) {
+	return make_float4(a.x * b + c.x, a.y * b + c.y, a.z * b + c.z, a.w * b + c.w);
+}
+OCLRASTER_FUNC float2 mad(const float2 a, const float2 b, const float c) {
+	return make_float2(a.x * b.x + c, a.y * b.y + c);
+}
+OCLRASTER_FUNC float3 mad(const float3 a, const float3 b, const float c) {
+	return make_float3(a.x * b.x + c, a.y * b.y + c, a.z * b.z + c);
+}
+OCLRASTER_FUNC float4 mad(const float4 a, const float4 b, const float c) {
+	return make_float4(a.x * b.x + c, a.y * b.y + c, a.z * b.z + c, a.w * b.w + c);
 }
 
 // for explicit fma instructions: use built-ins
@@ -266,9 +341,6 @@ OCLRASTER_FUNC float2 make_float2(float2 vec) {
 	return vec;
 }
 OCLRASTER_FUNC float3 make_float3(float3 vec) {
-	return vec;
-}
-OCLRASTER_FUNC float4 make_float4(float4 vec) {
 	return vec;
 }
 
@@ -376,5 +448,75 @@ OCLRASTER_FUNC void vstore_half8(const float8& data, const size_t& offset, half*
 OCLRASTER_FUNC void vstore_half16(const float16& data, const size_t& offset, half* ptr) {
 	vstore_halfn<float16, 16>(data, offset, ptr);
 }
+
+// sampler
+typedef unsigned int sampler_t;
+enum {
+	// normalized coords
+	CLK_ADDRESS_NONE				= (1u << 0u),
+	CLK_ADDRESS_CLAMP				= (1u << 1u),
+	CLK_ADDRESS_CLAMP_TO_EDGE		= (1u << 2u),
+	CLK_ADDRESS_REPEAT				= (1u << 3u),
+	CLK_ADDRESS_MIRRORED_REPEAT		= (1u << 4u),
+	
+	// addressing mode
+	CLK_NORMALIZED_COORDS_FALSE		= (1u << 5u),
+	CLK_NORMALIZED_COORDS_TRUE		= (1u << 6u),
+	
+	// filter mode
+	CLK_FILTER_NEAREST				= (1u << 7u),
+	CLK_FILTER_LINEAR				= (1u << 8u),
+};
+
+// channel data type
+enum {
+	CLK_SNORM_INT8,
+	CLK_SNORM_INT16,
+	CLK_UNORM_INT8,
+	CLK_UNORM_INT16,
+	CLK_UNORM_SHORT_565,
+	CLK_UNORM_SHORT_555,
+	CLK_UNORM_SHORT_101010,
+	CLK_SIGNED_INT8,
+	CLK_SIGNED_INT16,
+	CLK_SIGNED_INT32,
+	CLK_UNSIGNED_INT8,
+	CLK_UNSIGNED_INT16,
+	CLK_UNSIGNED_INT32,
+	CLK_HALF_FLOAT,
+	CLK_FLOAT,
+};
+
+// image channel order
+enum {
+	CLK_A,
+	CLK_R,
+	CLK_Rx,
+	CLK_RG,
+	CLK_RGx,
+	CLK_RA,
+	CLK_RGB,
+	CLK_RGBx,
+	CLK_RGBA,
+	CLK_ARGB,
+	CLK_BGRA,
+	CLK_INTENSITY,
+	CLK_LUMINANCE,
+};
+
+// native image functions (no-ops for now)
+typedef texture<uchar, cudaTextureType2D, cudaReadModeElementType> image2d_t;
+template <class coord_type> OCLRASTER_FUNC float4 read_imagef(image2d_t img, const sampler_t& sampler, const coord_type& coord) {
+	return make_float4(0.0f);
+};
+template <class coord_type> OCLRASTER_FUNC int4 read_imagei(image2d_t img, const sampler_t& sampler, const coord_type& coord) {
+	return make_int4(0);
+};
+template <class coord_type> OCLRASTER_FUNC uint4 read_imageui(image2d_t img, const sampler_t& sampler, const coord_type& coord) {
+	return make_uint4(0u);
+};
+void write_imagef(image2d_t img, const int2& coord, const float4& color) {}
+void write_imagei(image2d_t img, const int2& coord, const int4& color) {}
+void write_imageui(image2d_t img, const int2& coord, const uint4& color) {}
 
 #endif

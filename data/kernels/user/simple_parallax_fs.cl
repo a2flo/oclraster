@@ -71,13 +71,15 @@ bool rasterize_main() {
 		const float lambert_term = dot(normal, light_dir);
 		if(lambert_term > 0.0f) {
 			//diff_color = rp_uniforms->light_color.xyz * lambert_term * attenuation;
-			diff_color = lambert_term * attenuation;
+			//diff_color = lambert_term * attenuation; // TODO: proper cuda vector lib
+			diff_color = (float3)(lambert_term * attenuation);
 			
 			float3 view_dir = normalize(rp_uniforms->camera_position.xyz - output_attributes->vertex.xyz);
 			float3 R = reflect(-light_dir, normal);
 			float specular = pow(max(dot(R, view_dir), 0.0f), 16.0f);
 			//spec_color = rp_uniforms->light_color.xyz * attenuation * specular;
-			spec_color = attenuation * specular;
+			//spec_color = attenuation * specular;
+			spec_color = (float3)(attenuation * specular);
 		}
 		
 		float4 color = (float4)(diff_color + spec_color, 1.0f);

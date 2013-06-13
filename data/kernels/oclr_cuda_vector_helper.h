@@ -6,7 +6,7 @@
 #define __OCLRASTER_CUDA_VECTOR_HELPER_H__
 
 template<class vec_type, size_t target_size> struct vector_mapping {
-	typedef void target;
+	typedef void type;
 	typedef void src_type;
 	static const size_t vec_size = 1;
 	static const size_t src_vec_size = 1;
