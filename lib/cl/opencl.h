@@ -353,6 +353,7 @@ public:
 	struct buffer_object {
 		cl::Buffer* buffer = nullptr;
 		cl::Image* image_buffer = nullptr;
+		const buffer_object* parent_buffer = nullptr;
 		GLuint ogl_buffer = 0;
 		bool manual_gl_sharing = false;
 		void* data = nullptr;

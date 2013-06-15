@@ -1542,6 +1542,7 @@ opencl::buffer_object* opencl::create_sub_buffer(const buffer_object* parent_buf
 		const auto region = cl_buffer_region { offset, size };
 		sub_buffer->size = size;
 		sub_buffer->buffer = new cl::Buffer(parent_buffer->buffer->createSubBuffer(sub_buffer->flags, CL_BUFFER_CREATE_TYPE_REGION, &region));
+		sub_buffer->parent_buffer = parent_buffer;
 		return sub_buffer;
 	}
 	__HANDLE_CL_EXCEPTION("create_sub_buffer")

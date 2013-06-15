@@ -245,6 +245,8 @@
 						}
 					}
 				}
+				//fragments_passed = 1.0f;
+				//framebuffer.color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
 				
 				// write framebuffer output (if any fragment has passed)
 				if(fragments_passed != 0.0f) {

@@ -892,6 +892,7 @@ opencl_base::buffer_object* cudacl::create_sub_buffer(const buffer_object* paren
 		
 		sub_buffer->size = size;
 		sub_buffer->buffer = nullptr;
+		sub_buffer->parent_buffer = parent_buffer;
 		
 		CUdeviceptr* cuda_mem = new CUdeviceptr();
 		*cuda_mem = *parent_cuda_mem + offset;
@@ -1003,15 +1004,20 @@ void cudacl::delete_buffer(opencl_base::buffer_object* buffer_obj) {
 	const auto buffer_iter = cuda_buffers.find(buffer_obj);
 	if(buffer_iter != cuda_buffers.end()) {
 		CUdeviceptr* cuda_mem = buffer_iter->second;
-		if(cuda_mem != nullptr && *cuda_mem != 0) {
-			if(buffer_obj->flags & CL_MEM_USE_HOST_PTR) {
-				CU(cuMemHostUnregister(buffer_obj->data));
-			}
-			else if(buffer_obj->flags & CL_MEM_ALLOC_HOST_PTR) {
-				CU(cuMemFreeHost(buffer_obj->data));
-			}
-			else {
-				CU(cuMemFree(*cuda_mem));
+		if(cuda_mem != nullptr) {
+			if(// don't delete memory that points to null and
+			   *cuda_mem != 0 &&
+			   // only delete actual buffers (sub-buffers have a parent buffer pointer)
+			   buffer_iter->first->parent_buffer == nullptr) {
+				if(buffer_obj->flags & CL_MEM_USE_HOST_PTR) {
+					CU(cuMemHostUnregister(buffer_obj->data));
+				}
+				else if(buffer_obj->flags & CL_MEM_ALLOC_HOST_PTR) {
+					CU(cuMemFreeHost(buffer_obj->data));
+				}
+				else {
+					CU(cuMemFree(*cuda_mem));
+				}
 			}
 			delete cuda_mem;
 		}
@@ -1293,6 +1299,7 @@ void* __attribute__((aligned(128))) cudacl::map_image(opencl_base::buffer_object
 													  size_t* image_row_pitch oclr_unused,
 													  size_t* image_slice_pitch oclr_unused) {
 	// TODO
+	assert(false && "map_image not implemented yet!");
 	return nullptr;
 }
 
