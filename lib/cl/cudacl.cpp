@@ -29,6 +29,10 @@
 #endif
 #endif
 
+#if (CUDA_VERSION < 5050)
+#error "oclraster must be compiled with at least CUDA 5.5!"
+#endif
+
 //
 struct cuda_kernel_object {
 	CUmodule* module = nullptr;
@@ -207,8 +211,8 @@ opencl_base(), cc_target(CU_TARGET_COMPUTE_10) {
 	//
 	int driver_version = 0;
 	cuDriverGetVersion(&driver_version);
-	if((driver_version/1000) < 5) {
-		oclr_error("oclraster requires at least CUDA 5.0!");
+	if(driver_version < 5050) {
+		oclr_error("oclraster requires at least CUDA 5.5!");
 		valid = false;
 	}
 	
