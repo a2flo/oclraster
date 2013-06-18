@@ -103,6 +103,7 @@ void cudacl_translate(const string& cl_source,
 		
 		// split build options and let tcc parse them
 		const string build_options = ("-I" + core::strip_path(oclraster::kernel_path("")) + " " +
+									  "-I" + core::strip_path(oclraster::kernel_path("cuda")) + " " +
 									  "-I /usr/local/cuda/include/ " + preprocess_options);
 		const auto build_option_args = core::tokenize(build_options, ' ');
 		const size_t argc = build_option_args.size();
@@ -197,9 +198,10 @@ void cudacl_translate(const string& cl_source,
 		{
 			{ regex("# ", regex::optimize), "// " },
 			
-			// remove "global" and "local" qualifiers from pointers (cuda doesn't care)
+			// remove "global", "local", "private" qualifiers from pointers (cuda doesn't care)
 			{ regex("([^\\w_]+)global([\\w\\s]+)(\\*)", regex::optimize), "$1$2$3" },
 			{ regex("([^\\w_]+)local([\\w\\s]+)(\\*)", regex::optimize), "$1$2$3" },
+			{ regex("([^\\w_]+)private([\\w\\s]+)(\\*)", regex::optimize), "$1$2$3" },
 			
 			// actual storage declarations, or other address spaces that don't matter:
 			{ regex("([^\\w_]+)global ", regex::optimize), "$1 " },
@@ -211,6 +213,7 @@ void cudacl_translate(const string& cl_source,
 			{ regex("#pragma", regex::optimize), "// #pragma" },
 			{ regex("(__)?read_only ", regex::optimize), " " },
 			{ regex("(__)?write_only ", regex::optimize), " " },
+			{ regex("(__)?read_write ", regex::optimize), " " },
 			{ regex("image1d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
 			//{ regex("image2d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
 			{ regex("image3d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
@@ -246,6 +249,7 @@ void cudacl_translate(const string& cl_source,
 	// replace all vector constructors
 	static const vector<pair<const regex, const string>> rx_vec_types {
 		{
+			// TODO: proper solution for all vector types
 			{ regex("\\(float2\\)", regex::optimize), "make_float2" },
 			{ regex("\\(float3\\)", regex::optimize), "make_float3" },
 			{ regex("\\(float4\\)", regex::optimize), "make_float4" },

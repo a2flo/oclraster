@@ -182,6 +182,7 @@ opencl_base(), cc_target(CU_TARGET_COMPUTE_10) {
 	fastest_gpu = nullptr;
 	
 	build_options = "-I " + kernel_path_str;
+	build_options += " -I " + kernel_path_str + "cuda";
 	build_options += " -D OCLRASTER_CUDA_CL";
 	
 #if defined(__APPLE__)

@@ -30,4 +30,9 @@ etc/image_support/oclr_image_support.h
 etc/image_support/oclr_framebuffer_clear.h
 etc/cuda_support/oclr_cuda_conversion.h
 etc/cuda_support/oclr_cuda_vector_helper.h
-
+*.a2m
+*.bin
+*.hex
+*.png
+*.dat
+*.raw
