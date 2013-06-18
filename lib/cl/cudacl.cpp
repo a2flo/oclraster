@@ -470,6 +470,8 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 			device->units = proc_count;
 			device->clock = clock_rate / 1000;
 			device->mem_size = global_mem;
+			device->local_mem_size = local_mem;
+			device->constant_mem_size = const_mem;
 			device->name = dev_name;
 			device->vendor = "NVIDIA";
 			device->version = "OpenCL 1.2";
@@ -479,6 +481,7 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 			device->vendor_type = VENDOR::NVIDIA;
 			device->type = (opencl_base::DEVICE_TYPE)cur_device;
 			device->max_alloc = global_mem;
+			device->max_wi_sizes.set(get<0>(max_work_item_size), get<1>(max_work_item_size), get<2>(max_work_item_size));
 			device->max_wg_size = max_work_group_size;
 			device->img_support = true;
 			device->max_img_2d.set(get<0>(max_image_2d), get<1>(max_image_2d));
@@ -496,6 +499,21 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 			}
 			
 			devices.push_back(device);
+			
+			// additional info
+			oclr_msg("mem size: %u MB (global), %u KB (local), %u KB (constant)",
+					 device->mem_size / 1024ULL / 1024ULL,
+					 device->local_mem_size / 1024ULL,
+					 device->constant_mem_size / 1024ULL);
+			oclr_msg("host unified memory: %u", unified_memory);
+			oclr_msg("max_wi_sizes: %v", device->max_wi_sizes);
+			oclr_msg("max_wg_size: %u", device->max_wg_size);
+			oclr_msg("double support: %b", device->double_support);
+			size_t printf_buffer_size = 0;
+			cuCtxGetLimit(&printf_buffer_size, CU_LIMIT_PRINTF_FIFO_SIZE);
+			oclr_msg("printf buffer size: %u bytes / %u MB",
+					 printf_buffer_size,
+					 printf_buffer_size / 1024ULL / 1024ULL);
 			
 			// TYPE (Units: %, Clock: %): Name, Vendor, Version, Driver Version
 			const string dev_type_str = "GPU ";
@@ -604,7 +622,7 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 			}
 			
 			string cuda_source = "";
-			cudacl_translate(src.c_str(), options, cuda_source, kernels_info);
+			cudacl_translate(src, options, cuda_source, kernels_info);
 			
 			// create tmp cu file
 			fstream cu_file(tmp_name+".cu", fstream::out);
@@ -613,7 +631,9 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 			
 			// nvcc compile
 			build_cmd = "/usr/local/cuda/bin/nvcc --ptx --machine 64 -arch sm_" + cc_target_str + " -O3";
+#if defined(__APPLE__)
 			build_cmd += " --compiler-bindir /usr/bin/llvm-g++";
+#endif
 			// clang frontend seems to be supported, but without c++11 support (fails to compile due to libc++ requiring c++11)
 			//build_cmd += " --compiler-bindir /usr/bin/clang++";
 			//build_cmd += " --cudafe-options \"--clang -D__GXX_EXPERIMENTAL_CXX0X__\"";
@@ -621,10 +641,11 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 			build_cmd += " -D NVIDIA";
 			build_cmd += " -D GPU";
 			build_cmd += " -D PLATFORM_"+platform_vendor_to_str(platform_vendor);
+			build_cmd += " -D LOCAL_MEM_SIZE=49152"; // TODO: always set to 48k for now?
 			build_cmd += " -o "+tmp_name+".ptx";
 			build_cmd += " "+tmp_name+".cu";
 			//build_cmd += " 2>&1";
-			core::system(build_cmd.c_str(), nvcc_log);
+			core::system(build_cmd, nvcc_log);
 			
 			// read ptx
 			if(!file_io::file_to_buffer(tmp_name+".ptx", ptx_buffer)) {

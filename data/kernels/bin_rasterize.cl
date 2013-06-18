@@ -133,12 +133,19 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 				// flag empty queue with 0xFFFF
 				primitive_queue[0] = 0xFF;
 				primitive_queue[1] = 0xFF;
+				//primitives_in_queue = 2;
 			}
 			else if(primitives_in_queue != 256) {
 				// set end of queue byte (0x00)
 				primitive_queue[primitives_in_queue] = 0x00;
 				primitives_in_queue++;
 			}
+			
+			//
+			/*for(uint idx = primitives_in_queue; idx < BATCH_SIZE; idx++) {
+				primitive_queue[idx] = 0x00;
+			}*/
+			//primitives_in_queue = 256u;
 			
 			// this stores batches for each bin sequentially
 			const ulong16* __attribute__((aligned(8))) queue_data_ptr = (const ulong16*)&primitive_queue[0];

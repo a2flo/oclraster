@@ -299,7 +299,7 @@ void cudacl_translate(const string& cl_source,
 			const auto comp_str_to_num = [](const string& comp_str) -> string {
 				return (comp_str == "x" ? "0" : (comp_str == "y" ? "1" : (comp_str == "z" ? "2" : "3")));
 			};
-			const size_t offset = match.size() - components + 1;
+			const size_t offset = match.size() - components;
 			for(size_t i = 0; i < components; i++) {
 				repl += comp_str_to_num(match[offset + i]);
 				if(i+1 < components) repl += ", ";

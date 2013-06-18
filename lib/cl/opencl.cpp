@@ -430,6 +430,22 @@ bool opencl_base::is_full_double_support() const {
 	return full_double_support;
 }
 
+void opencl_base::dump_buffer(buffer_object* buffer_obj,
+							  const string& filename) {
+	flush();
+	finish();
+	
+	auto data_ptr = map_buffer(buffer_obj);
+	file_io dump_file(filename, file_io::OPEN_TYPE::WRITE_BINARY);
+	
+	auto data = new char[buffer_obj->size];
+	copy_n((const char*)data_ptr, buffer_obj->size, data);
+	dump_file.write_block(data, buffer_obj->size);
+	
+	dump_file.close();
+	unmap_buffer(buffer_obj, data_ptr);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // general/actual opencl implementation below
 #define __ERROR_CODE_INFO_CL_11(F) \

@@ -29,7 +29,7 @@
 
 // uses kernel templates from the data/kernels/ folder instead of the internal ones
 #if !defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
-//#define OCLRASTER_INTERNAL_PROGRAM_DEBUG (1)
+#define OCLRASTER_INTERNAL_PROGRAM_DEBUG (1)
 #endif
 
 // this defines the minimum alignment for all oclraster structs (should at least be 16)

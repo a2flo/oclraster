@@ -307,6 +307,11 @@ public:
 							  const size_t offset = 0,
 							  const size_t size = 0) = 0;
 	
+	// for debugging purposes
+	virtual void dump_buffer(buffer_object* buffer_obj,
+							 const string& filename);
+	
+	//
 	virtual void set_active_device(const DEVICE_TYPE& dev) = 0;
 	virtual bool set_kernel_argument(const unsigned int& index, buffer_object* arg) = 0;
 	virtual bool set_kernel_argument(const unsigned int& index, const buffer_object* arg) = 0;

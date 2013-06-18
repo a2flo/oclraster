@@ -452,14 +452,14 @@ OCLRASTER_FUNC void vstore_half16(const float16& data, const size_t& offset, hal
 // sampler
 typedef unsigned int sampler_t;
 enum {
-	// normalized coords
+	// addressing mode
 	CLK_ADDRESS_NONE				= (1u << 0u),
 	CLK_ADDRESS_CLAMP				= (1u << 1u),
 	CLK_ADDRESS_CLAMP_TO_EDGE		= (1u << 2u),
 	CLK_ADDRESS_REPEAT				= (1u << 3u),
 	CLK_ADDRESS_MIRRORED_REPEAT		= (1u << 4u),
 	
-	// addressing mode
+	// normalized coords
 	CLK_NORMALIZED_COORDS_FALSE		= (1u << 5u),
 	CLK_NORMALIZED_COORDS_TRUE		= (1u << 6u),
 	
