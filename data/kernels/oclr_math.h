@@ -36,7 +36,7 @@ OCLRASTER_FUNC float3 reflect(const float3 I, const float3 N) {
 }
 
 //
-#define interpolate(v0, v1, v2, gad) (mad(v0, gad.x, mad(v1, gad.y, v2 * gad.z)))
+#define interpolate(v0, v1, v2, interp) (mad(v0, interp.x, mad(v1, interp.y, v2 * interp.z)))
 #define linear_blend(v0, v1, interp) (mad(v1 - v0, interp, v0))
 
 //

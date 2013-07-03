@@ -55,13 +55,13 @@ public:
 		T z, b;
 	};
 	
-	oclr_constexpr vector3() noexcept : x((T)0), y((T)0), z((T)0) {}
-	oclr_constexpr vector3(vector3<T>&& vec3) noexcept : x(vec3.x), y(vec3.y), z(vec3.z) {}
-	oclr_constexpr vector3(const vector3<T>& vec3) noexcept : x(vec3.x), y(vec3.y), z(vec3.z) {}
-	oclr_constexpr vector3(const vector3<T>* vec3) noexcept : x(vec3->x), y(vec3->y), z(vec3->z) {}
-	oclr_constexpr vector3(const T& vx, const T& vy, const T& vz) noexcept : x(vx), y(vy), z(vz) {}
-	oclr_constexpr vector3(const T& f) noexcept : x(f), y(f), z(f) {}
-	template <typename U> oclr_constexpr vector3(const vector3<U>& vec3) noexcept : x((T)vec3.x), y((T)vec3.y), z((T)vec3.z) {}
+	constexpr vector3() noexcept : x((T)0), y((T)0), z((T)0) {}
+	constexpr vector3(vector3<T>&& vec3) noexcept : x(vec3.x), y(vec3.y), z(vec3.z) {}
+	constexpr vector3(const vector3<T>& vec3) noexcept : x(vec3.x), y(vec3.y), z(vec3.z) {}
+	constexpr vector3(const vector3<T>* vec3) noexcept : x(vec3->x), y(vec3->y), z(vec3->z) {}
+	constexpr vector3(const T& vx, const T& vy, const T& vz) noexcept : x(vx), y(vy), z(vz) {}
+	constexpr vector3(const T& f) noexcept : x(f), y(f), z(f) {}
+	template <typename U> constexpr vector3(const vector3<U>& vec3) noexcept : x((T)vec3.x), y((T)vec3.y), z((T)vec3.z) {}
 	
 	T& operator[](size_t index);
 	const T& operator[](size_t index) const;

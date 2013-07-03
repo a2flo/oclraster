@@ -73,13 +73,6 @@
 
 using namespace std;
 
-// don't use constexpr constructors with gcc
-#if defined(__clang__)
-#define oclr_constexpr constexpr
-#else
-#define oclr_constexpr
-#endif
-
 //
 #define oclr_unused __attribute__((unused))
 
@@ -88,7 +81,9 @@ using namespace std;
 #undef max
 
 // cbegin/cend
-#if !defined(OCLRASTER_HAS_CBEGIN_CEND)
+#if !defined(OCLRASTER_HAS_CBEGIN_CEND) && \
+	/* now part of c++14 and implemented in libc++ */ \
+	(!defined(_LIBCPP_STD_VER) || !(_LIBCPP_STD_VER > 11))
 
 template <class C> auto cbegin(C& c) -> decltype(c.cbegin()) { return c.cbegin(); }
 template <class C> auto cbegin(const C& c) -> decltype(c.cbegin()) { return c.cbegin(); }
@@ -100,7 +95,9 @@ template <class T, size_t N> const T* cend(const T (&array)[N]) { return array +
 #endif
 
 // make_unique
-#if !defined(OCLRASTER_HAS_MAKE_UNIQUE)
+#if !defined(OCLRASTER_HAS_MAKE_UNIQUE) && \
+	/* now part of c++14 and implemented in libc++ */ \
+	(!defined(_LIBCPP_STD_VER) || !(_LIBCPP_STD_VER > 11))
 
 template<typename T, typename... Args> unique_ptr<T> make_unique(Args&&... args) {
 	return unique_ptr<T>(new T(std::forward<Args>(args)...));

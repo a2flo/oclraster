@@ -233,6 +233,10 @@ streampos file_io::get_current_write_offset() {
 	return filestream.tellp();
 }
 
+void file_io::write_file(string& str) {
+	filestream.write(&str.front(), str.size());
+}
+
 /*! writes a block to the current file (offset)
  *  @param data a pointer to the block we want to write
  *  @param size the size of the block
@@ -294,7 +298,7 @@ bool file_io::check_open() {
 	return false;
 }
 
-/*! checks if we reached the end of file 
+/*! checks if we reached the end of file
  */
 bool file_io::eof() const {
 	return filestream.eof();
@@ -353,5 +357,15 @@ bool file_io::read_file(string& str) {
 	filestream.seekg(0, ios::beg);
 	filestream.seekp(0, ios::beg);
 	filestream.clear();
+	return true;
+}
+
+bool file_io::string_to_file(const string& filename, string& str) {
+	file_io file(filename, file_io::OPEN_TYPE::WRITE);
+	if(!file.is_open()) {
+		return false;
+	}
+	file.write_file(str);
+	file.close();
 	return true;
 }

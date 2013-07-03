@@ -328,7 +328,7 @@ string rasterization_program::specialized_processing(const string& code,
 						buffer_handling_code += "user_buffer_" + cur_user_buffer_str + "[indices[" + size_t2string(i) + "]]." + var;
 						if(i < 2) buffer_handling_code += ", ";
 					}
-					buffer_handling_code += ", barycentric.xyz);\n";
+					buffer_handling_code += ", barycentric);\n";
 				}
 				main_call_parameters += "&" + interp_var_name + ", ";
 			}

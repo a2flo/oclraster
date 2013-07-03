@@ -656,6 +656,8 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 }
 
 void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& struct_info) {
+	// TODO: combine this for all program structs, so it has to be run only once
+	// TODO: also: no need to use atomics (use if global_id == 0 instead) + use __builtin_offsetof?
 	static const string kernel_header = "#include \"oclr_global.h\"\n#include \"oclr_matrix.h\"\n";
 	static const string kernel_start = "kernel void struct_info(global int* info_buffer) {\nint index = 0;\n";
 	static const string kernel_end = "}";
@@ -796,7 +798,7 @@ string oclraster_program::preprocess_code(const string& raw_code) {
 	
 	// in-memory preprocessing
 	const uint8_t* code_input = (const uint8_t*)raw_code.c_str();
-	tcc_in_memory_preprocess(state, code_input, raw_code.length(), &ret_code,
+	tcc_in_memory_preprocess(state, code_input, raw_code.length(), false, &ret_code,
 							 [](const char* str, void* ret) -> void {
 								 *(string*)ret += str;
 							 });

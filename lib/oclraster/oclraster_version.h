@@ -25,7 +25,7 @@
 #define OCLRASTER_MAJOR_VERSION "0"
 #define OCLRASTER_MINOR_VERSION "0"
 #define OCLRASTER_REVISION_VERSION "4"
-#define OCLRASTER_DEV_STAGE_VERSION "d1"
+#define OCLRASTER_DEV_STAGE_VERSION "d2"
 #define OCLRASTER_BUILD_TIME __TIME__
 #define OCLRASTER_BUILD_DATE __DATE__
 
@@ -72,8 +72,8 @@
 // compiler checks:
 // msvc check
 #if defined(_MSC_VER)
-#if (_MSC_VER <= 1700)
-#error "Sorry, but you need MSVC 12.0+ to compile oclraster"
+#if (_MSC_VER <= 1800)
+#error "Sorry, but you need MSVC 13.0+ (VS 2014+) to compile oclraster"
 #endif
 
 // clang check

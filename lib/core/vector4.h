@@ -51,19 +51,19 @@ public:
 		T w, a;
 	};
 	
-	oclr_constexpr vector4() noexcept : vector3<T>((T)0, (T)0, (T)0), w((T)0) {}
-	oclr_constexpr vector4(vector4<T>&& vec4) noexcept : vector3<T>(vec4.x, vec4.y, vec4.z), w(vec4.w) {}
-	oclr_constexpr vector4(const vector4<T>& vec4) noexcept : vector3<T>(vec4.x, vec4.y, vec4.z), w(vec4.w) {}
-	oclr_constexpr vector4(const T& vx, const T& vy, const T& vz, const T& vw) noexcept : vector3<T>(vx, vy, vz), w(vw) {}
-	oclr_constexpr vector4(const T& f) noexcept : vector3<T>(f, f, f), w(f) {}
+	constexpr vector4() noexcept : vector3<T>((T)0, (T)0, (T)0), w((T)0) {}
+	constexpr vector4(vector4<T>&& vec4) noexcept : vector3<T>(vec4.x, vec4.y, vec4.z), w(vec4.w) {}
+	constexpr vector4(const vector4<T>& vec4) noexcept : vector3<T>(vec4.x, vec4.y, vec4.z), w(vec4.w) {}
+	constexpr vector4(const T& vx, const T& vy, const T& vz, const T& vw) noexcept : vector3<T>(vx, vy, vz), w(vw) {}
+	constexpr vector4(const T& f) noexcept : vector3<T>(f, f, f), w(f) {}
 	
 	// construction from other/lower vector types
 	// .z will be initialized with 0, .w with 1
-	oclr_constexpr vector4(const vector3<T>& vec3) noexcept : vector3<T>(vec3.x, vec3.y, vec3.z), w((T)1) {}
-	oclr_constexpr vector4(const vector3<T>& vec3, const T& vw) noexcept : vector3<T>(vec3.x, vec3.y, vec3.z), w(vw) {}
-	oclr_constexpr vector4(const vector2<T>& vec2) noexcept : vector3<T>(vec2.x, vec2.y, (T)0), w((T)1) {}
-	oclr_constexpr vector4(const vector2<T>& vec2_0, const vector2<T>& vec2_1) noexcept : vector3<T>(vec2_0.x, vec2_0.y, vec2_1.x), w(vec2_1.y) {}
-	oclr_constexpr vector4(const vector2<T>& vec2, const T& vz, const T& vw) noexcept : vector3<T>(vec2.x, vec2.y, vz), w(vw) {}
+	constexpr vector4(const vector3<T>& vec3) noexcept : vector3<T>(vec3.x, vec3.y, vec3.z), w((T)1) {}
+	constexpr vector4(const vector3<T>& vec3, const T& vw) noexcept : vector3<T>(vec3.x, vec3.y, vec3.z), w(vw) {}
+	constexpr vector4(const vector2<T>& vec2) noexcept : vector3<T>(vec2.x, vec2.y, (T)0), w((T)1) {}
+	constexpr vector4(const vector2<T>& vec2_0, const vector2<T>& vec2_1) noexcept : vector3<T>(vec2_0.x, vec2_0.y, vec2_1.x), w(vec2_1.y) {}
+	constexpr vector4(const vector2<T>& vec2, const T& vz, const T& vw) noexcept : vector3<T>(vec2.x, vec2.y, vz), w(vw) {}
 	
 	// overloading routines
 	T& operator[](size_t index);

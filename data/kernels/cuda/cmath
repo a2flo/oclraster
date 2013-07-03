@@ -1,0 +1,32 @@
+// this is just a dummy file
+
+#ifndef __OCLRASTER_CMATH__
+#define __OCLRASTER_CMATH__
+
+namespace std {
+	using ::abs;
+	using ::fabs;
+	using ::ceil;
+	using ::floor;
+	using ::sqrt;
+	using ::pow;
+	using ::log;
+	using ::log10;
+	using ::fmod;
+	using ::modf;
+	using ::exp;
+	using ::frexp;
+	using ::ldexp;
+	using ::asin;
+	using ::sin;
+	using ::sinh;
+	using ::acos;
+	using ::cos;
+	using ::cosh;
+	using ::atan;
+	using ::atan2;
+	using ::tan;
+	using ::tanh;
+};
+
+#endif

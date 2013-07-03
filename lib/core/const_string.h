@@ -21,7 +21,6 @@
 
 #include <type_traits>
 #include "core/platform.h"
-using namespace std;
 
 // NOTE: unless you have a lot of RAM and time to spare,
 // don't try this with strings that have a length > 10000.

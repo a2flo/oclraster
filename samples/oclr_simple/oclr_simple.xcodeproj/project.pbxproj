@@ -83,6 +83,8 @@
 		5C6D20D9173A1D4700F123B0 /* simple_parallax_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_parallax_fs.cl; sourceTree = "<group>"; };
 		5C6D20DA173A1D4700F123B0 /* simple_parallax_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_parallax_vs.cl; sourceTree = "<group>"; };
 		5C6D20DB173A1D4700F123B0 /* simple_texturing.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = simple_texturing.cl; sourceTree = "<group>"; };
+		5C83CD5A17768D0C00D83927 /* oclr_cuda_vector_ops.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector_ops.h; sourceTree = "<group>"; };
+		5C83CD5C1776C5A400D83927 /* oclr_cuda_vector_lib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector_lib.h; sourceTree = "<group>"; };
 		5C91650E166685EA00626436 /* oclr_global.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_global.h; sourceTree = "<group>"; };
 		5C91650F166685EA00626436 /* oclr_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_math.h; sourceTree = "<group>"; };
 		5C916510166685EA00626436 /* oclr_matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_matrix.h; sourceTree = "<group>"; };
@@ -100,16 +102,22 @@
 		5CCC96701641B775005C3DE4 /* oclr_simple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oclr_simple.h; path = src/oclr_simple.h; sourceTree = SOURCE_ROOT; };
 		5CCC96761641BAF3005C3DE4 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = Library/Frameworks/SDL2.framework; sourceTree = SDKROOT; };
 		5CCC96771641BAF3005C3DE4 /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = Library/Frameworks/SDL2_image.framework; sourceTree = SDKROOT; };
+		5CD8BB2D17825E2100701F71 /* device_runtime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = device_runtime.h; sourceTree = "<group>"; };
+		5CD8BB2E1782BF1600701F71 /* oclr_cuda_vector_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector_math.h; sourceTree = "<group>"; };
 		5CDCB7E0172AF14E001ADC50 /* oclr_framebuffer_clear.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_framebuffer_clear.h; sourceTree = "<group>"; };
 		5CE91CED16F00F050044C264 /* debug_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_fs.cl; sourceTree = "<group>"; };
 		5CE91CEE16F00F050044C264 /* debug_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_vs.cl; sourceTree = "<group>"; };
 		5CEF6CC616F4FA440044E2DF /* template_rasterization_program.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_rasterization_program.cl; sourceTree = "<group>"; };
 		5CEF6CC716F4FA440044E2DF /* template_transform_program.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_transform_program.cl; sourceTree = "<group>"; };
-		5CF478821770D26100265E94 /* cutil_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cutil_math.h; sourceTree = "<group>"; };
 		5CF478831770D26100265E94 /* oclr_cuda_base.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_base.h; sourceTree = "<group>"; };
 		5CF478841770D26100265E94 /* oclr_cuda_conversion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_conversion.h; sourceTree = "<group>"; };
 		5CF478851770D26100265E94 /* oclr_cuda_vector_helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector_helper.h; sourceTree = "<group>"; };
 		5CF478861770D26100265E94 /* oclr_cudacl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cudacl.h; sourceTree = "<group>"; };
+		5CF4788B1770E97D00265E94 /* oclr_cuda_vector_base.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector_base.h; sourceTree = "<group>"; };
+		5CF4788C1770E97D00265E94 /* oclr_cuda_vector1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector1.h; sourceTree = "<group>"; };
+		5CF4788D1770E97D00265E94 /* oclr_cuda_vector2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector2.h; sourceTree = "<group>"; };
+		5CF4788E1770E97D00265E94 /* oclr_cuda_vector3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector3.h; sourceTree = "<group>"; };
+		5CF4788F1770E97D00265E94 /* oclr_cuda_vector4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector4.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -258,6 +266,14 @@
 			path = ../../data/kernels;
 			sourceTree = "<group>";
 		};
+		5CD8BB2C17825E2100701F71 /* crt */ = {
+			isa = PBXGroup;
+			children = (
+				5CD8BB2D17825E2100701F71 /* device_runtime.h */,
+			);
+			path = crt;
+			sourceTree = "<group>";
+		};
 		5CEC5B641699719F00C464D5 /* user */ = {
 			isa = PBXGroup;
 			children = (
@@ -275,11 +291,19 @@
 		5CF478811770D26100265E94 /* cuda */ = {
 			isa = PBXGroup;
 			children = (
-				5CF478821770D26100265E94 /* cutil_math.h */,
+				5CD8BB2C17825E2100701F71 /* crt */,
+				5CF478861770D26100265E94 /* oclr_cudacl.h */,
 				5CF478831770D26100265E94 /* oclr_cuda_base.h */,
 				5CF478841770D26100265E94 /* oclr_cuda_conversion.h */,
 				5CF478851770D26100265E94 /* oclr_cuda_vector_helper.h */,
-				5CF478861770D26100265E94 /* oclr_cudacl.h */,
+				5C83CD5C1776C5A400D83927 /* oclr_cuda_vector_lib.h */,
+				5CF4788B1770E97D00265E94 /* oclr_cuda_vector_base.h */,
+				5C83CD5A17768D0C00D83927 /* oclr_cuda_vector_ops.h */,
+				5CF4788C1770E97D00265E94 /* oclr_cuda_vector1.h */,
+				5CF4788D1770E97D00265E94 /* oclr_cuda_vector2.h */,
+				5CF4788E1770E97D00265E94 /* oclr_cuda_vector3.h */,
+				5CF4788F1770E97D00265E94 /* oclr_cuda_vector4.h */,
+				5CD8BB2E1782BF1600701F71 /* oclr_cuda_vector_math.h */,
 			);
 			path = cuda;
 			sourceTree = "<group>";

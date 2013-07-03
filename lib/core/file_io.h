@@ -52,6 +52,7 @@ public:
 	static bool file_to_buffer(const string& filename, stringstream& buffer);
 	static bool file_to_string(const string& filename, string& str);
 	static string file_to_string(const string& filename);
+	static bool string_to_file(const string& filename, string& str);
 
 	bool open(const string& filename, OPEN_TYPE open_type);
 	void close();
@@ -74,6 +75,7 @@ public:
 	streampos get_current_read_offset();
 	
 	// file output:
+	void write_file(string& str);
 	void write_block(const char* data, size_t size, bool check_size = false);
 	void write_terminated_block(const string& str, const char terminator);
 	void write_char(const unsigned char& ch);

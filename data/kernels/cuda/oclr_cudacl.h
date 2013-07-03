@@ -145,60 +145,17 @@ OCLRASTER_FUNC void set_vector_components_4(const dst_vec_type& dst, const src_v
 #define write_mem_fence(X) __syncthreads();
 
 // helper functions
-OCLRASTER_FUNC float2 sin(float2 vec) {
-	return make_float2(sin(vec.x), sin(vec.y));
-}
-OCLRASTER_FUNC float3 sin(float3 vec) {
-	return make_float3(sin(vec.x), sin(vec.y), sin(vec.z));
-}
-OCLRASTER_FUNC float4 sin(float4 vec) {
-	return make_float4(sin(vec.x), sin(vec.y), sin(vec.z), sin(vec.w));
-}
-OCLRASTER_FUNC float2 cos(float2 vec) {
-	return make_float2(cos(vec.x), cos(vec.y));
-}
-OCLRASTER_FUNC float3 cos(float3 vec) {
-	return make_float3(cos(vec.x), cos(vec.y), cos(vec.z));
-}
-OCLRASTER_FUNC float4 cos(float4 vec) {
-	return make_float4(cos(vec.x), cos(vec.y), cos(vec.z), cos(vec.w));
-}
-OCLRASTER_FUNC float2 tan(float2 vec) {
-	return make_float2(tan(vec.x), tan(vec.y));
-}
-OCLRASTER_FUNC float3 tan(float3 vec) {
-	return make_float3(tan(vec.x), tan(vec.y), tan(vec.z));
-}
-OCLRASTER_FUNC float4 tan(float4 vec) {
-	return make_float4(tan(vec.x), tan(vec.y), tan(vec.z), tan(vec.w));
-}
-
-template <typename T> OCLRASTER_FUNC float distance(T vec_0, T vec_1) {
-	const T diff = vec_0 - vec_1;
-	return sqrtf(dot(diff, diff));
-}
-template <typename T> OCLRASTER_FUNC float fast_distance(T vec_0, T vec_1) {
-	const T diff = vec_0 - vec_1;
-	return __fsqrt_rn(dot(diff, diff));
-}
-template <typename T> OCLRASTER_FUNC float fast_length(T vec) {
-	return __fsqrt_rn(dot(vec, vec));
-}
-template <typename T> OCLRASTER_FUNC T fast_normalize(T vec) {
-	return normalize(vec);
-}
-
 OCLRASTER_FUNC int signbit(const float& val) {
 	return __int2float_rn(__signbitf(val));
 }
 OCLRASTER_FUNC int2 signbit(const float2& vec) {
-	return make_int2(__signbitf(vec.x), __signbitf(vec.y));
+	return int2(__signbitf(vec.x), __signbitf(vec.y));
 }
 OCLRASTER_FUNC int3 signbit(const float3& vec) {
-	return make_int3(__signbitf(vec.x), __signbitf(vec.y), __signbitf(vec.z));
+	return int3(__signbitf(vec.x), __signbitf(vec.y), __signbitf(vec.z));
 }
 OCLRASTER_FUNC int4 signbit(const float4& vec) {
-	return make_int4(__signbitf(vec.x), __signbitf(vec.y), __signbitf(vec.z), __signbitf(vec.w));
+	return int4(__signbitf(vec.x), __signbitf(vec.y), __signbitf(vec.z), __signbitf(vec.w));
 }
 
 OCLRASTER_FUNC int any(const int2& val) {
@@ -229,119 +186,48 @@ OCLRASTER_FUNC gentype smoothstep(const gentype edge0, const gentype edge1, cons
 	return t * t * (((single_type)3) - ((single_type)2) * t);
 }
 
-// TODO: macro this (+floor)
-template<class src_typen,
-		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 2, int>::type = 0>
-OCLRASTER_FUNC src_typen trunc(const src_typen vec) {
-	src_typen ret;
-	ret.x = trunc(vec.x);
-	ret.y = trunc(vec.y);
-	return ret;
-}
-template<class src_typen,
-		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 3, int>::type = 0>
-OCLRASTER_FUNC src_typen trunc(const src_typen vec) {
-	src_typen ret;
-	ret.x = trunc(vec.x);
-	ret.y = trunc(vec.y);
-	ret.z = trunc(vec.z);
-	return ret;
-}
-template<class src_typen,
-		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 4, int>::type = 0>
-OCLRASTER_FUNC src_typen trunc(const src_typen vec) {
-	src_typen ret;
-	ret.x = trunc(vec.x);
-	ret.y = trunc(vec.y);
-	ret.z = trunc(vec.z);
-	ret.w = trunc(vec.w);
-	return ret;
-}
-
-
-template<class src_typen,
-		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 2, int>::type = 0>
-OCLRASTER_FUNC src_typen ceil(const src_typen vec) {
-	src_typen ret;
-	ret.x = ceil(vec.x);
-	ret.y = ceil(vec.y);
-	return ret;
-}
-template<class src_typen,
-		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 3, int>::type = 0>
-OCLRASTER_FUNC src_typen ceil(const src_typen vec) {
-	src_typen ret;
-	ret.x = ceil(vec.x);
-	ret.y = ceil(vec.y);
-	ret.z = ceil(vec.z);
-	return ret;
-}
-template<class src_typen,
-		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 4, int>::type = 0>
-OCLRASTER_FUNC src_typen ceil(const src_typen vec) {
-	src_typen ret;
-	ret.x = ceil(vec.x);
-	ret.y = ceil(vec.y);
-	ret.z = ceil(vec.z);
-	ret.w = ceil(vec.w);
-	return ret;
-}
-
 // for mad instructions: let the compiler decide what to do
 OCLRASTER_FUNC float mad(const float a, const float b, const float c) {
 	return a * b + c;
 }
 OCLRASTER_FUNC float2 mad(const float2 a, const float2 b, const float2 c) {
-	return make_float2(a.x * b.x + c.x, a.y * b.y + c.y);
+	return float2(a.x * b.x + c.x, a.y * b.y + c.y);
 }
 OCLRASTER_FUNC float3 mad(const float3 a, const float3 b, const float3 c) {
-	return make_float3(a.x * b.x + c.x, a.y * b.y + c.y, a.z * b.z + c.z);
+	return float3(a.x * b.x + c.x, a.y * b.y + c.y, a.z * b.z + c.z);
 }
 OCLRASTER_FUNC float4 mad(const float4 a, const float4 b, const float4 c) {
-	return make_float4(a.x * b.x + c.x, a.y * b.y + c.y, a.z * b.z + c.z, a.w * b.w + c.w);
+	return float4(a.x * b.x + c.x, a.y * b.y + c.y, a.z * b.z + c.z, a.w * b.w + c.w);
 }
 OCLRASTER_FUNC float2 mad(const float2 a, const float b, const float2 c) {
-	return make_float2(a.x * b + c.x, a.y * b + c.y);
+	return float2(a.x * b + c.x, a.y * b + c.y);
 }
 OCLRASTER_FUNC float3 mad(const float3 a, const float b, const float3 c) {
-	return make_float3(a.x * b + c.x, a.y * b + c.y, a.z * b + c.z);
+	return float3(a.x * b + c.x, a.y * b + c.y, a.z * b + c.z);
 }
 OCLRASTER_FUNC float4 mad(const float4 a, const float b, const float4 c) {
-	return make_float4(a.x * b + c.x, a.y * b + c.y, a.z * b + c.z, a.w * b + c.w);
+	return float4(a.x * b + c.x, a.y * b + c.y, a.z * b + c.z, a.w * b + c.w);
 }
 OCLRASTER_FUNC float2 mad(const float2 a, const float2 b, const float c) {
-	return make_float2(a.x * b.x + c, a.y * b.y + c);
+	return float2(a.x * b.x + c, a.y * b.y + c);
 }
 OCLRASTER_FUNC float3 mad(const float3 a, const float3 b, const float c) {
-	return make_float3(a.x * b.x + c, a.y * b.y + c, a.z * b.z + c);
+	return float3(a.x * b.x + c, a.y * b.y + c, a.z * b.z + c);
 }
 OCLRASTER_FUNC float4 mad(const float4 a, const float4 b, const float c) {
-	return make_float4(a.x * b.x + c, a.y * b.y + c, a.z * b.z + c, a.w * b.w + c);
+	return float4(a.x * b.x + c, a.y * b.y + c, a.z * b.z + c, a.w * b.w + c);
 }
 
 // for explicit fma instructions: use built-ins
 // --single float fma is already defined
 OCLRASTER_FUNC float2 fma(const float2 a, const float2 b, const float2 c) {
-	return make_float2(__fmaf_rz(a.x, b.x, c.x), __fmaf_rz(a.y, b.y, c.y));
+	return float2(__fmaf_rz(a.x, b.x, c.x), __fmaf_rz(a.y, b.y, c.y));
 }
 OCLRASTER_FUNC float3 fma(const float3 a, const float3 b, const float3 c) {
-	return make_float3(__fmaf_rz(a.x, b.x, c.x), __fmaf_rz(a.y, b.y, c.y), __fmaf_rz(a.z, b.z, c.z));
+	return float3(__fmaf_rz(a.x, b.x, c.x), __fmaf_rz(a.y, b.y, c.y), __fmaf_rz(a.z, b.z, c.z));
 }
 OCLRASTER_FUNC float4 fma(const float4 a, const float4 b, const float4 c) {
-	return make_float4(__fmaf_rz(a.x, b.x, c.x), __fmaf_rz(a.y, b.y, c.y), __fmaf_rz(a.z, b.z, c.z), __fmaf_rz(a.w, b.w, c.w));
-}
-
-//
-OCLRASTER_FUNC float2 make_float2(float4 vec) {
-	return make_float2(vec.x, vec.y);
-}
-
-// redundant make_float*
-OCLRASTER_FUNC float2 make_float2(float2 vec) {
-	return vec;
-}
-OCLRASTER_FUNC float3 make_float3(float3 vec) {
-	return vec;
+	return float4(__fmaf_rz(a.x, b.x, c.x), __fmaf_rz(a.y, b.y, c.y), __fmaf_rz(a.z, b.z, c.z), __fmaf_rz(a.w, b.w, c.w));
 }
 
 // atomics (note: cuda atomic inc/dec works differently -> use add/sub)
@@ -507,13 +393,13 @@ enum {
 // native image functions (no-ops for now)
 typedef texture<uchar, cudaTextureType2D, cudaReadModeElementType> image2d_t;
 template <class coord_type> OCLRASTER_FUNC float4 read_imagef(image2d_t img, const sampler_t& sampler, const coord_type& coord) {
-	return make_float4(0.0f);
+	return float4(0.0f);
 };
 template <class coord_type> OCLRASTER_FUNC int4 read_imagei(image2d_t img, const sampler_t& sampler, const coord_type& coord) {
-	return make_int4(0);
+	return int4(0);
 };
 template <class coord_type> OCLRASTER_FUNC uint4 read_imageui(image2d_t img, const sampler_t& sampler, const coord_type& coord) {
-	return make_uint4(0u);
+	return uint4(0u);
 };
 void write_imagef(image2d_t img, const int2& coord, const float4& color) {}
 void write_imagei(image2d_t img, const int2& coord, const int4& color) {}

@@ -20,6 +20,7 @@
 
 #include "opencl.h"
 #include "cudacl_translator.h"
+#include "cudacl_compiler.h"
 #include "zlib.h"
 #include "pipeline/image.h"
 
@@ -185,14 +186,14 @@ opencl_base(), cc_target(CU_TARGET_COMPUTE_10) {
 	fastest_cpu = nullptr;
 	fastest_gpu = nullptr;
 	
-	build_options = "-I " + kernel_path_str;
-	build_options += " -I " + kernel_path_str + "cuda";
-	build_options += " -D OCLRASTER_CUDA_CL";
+	build_options = "-I" + kernel_path_str;
+	build_options += " -I" + kernel_path_str + "cuda";
+	build_options += " -DOCLRASTER_CUDA_CL";
 	
 #if defined(__APPLE__)
 	// add defines for the compile-time and run-time os x versions
-	build_options += " -D OS_X_VERSION_COMPILED=" + size_t2string(osx_helper::get_compiled_system_version());
-	build_options += " -D OS_X_VERSION=" + size_t2string(osx_helper::get_system_version());
+	build_options += " -DOS_X_VERSION_COMPILED=" + size_t2string(osx_helper::get_compiled_system_version());
+	build_options += " -DOS_X_VERSION=" + size_t2string(osx_helper::get_system_version());
 #endif
 	
 	// clear cuda cache
@@ -601,7 +602,7 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 	// the same goes for the general struct alignment
 	options += " -DOCLRASTER_STRUCT_ALIGNMENT="+uint2string(OCLRASTER_STRUCT_ALIGNMENT);
 	
-	string nvcc_log = "";
+	string error_log = "";
 	string build_cmd = "";
 	const string tmp_name = "/tmp/cudacl_tmp_"+identifier+"_"+size_t2string(SDL_GetPerformanceCounter());
 	try {
@@ -619,44 +620,37 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 		vector<cudacl_kernel_info> kernels_info;
 		
 		//
-		stringstream ptx_buffer(stringstream::in | stringstream::out);
+		string ptx_code = "";
 		if(!use_ptx_cache) {
-			if(!additional_options.empty()) {
-				// convert all -DDEFINEs to -D DEFINE
-				options += " " + core::find_and_replace(additional_options, "-D", "-D ");
-			}
+			options += additional_options;
 			
 			string cuda_source = "";
 			cudacl_translate(src, options, cuda_source, kernels_info);
 			
-			// create tmp cu file
-			fstream cu_file(tmp_name+".cu", fstream::out);
-			cu_file << cuda_source << endl;
-			cu_file.close();
+			// use internal compile chain (instead of nvcc)
+			string info_log = "";
+			build_cmd = {
+				options +
+				" -DNVIDIA"+
+				" -DGPU"+
+				" -DPLATFORM_"+platform_vendor_to_str(platform_vendor)+
+				" -DLOCAL_MEM_SIZE=49152", // TODO: always set to 48k for now?
+			};
+			ptx_code = cudacl_compiler::compile(cuda_source,
+												identifier,
+												cc_target_str,
+												build_cmd,
+												tmp_name,
+												error_log, info_log);
 			
-			// nvcc compile
-			build_cmd = "/usr/local/cuda/bin/nvcc --ptx --machine 64 -arch sm_" + cc_target_str + " -O3";
-#if defined(__APPLE__)
-			build_cmd += " --compiler-bindir /usr/bin/llvm-g++";
-#endif
-			// clang frontend seems to be supported, but without c++11 support (fails to compile due to libc++ requiring c++11)
-			//build_cmd += " --compiler-bindir /usr/bin/clang++";
-			//build_cmd += " --cudafe-options \"--clang -D__GXX_EXPERIMENTAL_CXX0X__\"";
-			build_cmd += " " + options;
-			build_cmd += " -D NVIDIA";
-			build_cmd += " -D GPU";
-			build_cmd += " -D PLATFORM_"+platform_vendor_to_str(platform_vendor);
-			build_cmd += " -D LOCAL_MEM_SIZE=49152"; // TODO: always set to 48k for now?
-			build_cmd += " -o "+tmp_name+".ptx";
-			build_cmd += " "+tmp_name+".cu";
-			//build_cmd += " 2>&1";
-			core::system(build_cmd, nvcc_log);
-			
-			// read ptx
-			if(!file_io::file_to_buffer(tmp_name+".ptx", ptx_buffer)) {
-				throw cudacl_exception("ptx file doesn't exist!");
+			if(!info_log.empty()) {
+				oclr_debug("%s info log:\n%s", identifier, info_log);
+			}
+			if(!error_log.empty()) {
+				throw cudacl_exception("error during kernel compilation!");
 			}
 			
+			// read ptx
 			bool found = false;
 			for(const auto& info : kernels_info) {
 				if(info.name == func_name) {
@@ -670,7 +664,7 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 		}
 		else {
 			// read cached ptx
-			if(!file_io::file_to_buffer(cache_path+identifier+"_"+cc_target_str+".ptx", ptx_buffer)) {
+			if(!file_io::file_to_string(cache_path+identifier+"_"+cc_target_str+".ptx", ptx_code)) {
 				throw cudacl_exception("ptx file doesn't exist!");
 			}
 			
@@ -714,7 +708,7 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 		// use the binary/ptx of the first device for now
 		CUmodule* module = new CUmodule();
 		CU(cuModuleLoadDataEx(module,
-							  ptx_buffer.str().c_str(),
+							  ptx_code.c_str(),
 							  (unsigned int)jit_options.size(),
 							  &jit_options[0],
 							  (void**)jit_option_values));
@@ -732,7 +726,7 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 	}
 	__HANDLE_CL_EXCEPTION_START("add_kernel")
 		// print out build log and build options
-		oclr_error("nvcc log (%s): %s", identifier, nvcc_log);
+		oclr_error("error log (%s): %s", identifier, error_log);
 		oclr_error("build command (%s): %s", identifier, build_cmd);
 	__HANDLE_CL_EXCEPTION_END
 	

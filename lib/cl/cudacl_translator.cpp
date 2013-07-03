@@ -21,8 +21,9 @@
 #include "cudacl_translator.h"
 #include "core/core.h"
 #include "core/gl_support.h"
-#include <regex>
 #include "oclraster.h"
+#include "core/timer.h"
+#include <regex>
 
 #if defined(__APPLE__)
 #include <CUDA/cuda.h>
@@ -81,12 +82,14 @@ void cudacl_translate(const string& cl_source,
 		OCLRASTER_REGEX_MARKER "\n"
 	};
 	static constexpr char cuda_header[] {
-		"#include <cuda_runtime.h>\n"
-		"#include \"cutil_math.h\"\n"
+		"#include \"cuda_runtime.h\"\n"
 		"#undef signbit\n" // must undef cudas signbit define to extend functionality to vector types
 	};
 	
+	oclr_timer timer;
+	
 	cuda_source = cuda_preprocess_header + cl_source;
+	timer.add("source string", false);
 	
 	// get kernel signatures:
 	// to do this, copy the currently processed "cuda source",
@@ -115,7 +118,7 @@ void cudacl_translate(const string& cl_source,
 		
 		// in-memory preprocessing
 		const uint8_t* code_input = (const uint8_t*)cuda_source.c_str();
-		tcc_in_memory_preprocess(state, code_input, cuda_source.length(), &kernel_source,
+		tcc_in_memory_preprocess(state, code_input, cuda_source.length(), true, &kernel_source,
 								 [](const char* str, void* ret) -> void {
 									 *(string*)ret += str;
 								 });
@@ -123,6 +126,7 @@ void cudacl_translate(const string& cl_source,
 		// cleanup + return
 		tcc_delete(state);
 	}
+	timer.add("preprocessing", false);
 	
 	// in preprocessed source: find regex marker, erase it, only apply regex on actual user code (add cuda header stuff later)
 	const size_t regex_marker_pos = kernel_source.find(OCLRASTER_REGEX_MARKER);
@@ -192,6 +196,7 @@ void cudacl_translate(const string& cl_source,
 			kernels.emplace_back(name_str, kernel_parameters);
 		}
 	}
+	timer.add("cl regex", false);
 	
 	// replace opencl keywords with cuda keywords
 	static const vector<pair<const regex, const string>> rx_cl2cuda {
@@ -219,6 +224,7 @@ void cudacl_translate(const string& cl_source,
 			{ regex("image3d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
 		}
 	};
+	timer.add("keyword regex", false);
 		
 	for(const auto& cl2cuda : rx_cl2cuda) {
 		cuda_source = regex_replace(cuda_source, cl2cuda.first, cl2cuda.second);
@@ -250,15 +256,16 @@ void cudacl_translate(const string& cl_source,
 	static const vector<pair<const regex, const string>> rx_vec_types {
 		{
 			// TODO: proper solution for all vector types
-			{ regex("\\(float2\\)", regex::optimize), "make_float2" },
-			{ regex("\\(float3\\)", regex::optimize), "make_float3" },
-			{ regex("\\(float4\\)", regex::optimize), "make_float4" },
-			{ regex("\\(int2\\)", regex::optimize), "make_int2" },
-			{ regex("\\(int3\\)", regex::optimize), "make_int3" },
-			{ regex("\\(int4\\)", regex::optimize), "make_int4" },
-			{ regex("\\(uint2\\)", regex::optimize), "make_uint2" },
-			{ regex("\\(uint3\\)", regex::optimize), "make_uint3" },
-			{ regex("\\(uint4\\)", regex::optimize), "make_uint4" },
+			// "(typen)(...)" -> normal vector constructor "typen(...)"
+			{ regex("\\(float2\\)", regex::optimize), "float2" },
+			{ regex("\\(float3\\)", regex::optimize), "float3" },
+			{ regex("\\(float4\\)", regex::optimize), "float4" },
+			{ regex("\\(int2\\)", regex::optimize), "int2" },
+			{ regex("\\(int3\\)", regex::optimize), "int3" },
+			{ regex("\\(int4\\)", regex::optimize), "int4" },
+			{ regex("\\(uint2\\)", regex::optimize), "uint2" },
+			{ regex("\\(uint3\\)", regex::optimize), "uint3" },
+			{ regex("\\(uint4\\)", regex::optimize), "uint4" },
 		}
 	};
 	for(const auto& rx_vec_type : rx_vec_types) {
@@ -313,9 +320,19 @@ void cudacl_translate(const string& cl_source,
 			cuda_source.replace(match.position(), match.length(), repl);
 		}
 	}
+	timer.add("vec regex", false);
 	
 	// add cuda header source
-	cuda_source.insert(0, cuda_header + kernel_source.substr(0, regex_marker_pos));
+	cuda_source.insert(0,
+					   // add the cuda header and non-regex code to the beginning
+					   cuda_header + kernel_source.substr(0, regex_marker_pos) +
+					   // also add a dummy ident struct, so it can be replaced by the
+					   // actual kernel name later on
+					   "struct __oclraster_ident_placeholder {};\n");
+	timer.add("end src string", false);
+#if 0
+	timer.end(true);
+#endif
 }
 
 #endif

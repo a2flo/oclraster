@@ -10,6 +10,8 @@
 		5C03756515A465350030C37B /* osx_helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C03756315A465350030C37B /* osx_helper.h */; };
 		5C03756615A465350030C37B /* osx_helper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5C03756415A465350030C37B /* osx_helper.mm */; };
 		5C053F90160CB31400540A7B /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C053F8F160CB31400540A7B /* libz.dylib */; };
+		5C063ABA178107FF002F787D /* cudacl_compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C063AB8178107FF002F787D /* cudacl_compiler.cpp */; };
+		5C063ABB178107FF002F787D /* cudacl_compiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C063AB9178107FF002F787D /* cudacl_compiler.h */; };
 		5C0959F916DC61490075E5B6 /* stage_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C0959F716DC61480075E5B6 /* stage_base.cpp */; };
 		5C0959FA16DC61490075E5B6 /* stage_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C0959F716DC61480075E5B6 /* stage_base.cpp */; };
 		5C0959FB16DC61490075E5B6 /* stage_base.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C0959F816DC61490075E5B6 /* stage_base.h */; };
@@ -162,6 +164,8 @@
 		5C03756415A465350030C37B /* osx_helper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = osx_helper.mm; sourceTree = "<group>"; };
 		5C053F8F160CB31400540A7B /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		5C05F790123171DA00D122BF /* liboclrasterd.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = liboclrasterd.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C063AB8178107FF002F787D /* cudacl_compiler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cudacl_compiler.cpp; sourceTree = "<group>"; };
+		5C063AB9178107FF002F787D /* cudacl_compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cudacl_compiler.h; sourceTree = "<group>"; };
 		5C0959F716DC61480075E5B6 /* stage_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stage_base.cpp; sourceTree = "<group>"; };
 		5C0959F816DC61490075E5B6 /* stage_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stage_base.h; sourceTree = "<group>"; };
 		5C1B1F96163ED84200355BCB /* event_objects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = event_objects.h; sourceTree = "<group>"; };
@@ -213,6 +217,7 @@
 		5C61BDEC1232A25500FD3451 /* logger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = logger.cpp; sourceTree = "<group>"; };
 		5C61BDED1232A25500FD3451 /* logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = logger.h; sourceTree = "<group>"; };
 		5C7B2CAD16E078920036837D /* const_string.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = const_string.h; sourceTree = "<group>"; };
+		5C83CD5917767CE800D83927 /* timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = timer.h; sourceTree = "<group>"; };
 		5C8B986C16D58FBA00EAAD97 /* ios_helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ios_helper.h; sourceTree = "<group>"; };
 		5C8B986D16D58FBA00EAAD97 /* ios_helper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ios_helper.mm; sourceTree = "<group>"; };
 		5C970DFE15E23C06007841C8 /* task.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = task.cpp; sourceTree = "<group>"; };
@@ -381,6 +386,8 @@
 			isa = PBXGroup;
 			children = (
 				5C3975A4123189750075C168 /* cl.hpp */,
+				5C063AB8178107FF002F787D /* cudacl_compiler.cpp */,
+				5C063AB9178107FF002F787D /* cudacl_compiler.h */,
 				5C4ABF8915FD818F00E8BDE1 /* cudacl_translator.cpp */,
 				5C4ABF8A15FD818F00E8BDE1 /* cudacl_translator.h */,
 				5CBD7DA815FC571700FB3954 /* cudacl.cpp */,
@@ -428,6 +435,7 @@
 				5C47267216A8D97400F7EA21 /* gl_support.cpp */,
 				5C47267316A8D97400F7EA21 /* gl_support.h */,
 				5C7B2CAD16E078920036837D /* const_string.h */,
+				5C83CD5917767CE800D83927 /* timer.h */,
 			);
 			path = core;
 			sourceTree = SOURCE_ROOT;
@@ -581,6 +589,7 @@
 				5CCB940716E89B9500079EC1 /* framebuffer.h in Headers */,
 				5C4ACFEE171824E200575953 /* libtcc.h in Headers */,
 				5C4ACFEF171824E200575953 /* tcc.h in Headers */,
+				5C063ABB178107FF002F787D /* cudacl_compiler.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -705,6 +714,7 @@
 				5C4ACFEC171824E200575953 /* libtcc.c in Sources */,
 				5C4ACFF0171824E200575953 /* tccgen.c in Sources */,
 				5C4ACFF2171824E200575953 /* tccpp.c in Sources */,
+				5C063ABA178107FF002F787D /* cudacl_compiler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -757,6 +767,7 @@
 		5C05F79A123171DA00D122BF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
@@ -769,9 +780,9 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CONFIGURATION_BUILD_DIR = ../bin;
-				CURRENT_PROJECT_VERSION = 0.0.3;
-				DYLIB_COMPATIBILITY_VERSION = 0.0.3;
-				DYLIB_CURRENT_VERSION = 0.0.3;
+				CURRENT_PROJECT_VERSION = 0.0.4;
+				DYLIB_COMPATIBILITY_VERSION = 0.0.4;
+				DYLIB_CURRENT_VERSION = 0.0.4;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
 				GCC_ENABLE_SSE41_EXTENSIONS = YES;
@@ -792,6 +803,7 @@
 				HEADER_SEARCH_PATHS = .;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "-fparse-all-comments";
 				SDKROOT = macosx;
 				STRINGS_FILE_OUTPUT_ENCODING = "UTF-8";
 				WARNING_CFLAGS = (
@@ -834,6 +846,7 @@
 		5C05F79B123171DA00D122BF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
@@ -846,9 +859,9 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CONFIGURATION_BUILD_DIR = ../bin;
-				CURRENT_PROJECT_VERSION = 0.0.3;
-				DYLIB_COMPATIBILITY_VERSION = 0.0.3;
-				DYLIB_CURRENT_VERSION = 0.0.3;
+				CURRENT_PROJECT_VERSION = 0.0.4;
+				DYLIB_COMPATIBILITY_VERSION = 0.0.4;
+				DYLIB_CURRENT_VERSION = 0.0.4;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
 				GCC_ENABLE_SSE41_EXTENSIONS = YES;
@@ -866,6 +879,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = .;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_CFLAGS = "-fparse-all-comments";
 				SDKROOT = macosx;
 				STRINGS_FILE_OUTPUT_ENCODING = "UTF-8";
 				WARNING_CFLAGS = (
@@ -909,6 +923,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
@@ -961,6 +976,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
@@ -1011,6 +1027,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				COPY_PHASE_STRIP = NO;
@@ -1089,6 +1106,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				COPY_PHASE_STRIP = YES;
