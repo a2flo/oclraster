@@ -15,7 +15,16 @@
 	 opencl platform options: either the opencl platform index (starting with 0) or "cuda" on supported platforms (OS X and Linux only)
 	 opencl restrict options: if this is set to any of (or a list of) "CPU", "GPU" or "ACCELERATOR", only these type of devices are used
 	-->
-	<opencl platform="0" clear_cache="1" gl_sharing="false" log_binaries="false" restrict=""/>
+	<opencl platform="0" clear_cache="true" gl_sharing="false" log_binaries="false" restrict=""/>
+	
+	<!-- cuda specific options
+	 base_dir: the base directory where cuda is installed (usually /usr/local/cuda, but might be /opt/cuda on linux)
+	 debug: compile cuda code with debug information
+	 profiling: compile cuda code with profiling support
+	 keep_temp: keep temporary files that are generated during cuda code compilation
+	 keep_binaries: save generated/compiled ptx code to data/cache/
+	-->
+	<cuda base_dir="/usr/local/cuda" debug="false" profiling="false" keep_temp="false" keep_binaries="false"/>
 	
 	<!-- application specific settings -->
 	<!-- none so far -->

@@ -113,7 +113,14 @@ public:
 	// opencl
 	static bool get_gl_sharing();
 	static bool get_log_binaries();
-
+	
+	// cuda
+	static const string& get_cuda_base_dir();
+	static bool get_cuda_debug();
+	static bool get_cuda_profiling();
+	static bool get_cuda_keep_temp();
+	static bool get_cuda_keep_binaries();
+	
 protected:
 	oclraster(const char* callpath_, const char* datapath_) = delete;
 	~oclraster() = delete;
@@ -147,6 +154,13 @@ protected:
 		bool gl_sharing = true;
 		bool log_binaries = false;
 		set<string> cl_device_restriction;
+		
+		// cuda
+		string cuda_base_dir = "/usr/local/cuda";
+		bool cuda_debug = false;
+		bool cuda_profiling = false;
+		bool cuda_keep_temp = false;
+		bool cuda_keep_binaries = true;
 
 		// sdl
 		SDL_Window* wnd = nullptr;

@@ -338,22 +338,29 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 		for(int cur_device = 0; cur_device < device_count; cur_device++) {
 			// get and create device
 			CUdevice* cuda_dev = new CUdevice();
+			CUdevice& cuda_device = *cuda_dev;
 			CUresult cu_err = cuDeviceGet(cuda_dev, cur_device);
-			cuda_devices.emplace_back(cuda_dev);
 			if(cu_err != CUDA_SUCCESS) {
 				oclr_error("failed to get device #%i: %i", cur_device, cu_err);
+				delete cuda_dev;
 				continue;
 			}
-			CUdevice& cuda_device = *cuda_dev;
 			
-			// get all attributes
 			char dev_name[256];
 			memset(dev_name, 0, 256);
 			CU(cuDeviceGetName(dev_name, 255, cuda_device));
 			
 			pair<int, int> cc;
 			CU(cuDeviceComputeCapability(&cc.first, &cc.second, cuda_device));
+			if(cc.first < 2) {
+				oclr_error("unsupported cuda device \"%s\": at least compute capability 2.0 is required (has %u.%u)!",
+						   dev_name, cc.first, cc.second);
+				delete cuda_dev;
+				continue;
+			}
+			cuda_devices.emplace_back(cuda_dev);
 			
+			// get all attributes
 			switch(cc.first) {
 				case 0:
 					oclr_error("invalid compute capability: %u.%u", cc.first, cc.second);
@@ -393,7 +400,6 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 					}
 					break;
 				case 3:
-				default: // default higher ones to highest 3.x (drivers already mention sm_40 and sm_50)
 					switch(cc.second) {
 						case 0: // gk10x
 							cc_target_str = "30";
@@ -410,6 +416,10 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 							cc_target = CU_TARGET_COMPUTE_35;
 							break;
 					}
+					break;
+				default: // default higher ones to current highest 3.5 (drivers already mention sm_40 and sm_50)
+					cc_target_str = "35";
+					cc_target = CU_TARGET_COMPUTE_35;
 					break;
 			}
 			

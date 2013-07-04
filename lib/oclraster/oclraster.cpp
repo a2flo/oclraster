@@ -212,6 +212,12 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 			if(dev_token == "") continue;
 			config.cl_device_restriction.insert(dev_token);
 		}
+		
+		config.cuda_base_dir = config_doc.get<string>("config.cuda.base_dir", "/usr/local/cuda");
+		config.cuda_debug = config_doc.get<bool>("config.cuda.debug", false);
+		config.cuda_profiling = config_doc.get<bool>("config.cuda.profiling", false);
+		config.cuda_keep_temp = config_doc.get<bool>("config.cuda.keep_temp", false);
+		config.cuda_keep_binaries = config_doc.get<bool>("config.cuda.keep_binaries", true);
 	}
 	
 	//
@@ -907,4 +913,24 @@ void oclraster::set_active_pipeline(pipeline* active_pipeline_) {
 
 pipeline* oclraster::get_active_pipeline() {
 	return active_pipeline;
+}
+
+const string& oclraster::get_cuda_base_dir() {
+	return config.cuda_base_dir;
+}
+
+bool oclraster::get_cuda_debug() {
+	return config.cuda_debug;
+}
+
+bool oclraster::get_cuda_profiling() {
+	return config.cuda_profiling;
+}
+
+bool oclraster::get_cuda_keep_temp() {
+	return config.cuda_keep_temp;
+}
+
+bool oclraster::get_cuda_keep_binaries() {
+	return config.cuda_keep_binaries;
 }

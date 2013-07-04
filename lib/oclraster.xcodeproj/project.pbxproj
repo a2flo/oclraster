@@ -66,6 +66,9 @@
 		5C61BDAF1231D32000FD3451 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C61BDAB1231D32000FD3451 /* OpenGL.framework */; };
 		5C61BDEE1232A25500FD3451 /* logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C61BDEC1232A25500FD3451 /* logger.cpp */; };
 		5C61BDEF1232A25500FD3451 /* logger.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C61BDED1232A25500FD3451 /* logger.h */; };
+		5C88B0CA17856721001E9A45 /* city.cc in Sources */ = {isa = PBXBuildFile; fileRef = 5C88B0C817856721001E9A45 /* city.cc */; };
+		5C88B0CB17856721001E9A45 /* city.cc in Sources */ = {isa = PBXBuildFile; fileRef = 5C88B0C817856721001E9A45 /* city.cc */; };
+		5C88B0CC17856721001E9A45 /* city.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C88B0C917856721001E9A45 /* city.h */; };
 		5C970E0015E23C06007841C8 /* task.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C970DFE15E23C06007841C8 /* task.cpp */; };
 		5C970E0115E23C06007841C8 /* task.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C970DFF15E23C06007841C8 /* task.h */; };
 		5CA4472316B5B44200CEC70F /* rasterization_program.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CA4472116B5B44200CEC70F /* rasterization_program.cpp */; };
@@ -218,6 +221,8 @@
 		5C61BDED1232A25500FD3451 /* logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = logger.h; sourceTree = "<group>"; };
 		5C7B2CAD16E078920036837D /* const_string.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = const_string.h; sourceTree = "<group>"; };
 		5C83CD5917767CE800D83927 /* timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = timer.h; sourceTree = "<group>"; };
+		5C88B0C817856721001E9A45 /* city.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = city.cc; sourceTree = "<group>"; };
+		5C88B0C917856721001E9A45 /* city.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = city.h; sourceTree = "<group>"; };
 		5C8B986C16D58FBA00EAAD97 /* ios_helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ios_helper.h; sourceTree = "<group>"; };
 		5C8B986D16D58FBA00EAAD97 /* ios_helper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ios_helper.mm; sourceTree = "<group>"; };
 		5C970DFE15E23C06007841C8 /* task.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = task.cpp; sourceTree = "<group>"; };
@@ -345,6 +350,7 @@
 				5CCC96331641B36D005C3DE4 /* global.h */,
 				5C3975A3123189750075C168 /* cl */,
 				5C3975A7123189750075C168 /* core */,
+				5C88B0C717856721001E9A45 /* hash */,
 				5CD8DB63164851A50082BEF7 /* pipeline */,
 				5CD8DB78164853E20082BEF7 /* program */,
 				5C03756215A465350030C37B /* osx */,
@@ -463,6 +469,15 @@
 			name = tccpp;
 			sourceTree = "<group>";
 		};
+		5C88B0C717856721001E9A45 /* hash */ = {
+			isa = PBXGroup;
+			children = (
+				5C88B0C817856721001E9A45 /* city.cc */,
+				5C88B0C917856721001E9A45 /* city.h */,
+			);
+			path = hash;
+			sourceTree = SOURCE_ROOT;
+		};
 		5C8B986B16D58FBA00EAAD97 /* ios */ = {
 			isa = PBXGroup;
 			children = (
@@ -580,6 +595,7 @@
 				5CD8DB7C164853ED0082BEF7 /* transform_program.h in Headers */,
 				5C2F6C8D164982A500FF5C61 /* pipeline.h in Headers */,
 				5CD91DC41663F52900B99A38 /* a2m.h in Headers */,
+				5C88B0CC17856721001E9A45 /* city.h in Headers */,
 				5CE34283168D57FB0071068E /* camera.h in Headers */,
 				5CEC5B68169B27EC00C464D5 /* oclraster_program.h in Headers */,
 				5C47267516A8D97400F7EA21 /* gl_support.h in Headers */,
@@ -688,6 +704,7 @@
 				5C3976D8123189750075C168 /* thread_base.cpp in Sources */,
 				5C61BDEE1232A25500FD3451 /* logger.cpp in Sources */,
 				5C32C6BE135528F300164662 /* vector2.cpp in Sources */,
+				5C88B0CA17856721001E9A45 /* city.cc in Sources */,
 				5CDC19F0142F8A4A00FE031C /* vector4.cpp in Sources */,
 				5C03756615A465350030C37B /* osx_helper.mm in Sources */,
 				5C970E0015E23C06007841C8 /* task.cpp in Sources */,
@@ -757,6 +774,7 @@
 				5CCB940616E89B9500079EC1 /* framebuffer.cpp in Sources */,
 				5C4ACFED171824E200575953 /* libtcc.c in Sources */,
 				5C4ACFF1171824E200575953 /* tccgen.c in Sources */,
+				5C88B0CB17856721001E9A45 /* city.cc in Sources */,
 				5C4ACFF3171824E200575953 /* tccpp.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -107,7 +107,7 @@ void cudacl_translate(const string& cl_source,
 		// split build options and let tcc parse them
 		const string build_options = ("-I" + core::strip_path(oclraster::kernel_path("")) + " " +
 									  "-I" + core::strip_path(oclraster::kernel_path("cuda")) + " " +
-									  "-I /usr/local/cuda/include/ " + preprocess_options);
+									  "-I " + oclraster::get_cuda_base_dir() + "/include/ " + preprocess_options);
 		const auto build_option_args = core::tokenize(build_options, ' ');
 		const size_t argc = build_option_args.size();
 		vector<const char*> argv;
@@ -118,7 +118,7 @@ void cudacl_translate(const string& cl_source,
 		
 		// in-memory preprocessing
 		const uint8_t* code_input = (const uint8_t*)cuda_source.c_str();
-		tcc_in_memory_preprocess(state, code_input, cuda_source.length(), true, &kernel_source,
+		tcc_in_memory_preprocess(state, code_input, cuda_source.length(), true, NULL, &kernel_source,
 								 [](const char* str, void* ret) -> void {
 									 *(string*)ret += str;
 								 });

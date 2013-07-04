@@ -798,7 +798,7 @@ string oclraster_program::preprocess_code(const string& raw_code) {
 	
 	// in-memory preprocessing
 	const uint8_t* code_input = (const uint8_t*)raw_code.c_str();
-	tcc_in_memory_preprocess(state, code_input, raw_code.length(), false, &ret_code,
+	tcc_in_memory_preprocess(state, code_input, raw_code.length(), false, NULL, &ret_code,
 							 [](const char* str, void* ret) -> void {
 								 *(string*)ret += str;
 							 });

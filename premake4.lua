@@ -124,12 +124,14 @@ solution "oclraster"
 		
 		if(cuda) then
 			add_include("/usr/local/cuda/include")
-			add_include("/usr/local/cuda-5.0/include")
+			add_include("/usr/local/cuda-5.5/include")
+			add_include("/opt/cuda/include")
+			add_include("/opt/cuda-5.5/include")
 			defines { "OCLRASTER_CUDA_CL=1" }
 			if(platform == "x64") then
-				libdirs { "/opt/cuda-toolkit/lib64", "/usr/local/cuda/lib64", "/usr/local/cuda-5.0/lib64" }
+				libdirs { "/opt/cuda-toolkit/lib64", "/usr/local/cuda/lib64", "/usr/local/cuda-5.5/lib64", "/opt/cuda/lib64", "/opt/cuda-5.5/lib64" }
 			else
-				libdirs { "/opt/cuda-toolkit/lib", "/usr/local/cuda/lib", "/usr/local/cuda-5.0/lib" }
+				libdirs { "/opt/cuda-toolkit/lib", "/usr/local/cuda/lib", "/usr/local/cuda-5.5/lib", "/opt/cuda/lib", "/opt/cuda-5.5/lib" }
 			end
 			links { "cuda", "cudart" }
 		end
@@ -212,12 +214,13 @@ project "liboclraster"
 	kind "SharedLib"
 	language "C++"
 
-	files { "lib/**.h", "lib/**.hpp", "lib/**.cpp", "lib/**.c" }
+	files { "lib/**.h", "lib/**.hpp", "lib/**.cpp", "lib/**.cc", "lib/**.c" }
 	basedir "lib"
 	targetdir "bin"
 	includedirs { "lib/",
 				  "lib/cl/",
 				  "lib/core/",
+				  "lib/hash/",
 				  "lib/oclraster/",
 				  "lib/pipeline/",
 				  "lib/program/",

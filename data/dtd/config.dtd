@@ -1,4 +1,4 @@
-<!ELEMENT config (#PCDATA | screen | projection | input | opencl)*>
+<!ELEMENT config (#PCDATA | screen | projection | input | opencl | cuda)*>
 <!ELEMENT screen (#PCDATA)*>
 <!ATTLIST screen
 	width CDATA #REQUIRED
@@ -28,4 +28,12 @@
 	gl_sharing CDATA #REQUIRED
 	log_binaries CDATA #REQUIRED
 	restrict CDATA #REQUIRED
+>
+<!ELEMENT cuda (#PCDATA)*>
+<!ATTLIST cuda
+	base_dir CDATA #REQUIRED
+	debug CDATA #REQUIRED
+	profiling CDATA #REQUIRED
+	keep_temp CDATA #REQUIRED
+	keep_binaries CDATA #REQUIRED
 >

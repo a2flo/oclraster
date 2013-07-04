@@ -20,13 +20,14 @@
 
 #include "cudacl_compiler.h"
 #include "core/core.h"
+#include "oclraster.h"
 
 #include "libtcc.h"
 extern "C" {
 #include "tcc.h"
 }
 
-static string cudacl_preprocess(const string& code, const string& build_options) {
+static string cudacl_preprocess(const string& code, const string& build_options, const string& filename) {
 	// init
 	string preprocessed_code = "";
 	TCCState* state = tcc_new();
@@ -44,7 +45,7 @@ static string cudacl_preprocess(const string& code, const string& build_options)
 	
 	// in-memory preprocessing
 	const uint8_t* code_input = (const uint8_t*)code.c_str();
-	tcc_in_memory_preprocess(state, code_input, code.length(), true, &preprocessed_code,
+	tcc_in_memory_preprocess(state, code_input, code.length(), true, filename.c_str(), &preprocessed_code,
 							 [](const char* str, void* ret) -> void {
 								 *(string*)ret += str;
 							 });
@@ -84,6 +85,7 @@ string cudacl_compiler::compile(const string& code,
 		// necessary fp defines
 		" -D__FLT_MIN__=1.17549435e-38F -D__DBL_MIN__=2.2250738585072014e-308 -D__LDBL_MIN__=3.36210314311209350626e-4932L"
 	};
+	const string cuda_include_dir { oclraster::get_cuda_base_dir() + "/include" };
 	
 	// TODO: error + log handling (parse output, directly abort if error)
 	// TODO: pipe tcc output into log
@@ -107,7 +109,8 @@ string cudacl_compiler::compile(const string& code,
 										  // user options
 										  user_options+
 										  // general cuda includes
-										  " -I/usr/include -I/usr/local/cuda/include");
+										  " -I/usr/include -I"+cuda_include_dir,
+										  tmp_name+".cpp1.ii");
 	// replace ident placeholder by the kernels identifier, so cudafe can tell in which
 	// file something went wrong (note that this still doesn't give us the actual line number)
 	core::find_and_replace(code_step1,
@@ -147,7 +150,8 @@ string cudacl_compiler::compile(const string& code,
 										  // user options
 										  user_options+
 										  // general cuda includes
-										  " -I/usr/include -I/usr/local/cuda/include");
+										  " -I/usr/include -I"+cuda_include_dir,
+										  tmp_name+".cpp2.i");
 	file_io::string_to_file(tmp_name+".cpp2.i", code_step3);
 	
 	// 4: cudafe, pass two
@@ -182,17 +186,19 @@ string cudacl_compiler::compile(const string& code,
 										  // user options
 										  user_options+
 										  // general cuda includes
-										  " -I/usr/include -I/usr/local/cuda/include");
+										  " -I/usr/include -I"+cuda_include_dir,
+										  tmp_name+".cpp3.i");
 	file_io::string_to_file(tmp_name+".cpp3.i", code_step5);
 	
 	// 6: actual compilation using cicc (nvidias new llvm based compiler)
 	output = "";
 	core::system(string { "cicc" } +
+				 /*" -show-src"+*/
 				 " -arch \"compute_"+cc_target_str+"\""+
 				 " -m64 -ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1"+
-				 // TODO: correct path
-				 // TODO: correct lib (there is no 21 or 32)
-				 " -nvvmir-library /usr/local/cuda/nvvm/libdevice/libdevice.compute_"+cc_target_str+".10.bc"+
+				 " -nvvmir-library " + oclraster::get_cuda_base_dir() + "/nvvm/libdevice/libdevice.compute_"+
+				 (cc_target_str == "21" ? "20" : (cc_target_str == "32" ? "30" : cc_target_str))+
+				 ".10.bc"+
 				 " --orig_src_file_name "+tmp_name+".cu"+
 				 " "+tmp_name+".cpp3.i"+
 				 " -o "+tmp_name+".ptx",

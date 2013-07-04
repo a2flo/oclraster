@@ -142,7 +142,9 @@ weak_ptr<opencl_base::kernel_object> opencl_base::add_kernel_file(const string& 
 	}
 	
 	// work around caching bug and modify source on each load, TODO: check if this still exists (still present in 10.8.3 ...)
-	kernel_data.insert(0, "#define __" + core::str_to_upper(func_name) +  "_BUILD_TIME__ " + uint2string((unsigned int)time(nullptr)) + "\n");
+	if(platform_vendor == PLATFORM_VENDOR::APPLE) {
+		kernel_data.insert(0, "#define __" + core::str_to_upper(func_name) +  "_BUILD_TIME__ " + uint2string((unsigned int)time(nullptr)) + "\n");
+	}
 	
 	return add_kernel_src(identifier, kernel_data, func_name, additional_options);
 }
