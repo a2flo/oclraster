@@ -22,6 +22,7 @@
 #if defined(OCLRASTER_CUDA_CL)
 
 #include "oclraster/global.h"
+#include "hash/city.h"
 
 enum class CUDACL_PARAM_ADDRESS_SPACE : unsigned int {
 	NONE,
@@ -70,7 +71,11 @@ struct OCLRASTER_API cudacl_kernel_info {
 extern void OCLRASTER_API cudacl_translate(const string& cl_source,
 										   const string& preprocess_options,
 										   string& cuda_source,
-										   vector<cudacl_kernel_info>& kernels);
+										   vector<cudacl_kernel_info>& kernels,
+										   const bool use_cache,
+										   bool& found_in_cache,
+										   uint128& kernel_hash,
+										   std::function<bool(const uint128&)> hash_lookup);
 
 #endif
 #endif

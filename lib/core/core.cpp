@@ -254,7 +254,7 @@ map<string, file_io::FILE_TYPE> core::get_file_list(const string& directory, con
 		_findclose(h_file);
 	}
 #else // works under Linux and OS X
-	struct dirent** namelist;
+	struct dirent** namelist = nullptr;
 	
 	dir_str += ".";
 	int n = scandir(dir_str.c_str(), &namelist, 0, alphasort);
@@ -274,7 +274,7 @@ map<string, file_io::FILE_TYPE> core::get_file_list(const string& directory, con
 		else file_list[name] = file_io::FILE_TYPE::NONE;
 	}
 	
-	delete [] namelist;
+	if(namelist != nullptr) delete [] namelist;
 #endif
 	
 	return file_list;

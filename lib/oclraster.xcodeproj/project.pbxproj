@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		5C03756515A465350030C37B /* osx_helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C03756315A465350030C37B /* osx_helper.h */; };
 		5C03756615A465350030C37B /* osx_helper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5C03756415A465350030C37B /* osx_helper.mm */; };
-		5C053F90160CB31400540A7B /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C053F8F160CB31400540A7B /* libz.dylib */; };
 		5C063ABA178107FF002F787D /* cudacl_compiler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C063AB8178107FF002F787D /* cudacl_compiler.cpp */; };
 		5C063ABB178107FF002F787D /* cudacl_compiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C063AB9178107FF002F787D /* cudacl_compiler.h */; };
 		5C0959F916DC61490075E5B6 /* stage_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C0959F716DC61480075E5B6 /* stage_base.cpp */; };
@@ -34,7 +33,6 @@
 		5C39764D123189750075C168 /* cpp_headers.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C3975AB123189750075C168 /* cpp_headers.h */; };
 		5C39764E123189750075C168 /* file_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C3975AC123189750075C168 /* file_io.cpp */; };
 		5C39764F123189750075C168 /* file_io.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C3975AD123189750075C168 /* file_io.h */; };
-		5C397650123189750075C168 /* functor.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C3975AE123189750075C168 /* functor.h */; };
 		5C397655123189750075C168 /* matrix4.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C3975B3123189750075C168 /* matrix4.cpp */; };
 		5C397656123189750075C168 /* matrix4.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C3975B4123189750075C168 /* matrix4.h */; };
 		5C397659123189750075C168 /* platform.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C3975B7123189750075C168 /* platform.h */; };
@@ -141,7 +139,6 @@
 		5CE9726616D6840200271278 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CE9726516D6840200271278 /* AudioToolbox.framework */; };
 		5CE9726816D6840800271278 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CE9726716D6840800271278 /* ImageIO.framework */; };
 		5CE9726A16D6840D00271278 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CE9726916D6840D00271278 /* MobileCoreServices.framework */; };
-		5CE9726C16D6841600271278 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CE9726B16D6841600271278 /* libz.dylib */; };
 		5CE9726E16D6841C00271278 /* libxml2.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CE9726D16D6841C00271278 /* libxml2.2.dylib */; };
 		5CE9727016D6842400271278 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CE9726F16D6842400271278 /* OpenCL.framework */; };
 		5CEC5B68169B27EC00C464D5 /* oclraster_program.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CEC5B66169B27EC00C464D5 /* oclraster_program.h */; };
@@ -189,7 +186,6 @@
 		5C3975AB123189750075C168 /* cpp_headers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cpp_headers.h; sourceTree = "<group>"; };
 		5C3975AC123189750075C168 /* file_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = file_io.cpp; sourceTree = "<group>"; };
 		5C3975AD123189750075C168 /* file_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = file_io.h; sourceTree = "<group>"; };
-		5C3975AE123189750075C168 /* functor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = functor.h; sourceTree = "<group>"; };
 		5C3975B3123189750075C168 /* matrix4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = matrix4.cpp; sourceTree = "<group>"; };
 		5C3975B4123189750075C168 /* matrix4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = matrix4.h; sourceTree = "<group>"; };
 		5C3975B7123189750075C168 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = platform.h; sourceTree = "<group>"; };
@@ -223,6 +219,7 @@
 		5C83CD5917767CE800D83927 /* timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = timer.h; sourceTree = "<group>"; };
 		5C88B0C817856721001E9A45 /* city.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = city.cc; sourceTree = "<group>"; };
 		5C88B0C917856721001E9A45 /* city.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = city.h; sourceTree = "<group>"; };
+		5C88B0CD178698F4001E9A45 /* functor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = functor.h; sourceTree = "<group>"; };
 		5C8B986C16D58FBA00EAAD97 /* ios_helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ios_helper.h; sourceTree = "<group>"; };
 		5C8B986D16D58FBA00EAAD97 /* ios_helper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ios_helper.mm; sourceTree = "<group>"; };
 		5C970DFE15E23C06007841C8 /* task.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = task.cpp; sourceTree = "<group>"; };
@@ -294,7 +291,6 @@
 				5CC97E3E1501677200AB0D95 /* SDL2.framework in Frameworks */,
 				5CC97E3F1501677200AB0D95 /* SDL2_image.framework in Frameworks */,
 				5C2C9275140AA9D900AC808C /* libxml2.dylib in Frameworks */,
-				5C053F90160CB31400540A7B /* libz.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -302,7 +298,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5CE9726C16D6841600271278 /* libz.dylib in Frameworks */,
 				5CE9726E16D6841C00271278 /* libxml2.2.dylib in Frameworks */,
 				5CE9727016D6842400271278 /* OpenCL.framework in Frameworks */,
 				5CE9726A16D6840D00271278 /* MobileCoreServices.framework in Frameworks */,
@@ -421,7 +416,7 @@
 				5C1B1F98163ED84200355BCB /* event.h */,
 				5C3975AC123189750075C168 /* file_io.cpp */,
 				5C3975AD123189750075C168 /* file_io.h */,
-				5C3975AE123189750075C168 /* functor.h */,
+				5C88B0CD178698F4001E9A45 /* functor.h */,
 				5C61BDEC1232A25500FD3451 /* logger.cpp */,
 				5C61BDED1232A25500FD3451 /* logger.h */,
 				5C3975B3123189750075C168 /* matrix4.cpp */,
@@ -568,7 +563,6 @@
 				5C39764C123189750075C168 /* core.h in Headers */,
 				5C39764D123189750075C168 /* cpp_headers.h in Headers */,
 				5C39764F123189750075C168 /* file_io.h in Headers */,
-				5C397650123189750075C168 /* functor.h in Headers */,
 				5C397656123189750075C168 /* matrix4.h in Headers */,
 				5C397659123189750075C168 /* platform.h in Headers */,
 				5C39765F123189750075C168 /* util.h in Headers */,
@@ -828,6 +822,7 @@
 					"-Weverything",
 					"-Wno-c++98-compat",
 					"-Wno-c++98-compat-pedantic",
+					"-Wno-c99-extensions",
 					"-Wno-header-hygiene",
 					"-Wno-gnu",
 					"-Wno-float-equal",
@@ -904,6 +899,7 @@
 					"-Weverything",
 					"-Wno-c++98-compat",
 					"-Wno-c++98-compat-pedantic",
+					"-Wno-c99-extensions",
 					"-Wno-header-hygiene",
 					"-Wno-gnu",
 					"-Wno-float-equal",

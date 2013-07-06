@@ -193,7 +193,7 @@ string cudacl_compiler::compile(const string& code,
 	// 6: actual compilation using cicc (nvidias new llvm based compiler)
 	output = "";
 	core::system(string { "cicc" } +
-				 /*" -show-src"+*/
+				 (oclraster::get_cuda_profiling() || oclraster::get_cuda_debug() ? " -show-src" : "")+
 				 " -arch \"compute_"+cc_target_str+"\""+
 				 " -m64 -ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1"+
 				 " -nvvmir-library " + oclraster::get_cuda_base_dir() + "/nvvm/libdevice/libdevice.compute_"+

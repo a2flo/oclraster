@@ -65,11 +65,20 @@
 #include <stdlib.h>  // for size_t.
 #include <stdint.h>
 #include <utility>
+#include <functional>
+#include <memory>
 
 //typedef uint8_t uint8;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 typedef std::pair<uint64, uint64> uint128;
+namespace std {
+	template <> struct hash<uint128> : public hash<size_t> {
+		size_t operator()(uint128 value) const throw() {
+			return (size_t)value.first; // this has to suffice for now
+		}
+	};
+}
 
 inline uint64 Uint128Low64(const uint128& x) { return x.first; }
 inline uint64 Uint128High64(const uint128& x) { return x.second; }

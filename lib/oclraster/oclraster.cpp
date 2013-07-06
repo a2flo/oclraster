@@ -218,6 +218,7 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 		config.cuda_profiling = config_doc.get<bool>("config.cuda.profiling", false);
 		config.cuda_keep_temp = config_doc.get<bool>("config.cuda.keep_temp", false);
 		config.cuda_keep_binaries = config_doc.get<bool>("config.cuda.keep_binaries", true);
+		config.cuda_use_cache = config_doc.get<bool>("config.cuda.use_cache", true);
 	}
 	
 	//
@@ -933,4 +934,8 @@ bool oclraster::get_cuda_keep_temp() {
 
 bool oclraster::get_cuda_keep_binaries() {
 	return config.cuda_keep_binaries;
+}
+
+bool oclraster::get_cuda_use_cache() {
+	return config.cuda_use_cache;
 }

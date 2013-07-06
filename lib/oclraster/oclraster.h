@@ -120,6 +120,7 @@ public:
 	static bool get_cuda_profiling();
 	static bool get_cuda_keep_temp();
 	static bool get_cuda_keep_binaries();
+	static bool get_cuda_use_cache();
 	
 protected:
 	oclraster(const char* callpath_, const char* datapath_) = delete;
@@ -161,6 +162,7 @@ protected:
 		bool cuda_profiling = false;
 		bool cuda_keep_temp = false;
 		bool cuda_keep_binaries = true;
+		bool cuda_use_cache = true;
 
 		// sdl
 		SDL_Window* wnd = nullptr;

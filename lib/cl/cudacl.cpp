@@ -21,8 +21,8 @@
 #include "opencl.h"
 #include "cudacl_translator.h"
 #include "cudacl_compiler.h"
-#include "zlib.h"
 #include "pipeline/image.h"
+#include "oclraster.h"
 
 #if defined(__APPLE__)
 #if !defined(OCLRASTER_IOS)
@@ -231,54 +231,25 @@ opencl_base(), cc_target(CU_TARGET_COMPUTE_10) {
 		supported = false;
 	}
 	
-	// check if the cache can be used
+	// get the cache file list (if this is actually being used is decided when compiling/adding a kernel)
 	cache_path = kernel_path_str.substr(0, kernel_path_str.rfind('/', kernel_path_str.length()-2)) + "/cache/";
-	if(file_io::is_file(cache_path+"CACHECRC")) {
-		file_io crc_file(cache_path+"CACHECRC", file_io::OPEN_TYPE::READ);
-		if(crc_file.is_open()) {
-			use_ptx_cache = true;
-			
-			auto& crc_fstream = *crc_file.get_filestream();
-			unordered_map<string, unsigned int> cache_crcs;
-			while(!crc_fstream.eof()) {
-				string kernel_fname = "";
-				unsigned int kernel_crc = 0;
-				crc_fstream >> kernel_fname;
-				crc_fstream >> hex >> kernel_crc >> dec;
-				if(kernel_fname.empty()) continue;
-				cache_crcs.insert({ kernel_fname, kernel_crc });
-			}
-			
-			const auto kernel_files = core::get_file_list(kernel_path_str);
-			for(const auto& kfile : kernel_files) {
-				if(kfile.first[0] == '.') continue;
-				stringstream buffer(stringstream::in | stringstream::out);
-				if(!file_io::file_to_buffer(kernel_path_+kfile.first, buffer)) {
-					oclr_error("failed to read kernel source for \"%s\"!", kernel_path_+kfile.first);
-					return;
-				}
-				const string src(buffer.str());
-				const unsigned int crc = (unsigned int)crc32(crc32(0L, Z_NULL, 0), (const Bytef*)src.c_str(), (uInt)src.size());
-				
-				//
-				const auto cache_iter = cache_crcs.find(kfile.first);
-				if(cache_iter == cache_crcs.end()) {
-					use_ptx_cache = false;
-					oclr_error("kernel file \"%s\" doesn't exist in cache!", kfile.first);
-					break;
-				}
-				
-				if(cache_iter->second != crc) {
-					use_ptx_cache = false;
-					oclr_error("CRC mismatch for kernel file \"%s\": %X (cache) != %X (current)", kfile.first, cache_iter->second, crc);
-					break;
-				}
-			}
-			crc_file.close();
+	const auto cache_list = core::get_file_list(cache_path);
+	for(const auto& cache_file : cache_list) {
+		// ignore directories
+		if(cache_file.second == file_io::FILE_TYPE::DIR) continue;
+		// ignore all files containing a '.'
+		if(cache_file.first.find(".") != string::npos) continue;
+		// all remaining files don't have a file extension -> must be cache files
+		if(cache_file.first.size() != 32) {
+			oclr_error("invalid cache filename: %s", cache_file.first);
+			continue;
 		}
-	}
-	if(use_ptx_cache) {
-		oclr_debug("using ptx cache!");
+		
+		// note: kernel identifier is unknown at this point (-> empty string)
+		cuda_cache_hashes.emplace(uint128 {
+			strtoull(cache_file.first.substr(0, 16).c_str(), nullptr, 16),
+			strtoull(cache_file.first.substr(16, 16).c_str(), nullptr, 16)
+		}, "");
 	}
 }
 
@@ -612,9 +583,10 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 	// the same goes for the general struct alignment
 	options += " -DOCLRASTER_STRUCT_ALIGNMENT="+uint2string(OCLRASTER_STRUCT_ALIGNMENT);
 	
-	string error_log = "";
-	string build_cmd = "";
-	const string tmp_name = "/tmp/cudacl_tmp_"+identifier+"_"+size_t2string(SDL_GetPerformanceCounter());
+	// user options
+	options += additional_options;
+	
+	string error_log = "", build_cmd = "";
 	try {
 		if(kernels.count(identifier) != 0) {
 			oclr_error("kernel \"%s\" already exists!", identifier);
@@ -630,13 +602,70 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 		vector<cudacl_kernel_info> kernels_info;
 		
 		//
-		string ptx_code = "";
-		if(!use_ptx_cache) {
-			options += additional_options;
-			
-			string cuda_source = "";
-			cudacl_translate(src, options, cuda_source, kernels_info);
-			
+		string ptx_code = "", cuda_source = "";
+		
+		const bool use_cache = oclraster::get_cuda_use_cache();
+		const bool keep_binaries = oclraster::get_cuda_keep_binaries();
+		bool found_in_cache = false;
+		uint128 kernel_hash { 0, 0 };
+		cudacl_translate(src, options, cuda_source, kernels_info, use_cache, found_in_cache, kernel_hash,
+						 [this](const uint128& hash) {
+			const auto iter = cuda_cache_hashes.find(hash);
+			if(iter == cuda_cache_hashes.end()) return false;
+			if(iter->first == hash) return true;
+			// else: ouch, collision
+			oclr_error("cuda cache hash collision");
+			cuda_cache_hashes.reserve(cuda_cache_hashes.size() * 4);
+			return false;
+		});
+		
+		// uint128 hash -> string conversion (+fill up with 0s if necessary)
+		stringstream sstr_upper; sstr_upper << hex << kernel_hash.first;
+		stringstream sstr_lower; sstr_lower << hex << kernel_hash.second;
+		string upper_hash { sstr_upper.str() };
+		string lower_hash { sstr_lower.str() };
+		if(upper_hash.size() < 16) upper_hash.insert(0, 16 - upper_hash.size(), '0');
+		if(lower_hash.size() < 16) lower_hash.insert(0, 16 - lower_hash.size(), '0');
+		const string hash_filename { upper_hash + lower_hash };
+		
+		//
+		if(found_in_cache) {
+			// a cache file exists for this hash:
+			// check if the cache file has already been read (or generated at runtime)
+			const auto cache_iter = cuda_cache_binaries.find(kernel_hash);
+			if(cache_iter != cuda_cache_binaries.end()) {
+				ptx_code = cache_iter->second;
+				oclr_debug("using cached binary for \"%s\"!", identifier);
+				
+				// add entry for this identifier if there isn't one already
+				bool found_entry = false;
+				const auto range = cuda_cache_hashes.equal_range(kernel_hash);
+				for(auto iter = range.first; iter != range.second; iter++) {
+					if(iter->second == identifier) {
+						found_entry = true;
+						break;
+					}
+				}
+				if(!found_entry) {
+					cuda_cache_hashes.emplace(kernel_hash, identifier);
+					rev_cuda_cache.emplace(identifier, kernel_hash);
+				}
+			}
+			// if not, read the file
+			else {
+				if(!file_io::file_to_string(cache_path + hash_filename, ptx_code)) {
+					oclr_error("couldn't read cached binary \"%s\" for \"%s\"!", hash_filename, identifier);
+					found_in_cache = false; // compile the code
+				}
+				else {
+					oclr_debug("using cached binary for \"%s\"!", identifier);
+					cuda_cache_binaries.emplace(kernel_hash, ptx_code);
+				}
+			}
+		}
+		
+		// not cached, cache read failed or caching is disabled -> compile
+		if(!found_in_cache) {
 			// use internal compile chain (instead of nvcc)
 			string info_log = "";
 			build_cmd = {
@@ -644,14 +673,16 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 				" -DNVIDIA"+
 				" -DGPU"+
 				" -DPLATFORM_"+platform_vendor_to_str(platform_vendor)+
-				" -DLOCAL_MEM_SIZE=49152", // TODO: always set to 48k for now?
+				" -DLOCAL_MEM_SIZE=6144"
+				//" -DLOCAL_MEM_SIZE=49152", // TODO: always set to 48k for now?
 			};
 			ptx_code = cudacl_compiler::compile(cuda_source,
 												identifier,
 												cc_target_str,
 												build_cmd,
-												tmp_name,
+												cache_path + hash_filename,
 												error_log, info_log);
+			// TODO: cleanup if keep flag is not set!
 			
 			if(!info_log.empty()) {
 				oclr_debug("%s info log:\n%s", identifier, info_log);
@@ -660,70 +691,60 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 				throw cudacl_exception("error during kernel compilation!");
 			}
 			
-			// read ptx
-			bool found = false;
-			for(const auto& info : kernels_info) {
-				if(info.name == func_name) {
-					kernel_info = &info;
-					kernel->arg_count = (unsigned int)info.parameters.size();
-					found = true;
-					break;
+			// if compiled binaries should be cached
+			if(keep_binaries) {
+				if(!file_io::string_to_file(cache_path + hash_filename, ptx_code)) {
+					oclr_error("couldn't cache binary \"%s\" for \"%s\"!", hash_filename, identifier);
 				}
 			}
-			if(!found) throw cudacl_exception("kernel function \""+func_name+"\" does not exist in source file!");
+			cuda_cache_hashes.emplace(kernel_hash, identifier);
+			rev_cuda_cache.emplace(identifier, kernel_hash);
+			cuda_cache_binaries.emplace(kernel_hash, ptx_code);
 		}
-		else {
-			// read cached ptx
-			if(!file_io::file_to_string(cache_path+identifier+"_"+cc_target_str+".ptx", ptx_code)) {
-				throw cudacl_exception("ptx file doesn't exist!");
+		
+		// get kernel info for function
+		bool found = false;
+		for(const auto& info : kernels_info) {
+			if(info.name == func_name) {
+				kernel_info = &info;
+				kernel->arg_count = (unsigned int)info.parameters.size();
+				found = true;
+				break;
 			}
-			
-			// read cached kernel info
-			stringstream info_buffer(stringstream::in | stringstream::out);
-			if(!file_io::file_to_buffer(cache_path+identifier+"_info_"+cc_target_str+".txt", info_buffer)) {
-				throw cudacl_exception("info file doesn't exist!");
-			}
-			
-			string info_kernel_name = "";
-			unsigned int info_param_count = 0;
-			info_buffer >> info_kernel_name;
-			info_buffer >> info_param_count;
-			kernel->arg_count = info_param_count;
-			vector<cudacl_kernel_info::kernel_param> kernel_parameters;
-			for(size_t i = 0; i < info_param_count; i++) {
-				string param_name = "";
-				unsigned int p0 = 0, p1 = 0, p2 = 0;
-				info_buffer >> param_name;
-				info_buffer >> p0;
-				info_buffer >> p1;
-				info_buffer >> p2;
-				kernel_parameters.emplace_back(param_name, (CUDACL_PARAM_ADDRESS_SPACE)p0, (CUDACL_PARAM_TYPE)p1, (CUDACL_PARAM_ACCESS)p2);
-			}
-			if(info_buffer.fail() || info_buffer.bad()) {
-				throw cudacl_exception("failed to parse cached kernel info file!");
-			}
-			
-			kernels_info.emplace_back(info_kernel_name, kernel_parameters);
-			kernel_info = &kernels_info.back();
 		}
+		if(!found) throw cudacl_exception("kernel function \""+func_name+"\" does not exist in source file!");
+		
+		//
 		kernel->args_passed.insert(kernel->args_passed.begin(), kernel->arg_count, false);
 		kernel->buffer_args.insert(kernel->buffer_args.begin(), kernel->arg_count, nullptr);
 		
 		// create cuda module (== opencl program)
-		array<CUjit_option, 1> jit_options { { CU_JIT_TARGET } };
-		size_t* jit_option_values = new size_t[1]; // size_t for correct alignment ...
-		jit_option_values[0] = 0;
-		*((unsigned int*)jit_option_values) = cc_target;
+		const CUjit_option jit_options[] {
+			CU_JIT_TARGET,
+			CU_JIT_GENERATE_LINE_INFO,
+			CU_JIT_GENERATE_DEBUG_INFO
+		};
+		const unsigned int option_count = sizeof(jit_options) / sizeof(CUjit_option);
+		const struct alignas(void*) {
+			union {
+				unsigned int ui;
+				float f;
+				char* cptr;
+			};
+		} jit_option_values[] {
+			{ .ui = cc_target },
+			{ .ui = (oclraster::get_cuda_profiling() || oclraster::get_cuda_debug()) ? 1u : 0u },
+			{ .ui = oclraster::get_cuda_debug() ? 1u : 0u },
+		};
+		static_assert(option_count == (sizeof(jit_option_values) / sizeof(void*)), "mismatching option count");
 		
 		// use the binary/ptx of the first device for now
 		CUmodule* module = new CUmodule();
 		CU(cuModuleLoadDataEx(module,
 							  ptx_code.c_str(),
-							  (unsigned int)jit_options.size(),
-							  &jit_options[0],
-							  (void**)jit_option_values));
-		
-		delete [] jit_option_values;
+							  option_count,
+							  (CUjit_option*)&jit_options[0],
+							  (void**)&jit_option_values[0]));
 		
 		// create cuda function (== opencl kernel)
 		CUfunction* cuda_func = new CUfunction();
@@ -739,13 +760,6 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 		oclr_error("error log (%s): %s", identifier, error_log);
 		oclr_error("build command (%s): %s", identifier, build_cmd);
 	__HANDLE_CL_EXCEPTION_END
-	
-	// cleanup
-	/*if(!use_ptx_cache) {
-		string dummy = "";
-		core::system("rm "+tmp_name+".ptx", dummy);
-		core::system("rm "+tmp_name+".cu", dummy);
-	}*/
 	
 	return kernels[identifier];
 }

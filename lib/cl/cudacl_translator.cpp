@@ -75,7 +75,11 @@ static constexpr array<const param_access_type_map, 6> access_mapping {
 void cudacl_translate(const string& cl_source,
 					  const string& preprocess_options,
 					  string& cuda_source,
-					  vector<cudacl_kernel_info>& kernels) {
+					  vector<cudacl_kernel_info>& kernels,
+					  const bool use_cache,
+					  bool& found_in_cache,
+					  uint128& kernel_hash,
+					  std::function<bool(const uint128&)> hash_lookup) {
 #define OCLRASTER_REGEX_MARKER "$$$OCLRASTER_REGEX_MARKER$$$"
 	static constexpr char cuda_preprocess_header[] {
 		"#include \"oclr_cudacl.h\"\n"
@@ -127,6 +131,12 @@ void cudacl_translate(const string& cl_source,
 		tcc_delete(state);
 	}
 	timer.add("preprocessing", false);
+	
+	// code hashing (note that this has to be done _after_ preprocessing,
+	// since build options and/or header files might have changed)
+	uint128 src_hash = CityHash128(kernel_source.c_str(), kernel_source.size());
+	timer.add("hashing", false);
+	kernel_hash = src_hash;
 	
 	// in preprocessed source: find regex marker, erase it, only apply regex on actual user code (add cuda header stuff later)
 	const size_t regex_marker_pos = kernel_source.find(OCLRASTER_REGEX_MARKER);
@@ -197,6 +207,18 @@ void cudacl_translate(const string& cl_source,
 		}
 	}
 	timer.add("cl regex", false);
+	
+	// if cache usage is enabled, check if the hash can be found in the cache
+	// note: this can't be done earlier, since the kernel info generated/extracted
+	// in the previous lines is required to use the kernel
+	if(use_cache) {
+		if(hash_lookup(src_hash)) {
+			// found it -> can return immediately
+			found_in_cache = true;
+			return;
+		}
+	}
+	found_in_cache = false;
 	
 	// replace opencl keywords with cuda keywords
 	static const vector<pair<const regex, const string>> rx_cl2cuda {

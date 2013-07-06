@@ -24,6 +24,7 @@
 #include "core/core.h"
 #include "core/vector2.h"
 #include "core/gl_support.h"
+#include "hash/city.h"
 
 // necessary for now (when compiling with opencl 1.2+ headers)
 #define CL_USE_DEPRECATED_OPENCL_1_1_APIS 1
@@ -758,7 +759,6 @@ public:
 	
 protected:
 	bool valid = true;
-	bool use_ptx_cache = false;
 	string cache_path = "";
 	string cc_target_str = "10";
 	unsigned int cc_target = 0;
@@ -771,6 +771,13 @@ protected:
 	unordered_map<opencl_base::buffer_object*, CUgraphicsResource*> cuda_gl_buffers;
 	unordered_map<CUgraphicsResource*, CUdeviceptr*> cuda_mapped_gl_buffers;
 	unordered_map<shared_ptr<opencl_base::kernel_object>, cuda_kernel_object*> cuda_kernels;
+	
+	// 128-bit kernel hash -> kernel identifier
+	// note: this is a multimap, because there might be kernels that are identical
+	// and can use the same binary (especially simple passthrough shaders)
+	unordered_multimap<uint128, string> cuda_cache_hashes;
+	unordered_map<string, uint128> rev_cuda_cache; // for reverse lookup
+	unordered_map<uint128, string> cuda_cache_binaries; // hash -> cache file content
 	
 	// active (host) memory mappings
 	struct cuda_mem_map_data {

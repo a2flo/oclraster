@@ -36,4 +36,5 @@
 	profiling CDATA #REQUIRED
 	keep_temp CDATA #REQUIRED
 	keep_binaries CDATA #REQUIRED
+	use_cache CDATA #REQUIRED
 >
