@@ -274,7 +274,12 @@ map<string, file_io::FILE_TYPE> core::get_file_list(const string& directory, con
 		else file_list[name] = file_io::FILE_TYPE::NONE;
 	}
 	
-	if(namelist != nullptr) delete [] namelist;
+	if(namelist != nullptr) {
+		for(int i = 0; i < n; i++) {
+			free(namelist[i]);
+		}
+		free(namelist);
+	}
 #endif
 	
 	return file_list;

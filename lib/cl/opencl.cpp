@@ -734,8 +734,8 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 				const string version_str = cl_version_str.substr(start_len, cl_version_str.find(" ", start_len) - start_len);
 				const size_t dot_pos = version_str.find(".");
 				if(string2size_t(version_str.substr(0, dot_pos)) > 1) {
-					// major version is higher than 1 -> pretend we're running on CL 1.2
-					return { true, CL_VERSION::CL_1_2 };
+					// major version is higher than 1 -> pretend we're running on CL 2.0
+					return { true, CL_VERSION::CL_2_0 };
 				}
 				else {
 					switch(string2size_t(version_str.substr(dot_pos+1, version_str.length()-dot_pos-1))) {
@@ -761,7 +761,9 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		//
 		oclr_debug("opencl platform #%u vendor: %s (version CL%s)",
 				   platform_index, platform_vendor_to_str(platform_vendor),
-				   (platform_cl_version == CL_VERSION::CL_1_0 ? "1.0" : (platform_cl_version == CL_VERSION::CL_1_1 ? "1.1" : "1.2")));
+				   (platform_cl_version == CL_VERSION::CL_1_0 ? "1.0" :
+					(platform_cl_version == CL_VERSION::CL_1_1 ? "1.1" :
+					 (platform_cl_version == CL_VERSION::CL_1_2 ? "1.2" : "2.0"))));
 		
 		internal_devices.clear();
 		internal_devices = context->getInfo<CL_CONTEXT_DEVICES>();

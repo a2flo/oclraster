@@ -124,7 +124,8 @@ public:
 	enum class CL_VERSION {
 		CL_1_0,
 		CL_1_1,
-		CL_1_2
+		CL_1_2,
+		CL_2_0,
 	};
 	// <vendor, index/identifier for use in oclraster config>
 	static vector<pair<PLATFORM_VENDOR, string>> get_platforms();
