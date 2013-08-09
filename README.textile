@@ -1,7 +1,12 @@
 *Flexible Rasterizer in OpenCL*
 
-This is the source code to my bachelor's thesis "Flexible Rasterizer in OpenCL". The intension is to write a fully functional and programmable software rasterizer in OpenCL.
-TODO: abstract
+This is the source code to my bachelor's thesis "Flexible Rasterizer in OpenCL":
+
+This project implements an essentially OpenGL 2.0-level software graphics pipeline, called OCLRaster (short for OpenCL Rasterizer), with the addition of some unique features and functionality of more recent OpenGL versions, but also the exclusion of some other features. The pipeline is written and accelerated by OpenCL C on the device side and C++ on the host side, and is capable of running on all OpenCL 1.1 desktop hardware. This includes most modern GPUs and CPUs.
+
+Among the main goals are to provide a simple host API and an easy way to program the vertex and fragment stage, with the direct intention of being similar to a hardware graphics pipeline and API, and accordingly requiring no modification of the pipeline. Both of these should allow for a rather uncomplicated migration of OpenGL programs.
+
+In regard to the implemented features, this software pipeline supports fully programmable depth testing and blending, which are both not possible on today’s graphics hardware, instanced rendering, scissor testing, the previously mentioned vertex and fragment stage programmability, miscellaneous buffer objects in a simplified and unified way, 2D images (hardware accelerated formats and software emulation for unsupported formats), framebuffers and multiple render targets with less restrictions than hardware pipelines, and of course rendering with perspective and orthographic projection modes. Other OpenGL 2.0-level features are however not supported. These include stencil testing (which can however be partially simulated in software by simply using an additional framebuffer attachment), anti-aliasing, 1D and 3D images, occlusion querrying and all of the now obsolete legacy draw functions and modes. The reasons for this are not of any technical nature that would prevent their implementation, but rather due to the time constraints of this thesis/project.
 
 Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (initialization, core, event and initial OpenCL/CUDA functionality)
 
@@ -13,15 +18,17 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 ** make sure to select the correct opencl platform in config.xml
 * on OS X:
 ** please install the "latest XQuartz":http://xquartz.macosforge.org
-** 10.7: OpenCL on 10.7.5 on non-CPU devices is broken, please use a CPU device for now or use an earlier version of OS X (or upgrade to 10.8)
+** 10.7: OpenCL on 10.7.5 on non-CPU devices is broken, please use a CPU device for now or use an earlier version of OS X (or upgrade to 10.8+)
 ** 10.8: update to at least 10.8.3 (prior versions are majorly broken)
-** -if you have a Nvidia GPU, you can also use "CUDA":https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda")- currently defunct
+** 10.9: should work OOTB
+** if you have a Nvidia GPU, you can also use "CUDA":https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda") - note that this is still experimental
 
 *Requirements:*
-* Windows: NT 6.0+ x86 (Vista/7/8/2008/2008R2/2012), NT 5.1/5.2 x86 (XP/2003) support is uncertain
+* Windows: NT 6.0+ x86 (Vista/7/8/2008/2008R2/2012/2012R2); NT 5.1/5.2 x86 (XP/2003) support is uncertain
 * OS X: 10.7+
 * Linux: any x64 distribution that supports the AMD, Intel or Nvidia OpenCL SDK/drivers
 * OpenGL 2.0+ (with support for ARB_framebuffer_object or EXT_framebuffer_object + EXT_framebuffer_blit) or OpenGL 3.2+ Core
+** note that OpenGL is only needed to actually display the framebuffer
 * OpenCL 1.1+ capable GPU/CPU and platform (GeForce 400+, Radeon HD5+, Core2+, Athlon64+)
 * OpenCL extension support for:
 ** cl_khr_global_int32_base_atomics
@@ -37,8 +44,9 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * after a submodule update / pull: git submodule update
 
 on Linux:
-* install all necessary libraries (-> Credits; a2elight is not required/used, CUDA is optional)
-* install clang 3.2+ and libc++ (currently 1101)
+* install all necessary libraries and programs, including clang 3.2+ and libc++ (currently 1101) (-> Credits; a2elight is not required/used, CUDA is optional)
+** on "Arch Linux":https://www.archlinux.org (sub-dependencies are installed automatically): pacman -S clang libc++ sdl2 sdl2_image libxml2 premake freetype2 opencl-headers cuda
+** any of: opencl-nvidia (in addition to Nvidia drivers), intel-opencl-sdk (from AUR, CPU only or in addition to Intel GPU drivers) or "catalyst":https://wiki.archlinux.org/index.php/AMD_Catalyst + "misc":https://wiki.archlinux.org/index.php/AMD_Catalyst#OpenCL_and_OpenGL_development
 * run ./premake.sh
 * make
 * there is an install script located in lib/ which should be executed from that folder (will install to /usr/local/)
@@ -80,10 +88,11 @@ on OS X:
 * Khronos (http://www.khronos.org) / Nvidia / AMD / Apple / Intel (OpenGL/OpenCL)
 * CUDA (http://www.nvidia.com)
 
-*Papers:*
-TODO: all papers
+*Relevant Links and Papers:*
 * "3D Rasterization: A Bridge between Rasterization and Ray Casting":http://cg.ibds.kit.edu/publications/p2012/3dr/gi2012.pdf
 * "High-Performance Software Rasterization on GPUs":https://mediatech.aalto.fi/~samuli/publications/laine2011hpg_paper.pdf
+* "View frustum culling":http://fgiesen.wordpress.com/2010/10/17/view-frustum-culling
+* "OpenCL Specification and Headers":http://www.khronos.org/registry/cl/
 
 *Screenshots:*
 * progress as of 2013/04/27, running on a GPU in OS X:
