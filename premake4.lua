@@ -109,7 +109,7 @@ solution "oclraster"
 			if(not win_unixenv) then
 				buildoptions { "-integrated-as" }
 				defines { "OCLRASTER_EXPORT=1" }
-				linkoptions { "-stdlib=libc++" }
+				linkoptions { "-stdlib=libc++ -lc++abi" }
 			else
 				-- "--allow-multiple-definition" is necessary, because gcc is still used as a linker
 				-- and will always link against libstdc++ (-> multiple definitions with libc++)
