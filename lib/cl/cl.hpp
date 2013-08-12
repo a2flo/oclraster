@@ -165,7 +165,8 @@
 #endif
 #include <OpenCL/opencl.h>
 #else
-#include <GL/gl3.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
 #include <CL/opencl.h>
 #endif // !__APPLE__
 

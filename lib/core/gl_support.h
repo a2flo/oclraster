@@ -87,7 +87,8 @@
 #if defined(MINGW)
 #define GL3_PROTOTYPES
 #endif
-#include <GL/gl3.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
 #if !defined(WIN_UNIXENV)
 #include <GL/glx.h>
 #include <GL/glxext.h>

@@ -31,14 +31,14 @@ for arg in "$@"; do
 	esac
 done
 
-if [[ $BUILD_USE_CLANG == 1 ]]; then
+if [ $BUILD_USE_CLANG == 1 ]; then
 	BUILD_ARGS+=" --clang"
 fi
 
 case $( uname | tr [:upper:] [:lower:] ) in
 	"darwin")
 		BUILD_OS="macosx"
-		BUILD_CPU_COUNT=$(sysctl -a | grep 'machdep.cpu.thread_count' | sed -E 's/.*(: )([:digit:]*)/\2/g')
+		BUILD_CPU_COUNT=$(sysctl 'machdep.cpu.thread_count' | sed -E 's/.*(: )([:digit:]*)/\2/g')
 		;;
 	"linux")
 		BUILD_OS="linux"
@@ -48,7 +48,7 @@ case $( uname | tr [:upper:] [:lower:] ) in
 	[a-z0-9]*"BSD")
 		BUILD_OS="bsd"
 		BUILD_MAKE="gmake"
-		# TODO: get cpu/thread count on *bsd
+		BUILD_CPU_COUNT=$(sysctl hw.ncpu | sed -E 's/.*(: )([:digit:]*)/\2/g')
 		;;
 	"cygwin"*)
 		BUILD_OS="windows"
@@ -67,7 +67,7 @@ case $( uname | tr [:upper:] [:lower:] ) in
 esac
 
 BUILD_PLATFORM_TEST_STRING=""
-if [[ $BUILD_OS != "windows" ]]; then
+if [ $BUILD_OS != "windows" ]; then
 	BUILD_PLATFORM_TEST_STRING=$( uname -m )
 else
 	BUILD_PLATFORM_TEST_STRING=$( gcc -dumpmachine | sed "s/-.*//" )
@@ -94,13 +94,18 @@ echo "using: premake4 --cc=gcc --os="${BUILD_OS}" gmake"${BUILD_ARGS}
 premake4 --cc=gcc --os=${BUILD_OS} gmake ${BUILD_ARGS}
 sed -i -e 's/\${MAKE}/\${MAKE} -j '${BUILD_CPU_COUNT}'/' Makefile
 
-if [[ $BUILD_USE_CLANG == 1 ]]; then
-	sed -i '1i export CC=clang' Makefile
-	sed -i '1i export CXX=clang++' Makefile
+if [ $UNIBOT_USE_CLANG == 1 ]; then
+	# this seems to be the most portable way of insert chars in front of a file
+	# note that "sed -i "1i ..." file" is not portable!
+	mv Makefile Makefile.tmp
+	echo "export CC=clang" > Makefile
+	echo "export CXX=clang++" >> Makefile
+	cat Makefile.tmp >> Makefile
+	rm Makefile.tmp
 fi
-sed -i 's/-std=c++11/-std=c11/g' lib/Makefile
-sed -i 's/-Wall -stdlib=libc++/-Wall/g' lib/Makefile
-sed -i 's/CXXFLAGS  += $(CFLAGS)/CXXFLAGS  += $(CFLAGS) -std=c++11 -stdlib=libc++/g' lib/Makefile
+sed -i -e 's/-std=c++11/-std=c11/g' lib/Makefile
+sed -i -e 's/-Wall -stdlib=libc++/-Wall/g' lib/Makefile
+sed -i -e 's/CXXFLAGS  += $(CFLAGS)/CXXFLAGS  += $(CFLAGS) -std=c++11 -stdlib=libc++/g' lib/Makefile
 
 chmod +x lib/build_version.sh
 
