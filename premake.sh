@@ -110,7 +110,19 @@ sed -i -e 's/CXXFLAGS  += $(CFLAGS)/CXXFLAGS  += $(CFLAGS) -std=c++11 -stdlib=li
 chmod +x lib/build_version.sh
 
 echo ""
-echo "#########################################################"
+echo "############################################################################"
+echo "#"
 echo "# NOTE: use '"${BUILD_MAKE}"' to build oclraster"
-echo "#########################################################"
+echo "#"
+echo "############################################################################"
+echo ""
+
+echo ""
+echo "############################################################################"
+echo "# if you have just cloned oclraster, but haven't cloned its submodules yet:"
+echo "#"
+echo "#   run: git submodule init && git submodule update && ./premake.sh"
+echo "#   and on every submodule change: git submodule update"
+echo "#"
+echo "############################################################################"
 echo ""
