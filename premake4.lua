@@ -86,6 +86,9 @@ solution "oclraster"
 		argc=argc+1
 	end
 	defines { "TCC_LIB_ONLY=1" }
+	if(pocl) then
+		defines { "OCLRASTER_POCL" }
+	end
 	
 	configurations { "Release", "Debug" }
 	

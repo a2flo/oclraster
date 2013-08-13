@@ -2292,7 +2292,7 @@ void opencl::unmap_buffer(opencl::buffer_object* buffer_obj, void* map_ptr) {
 	__HANDLE_CL_EXCEPTION("unmap_buffer")
 }
 
-#if defined(CL_VERSION_1_2)
+#if defined(CL_VERSION_1_2) && !defined(OCLRASTER_POCL)
 void opencl::_fill_buffer(buffer_object* buffer_obj,
 						  const void* pattern,
 						  const size_t& pattern_size,
