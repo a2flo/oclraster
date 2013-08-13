@@ -35,6 +35,58 @@ shared_ptr<opencl::kernel_object> opencl_base::null_kernel_object { nullptr };
 // 2d array: [IMAGE_TYPE][IMAGE_CHANNEL] -> cl::ImageFormat (-> will be (0, 0) if not supported)
 static array<array<cl::ImageFormat, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL>, (size_t)IMAGE_TYPE::__MAX_TYPE> internal_image_format_mapping;
 
+// these functions are not part of the FreeBSD libOpenCL.so, so define them here
+#if defined(__FreeBSD__)
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueAcquireGLObjects(cl_command_queue      /* command_queue */,
+                          cl_uint               /* num_objects */,
+                          const cl_mem *        /* mem_objects */,
+                          cl_uint               /* num_events_in_wait_list */,
+                          const cl_event *      /* event_wait_list */,
+                          cl_event *            /* event */) {
+	oclr_error("don't use gl sharing functions on FreeBSD!");
+	throw runtime_error("don't use gl sharing functions on FreeBSD!");
+}
+
+CL_API_ENTRY cl_int CL_API_CALL
+clEnqueueReleaseGLObjects(cl_command_queue      /* command_queue */,
+                          cl_uint               /* num_objects */,
+                          const cl_mem *        /* mem_objects */,
+                          cl_uint               /* num_events_in_wait_list */,
+                          const cl_event *      /* event_wait_list */,
+                          cl_event *            /* event */) {
+	oclr_error("don't use gl sharing functions on FreeBSD!");
+	throw runtime_error("don't use gl sharing functions on FreeBSD!");
+}
+CL_API_ENTRY cl_mem CL_API_CALL
+clCreateFromGLTexture2D(cl_context      /* context */,
+                        cl_mem_flags    /* flags */,
+                        cl_GLenum       /* target */,
+                        cl_GLint        /* miplevel */,
+                        cl_GLuint       /* texture */,
+                        cl_int *        /* errcode_ret */) {
+	oclr_error("don't use gl sharing functions on FreeBSD!");
+	throw runtime_error("don't use gl sharing functions on FreeBSD!");
+}
+CL_API_ENTRY cl_mem CL_API_CALL
+clCreateFromGLRenderbuffer(cl_context   /* context */,
+                           cl_mem_flags /* flags */,
+                           cl_GLuint    /* renderbuffer */,
+                           cl_int *     /* errcode_ret */) {
+	oclr_error("don't use gl sharing functions on FreeBSD!");
+	throw runtime_error("don't use gl sharing functions on FreeBSD!");
+}
+
+CL_API_ENTRY cl_mem CL_API_CALL
+clCreateFromGLBuffer(cl_context     /* context */,
+                     cl_mem_flags   /* flags */,
+                     cl_GLuint      /* bufobj */,
+                     int *          /* errcode_ret */) {
+	oclr_error("don't use gl sharing functions on FreeBSD!");
+	throw runtime_error("don't use gl sharing functions on FreeBSD!");
+}
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // common in all opencl implementations:
 
@@ -86,6 +138,8 @@ string opencl_base::platform_vendor_to_str(const opencl_base::PLATFORM_VENDOR& p
 		case PLATFORM_VENDOR::INTEL: return "INTEL";
 		case PLATFORM_VENDOR::AMD: return "AMD";
 		case PLATFORM_VENDOR::APPLE: return "APPLE";
+		case PLATFORM_VENDOR::FREEOCL: return "FREEOCL";
+		case PLATFORM_VENDOR::POCL: return "POCL";
 		case PLATFORM_VENDOR::UNKNOWN: break;
 	}
 	return "UNKNOWN";
@@ -724,6 +778,12 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		else if(platform_vendor_str.find("intel") != string::npos) {
 			platform_vendor = PLATFORM_VENDOR::INTEL;
 		}
+		else if(platform_vendor_str.find("freeocl") != string::npos) {
+			platform_vendor = PLATFORM_VENDOR::FREEOCL;
+		}
+		else if(platform_vendor_str.find("pocl") != string::npos) {
+			platform_vendor = PLATFORM_VENDOR::POCL;
+		}
 #endif
 		
 		//
@@ -845,7 +905,10 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 						 printf_buffer_size,
 						 printf_buffer_size / 1024ULL / 1024ULL);
 				oclr_msg("max sub-devices: %u", internal_device.getInfo<CL_DEVICE_PARTITION_MAX_SUB_DEVICES>());
-				oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
+				if(platform_vendor != PLATFORM_VENDOR::FREEOCL) {
+					// this is broken on freeocl
+					oclr_msg("built-in kernels: %s", internal_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
+				}
 			}
 #endif
 
@@ -863,6 +926,11 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			}
 			else if(strstr(vendor_str.c_str(), "apple") != nullptr) {
 				device->vendor_type = VENDOR::APPLE;
+			}
+			
+			// freeocl uses an empty device name, but "FreeOCL" is contained in the device version
+			if(device->version.find("FreeOCL") != string::npos) {
+				device->vendor_type = VENDOR::FREEOCL;
 			}
 			
 			if(device->internal_type & CL_DEVICE_TYPE_CPU) {
@@ -1257,6 +1325,12 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 					break;
 				case VENDOR::APPLE:
 					device_options += " -DAPPLE_ARM";
+					break;
+				case VENDOR::FREEOCL:
+					device_options += " -DFREEOCL";
+					break;
+				case VENDOR::POCL:
+					device_options += " -DPOCL";
 					break;
 				case VENDOR::UNKNOWN:
 					device_options += " -DUNKNOWN_VENDOR";

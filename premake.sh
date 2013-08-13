@@ -11,20 +11,23 @@ BUILD_USE_CLANG=1
 for arg in "$@"; do
 	case $arg in
 		"gcc")
-			BUILD_ARGS+=" --gcc"
+			BUILD_ARGS=${BUILD_ARGS}" --gcc"
 			BUILD_USE_CLANG=0
 			;;
 		"cuda")
-			BUILD_ARGS+=" --cuda"
+			BUILD_ARGS=${BUILD_ARGS}" --cuda"
+			;;
+		"pocl")
+			BUILD_ARGS=${BUILD_ARGS}" --pocl"
 			;;
 		"windows")
-			BUILD_ARGS+=" --windows"
+			BUILD_ARGS=${BUILD_ARGS}" --windows"
 			;;
 		"internal-debug")
-			BUILD_ARGS+=" --internal-debug"
+			BUILD_ARGS=${BUILD_ARGS}" --internal-debug"
 			;;
 		"cl-profiling")
-			BUILD_ARGS+=" --cl-profiling"
+			BUILD_ARGS=${BUILD_ARGS}" --cl-profiling"
 			;;
 		*)
 			;;
@@ -32,7 +35,7 @@ for arg in "$@"; do
 done
 
 if [ $BUILD_USE_CLANG == 1 ]; then
-	BUILD_ARGS+=" --clang"
+	BUILD_ARGS=${BUILD_ARGS}" --clang"
 fi
 
 case $( uname | tr [:upper:] [:lower:] ) in
@@ -45,19 +48,19 @@ case $( uname | tr [:upper:] [:lower:] ) in
 		# note that this includes hyper-threading and multi-socket systems
 		BUILD_CPU_COUNT=$(cat /proc/cpuinfo | grep "processor" | wc -l)
 		;;
-	[a-z0-9]*"BSD")
+	[a-z0-9]*"bsd")
 		BUILD_OS="bsd"
 		BUILD_MAKE="gmake"
 		BUILD_CPU_COUNT=$(sysctl hw.ncpu | sed -E 's/.*(: )([:digit:]*)/\2/g')
 		;;
 	"cygwin"*)
 		BUILD_OS="windows"
-		BUILD_ARGS+=" --env cygwin"
+		BUILD_ARGS=${BUILD_ARGS}" --env cygwin"
 		BUILD_CPU_COUNT=$(env | grep 'NUMBER_OF_PROCESSORS' | sed -E 's/.*=([:digit:]*)/\1/g')
 		;;
 	"mingw"*)
 		BUILD_OS="windows"
-		BUILD_ARGS+=" --env mingw"
+		BUILD_ARGS=${BUILD_ARGS}" --env mingw"
 		BUILD_CPU_COUNT=$(env | grep 'NUMBER_OF_PROCESSORS' | sed -E 's/.*=([:digit:]*)/\1/g')
 		;;
 	*)
@@ -77,12 +80,12 @@ case $BUILD_PLATFORM_TEST_STRING in
 	"i386"|"i486"|"i586"|"i686")
 		BUILD_PLATFORM="x32"
 		BUILD_MAKE_PLATFORM="32"
-		BUILD_ARGS+=" --platform x32"
+		BUILD_ARGS=${BUILD_ARGS}" --platform x32"
 		;;
 	"x86_64"|"amd64")
 		BUILD_PLATFORM="x64"
 		BUILD_MAKE_PLATFORM="64"
-		BUILD_ARGS+=" --platform x64"
+		BUILD_ARGS=${BUILD_ARGS}" --platform x64"
 		;;
 	*)
 		echo "unknown architecture - using "${BUILD_PLATFORM}

@@ -49,10 +49,6 @@ OGL_API PFNGLGENERATEMIPMAPPROC _glGenerateMipmap_ptr = nullptr; // ARB_framebuf
 OGL_API PFNGLBLITFRAMEBUFFERPROC _glBlitFramebuffer_ptr = nullptr; // ARB_framebuffer_object
 OGL_API PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC _glRenderbufferStorageMultisample_ptr = nullptr; // ARB_framebuffer_object
 OGL_API PFNGLFRAMEBUFFERTEXTURELAYERPROC _glFramebufferTextureLayer_ptr = nullptr; // ARB_framebuffer_object
-OGL_API PFNGLTEXIMAGE2DMULTISAMPLEPROC _glTexImage2DMultisample_ptr = nullptr; // ARB_texture_multisample
-OGL_API PFNGLTEXIMAGE3DMULTISAMPLEPROC _glTexImage3DMultisample_ptr = nullptr; // ARB_texture_multisample
-OGL_API PFNGLGETMULTISAMPLEFVPROC _glGetMultisamplefv_ptr = nullptr; // ARB_texture_multisample
-OGL_API PFNGLSAMPLEMASKIPROC _glSampleMaski_ptr = nullptr; // ARB_texture_multisample
 
 void init_gl_funcs() {
 	// try core functions first
@@ -76,11 +72,6 @@ void init_gl_funcs() {
 	_glBlitFramebuffer_ptr = (PFNGLBLITFRAMEBUFFERPROC)glGetProcAddress((ProcType)"glBlitFramebuffer");
 	_glRenderbufferStorageMultisample_ptr = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)glGetProcAddress((ProcType)"glRenderbufferStorageMultisample");
 	_glFramebufferTextureLayer_ptr = (PFNGLFRAMEBUFFERTEXTURELAYERPROC)glGetProcAddress((ProcType)"glFramebufferTextureLayer");
-	
-	_glTexImage2DMultisample_ptr = (PFNGLTEXIMAGE2DMULTISAMPLEPROC)glGetProcAddress((ProcType)"glTexImage2DMultisample");
-	_glTexImage3DMultisample_ptr = (PFNGLTEXIMAGE3DMULTISAMPLEPROC)glGetProcAddress((ProcType)"glTexImage3DMultisample");
-	_glGetMultisamplefv_ptr = (PFNGLGETMULTISAMPLEFVPROC)glGetProcAddress((ProcType)"glGetMultisamplefv");
-	_glSampleMaski_ptr = (PFNGLSAMPLEMASKIPROC)glGetProcAddress((ProcType)"glSampleMaski");
 	
 	// fallback (ARB_framebuffer_object)
 	if(_glIsRenderbuffer_ptr == nullptr) _glIsRenderbuffer_ptr = (PFNGLISRENDERBUFFERPROC)glGetProcAddress((ProcType)"glIsRenderbufferARB"); // ARB_framebuffer_object
@@ -129,13 +120,6 @@ void init_gl_funcs() {
 	
 	// no glFramebufferTextureLayer EXT equivalent
 	
-	// fallback (ARB_texture_multisample)
-	_glTexImage2DMultisample_ptr = (PFNGLTEXIMAGE2DMULTISAMPLEPROC)glGetProcAddress((ProcType)"glTexImage2DMultisampleARB"); // ARB_texture_multisample
-	_glTexImage3DMultisample_ptr = (PFNGLTEXIMAGE3DMULTISAMPLEPROC)glGetProcAddress((ProcType)"glTexImage3DMultisampleARB"); // ARB_texture_multisample
-	_glGetMultisamplefv_ptr = (PFNGLGETMULTISAMPLEFVPROC)glGetProcAddress((ProcType)"glGetMultisamplefvARB"); // ARB_texture_multisample
-	_glSampleMaski_ptr = (PFNGLSAMPLEMASKIPROC)glGetProcAddress((ProcType)"glSampleMaskiARB"); // ARB_texture_multisample
-	
-	
 	// check gl function pointers (print error if nullptr)
 	if(_glIsRenderbuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glIsRenderbuffer\"!");
 	if(_glBindRenderbuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glBindRenderbuffer\"!");
@@ -157,10 +141,6 @@ void init_gl_funcs() {
 	if(_glBlitFramebuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glBlitFramebuffer\"!");
 	if(_glRenderbufferStorageMultisample_ptr == nullptr) oclr_error("couldn't get function pointer to \"glRenderbufferStorageMultisample\"!");
 	if(_glFramebufferTextureLayer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glFramebufferTextureLayer\"!");
-	if(_glTexImage2DMultisample_ptr == nullptr) oclr_error("couldn't get function pointer to \"glTexImage2DMultisample\"!");
-	if(_glTexImage3DMultisample_ptr == nullptr) oclr_error("couldn't get function pointer to \"glTexImage3DMultisample\"!");
-	if(_glGetMultisamplefv_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGetMultisamplefv\"!");
-	if(_glSampleMaski_ptr == nullptr) oclr_error("couldn't get function pointer to \"glSampleMaski\"!");
 }
 
 #endif

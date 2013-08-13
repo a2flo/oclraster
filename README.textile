@@ -53,6 +53,9 @@ on Linux:
 * alternatively:
 ** sudo ln -sf /path/to/oclraster/bin/liboclraster{,d}.{a,so} /usr/local/lib/
 ** sudo ln -sf /path/to/oclraster/lib /usr/local/include/oclraster
+* when using X11 forwarding, set these env variables:
+** export LIBGL_ALWAYS_INDIRECT=yes
+** export SDL_VIDEO_X11_NODIRECTCOLOR=yes
 
 on Windows/MinGW:
 * install custom MinGW builds "gcc-dw2-4.6":http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/rubenvb/gcc-dw2-4.6-release/ and "clang-3.2":http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/rubenvb/clang-3.2-release/ (thanks to "rubenvb":https://github.com/rubenvb for providing these!)

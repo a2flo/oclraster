@@ -256,7 +256,7 @@
 		5CE34280168D57FB0071068E /* camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = camera.cpp; sourceTree = "<group>"; };
 		5CE34281168D57FB0071068E /* camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
 		5CE91CE916EE2F0C0044C264 /* premake.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = premake.sh; path = ../premake.sh; sourceTree = "<group>"; };
-		5CE91CEA16EE2F0C0044C264 /* premake4.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = premake4.lua; path = ../premake4.lua; sourceTree = "<group>"; };
+		5CE91CEA16EE2F0C0044C264 /* premake4.lua */ = {isa = PBXFileReference; lastKnownFileType = text; name = premake4.lua; path = ../premake4.lua; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.python; };
 		5CE91CEB16EE2F0C0044C264 /* README.textile */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.textile; path = ../README.textile; sourceTree = "<group>"; };
 		5CE91CEC16EE2F240044C264 /* install.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = install.sh; sourceTree = "<group>"; };
 		5CE9722D16D682D600271278 /* liboclrasterd.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = liboclrasterd.a; sourceTree = BUILT_PRODUCTS_DIR; };

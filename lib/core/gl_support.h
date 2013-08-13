@@ -122,10 +122,6 @@ OGL_API extern PFNGLGENERATEMIPMAPPROC _glGenerateMipmap_ptr; // ARB_framebuffer
 OGL_API extern PFNGLBLITFRAMEBUFFERPROC _glBlitFramebuffer_ptr; // ARB_framebuffer_object
 OGL_API extern PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC _glRenderbufferStorageMultisample_ptr; // ARB_framebuffer_object
 OGL_API extern PFNGLFRAMEBUFFERTEXTURELAYERPROC _glFramebufferTextureLayer_ptr; // ARB_framebuffer_object
-OGL_API extern PFNGLTEXIMAGE2DMULTISAMPLEPROC _glTexImage2DMultisample_ptr; // ARB_texture_multisample
-OGL_API extern PFNGLTEXIMAGE3DMULTISAMPLEPROC _glTexImage3DMultisample_ptr; // ARB_texture_multisample
-OGL_API extern PFNGLGETMULTISAMPLEFVPROC _glGetMultisamplefv_ptr; // ARB_texture_multisample
-OGL_API extern PFNGLSAMPLEMASKIPROC _glSampleMaski_ptr; // ARB_texture_multisample
 
 #define glIsRenderbuffer ((PFNGLISRENDERBUFFERPROC)_glIsRenderbuffer_ptr)
 #define glBindRenderbuffer ((PFNGLBINDRENDERBUFFERPROC)_glBindRenderbuffer_ptr)
@@ -147,10 +143,6 @@ OGL_API extern PFNGLSAMPLEMASKIPROC _glSampleMaski_ptr; // ARB_texture_multisamp
 #define glBlitFramebuffer ((PFNGLBLITFRAMEBUFFERPROC)_glBlitFramebuffer_ptr)
 #define glRenderbufferStorageMultisample ((PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)_glRenderbufferStorageMultisample_ptr)
 #define glFramebufferTextureLayer ((PFNGLFRAMEBUFFERTEXTURELAYERPROC)_glFramebufferTextureLayer_ptr)
-#define glTexImage2DMultisample ((PFNGLTEXIMAGE2DMULTISAMPLEPROC)_glTexImage2DMultisample_ptr)
-#define glTexImage3DMultisample ((PFNGLTEXIMAGE3DMULTISAMPLEPROC)_glTexImage3DMultisample_ptr)
-#define glGetMultisamplefv ((PFNGLGETMULTISAMPLEFVPROC)_glGetMultisamplefv_ptr)
-#define glSampleMaski ((PFNGLSAMPLEMASKIPROC)_glSampleMaski_ptr)
 
 #endif
 

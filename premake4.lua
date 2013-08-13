@@ -6,6 +6,7 @@ local mingw = false
 local clang_libcxx = false
 local gcc_compat = false
 local cuda = false
+local pocl = false
 local windows_no_cmd = false
 local platform = "x32"
 local system_includes = ""
@@ -70,6 +71,9 @@ solution "oclraster"
 		if(_ARGS[argc] == "--cuda") then
 			cuda = true
 		end
+		if(_ARGS[argc] == "--pocl") then
+			pocl = true
+		end
 		if(_ARGS[argc] == "--windows") then
 			windows_no_cmd = true
 		end
@@ -96,7 +100,9 @@ solution "oclraster"
 		add_include("/usr/local/include")
 		add_include("/usr/include/libxml2")
 		add_include("/usr/include/libxml")
+		add_include("/usr/local/include/libxml2")
 		add_include("/usr/include/freetype2")
+		add_include("/usr/local/include/freetype2")
 		buildoptions { "-std=c++11 -Wall" }
 		
 		if(clang_libcxx) then
@@ -110,7 +116,10 @@ solution "oclraster"
 			if(not win_unixenv) then
 				buildoptions { "-integrated-as" }
 				defines { "OCLRASTER_EXPORT=1" }
-				linkoptions { "-stdlib=libc++ -lc++abi" }
+				linkoptions { "-stdlib=libc++" }
+				if(os.is("linux")) then
+					linkoptions { "-lc++abi" }
+				end
 			else
 				-- "--allow-multiple-definition" is necessary, because gcc is still used as a linker
 				-- and will always link against libstdc++ (-> multiple definitions with libc++)
@@ -157,7 +166,11 @@ solution "oclraster"
 		-- set system includes
 		buildoptions { system_includes }
 		
-		links { "OpenCL" }
+		if(not pocl) then
+			links { "OpenCL" }
+		else
+			links { "pocl" }
+		end
 		libdirs { os.findlib("GL"), os.findlib("xml2"), os.findlib("OpenCL") }
 		if(not win_unixenv) then
 			links { "GL", "SDL2_image", "Xxf86vm", "xml2" }

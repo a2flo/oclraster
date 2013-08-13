@@ -119,6 +119,8 @@ public:
 		INTEL,
 		AMD,
 		APPLE,
+		FREEOCL,
+		POCL,
 		UNKNOWN
 	};
 	enum class CL_VERSION {
@@ -138,6 +140,8 @@ public:
 		INTEL,
 		AMD,
 		APPLE,
+		FREEOCL,
+		POCL,
 		UNKNOWN
 	};
 	

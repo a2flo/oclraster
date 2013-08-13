@@ -258,7 +258,8 @@ void oclraster::init_internal() {
 	oclr_debug("initializing oclraster");
 
 	// in order to use multi-threaded opengl with x11/xlib, we have to tell it to actually be thread safe
-#if !defined(__APPLE__) && !defined(__WINDOWS__)
+	// TODO: this is done by newer versions of SDL2 now - remove it at a later point
+#if !defined(__APPLE__) && !defined(__WINDOWS__) && !defined(__FreeBSD__)
 	if(XInitThreads() == 0) {
 		oclr_error("XInitThreads failed!");
 		exit(1);
@@ -277,11 +278,8 @@ void oclraster::init_internal() {
 
 	// set some flags
 	config.flags |= SDL_WINDOW_OPENGL;
-	config.flags |= SDL_WINDOW_SHOWN;
 	
 #if !defined(OCLRASTER_IOS)
-	config.flags |= SDL_WINDOW_INPUT_FOCUS;
-	config.flags |= SDL_WINDOW_MOUSE_FOCUS;
 	config.flags |= SDL_WINDOW_RESIZABLE;
 
 	int2 windows_pos(SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -307,8 +305,6 @@ void oclraster::init_internal() {
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	
 #if !defined(OCLRASTER_IOS)
 #if defined(__APPLE__) // only default to opengl 3.2 core on os x for now (opengl version doesn't really matter on other platforms)
