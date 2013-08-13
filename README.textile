@@ -22,11 +22,15 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 ** 10.8: update to at least 10.8.3 (prior versions are majorly broken)
 ** 10.9: should work OOTB
 ** if you have a Nvidia GPU, you can also use "CUDA":https://developer.nvidia.com/cuda-downloads (set the opencl platform value to "cuda") - note that this is still experimental
+* on FreeBSD:
+** only FreeBSD 10.0 is supported (and possibly any future versions)
+** since there is no direct OpenCL support from any hardware vendor, you'll have to install and use "pocl 0.8+":http://pocl.sourceforge.net (currently only "manually":http://www.freebsd.org/cgi/query-pr.cgi?pr=171914)
 
 *Requirements:*
 * Windows: NT 6.0+ x86 (Vista/7/8/2008/2008R2/2012/2012R2); NT 5.1/5.2 x86 (XP/2003) support is uncertain
 * OS X: 10.7+
 * Linux: any x64 distribution that supports the AMD, Intel or Nvidia OpenCL SDK/drivers
+* FreeBSD: 10.0+ (amd64; i386 support is uncertain)
 * OpenGL 2.0+ (with support for ARB_framebuffer_object or EXT_framebuffer_object + EXT_framebuffer_blit) or OpenGL 3.2+ Core
 ** note that OpenGL is only needed to actually display the framebuffer
 * OpenCL 1.1+ capable GPU/CPU and platform (GeForce 400+, Radeon HD5+, Core2+, Athlon64+)
@@ -43,7 +47,7 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * after cloning: git submodule init && git submodule update
 * after a submodule update / pull: git submodule update
 
-on Linux:
+on Linux and FreeBSD:
 * install all necessary libraries and programs, including clang 3.2+ and libc++ (currently 1101) (-> Credits; a2elight is not required/used, CUDA is optional)
 ** on "Arch Linux":https://www.archlinux.org (sub-dependencies are installed automatically): pacman -S clang libc++ sdl2 sdl2_image libxml2 premake freetype2 opencl-headers cuda
 ** any of: opencl-nvidia (in addition to Nvidia drivers), intel-opencl-sdk (from AUR, CPU only or in addition to Intel GPU drivers) or "catalyst":https://wiki.archlinux.org/index.php/AMD_Catalyst + "misc":https://wiki.archlinux.org/index.php/AMD_Catalyst#OpenCL_and_OpenGL_development
@@ -63,7 +67,7 @@ on Windows/MinGW:
 * build/install all necessary libraries, including libc++ (-> Credits; a2elight is not required/used, CUDA is optional)
 * add a Windows system environment variable called "MINGW_ROOT" and set it to your MinGW root folder (e.g. "/c/mingw/mingw32/")
 * add the "mingw/bin" path to the Windows system environment variable called "PATH"
-* run ./premake.sh
+* run "./premake.sh" or "./premake.sh pocl" on FreeBSD
 * make
 * libraries and headers will be automatically installed to your previously set MinGW folder
 * note: to make things easier, I might provide a full MinGW package containing all required libraries at a later point
@@ -92,12 +96,14 @@ on OS X:
 * http://clang.llvm.org / clang
 * http://libcxx.llvm.org / libc++
 * Khronos (http://www.khronos.org) / Nvidia / AMD / Apple / Intel (OpenGL/OpenCL)
-* CUDA (http://www.nvidia.com)
+* CUDA (http://www.nvidia.com) (optional)
+* http://pocl.sourceforge.net / pocl (optional)
 
 *Relevant Links and Papers:*
 * "3D Rasterization: A Bridge between Rasterization and Ray Casting":http://cg.ibds.kit.edu/publications/p2012/3dr/gi2012.pdf
 * "High-Performance Software Rasterization on GPUs":https://mediatech.aalto.fi/~samuli/publications/laine2011hpg_paper.pdf
 * "View frustum culling":http://fgiesen.wordpress.com/2010/10/17/view-frustum-culling
+* "A trip through the Graphics Pipeline":http://fgiesen.wordpress.com/2011/07/09/a-trip-through-the-graphics-pipeline-2011-index
 * "OpenCL Specification and Headers":http://www.khronos.org/registry/cl/
 
 *Screenshots:*

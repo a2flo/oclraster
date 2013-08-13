@@ -781,9 +781,6 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 		else if(platform_vendor_str.find("freeocl") != string::npos) {
 			platform_vendor = PLATFORM_VENDOR::FREEOCL;
 		}
-		else if(platform_vendor_str.find("pocl") != string::npos) {
-			platform_vendor = PLATFORM_VENDOR::POCL;
-		}
 #endif
 		
 		//
@@ -817,6 +814,11 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			oclr_error("invalid opencl platform version string: %s", cl_version_str);
 		}
 		platform_cl_version = extracted_cl_version.second;
+		
+		// pocl only identifies itself in the platform version string, not the vendor string
+		if(cl_version_str.find("pocl") != string::npos) {
+			platform_vendor = PLATFORM_VENDOR::POCL;
+		}
 
 		//
 		oclr_debug("opencl platform #%u vendor: %s (version CL%s)",
@@ -898,8 +900,11 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			oclr_msg("max_wg_size: %u", device->max_wg_size);
 			oclr_msg("max param size: %u", internal_device.getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>());
 			oclr_msg("double support: %b", device->double_support);
+			oclr_msg("image support: %b", device->img_support);
 #if defined(CL_VERSION_1_2)
-			if(platform_cl_version >= CL_VERSION::CL_1_2) {
+			if(platform_cl_version >= CL_VERSION::CL_1_2 &&
+			   // pocl has no support for this yet
+			   platform_vendor != PLATFORM_VENDOR::POCL) {
 				const unsigned long long int printf_buffer_size = internal_device.getInfo<CL_DEVICE_PRINTF_BUFFER_SIZE>();
 				oclr_msg("printf buffer size: %u bytes / %u MB",
 						 printf_buffer_size,
@@ -928,9 +933,12 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 				device->vendor_type = VENDOR::APPLE;
 			}
 			
-			// freeocl uses an empty device name, but "FreeOCL" is contained in the device version
+			// freeocl and pocl use an empty device name, but "FreeOCL"/"pocl" is contained in the device version
 			if(device->version.find("FreeOCL") != string::npos) {
 				device->vendor_type = VENDOR::FREEOCL;
+			}
+			if(device->version.find("pocl") != string::npos) {
+				device->vendor_type = VENDOR::POCL;
 			}
 			
 			if(device->internal_type & CL_DEVICE_TYPE_CPU) {
