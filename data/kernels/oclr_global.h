@@ -115,4 +115,10 @@ enum PRIMITIVE_TYPE {
 	PT_TRIANGLE_FAN
 };
 
+// batch: 2 header bytes (#passing triangles), n bytes passing primitive mask (8 primitives per byte)
+#define BATCH_HEADER_SIZE (2u)
+#define BATCH_BYTE_COUNT (BATCH_SIZE / 8u)
+#define BATCH_PRIMITIVE_COUNT (BATCH_SIZE - BATCH_HEADER_SIZE * 8u)
+#define BATCH_PRIMITIVE_BYTE_COUNT (BATCH_PRIMITIVE_COUNT / 8u)
+
 #endif

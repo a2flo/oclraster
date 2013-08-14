@@ -74,7 +74,6 @@ struct draw_state {
 	const uint2 bin_size { OCLRASTER_BIN_SIZE };
 	uint2 bin_count { 1, 1 };
 	uint2 bin_offset { 0, 0 };
-	const unsigned int batch_size { OCLRASTER_BATCH_SIZE };
 	unsigned int batch_count { 0 };
 	unsigned int primitive_count { 0 };
 	unsigned int instance_primitive_count { 0 };

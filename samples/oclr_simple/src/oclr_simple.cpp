@@ -165,7 +165,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	for(size_t i = 0; i < (512*512); i++) {
 		fp_noise_data[i] = core::rand(0.0f, 1.0f);
 	}
-	image* fp_noise = new image(512, 512, image::BACKING::BUFFER, IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R, fp_noise_data);
+	image* fp_noise = new image(512, 512, image_backing, IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R, fp_noise_data);
 	delete [] fp_noise_data;
 	
 #if 0
@@ -185,7 +185,7 @@ int main(int argc oclr_unused, char* argv[]) {
 		// event handling
 		evt->handle_events();
 		
-#if !defined(OCLRASTER_DEBUG) && 0
+#if 0 // enable this to disable rendering when the window is inactive
 		// stop drawing if window is inactive
 		if(!(SDL_GetWindowFlags(oclraster::get_window()) & SDL_WINDOW_INPUT_FOCUS)) {
 			SDL_Delay(20);

@@ -28,7 +28,7 @@ binning_stage::binning_stage() {
 	queue_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
 									  opencl::BUFFER_FLAG::BLOCK_ON_READ |
 									  opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
-									  128 * 1024 * 1024); // TODO: actual size
+									  24 * 1024 * 1024); // TODO: actual size
 }
 
 binning_stage::~binning_stage() {
@@ -82,6 +82,7 @@ const opencl::buffer_object* binning_stage::bin(draw_state& state) {
 	static bool dumped = false;
 	if(!dumped) {
 		dumped = true;
+		ocl->finish();
 		ocl->dump_buffer(queue_buffer, oclraster::data_path("dump/queue.bin"));
 		ocl->dump_buffer(bin_distribution_counter, oclraster::data_path("dump/bindist.bin"));
 	}

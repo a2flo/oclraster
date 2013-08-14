@@ -27,9 +27,16 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	// TODO: already read depth from framebuffer in here -> cull if depth test fails
 	
 	// -> each work-item: 1 bin + private mem queue (gpu version) or 1 batch + private mem queue (cpu version)
-	// -> iterate over 256 primitives (batch size: 256)
+	// -> iterate over 240 primitives (batch size: 240)
 	// -> store loop index in priv mem queue (-> only one byte per primitive)
-	// -> 2 vstore16 calls with 2 ulong16s (256 bytes)
+	// -> 1 vstore4 calls with 1 ulong4 (32 bytes)
+	
+	// queue storage handling
+	uchar primitive_queue[BATCH_BYTE_COUNT] __attribute__((aligned(8))); // should be aligned to 8, since it's casted to ulong later on
+	const ulong4* __attribute__((aligned(8))) queue_data_ptr = (const ulong4*)&primitive_queue[0];
+	
+	// framebuffer range is [0, size - 1], clamp accordingly
+	const uint2 framebuffer_clamp_size = framebuffer_size - 1u;
 	
 #if !defined(CPU)
 	// GPU version
@@ -43,10 +50,9 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	barrier(CLK_GLOBAL_MEM_FENCE);
 	
 	// note: opencl does not require this to be aligned, but certain implementations do
-	uchar primitive_queue[BATCH_SIZE] __attribute__((aligned(8)));
-	local float4 primitive_bounds[BATCH_SIZE] __attribute__((aligned(16))); // correctly align, so async copy will work
+	local float4 primitive_bounds[BATCH_PRIMITIVE_COUNT] __attribute__((aligned(16))); // correctly align, so async copy will work
 	local unsigned int batch_idx;
-	const uint2 framebuffer_clamp_size = framebuffer_size - 1u;
+	
 	for(;;) {
 		// get next batch index
 		// note that this barrier is necessary, because not all work-items are running this kernel synchronously
@@ -63,10 +69,10 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 		}
 		
 		// read input primitive bounds into shared memory (across work-group)
-		const unsigned int primitive_id_offset = batch_idx * BATCH_SIZE;
+		const unsigned int primitive_id_offset = batch_idx * BATCH_PRIMITIVE_COUNT;
 		event_t event = async_work_group_copy(&primitive_bounds[0],
 											  (global const float4*)&primitive_bounds_buffer[primitive_id_offset],
-											  BATCH_SIZE, 0);
+											  BATCH_PRIMITIVE_COUNT, 0);
 		wait_group_events(1, &event);
 		
 		// in cases where #bins > #work-items, we need to iterate over all bins (simply offset the bin_idx by the #work-items)
@@ -77,32 +83,34 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 			
 			// iterate over all primitives in this batch
 			unsigned int primitives_in_queue = 0;
-			for(unsigned int primitive_id = primitive_id_offset, idx = 0,
-				last_primitive_id = min(primitive_id_offset + BATCH_SIZE, primitive_count);
-				primitive_id < last_primitive_id; primitive_id++, idx++) {
+			(*queue_data_ptr).xyzw = (ulong4)(0ULL, 0ULL, 0ULL, 0ULL); // init all primitive bytes to 0 (-> all invisible)
+			
+			for(unsigned int primitive_id = primitive_id_offset, primitive_counter = 0u,
+				last_primitive_id = min(primitive_id_offset + BATCH_PRIMITIVE_COUNT, primitive_count);
+				primitive_id < last_primitive_id;
+				primitive_id++, primitive_counter++) {
 				// cull:
-				if(primitive_bounds[idx].x == INFINITY) continue;
+				if(primitive_bounds[primitive_counter].x == INFINITY) continue;
 				
-				const uint2 x_bounds = (uint2)(convert_uint(primitive_bounds[idx].x),
-											   convert_uint(primitive_bounds[idx].y));
-				const uint2 y_bounds = (uint2)(convert_uint(primitive_bounds[idx].z),
-											   convert_uint(primitive_bounds[idx].w));
+				const uint2 x_bounds = (uint2)(convert_uint(primitive_bounds[primitive_counter].x),
+											   convert_uint(primitive_bounds[primitive_counter].y));
+				const uint2 y_bounds = (uint2)(convert_uint(primitive_bounds[primitive_counter].z),
+											   convert_uint(primitive_bounds[primitive_counter].w));
 #else
 	// CPU version (no barriers, no group-waiting, no local-mem)
 	
 	const unsigned int bin_idx = get_group_id(0);
 	const uint2 bin_location = (uint2)(bin_idx % bin_count.x, bin_idx / bin_count.x) + bin_offset;
-	
-	// note: opencl does not require this to be aligned, but certain implementations do
-	uchar primitive_queue[BATCH_SIZE] __attribute__((aligned(8)));
-	const uint2 framebuffer_clamp_size = framebuffer_size - 1u;
 	{
 		for(unsigned int batch_idx = local_id; batch_idx < batch_count; batch_idx += local_size) {
 			unsigned int primitives_in_queue = 0;
-			const unsigned int primitive_id_offset = batch_idx * BATCH_SIZE;
-			for(unsigned int primitive_id = primitive_id_offset, idx = 0,
-				last_primitive_id = min(primitive_id_offset + BATCH_SIZE, primitive_count);
-				primitive_id < last_primitive_id; primitive_id++, idx++) {
+			(*queue_data_ptr).xyzw = (ulong4)(0ULL, 0ULL, 0ULL, 0ULL); // init all primitive bytes to 0 (-> all invisible)
+			const unsigned int primitive_id_offset = batch_idx * BATCH_PRIMITIVE_COUNT;
+			
+			for(unsigned int primitive_id = primitive_id_offset, primitive_counter = 0u,
+				last_primitive_id = min(primitive_id_offset + BATCH_PRIMITIVE_COUNT, primitive_count);
+				primitive_id < last_primitive_id;
+				primitive_id++, primitive_counter++) {
 				// cull:
 				if(primitive_bounds_buffer[primitive_id].bounds.x == INFINITY) continue;
 				
@@ -124,37 +132,23 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 				
 				if(bin_location.y >= y_bins.x && bin_location.y <= y_bins.y &&
 				   bin_location.x >= x_bins.x && bin_location.x <= x_bins.y) {
-					primitive_queue[primitives_in_queue] = idx;
+					const unsigned int queue_bit = primitive_counter % 8u, queue_byte = BATCH_HEADER_SIZE + (primitive_counter / 8u);
+					primitive_queue[queue_byte] |= (1u << queue_bit);
 					primitives_in_queue++;
 				}
 			}
 			
-			if(primitives_in_queue == 0) {
-				// flag empty queue with 0xFFFF
-				primitive_queue[0] = 0xFF;
-				primitive_queue[1] = 0xFF;
-				//primitives_in_queue = 2;
-			}
-			else if(primitives_in_queue != 256) {
-				// set end of queue byte (0x00)
-				primitive_queue[primitives_in_queue] = 0x00;
-				primitives_in_queue++;
-			}
-			
-			//
-			/*for(uint idx = primitives_in_queue; idx < BATCH_SIZE; idx++) {
-				primitive_queue[idx] = 0x00;
-			}*/
-			//primitives_in_queue = 256u;
-			
-			// this stores batches for each bin sequentially
-			const ulong16* __attribute__((aligned(8))) queue_data_ptr = (const ulong16*)&primitive_queue[0];
-			const size_t offset = (bin_idx * batch_count + batch_idx) * (BATCH_SIZE / 128u);
-			vstore16(*queue_data_ptr, offset, bin_queues);
-			if(primitives_in_queue > 128u) {
-				// only necessary, if there are more than 128 primitives in the bin queue
-				vstore16(*(queue_data_ptr+1), offset+1, bin_queues);
-			}
+			// store the count in the first two bytes of the queue
+			primitive_queue[0] = (primitives_in_queue & 0xFF00u) >> 8u;
+			primitive_queue[1] = (primitives_in_queue & 0xFFu);
+	
+			// copy queue to global memory (note that some/all implementations have 64-bit loads/stores -> use an ulong4)
+#if (BATCH_SIZE == 256u)
+			const size_t offset = (bin_idx * batch_count + batch_idx);
+			vstore4(*queue_data_ptr, offset, bin_queues);
+#else
+#error "invalid batch size (only 256 is currently supported)!"
+#endif
 		}
 	}
 }

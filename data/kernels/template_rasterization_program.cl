@@ -40,32 +40,31 @@
 										const uint4 scissor_rectangle) {
 		const unsigned int local_id = get_local_id(0);
 		const unsigned int local_size = get_local_size(0);
-		
-#if defined(CPU)
-#define NO_BARRIER
-#else
-#define LOCAL_MEM_COPY
-#endif
-		
-#if !defined(NO_BARRIER)
+				
+#if defined(GPU)
 		const unsigned int global_id = get_global_id(0);
 		// init counter
 		if(global_id == 0) {
 			*bin_distribution_counter = 0;
 		}
 		barrier(CLK_GLOBAL_MEM_FENCE);
-#endif
 		
-#if defined(LOCAL_MEM_COPY)
 		// -1 b/c the local memory is also used for other things
-		#define LOCAL_MEM_BATCH_COUNT ((LOCAL_MEM_SIZE / BATCH_SIZE) - 1)
+		//#define LOCAL_MEM_BATCH_COUNT ((LOCAL_MEM_SIZE / BATCH_SIZE) - 1)
 		//#define LOCAL_MEM_BATCH_COUNT (32u)
-		local uchar primitive_queue[LOCAL_MEM_BATCH_COUNT * BATCH_SIZE] __attribute__((aligned(16)));
+		
+		// note: this is highly hardware dependent, i.e. we don't to allocate
+		// too much local memory so that there is less occupancy because of it,
+		// but we still want to allocate as much as possible
+		// for now: simply store 32 batches (-> 64 * 32 = 2048 bytes)
+		//          -> 64 * 240 = 15360 triangles
+		// TODO: figure this out depending on the used hardware
+		#define LOCAL_MEM_BATCH_COUNT (64u)
+		
+		local uchar primitive_queue[LOCAL_MEM_BATCH_COUNT * BATCH_BYTE_COUNT] __attribute__((aligned(16)));
 		unsigned int triangle_offsets[LOCAL_MEM_BATCH_COUNT]; // stores the triangle id offsets for valid batches
 		event_t events[LOCAL_MEM_BATCH_COUNT];
-#endif
 		
-#if !defined(NO_BARRIER)
 		local unsigned int bin_idx;
 		for(;;) {
 			// get next bin index
@@ -87,20 +86,20 @@
 		{
 #endif
 			
-#if defined(LOCAL_MEM_COPY)
+#if defined(GPU)
 			// only read batches into local memory when they're non-empty
 			// note that this doesn't require any synchronization, since it's the same for all work-items
 			unsigned int valid_batch_count = 0;
-			size_t batch_offset = (bin_idx * batch_count) * BATCH_SIZE;
-			for(unsigned int batch_idx = 0; batch_idx < batch_count; batch_idx++, batch_offset += BATCH_SIZE) {
-				if(bin_queues[batch_offset] == 0xFF && bin_queues[batch_offset + 1] == 0xFF) {
+			size_t batch_offset = (bin_idx * batch_count) * BATCH_BYTE_COUNT;
+			for(unsigned int batch_idx = 0; batch_idx < batch_count; batch_idx++, batch_offset += BATCH_BYTE_COUNT) {
+				if(bin_queues[batch_offset] == 0 && bin_queues[batch_offset + 1] == 0) {
 					continue;
 				}
 				
-				events[valid_batch_count] = async_work_group_copy(&primitive_queue[valid_batch_count * BATCH_SIZE],
+				events[valid_batch_count] = async_work_group_copy(&primitive_queue[valid_batch_count * BATCH_BYTE_COUNT],
 																  (global const uchar*)(bin_queues + batch_offset),
-																  BATCH_SIZE, 0);
-				triangle_offsets[valid_batch_count] = batch_idx * BATCH_SIZE;
+																  BATCH_BYTE_COUNT, 0);
+				triangle_offsets[valid_batch_count] = batch_idx * BATCH_PRIMITIVE_COUNT;
 				valid_batch_count++;
 			}
 			
@@ -112,7 +111,7 @@
 				wait_group_events(1, &events[batch_idx]);
 			}
 #else
-			const size_t global_queue_offset = (bin_idx * batch_count) * BATCH_SIZE;
+			const size_t global_queue_offset = (bin_idx * batch_count) * BATCH_BYTE_COUNT;
 #endif
 			
 			//
@@ -139,26 +138,31 @@
 				//
 				for(unsigned int batch_idx = 0, queue_offset = 0;
 					batch_idx < valid_batch_count;
-					batch_idx++, queue_offset += BATCH_SIZE) {
-#if defined(LOCAL_MEM_COPY)
-					local const uchar* queue_ptr = &primitive_queue[queue_offset];
+					batch_idx++, queue_offset += BATCH_BYTE_COUNT) {
+#if defined(GPU)
+					local const uchar* queue_ptr = &primitive_queue[queue_offset + 2];
 #else
 					global const uchar* queue_ptr = &bin_queues[global_queue_offset + queue_offset];
 					
 					// check if queue is empty
-					if(queue_ptr[0] == 0xFF && queue_ptr[1] == 0xFF) {
+					if(queue_ptr[0] == 0 && queue_ptr[1] == 0) {
 						continue;
 					}
+					queue_ptr += BATCH_HEADER_SIZE; // advance to primitive data
+					
+					const unsigned int primitive_idx_offset = batch_idx * BATCH_PRIMITIVE_COUNT;
 #endif
 					
 					//
-					for(unsigned int idx = 0; idx < BATCH_SIZE; idx++) {
-						const unsigned int queue_data = queue_ptr[idx];
-						if(queue_data < idx) break; // end of queue
-#if defined(LOCAL_MEM_COPY)
-						const unsigned int primitive_id = triangle_offsets[batch_idx] + queue_data;
+					for(unsigned int idx = 0; idx < BATCH_PRIMITIVE_COUNT; idx++) {
+						const unsigned int queue_bit = idx % 8u, queue_byte = idx / 8u;
+						const bool is_visible = ((queue_ptr[queue_byte] & (1u << queue_bit)) != 0u);
+						if(!is_visible) continue;
+						
+#if defined(GPU)
+						const unsigned int primitive_id = triangle_offsets[batch_idx] + idx;
 #else
-						const unsigned int primitive_id = queue_offset + queue_data;
+						const unsigned int primitive_id = primitive_idx_offset + idx;
 #endif
 						const unsigned int instance_id = primitive_id / instance_primitive_count;
 						

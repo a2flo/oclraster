@@ -1349,8 +1349,7 @@ weak_ptr<opencl::kernel_object> opencl::add_kernel_src(const string& identifier,
 			if((device->internal_type & CL_DEVICE_TYPE_ACCELERATOR) != 0) device_options += " -DACCELERATOR";
 			
 			device_options += " -DPLATFORM_"+platform_vendor_to_str(platform_vendor);
-			//device_options += " -DLOCAL_MEM_SIZE="+ull2string(device->local_mem_size);
-			device_options += " -DLOCAL_MEM_SIZE=6144";
+			device_options += " -DLOCAL_MEM_SIZE="+ull2string(device->local_mem_size);
 			if(device->double_support) device_options += " -DOCLRASTER_DOUBLE_SUPPORT";
 			
 			kernel_ptr->program->build({ device->device }, (options+device_options).c_str());

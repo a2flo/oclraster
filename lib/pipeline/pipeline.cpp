@@ -269,13 +269,13 @@ void pipeline::draw_instanced(const PRIMITIVE_TYPE type,
 		state.bin_count = end_bin - start_bin + 1;
 		state.bin_offset = start_bin;
 	}
-	state.batch_count = ((state.primitive_count / state.batch_size) +
-						 ((state.primitive_count % state.batch_size) != 0 ? 1 : 0));
+	state.batch_count = ((state.primitive_count / OCLRASTER_BATCH_PRIMITIVE_COUNT) +
+						 ((state.primitive_count % OCLRASTER_BATCH_PRIMITIVE_COUNT) != 0 ? 1 : 0));
 	
 	// TODO: this should be static!
-	// note: internal transformed buffer size must be a multiple of "batch size" primitives (necessary for the binner)
-	const unsigned int pc_mod_batch_size = (state.primitive_count % OCLRASTER_BATCH_SIZE);
-	const unsigned int primitive_padding = (pc_mod_batch_size == 0 ? 0 : OCLRASTER_BATCH_SIZE - pc_mod_batch_size);
+	// note: internal transformed buffer size must be a multiple of "batch primitive count" primitives (necessary for the binner)
+	const unsigned int pc_mod_batch_size = (state.primitive_count % OCLRASTER_BATCH_PRIMITIVE_COUNT);
+	const unsigned int primitive_padding = (pc_mod_batch_size == 0 ? 0 : OCLRASTER_BATCH_PRIMITIVE_COUNT - pc_mod_batch_size);
 	state.transformed_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
 												  state.transformed_primitive_size * (state.primitive_count + primitive_padding));
 	state.primitive_bounds_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE,
