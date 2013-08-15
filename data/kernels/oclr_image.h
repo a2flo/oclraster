@@ -38,14 +38,14 @@ OCLRASTER_FUNC unsigned int oclr_get_image_channel_order(global const image_head
 
 //
 OCLRASTER_FUNC float FUNC_OVERLOAD texel_mix(float x, float y, float a) { return linear_blend(x, y, a); }
-OCLRASTER_FUNC float2 FUNC_OVERLOAD texel_mix(float2 x, float2 y, float a) { return linear_blend(x, y, a); }
-OCLRASTER_FUNC float3 FUNC_OVERLOAD texel_mix(float3 x, float3 y, float a) { return linear_blend(x, y, a); }
-OCLRASTER_FUNC float4 FUNC_OVERLOAD texel_mix(float4 x, float4 y, float a) { return linear_blend(x, y, a); }
+OCLRASTER_FUNC float2 FUNC_OVERLOAD texel_mix(float2 x, float2 y, float a) { return linear_blend(x, y, (float2)(a)); }
+OCLRASTER_FUNC float3 FUNC_OVERLOAD texel_mix(float3 x, float3 y, float a) { return linear_blend(x, y, (float3)(a)); }
+OCLRASTER_FUNC float4 FUNC_OVERLOAD texel_mix(float4 x, float4 y, float a) { return linear_blend(x, y, (float4)(a)); }
 #if defined(OCLRASTER_DOUBLE_SUPPORT)
 OCLRASTER_FUNC double FUNC_OVERLOAD texel_mix(double x, double y, float a) { return linear_blend(x, y, (double)a); }
-OCLRASTER_FUNC double2 FUNC_OVERLOAD texel_mix(double2 x, double2 y, float a) { return linear_blend(x, y, (double)a); }
-OCLRASTER_FUNC double3 FUNC_OVERLOAD texel_mix(double3 x, double3 y, float a) { return linear_blend(x, y, (double)a); }
-OCLRASTER_FUNC double4 FUNC_OVERLOAD texel_mix(double4 x, double4 y, float a) { return linear_blend(x, y, (double)a); }
+OCLRASTER_FUNC double2 FUNC_OVERLOAD texel_mix(double2 x, double2 y, float a) { return linear_blend(x, y, (double2)((double)a)); }
+OCLRASTER_FUNC double3 FUNC_OVERLOAD texel_mix(double3 x, double3 y, float a) { return linear_blend(x, y, (double3)((double)a)); }
+OCLRASTER_FUNC double4 FUNC_OVERLOAD texel_mix(double4 x, double4 y, float a) { return linear_blend(x, y, (double4)((double)a)); }
 #endif
 
 #define INT_TEXEL_MIX(type, type_vec, ftype, one) \

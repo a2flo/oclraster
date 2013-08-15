@@ -83,7 +83,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 			
 			// iterate over all primitives in this batch
 			unsigned int primitives_in_queue = 0;
-			primitive_queue_vec = (ulong4)(0ULL, 0ULL, 0ULL, 0ULL); // init all primitive bytes to 0 (-> all invisible)
+			primitive_queue_vec = (ulong4)(0u, 0u, 0u, 0u); // init all primitive bytes to 0 (-> all invisible)
 			
 			for(unsigned int primitive_id = primitive_id_offset, primitive_counter = 0u,
 				last_primitive_id = min(primitive_id_offset + BATCH_PRIMITIVE_COUNT, primitive_count);
@@ -104,7 +104,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	{
 		for(unsigned int batch_idx = local_id; batch_idx < batch_count; batch_idx += local_size) {
 			unsigned int primitives_in_queue = 0;
-			primitive_queue_vec = (ulong4)(0ULL, 0ULL, 0ULL, 0ULL); // init all primitive bytes to 0 (-> all invisible)
+			primitive_queue_vec = (ulong4)(0u, 0u, 0u, 0u); // init all primitive bytes to 0 (-> all invisible)
 			const unsigned int primitive_id_offset = batch_idx * BATCH_PRIMITIVE_COUNT;
 			
 			for(unsigned int primitive_id = primitive_id_offset, primitive_counter = 0u,
