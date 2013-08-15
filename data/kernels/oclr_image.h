@@ -73,45 +73,28 @@ INT_TEXEL_MIX(long, long3, double, 1.0)
 INT_TEXEL_MIX(long, long4, double, 1.0)
 #endif
 
-// pocl compat
-#if defined(POCL)
-
 // pocl doesn't support all native image functions -> define them
-int4 read_imagei(image2d_t img, sampler_t sampler, float2 coord) {
+#if defined(POCL)
+int4 FUNC_OVERLOAD read_imagei(image2d_t img, sampler_t sampler, float2 coord) {
 	printf("read_imagei is not supported by pocl");
+	return (int4)(0, 0, 0, 0);
 }
-uint4 read_imageui(image2d_t img, sampler_t sampler, float2 coord) {
+int4 FUNC_OVERLOAD read_imagei(image2d_t img, sampler_t sampler, int2 coord) {
+	printf("read_imagei is not supported by pocl");
+	return (int4)(0, 0, 0, 0);
+}
+uint4 FUNC_OVERLOAD read_imageui(image2d_t img, sampler_t sampler, float2 coord) {
 	printf("read_imageui is not supported by pocl");
+	return (uint4)(0u, 0u, 0u, 0u);
 }
-void write_imageui(image2d_t img, int2 coord, uint4 color) {
+uint4 FUNC_OVERLOAD read_imageui(image2d_t img, sampler_t sampler, int2 coord) {
+	printf("read_imageui is not supported by pocl");
+	return (uint4)(0u, 0u, 0u, 0u);
+}
+void FUNC_OVERLOAD write_imageui(image2d_t img, int2 coord, uint4 color) {
 	printf("write_imageui is not supported by pocl");
 }
-
-// there is a type mismatch between sampler_t and sampler_t "enums" in pocl
-// -> undef old defines, define new ones with a type cast
-#undef CLK_ADDRESS_NONE
-#undef CLK_ADDRESS_MIRRORED_REPEAT
-#undef CLK_ADDRESS_REPEAT
-#undef CLK_ADDRESS_CLAMP_TO_EDGE
-#undef CLK_ADDRESS_CLAMP
-#undef CLK_NORMALIZED_COORDS_FALSE
-#undef CLK_NORMALIZED_COORDS_TRUE
-#undef CLK_FILTER_NEAREST
-#undef CLK_FILTER_LINEAR
-#define CLK_ADDRESS_NONE                ((sampler_t)0x00)
-#define CLK_ADDRESS_MIRRORED_REPEAT     ((sampler_t)0x01)
-#define CLK_ADDRESS_REPEAT              ((sampler_t)0x02)
-#define CLK_ADDRESS_CLAMP_TO_EDGE       ((sampler_t)0x03)
-#define CLK_ADDRESS_CLAMP               ((sampler_t)0x04)
-#define CLK_NORMALIZED_COORDS_FALSE     ((sampler_t)0x00)
-#define CLK_NORMALIZED_COORDS_TRUE      ((sampler_t)0x08)
-#define CLK_FILTER_NEAREST              ((sampler_t)0x00)
-#define CLK_FILTER_LINEAR               ((sampler_t)0x10)
-
 #endif
-
-// image_read* and image_write* functions for buffer-based images
-#include "oclr_image_support.h"
 
 // image read functions for native images
 OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
@@ -148,6 +131,15 @@ OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const ui
 OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const uint4 color) {
 	write_imageui(img, convert_int2(coord), color);
 }
+
+#if defined(POCL)
+// there is a type mismatch between the sampler_t typedef and sampler_t "enums"/defines in pocl
+// -> simply define sampler_t as int, since the preprocessor gets there first, before the compiler
+#define sampler_t int
+#endif
+
+// image_read* and image_write* functions for buffer-based images
+#include "oclr_image_support.h"
 
 //
 #if defined(__clang__)
