@@ -25,13 +25,12 @@
 #define OCLRASTER_BIN_SIZE (32u)
 
 // batch size (used in the binner and rasterization stage) - for now this is fixed at 256
-// amount of primitives per batch: 256 (bits in total) - 2 (header bytes) * 8 = 240
+// amount of primitives per batch: 256 (bits in total) - 1 (header bit) = 255
 #define OCLRASTER_BATCH_SIZE (256u)
 // if you need to change these, also change them in data/kernels/oclr_global.h
-#define OCLRASTER_BATCH_HEADER_SIZE (2u)
+#define OCLRASTER_BATCH_HEADER_SIZE (1u)
 #define OCLRASTER_BATCH_BYTE_COUNT (OCLRASTER_BATCH_SIZE / 8u)
-#define OCLRASTER_BATCH_PRIMITIVE_COUNT (OCLRASTER_BATCH_SIZE - OCLRASTER_BATCH_HEADER_SIZE * 8u)
-#define OCLRASTER_BATCH_PRIMITIVE_BYTE_COUNT (OCLRASTER_BATCH_PRIMITIVE_COUNT / 8u)
+#define OCLRASTER_BATCH_PRIMITIVE_COUNT (OCLRASTER_BATCH_SIZE - OCLRASTER_BATCH_HEADER_SIZE)
 
 // uses kernel templates from the data/kernels/ folder instead of the internal ones
 #if !defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)

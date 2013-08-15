@@ -27,13 +27,13 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	// TODO: already read depth from framebuffer in here -> cull if depth test fails
 	
 	// -> each work-item: 1 bin + private mem queue (gpu version) or 1 batch + private mem queue (cpu version)
-	// -> iterate over 240 primitives (batch size: 240)
+	// -> iterate over 255 primitives (batch size: 255)
 	// -> store loop index in priv mem queue (-> only one byte per primitive)
 	// -> 1 vstore4 calls with 1 ulong4 (32 bytes)
 	
 	// queue storage handling
-	uchar primitive_queue[BATCH_BYTE_COUNT] __attribute__((aligned(8))); // should be aligned to 8, since it's casted to ulong later on
-	const ulong4* __attribute__((aligned(8))) queue_data_ptr = (const ulong4*)&primitive_queue[0];
+	ulong4 primitive_queue_vec;
+	uchar* primitive_queue = (uchar*)&primitive_queue_vec;
 	
 	// framebuffer range is [0, size - 1], clamp accordingly
 	const uint2 framebuffer_clamp_size = framebuffer_size - 1u;
@@ -83,7 +83,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 			
 			// iterate over all primitives in this batch
 			unsigned int primitives_in_queue = 0;
-			(*queue_data_ptr).xyzw = (ulong4)(0ULL, 0ULL, 0ULL, 0ULL); // init all primitive bytes to 0 (-> all invisible)
+			primitive_queue_vec = (ulong4)(0ULL, 0ULL, 0ULL, 0ULL); // init all primitive bytes to 0 (-> all invisible)
 			
 			for(unsigned int primitive_id = primitive_id_offset, primitive_counter = 0u,
 				last_primitive_id = min(primitive_id_offset + BATCH_PRIMITIVE_COUNT, primitive_count);
@@ -104,7 +104,7 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 	{
 		for(unsigned int batch_idx = local_id; batch_idx < batch_count; batch_idx += local_size) {
 			unsigned int primitives_in_queue = 0;
-			(*queue_data_ptr).xyzw = (ulong4)(0ULL, 0ULL, 0ULL, 0ULL); // init all primitive bytes to 0 (-> all invisible)
+			primitive_queue_vec = (ulong4)(0ULL, 0ULL, 0ULL, 0ULL); // init all primitive bytes to 0 (-> all invisible)
 			const unsigned int primitive_id_offset = batch_idx * BATCH_PRIMITIVE_COUNT;
 			
 			for(unsigned int primitive_id = primitive_id_offset, primitive_counter = 0u,
@@ -132,20 +132,19 @@ kernel void oclraster_bin(global unsigned int* bin_distribution_counter,
 				
 				if(bin_location.y >= y_bins.x && bin_location.y <= y_bins.y &&
 				   bin_location.x >= x_bins.x && bin_location.x <= x_bins.y) {
-					const unsigned int queue_bit = primitive_counter % 8u, queue_byte = BATCH_HEADER_SIZE + (primitive_counter / 8u);
+					const unsigned int queue_bit = (primitive_counter + 1u) % 8u, queue_byte = ((primitive_counter + 1u) / 8u);
 					primitive_queue[queue_byte] |= (1u << queue_bit);
 					primitives_in_queue++;
 				}
 			}
 			
-			// store the count in the first two bytes of the queue
-			primitive_queue[0] = (primitives_in_queue & 0xFF00u) >> 8u;
-			primitive_queue[1] = (primitives_in_queue & 0xFFu);
+			// store the "any primitives visible at all" flag in the first bit of the first byte
+			primitive_queue[0] |= (primitives_in_queue > 0u ? 1u : 0u);
 	
 			// copy queue to global memory (note that some/all implementations have 64-bit loads/stores -> use an ulong4)
 #if (BATCH_SIZE == 256u)
 			const size_t offset = (bin_idx * batch_count + batch_idx);
-			vstore4(*queue_data_ptr, offset, bin_queues);
+			vstore4(primitive_queue_vec, offset, bin_queues);
 #else
 #error "invalid batch size (only 256 is currently supported)!"
 #endif

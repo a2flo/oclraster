@@ -49,15 +49,11 @@
 		}
 		barrier(CLK_GLOBAL_MEM_FENCE);
 		
-		// -1 b/c the local memory is also used for other things
-		//#define LOCAL_MEM_BATCH_COUNT ((LOCAL_MEM_SIZE / BATCH_SIZE) - 1)
-		//#define LOCAL_MEM_BATCH_COUNT (32u)
-		
 		// note: this is highly hardware dependent, i.e. we don't to allocate
 		// too much local memory so that there is less occupancy because of it,
 		// but we still want to allocate as much as possible
-		// for now: simply store 32 batches (-> 64 * 32 = 2048 bytes)
-		//          -> 64 * 240 = 15360 triangles
+		// for now: simply store 64 batches (-> 64 * 32 = 2048 bytes)
+		//          -> 64 * 255 = 16320 triangles
 		// TODO: figure this out depending on the used hardware
 		#define LOCAL_MEM_BATCH_COUNT (64u)
 		
@@ -92,7 +88,7 @@
 			unsigned int valid_batch_count = 0;
 			size_t batch_offset = (bin_idx * batch_count) * BATCH_BYTE_COUNT;
 			for(unsigned int batch_idx = 0; batch_idx < batch_count; batch_idx++, batch_offset += BATCH_BYTE_COUNT) {
-				if(bin_queues[batch_offset] == 0 && bin_queues[batch_offset + 1] == 0) {
+				if((bin_queues[batch_offset] & 1u) == 0) {
 					continue;
 				}
 				
@@ -140,22 +136,21 @@
 					batch_idx < valid_batch_count;
 					batch_idx++, queue_offset += BATCH_BYTE_COUNT) {
 #if defined(GPU)
-					local const uchar* queue_ptr = &primitive_queue[queue_offset + 2];
+					local const uchar* queue_ptr = &primitive_queue[queue_offset];
 #else
 					global const uchar* queue_ptr = &bin_queues[global_queue_offset + queue_offset];
 					
 					// check if queue is empty
-					if(queue_ptr[0] == 0 && queue_ptr[1] == 0) {
+					if((queue_ptr[0] & 1u) == 0) {
 						continue;
 					}
-					queue_ptr += BATCH_HEADER_SIZE; // advance to primitive data
 					
 					const unsigned int primitive_idx_offset = batch_idx * BATCH_PRIMITIVE_COUNT;
 #endif
 					
 					//
 					for(unsigned int idx = 0; idx < BATCH_PRIMITIVE_COUNT; idx++) {
-						const unsigned int queue_bit = idx % 8u, queue_byte = idx / 8u;
+						const unsigned int queue_bit = (idx + 1u) % 8u, queue_byte = (idx + 1u) / 8u;
 						const bool is_visible = ((queue_ptr[queue_byte] & (1u << queue_bit)) != 0u);
 						if(!is_visible) continue;
 						

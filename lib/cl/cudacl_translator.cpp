@@ -288,6 +288,12 @@ void cudacl_translate(const string& cl_source,
 			{ regex("\\(uint2\\)", regex::optimize), "uint2" },
 			{ regex("\\(uint3\\)", regex::optimize), "uint3" },
 			{ regex("\\(uint4\\)", regex::optimize), "uint4" },
+			{ regex("\\(long2\\)", regex::optimize), "long2" },
+			{ regex("\\(long3\\)", regex::optimize), "long3" },
+			{ regex("\\(long4\\)", regex::optimize), "long4" },
+			{ regex("\\(ulong2\\)", regex::optimize), "ulong2" },
+			{ regex("\\(ulong3\\)", regex::optimize), "ulong3" },
+			{ regex("\\(ulong4\\)", regex::optimize), "ulong4" },
 		}
 	};
 	for(const auto& rx_vec_type : rx_vec_types) {
@@ -298,9 +304,9 @@ void cudacl_translate(const string& cl_source,
 	static const vector<pair<const regex, const string>> rx_vector_op {
 		{
 			// TODO: find a better (stable) solution for this!
-			{ regex("([\\w\\[\\]\\.\\->]+)\\.xyzw ([\\+\\-\\*/]*)=", regex::optimize), "*((float4*)&$1) $2=" },
-			{ regex("([\\w\\[\\]\\.\\->]+)\\.xyz ([\\+\\-\\*/]*)=", regex::optimize), "*((float3*)&$1) $2=" },
-			{ regex("([\\w\\[\\]\\.\\->]+)\\.xy ([\\+\\-\\*/]*)=", regex::optimize), "*((float2*)&$1) $2=" },
+			{ regex("([\\w\\[\\]\\.\\->_]+)\\.xyzw ([\\+\\-\\*/]*)=", regex::optimize), "*((float4*)&$1) $2=" },
+			{ regex("([\\w\\[\\]\\.\\->_]+)\\.xyz ([\\+\\-\\*/]*)=", regex::optimize), "*((float3*)&$1) $2=" },
+			{ regex("([\\w\\[\\]\\.\\->_]+)\\.xy ([\\+\\-\\*/]*)=", regex::optimize), "*((float2*)&$1) $2=" },
 		}
 	};
 	for(const auto& rx_vec_op : rx_vector_op) {
@@ -310,12 +316,13 @@ void cudacl_translate(const string& cl_source,
 	// <regex, components, function?>
 	static const vector<tuple<const regex, const size_t, const bool>> rx_vec_accessors {
 		{
-			{ regex("([\\w\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, false },
-			{ regex("([\\w\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, false },
-			{ regex("([\\w\\[\\]\\.\\->]+)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, false },
-			{ regex("([\\w\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, true },
-			{ regex("([\\w\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, true },
-			{ regex("([\\w\\[\\]\\.\\->]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, true },
+			// TODO: handle "(*vec_ptr).xyz"
+			{ regex("([\\w\\[\\]\\.\\->_]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, false },
+			{ regex("([\\w\\[\\]\\.\\->_]+)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, false },
+			{ regex("([\\w\\[\\]\\.\\->_]+)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, false },
+			{ regex("([\\w\\[\\]\\.\\->_]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 4, true },
+			{ regex("([\\w\\[\\]\\.\\->_]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)(x|y|z|w)", regex::optimize), 3, true },
+			{ regex("([\\w\\[\\]\\.\\->_]+)\\((.*)\\)\\.(x|y|z|w)(x|y|z|w)", regex::optimize), 2, true },
 		}
 	};
 	for(const auto& rx_vec_access : rx_vec_accessors) {
