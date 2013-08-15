@@ -28,6 +28,11 @@
 #endif
 #endif
 
+#if defined(__FreeBSD__)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
+
 #define CLINFO_STR_SIZE (65536*2)
 
 shared_ptr<opencl::kernel_object> opencl_base::null_kernel_object { nullptr };
@@ -939,6 +944,19 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			}
 			if(device->version.find("pocl") != string::npos) {
 				device->vendor_type = VENDOR::POCL;
+				
+				// device unit count on pocl is 0 -> figure out how many logical cpus actually exist
+				if(device->units == 0) {
+#if defined(__FreeBSD__)
+					int core_count = 0;
+					size_t size = sizeof(core_count);
+					sysctlbyname("hw.ncpu", &core_count, &size, nullptr, 0);
+					device->units = core_count;
+#else
+					// TODO: other platforms?
+					device->units = 1;
+#endif
+				}
 			}
 			
 			if(device->internal_type & CL_DEVICE_TYPE_CPU) {
