@@ -20,7 +20,7 @@ case $OCLR_PLATFORM_TEST_STRING in
 		exit;;
 esac
 
-declare -a paths=( cl core oclraster pipeline program threading )
+declare -a paths=( cl core oclraster hash pipeline program threading )
 case $( uname | tr [:upper:] [:lower:] ) in
 	"linux"|[a-z0-9]*"BSD")
 		OCLR_INCLUDE_PATH="/usr/local/include"

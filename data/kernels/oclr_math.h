@@ -36,8 +36,18 @@ OCLRASTER_FUNC float3 reflect(const float3 I, const float3 N) {
 }
 
 //
-#define interpolate(v0, v1, v2, interp) (mad(v0, interp.x, mad(v1, interp.y, v2 * interp.z)))
-#define linear_blend(v0, v1, interp) (mad(v1 - v0, interp, v0))
+OCLRASTER_FUNC float FUNC_OVERLOAD interpolate(const float v0, const float v1, const float v2, const float4 interp) {
+	return mad(v0, interp.x, mad(v1, interp.y, v2 * interp.z));
+}
+OCLRASTER_FUNC float2 FUNC_OVERLOAD interpolate(const float2 v0, const float2 v1, const float2 v2, const float4 interp) {
+	return mad(v0, (float2)(interp.x), mad(v1, (float2)(interp.y), v2 * interp.z));
+}
+OCLRASTER_FUNC float3 FUNC_OVERLOAD interpolate(const float3 v0, const float3 v1, const float3 v2, const float4 interp) {
+	return mad(v0, (float3)(interp.x), mad(v1, (float3)(interp.y), v2 * interp.z));
+}
+OCLRASTER_FUNC float4 FUNC_OVERLOAD interpolate(const float4 v0, const float4 v1, const float4 v2, const float4 interp) {
+	return mad(v0, (float4)(interp.x), mad(v1, (float4)(interp.y), v2 * interp.z));
+}
 
 //
 #if defined(__clang__)

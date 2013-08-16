@@ -927,15 +927,16 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 			if(strstr(vendor_str.c_str(), "nvidia") != nullptr) {
 				device->vendor_type = VENDOR::NVIDIA;
 			}
-			else if(strstr(vendor_str.c_str(), "amd") != nullptr ||
-					strstr(vendor_str.c_str(), "ati") != nullptr) {
-				device->vendor_type = VENDOR::AMD;
-			}
 			else if(strstr(vendor_str.c_str(), "intel") != nullptr) {
 				device->vendor_type = VENDOR::INTEL;
 			}
 			else if(strstr(vendor_str.c_str(), "apple") != nullptr) {
 				device->vendor_type = VENDOR::APPLE;
+			}
+			else if(strstr(vendor_str.c_str(), "amd") != nullptr ||
+					// "ati" should be tested last, since it also matches "corporation"
+					strstr(vendor_str.c_str(), "ati") != nullptr) {
+				device->vendor_type = VENDOR::AMD;
 			}
 			
 			// freeocl and pocl use an empty device name, but "FreeOCL"/"pocl" is contained in the device version

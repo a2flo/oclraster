@@ -85,11 +85,20 @@ static uint32 UNALIGNED_LOAD32(const char *p) {
 #define bswap_64(x) bswap64(x)
 #endif
 
-#elif defined __FreeBSD__
+#elif defined(__FreeBSD__)
 
 #include <sys/endian.h>
 #define bswap_32(x) bswap32(x)
 #define bswap_64(x) bswap64(x)
+
+#elif defined(WIN_UNIXENV)
+
+static unsigned int bswap_32(const unsigned int& x) {
+	return ((x & 0xFF000000) >> 24) | ((x & 0xFF0000) >> 8) | ((x & 0xFF00) << 8) | ((x & 0xFF) << 24);
+}
+static unsigned long long int bswap_64(const unsigned long long int& x) {
+	return bswap_32(x >> 32ULL) | bswap_32(x & 0xFFFFFFFFULL);
+}
 
 #else
 

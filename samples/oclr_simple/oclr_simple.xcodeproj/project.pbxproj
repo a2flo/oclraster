@@ -86,7 +86,7 @@
 		5C83CD5A17768D0C00D83927 /* oclr_cuda_vector_ops.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector_ops.h; sourceTree = "<group>"; };
 		5C83CD5C1776C5A400D83927 /* oclr_cuda_vector_lib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cuda_vector_lib.h; sourceTree = "<group>"; };
 		5C91650E166685EA00626436 /* oclr_global.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_global.h; sourceTree = "<group>"; };
-		5C91650F166685EA00626436 /* oclr_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_math.h; sourceTree = "<group>"; };
+		5C91650F166685EA00626436 /* oclr_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_math.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.opencl; };
 		5C916510166685EA00626436 /* oclr_matrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_matrix.h; sourceTree = "<group>"; };
 		5C9165111666946B00626436 /* bin_rasterize.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = bin_rasterize.cl; sourceTree = "<group>"; };
 		5CC688F91715C167006BD36B /* processing.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = processing.cl; sourceTree = "<group>"; };
