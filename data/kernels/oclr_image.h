@@ -103,22 +103,22 @@ void FUNC_OVERLOAD write_imageui(image2d_t img, int2 coord, uint4 color) {
 #endif
 
 // image read functions for native images
-OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const oclr_sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imagef(img, sampler, coord);
 }
-OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const oclr_sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
 	return read_imagef(img, sampler, convert_int2(coord));
 }
-OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const oclr_sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imagei(img, sampler, coord);
 }
-OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const oclr_sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
 	return read_imagei(img, sampler, convert_int2(coord));
 }
-OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const oclr_sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imageui(img, sampler, coord);
 }
-OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const oclr_sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
 	return read_imageui(img, sampler, convert_int2(coord));
 }
 
