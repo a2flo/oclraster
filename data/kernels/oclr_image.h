@@ -73,6 +73,12 @@ INT_TEXEL_MIX(long, long3, double, 1.0)
 INT_TEXEL_MIX(long, long4, double, 1.0)
 #endif
 
+// since certain opencl implementations don't allow bitwise (or any) operations on sampler_t,
+// which are necessary for oclrasters buffer-based image support (aka software emulation),
+// define a oclr_sampler_t which should easily convert to sampler_t (constructible by uint per spec)
+// note: use this always and everywhere (except where emulating opencl functions)
+typedef unsigned int oclr_sampler_t;
+
 // pocl doesn't support all native image functions -> define them
 #if defined(POCL)
 int4 FUNC_OVERLOAD read_imagei(image2d_t img, sampler_t sampler, float2 coord) {
@@ -97,22 +103,22 @@ void FUNC_OVERLOAD write_imageui(image2d_t img, int2 coord, uint4 color) {
 #endif
 
 // image read functions for native images
-OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const oclr_sampler_t sampler, const float2 coord) {
 	return read_imagef(img, sampler, coord);
 }
-OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const oclr_sampler_t sampler, const uint2 coord) {
 	return read_imagef(img, sampler, convert_int2(coord));
 }
-OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const oclr_sampler_t sampler, const float2 coord) {
 	return read_imagei(img, sampler, coord);
 }
-OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const oclr_sampler_t sampler, const uint2 coord) {
 	return read_imagei(img, sampler, convert_int2(coord));
 }
-OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const oclr_sampler_t sampler, const float2 coord) {
 	return read_imageui(img, sampler, coord);
 }
-OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const oclr_sampler_t sampler, const uint2 coord) {
 	return read_imageui(img, sampler, convert_int2(coord));
 }
 
@@ -131,12 +137,6 @@ OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const ui
 OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const uint4 color) {
 	write_imageui(img, convert_int2(coord), color);
 }
-
-#if defined(POCL)
-// there is a type mismatch between the sampler_t typedef and sampler_t "enums"/defines in pocl
-// -> simply define sampler_t as int, since the preprocessor gets there first, before the compiler
-#define sampler_t int
-#endif
 
 // image_read* and image_write* functions for buffer-based images
 #include "oclr_image_support.h"

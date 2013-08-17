@@ -15,7 +15,7 @@ kernel void framebuffer_luma(//###OCLRASTER_FRAMEBUFFER_IMAGES###
 	}
 	
 	const uint2 coord = (uint2)(x, y);
-	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
+	const oclr_sampler_t point_sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
 	const float3 color = image_read(framebuffer, point_sampler, coord).xyz;
 	const float luma = color.x * 0.2126f + color.y * 0.7152f + color.z * 0.0722;
 	image_write(framebuffer, coord, (float4)(color, luma));

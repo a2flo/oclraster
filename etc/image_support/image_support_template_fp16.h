@@ -72,14 +72,14 @@ RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_FILTER_NAME(linear)(
 				  weights.y) VEC4_FILL);
 }
 
-RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_NAME()(global const IMG_TYPE* img, const sampler_t sampler, const float2 coord) {
+RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_NAME()(global const IMG_TYPE* img, const oclr_sampler_t sampler, const float2 coord) {
 	// need to check linear first (CLK_FILTER_NEAREST might be 0)
 	if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return IMG_READ_FUNC_FILTER_NAME(linear)(img, coord);
 	else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return IMG_READ_FUNC_FILTER_NAME(nearest)(img, coord);
 	return (RETURN_TYPE_VEC4)(IMG_ZERO, IMG_ZERO, IMG_ZERO, IMG_ONE);
 }
 
-RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_NAME()(global const IMG_TYPE* img, const sampler_t sampler, const uint2 coord) {
+RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_NAME()(global const IMG_TYPE* img, const oclr_sampler_t sampler, const uint2 coord) {
 	// filter must be set to CLK_FILTER_NEAREST
 	if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return IMG_READ_FUNC_FILTER_NAME(nearest)(img, coord);
 	return (RETURN_TYPE_VEC4)(IMG_ZERO, IMG_ZERO, IMG_ZERO, IMG_ONE);

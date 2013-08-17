@@ -55,8 +55,8 @@ oclraster_framebuffer {
 };
 
 bool rasterize_main() {
-	const sampler_t linear_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
-	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+	const oclr_sampler_t linear_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
+	const oclr_sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	
 	const float noise_offset = image_read(fp_noise, point_sampler, output_attributes->tex_coord).x;
 	const float noise = image_read(fp_noise, linear_sampler, fragment_coord/100.0f + noise_offset).x;

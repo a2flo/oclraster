@@ -417,8 +417,8 @@ FxaaFloat4 FxaaPixelShader(
 						   FxaaFloat fxaaQualityEdgeThresholdMin
 						   ) {
 	/*--------------------------------------------------------------------------*/
-	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
-	const sampler_t linear_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
+	const oclr_sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+	const oclr_sampler_t linear_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
     FxaaFloat2 posM;
     posM.x = pos.x;
     posM.y = pos.y;
@@ -849,7 +849,7 @@ kernel void framebuffer_fxaa(//###OCLRASTER_FRAMEBUFFER_IMAGES###
 										 //   Tune by looking at mostly non-green content,
 										 //   then start at zero and increase until aliasing is a problem.
 										 0.0833f);
-	//const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+	//const oclr_sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	//const float luma = image_read(framebuffer, point_sampler, (uint2)(x, y)).w;
 	//image_write(framebuffer, (uint2)(x, y), (float4)(luma, luma, luma, 1.0f));
 	image_write(framebuffer, (uint2)(x, y), (float4)(color.xyz, 1.0f));

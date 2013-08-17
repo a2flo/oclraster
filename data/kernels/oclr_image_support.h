@@ -52,12 +52,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const uchar* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)) / 255.0f) , 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -117,12 +117,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const uchar2*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)) / 255.0f) , 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar2* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar2* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -182,12 +182,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const uchar3*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)) / 255.0f) , 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar3* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar3* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -247,12 +247,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const uchar4*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)) / 255.0f) );
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar4* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar4* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const uchar4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -312,12 +312,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const uchar* im
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -377,12 +377,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const uchar2* i
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar2* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar2* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -442,12 +442,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const uchar3* i
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar3* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar3* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -507,12 +507,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const uchar4* i
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar4* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar4* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uchar4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -572,12 +572,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const ushort*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)) / 65535.0f) , 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -637,12 +637,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const ushort2
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)) / 65535.0f) , 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort2* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort2* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -702,12 +702,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const ushort3
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)) / 65535.0f) , 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort3* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort3* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -767,12 +767,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const ushort4
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)) / 65535.0f) );
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort4* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort4* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const ushort4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -832,12 +832,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const ushort* i
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -897,12 +897,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const ushort2* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort2* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort2* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -962,12 +962,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const ushort3* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort3* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort3* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -1027,12 +1027,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const ushort4* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort4* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort4* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const ushort4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -1092,12 +1092,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const uint* img
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -1157,12 +1157,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const uint2* im
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint2* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint2* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -1222,12 +1222,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const uint3* im
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint3* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint3* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -1287,12 +1287,12 @@ uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint_linear(global const uint4* im
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint4* img, const sampler_t sampler, const float2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_uint_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
-uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint4* img, const sampler_t sampler, const uint2 coord) {
+uint4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_uint(global const uint4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_uint_nearest(img, coord);
  return (uint4)(0, 0, 0, 1);
 }
@@ -1352,12 +1352,12 @@ ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong_linear(global const ulong* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 0, 1);
 }
-ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong* img, const sampler_t sampler, const float2 coord) {
+ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_ulong_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
-ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong* img, const sampler_t sampler, const uint2 coord) {
+ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
@@ -1417,12 +1417,12 @@ ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong_linear(global const ulong2*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 1);
 }
-ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong2* img, const sampler_t sampler, const float2 coord) {
+ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_ulong_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
-ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong2* img, const sampler_t sampler, const uint2 coord) {
+ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
@@ -1482,12 +1482,12 @@ ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong_linear(global const ulong3*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1);
 }
-ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong3* img, const sampler_t sampler, const float2 coord) {
+ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_ulong_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
-ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong3* img, const sampler_t sampler, const uint2 coord) {
+ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
@@ -1547,12 +1547,12 @@ ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong_linear(global const ulong4*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong4* img, const sampler_t sampler, const float2 coord) {
+ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_ulong_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
-ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong4* img, const sampler_t sampler, const uint2 coord) {
+ulong4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_ulong(global const ulong4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_ulong_nearest(img, coord);
  return (ulong4)(0, 0, 0, 1);
 }
@@ -1612,12 +1612,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const char* i
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)+ 128.0f) / 255.0f) * 2.0f - 1.0f , 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -1677,12 +1677,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const char2* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)+ 128.0f) / 255.0f) * 2.0f - 1.0f , 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char2* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char2* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -1742,12 +1742,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const char3* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)+ 128.0f) / 255.0f) * 2.0f - 1.0f , 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char3* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char3* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -1807,12 +1807,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const char4* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)+ 128.0f) / 255.0f) * 2.0f - 1.0f );
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char4* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char4* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const char4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -1872,12 +1872,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const char* img, 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -1937,12 +1937,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const char2* img,
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char2* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char2* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2002,12 +2002,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const char3* img,
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char3* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char3* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2067,12 +2067,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const char4* img,
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char4* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char4* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const char4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2132,12 +2132,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const short* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f , 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -2197,12 +2197,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const short2*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f , 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short2* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short2* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -2262,12 +2262,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const short3*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f , 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short3* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short3* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -2327,12 +2327,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const short4*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y)+ 32768.0f) / 65535.0f) * 2.0f - 1.0f );
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short4* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short4* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const short4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -2392,12 +2392,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const short* img,
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2457,12 +2457,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const short2* img
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short2* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short2* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2522,12 +2522,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const short3* img
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short3* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short3* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2587,12 +2587,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const short4* img
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short4* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short4* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const short4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2652,12 +2652,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const int* img, c
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2717,12 +2717,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const int2* img, 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int2* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int2* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2782,12 +2782,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const int3* img, 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int3* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int3* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2847,12 +2847,12 @@ int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int_linear(global const int4* img, 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int4* img, const sampler_t sampler, const float2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_int_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
-int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int4* img, const sampler_t sampler, const uint2 coord) {
+int4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_int(global const int4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_int_nearest(img, coord);
  return (int4)(0, 0, 0, 1);
 }
@@ -2912,12 +2912,12 @@ long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long_linear(global const long* img
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 0, 1);
 }
-long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long* img, const sampler_t sampler, const float2 coord) {
+long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_long_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
-long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long* img, const sampler_t sampler, const uint2 coord) {
+long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
@@ -2977,12 +2977,12 @@ long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long_linear(global const long2* im
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0, 1);
 }
-long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long2* img, const sampler_t sampler, const float2 coord) {
+long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_long_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
-long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long2* img, const sampler_t sampler, const uint2 coord) {
+long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
@@ -3042,12 +3042,12 @@ long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long_linear(global const long3* im
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1);
 }
-long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long3* img, const sampler_t sampler, const float2 coord) {
+long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_long_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
-long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long3* img, const sampler_t sampler, const uint2 coord) {
+long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
@@ -3107,12 +3107,12 @@ long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long_linear(global const long4* im
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long4* img, const sampler_t sampler, const float2 coord) {
+long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_long_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
-long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long4* img, const sampler_t sampler, const uint2 coord) {
+long4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_long(global const long4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_long_nearest(img, coord);
  return (long4)(0, 0, 0, 1);
 }
@@ -3166,12 +3166,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const oclr_ha
  texel_mix(texels[2], texels[3], weights.x),
  weights.y) , 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -3225,12 +3225,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const oclr_ha
  texel_mix(texels[2], texels[3], weights.x),
  weights.y) , 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half2* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half2* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -3284,12 +3284,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const oclr_ha
  texel_mix(texels[2], texels[3], weights.x),
  weights.y) , 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half3* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half3* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -3343,12 +3343,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const oclr_ha
  texel_mix(texels[2], texels[3], weights.x),
  weights.y) );
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half4* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half4* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const oclr_half4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -3408,12 +3408,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const float* 
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -3473,12 +3473,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const float2*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float2* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float2* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -3538,12 +3538,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const float3*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float3* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float3* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -3603,12 +3603,12 @@ float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_float_linear(global const float4*
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float4* img, const sampler_t sampler, const float2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_float_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float4* img, const sampler_t sampler, const uint2 coord) {
+float4 FUNC_OVERLOAD OCLRASTER_FUNC image_read(global const float4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_float_nearest(img, coord);
  return (float4)(0.0f, 0.0f, 0.0f, 1.0f);
 }
@@ -3668,12 +3668,12 @@ double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double_linear(global const doubl
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0.0, 0.0, 1.0);
 }
-double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double* img, const sampler_t sampler, const float2 coord) {
+double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_double_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
-double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double* img, const sampler_t sampler, const uint2 coord) {
+double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
@@ -3733,12 +3733,12 @@ double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double_linear(global const doubl
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 0.0, 1.0);
 }
-double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double2* img, const sampler_t sampler, const float2 coord) {
+double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double2* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_double_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
-double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double2* img, const sampler_t sampler, const uint2 coord) {
+double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double2* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
@@ -3798,12 +3798,12 @@ double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double_linear(global const doubl
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) , 1.0);
 }
-double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double3* img, const sampler_t sampler, const float2 coord) {
+double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double3* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_double_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
-double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double3* img, const sampler_t sampler, const uint2 coord) {
+double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double3* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
@@ -3863,12 +3863,12 @@ double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double_linear(global const doubl
  texel_mix(texels[2], texels[3], weights.x),
  weights.y))) );
 }
-double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double4* img, const sampler_t sampler, const float2 coord) {
+double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double4* img, const oclr_sampler_t sampler, const float2 coord) {
  if((sampler & CLK_FILTER_LINEAR) == CLK_FILTER_LINEAR) return image_read_double_linear(img, coord);
  else if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
-double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double4* img, const sampler_t sampler, const uint2 coord) {
+double4 FUNC_OVERLOAD OCLRASTER_FUNC image_read_double(global const double4* img, const oclr_sampler_t sampler, const uint2 coord) {
  if((sampler & CLK_FILTER_NEAREST) == CLK_FILTER_NEAREST) return image_read_double_nearest(img, coord);
  return (double4)(0.0, 0.0, 0.0, 1.0);
 }
