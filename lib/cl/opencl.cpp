@@ -2030,11 +2030,10 @@ void opencl::run_kernel(weak_ptr<kernel_object> kernel_obj) {
 	}
 	
 	try {
-		
 		bool all_set = true;
 		for(unsigned int i = 0; i < kernel_ptr->args_passed.size(); i++) {
 			if(!kernel_ptr->args_passed[i]) {
-				oclr_error("argument #%u not set!", i);
+				oclr_error("kernel %s: argument #%u not set!", kernel_ptr->name, i);
 				all_set = false;
 			}
 		}
@@ -2167,7 +2166,10 @@ bool opencl::set_kernel_argument(const unsigned int& index, size_t size, void* a
 		cur_kernel->args_passed[index] = true;
 		return true;
 	}
-	__HANDLE_CL_EXCEPTION("set_kernel_argument")
+	__HANDLE_CL_EXCEPTION_EXT("set_kernel_argument",
+							  (" - arg idx: "+size_t2string(index)+
+							   ", arg size: "+size_t2string(size)+
+							   ", in kernel: "+cur_kernel->name).c_str())
 	return false;
 }
 
