@@ -359,7 +359,11 @@ void oclraster::init_internal() {
 		exit(1);
 	}
 #if !defined(OCLRASTER_IOS)
-	SDL_GL_SetSwapInterval(config.vsync ? 1 : 0); // has to be set after context creation
+	// has to be set after context creation
+	if(config.vsync && SDL_GL_SetSwapInterval(1) == -1) {
+		oclr_error("error setting the gl swap interval to 1 (vsync): %s", SDL_GetError());
+		SDL_ClearError();
+	}
 	
 	// enable multi-threaded opengl context when on os x
 #if defined(__APPLE__) && 0
