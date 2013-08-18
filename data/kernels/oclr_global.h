@@ -15,7 +15,13 @@
 #endif
 
 #if !defined(OCLRASTER_CUDA_CL)
+#if !defined(PLATFORM_AMD)
 #define OCLRASTER_FUNC inline
+#else
+// the amd opencl compiler has many issues with (forced/hinted) function inlining
+// -> simply don't use it and let the compiler decide what to inline
+#define OCLRASTER_FUNC
+#endif
 #endif
 
 #if defined(__clang__)
