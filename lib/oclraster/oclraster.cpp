@@ -257,15 +257,6 @@ void oclraster::destroy() {
 void oclraster::init_internal() {
 	oclr_debug("initializing oclraster");
 
-	// in order to use multi-threaded opengl with x11/xlib, we have to tell it to actually be thread safe
-	// TODO: this is done by newer versions of SDL2 now - remove it at a later point
-#if !defined(__APPLE__) && !defined(__WINDOWS__) && !defined(__FreeBSD__)
-	if(XInitThreads() == 0) {
-		oclr_error("XInitThreads failed!");
-		exit(1);
-	}
-#endif
-
 	// initialize sdl
 	if(SDL_Init(SDL_INIT_VIDEO) == -1) {
 		oclr_error("can't init SDL: %s", SDL_GetError());
