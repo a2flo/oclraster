@@ -48,8 +48,12 @@ static constexpr char template_framebuffer_program[] { u8R"OCLRASTER_RAWSTR(
 	kernel void clear_framebuffer(//###OCLRASTER_FRAMEBUFFER_IMAGES###
 								  const uint2 framebuffer_size,
 								  const ulong4 clear_color_value,
+#if defined(CLEAR_DEPTH)
 								  const float clear_depth_value,
+#endif
+#if defined(CLEAR_STENCIL)
 								  const ulong clear_stencil_value,
+#endif
 								  const uint4 scissor_rectangle) { // note: scissor_rectangle contains absolute coordinates
 		const unsigned int x = get_global_id(0) + scissor_rectangle.x;
 		const unsigned int y = get_global_id(1) + scissor_rectangle.y;
@@ -391,8 +395,12 @@ void framebuffer::clear(const vector<size_t> image_indices, const bool depth_cle
 	
 	ocl->set_kernel_argument(argc++, size);
 	ocl->set_kernel_argument(argc++, clear_color);
-	ocl->set_kernel_argument(argc++, clear_depth);
-	ocl->set_kernel_argument(argc++, clear_stencil);
+	if(depth_clear && depth_buffer != nullptr) {
+		ocl->set_kernel_argument(argc++, clear_depth);
+	}
+	if(stencil_clear && stencil_buffer != nullptr) {
+		ocl->set_kernel_argument(argc++, clear_stencil);
+	}
 	
 	//
 	uint4 scissor_rectangle { 0u, 0u, ~0u, ~0u };
