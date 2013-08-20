@@ -25,6 +25,9 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * on FreeBSD:
 ** only FreeBSD 10.0 is supported (and possibly any future versions)
 ** since there is no direct OpenCL support from any hardware vendor, you'll have to install and use "pocl 0.8+":http://pocl.sourceforge.net (currently only "manually":http://www.freebsd.org/cgi/query-pr.cgi?pr=171914)
+** I'm currently having issues with FreeBSD + X11 forwarding + OpenGL FBO usage, so if the normal configuration is failing for you (only rendering a black screen), I'd recommend enabling the "gldrawpixels" option with premake.sh
+* on Linux:
+** install any of the AMD, Intel or Nvidia OpenCL SDK+libs+drivers or/and "pocl 0.8+":http://pocl.sourceforge.net and ocl-icd
 
 *Requirements:*
 * Windows: NT 6.0+ x86 (Vista/7/8/2008/2008R2/2012/2012R2); NT 5.1/5.2 x86 (XP/2003) support is uncertain
@@ -51,7 +54,7 @@ on Linux and FreeBSD:
 * install all necessary libraries and programs, including clang 3.2+ and libc++ (currently 1101) (-> Credits; a2elight is not required/used, CUDA is optional)
 ** on "Arch Linux":https://www.archlinux.org (sub-dependencies are installed automatically): pacman -S clang libc++ sdl2 sdl2_image libxml2 premake freetype2 opencl-headers cuda
 ** any of: opencl-nvidia (in addition to Nvidia drivers), intel-opencl-sdk (from AUR, CPU only or in addition to Intel GPU drivers) or "catalyst":https://wiki.archlinux.org/index.php/AMD_Catalyst + "misc":https://wiki.archlinux.org/index.php/AMD_Catalyst#OpenCL_and_OpenGL_development
-* run ./premake.sh or "./premake.sh pocl" on FreeBSD
+* run ./premake.sh or "./premake.sh pocl gldrawpixels" on FreeBSD
 * make
 * there is an install script located in lib/ which should be executed from that folder (will install to /usr/local/)
 * alternatively:
