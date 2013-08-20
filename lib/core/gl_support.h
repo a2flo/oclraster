@@ -24,6 +24,10 @@
 #if !defined(OCLRASTER_IOS)
 #include <OpenGL/gl3.h>
 #include <OpenGL/gl3ext.h>
+
+extern "C" {
+extern void glDrawPixels (GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
+}
 #else
 
 #include <OpenGLES/ES2/gl.h>

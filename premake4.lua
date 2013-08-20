@@ -8,6 +8,7 @@ local gcc_compat = false
 local cuda = false
 local pocl = false
 local windows_no_cmd = false
+local gldrawpixels = false
 local platform = "x32"
 local system_includes = ""
 
@@ -82,6 +83,9 @@ solution "oclraster"
 		end
 		if(_ARGS[argc] == "--cl-profiling") then
 			defines { "OCLRASTER_PROFILING=1" }
+		end
+		if(_ARGS[argc] == "--gldrawpixels") then
+			defines { "OCLRASTER_USE_DRAW_PIXELS=1" }
 		end
 		argc=argc+1
 	end

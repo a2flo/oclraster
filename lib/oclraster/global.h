@@ -46,4 +46,9 @@
 //#define OCLRASTER_FXAA (1)
 #endif
 
+// as a last resort, if normal opengl framebuffer usage fails, glDrawPixels can used to display the framebuffer
+#if !defined(OCLRASTER_USE_DRAW_PIXELS)
+//#define OCLRASTER_USE_DRAW_PIXELS (1)
+#endif
+
 #endif

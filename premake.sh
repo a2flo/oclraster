@@ -29,6 +29,9 @@ for arg in "$@"; do
 		"cl-profiling")
 			BUILD_ARGS=${BUILD_ARGS}" --cl-profiling"
 			;;
+		"gldrawpixels")
+			BUILD_ARGS=${BUILD_ARGS}" --gldrawpixels"
+			;;
 		*)
 			;;
 	esac

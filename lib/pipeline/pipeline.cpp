@@ -96,6 +96,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 														  { { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA } },
 														  { IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R });
 	
+#if !defined(OCLRASTER_USE_DRAW_PIXELS)
 	// create a fbo for copying the color framebuffer every frame and displaying it
 	// (there is no other way, unfortunately)
 	glGenFramebuffers(1, &copy_fbo_id);
@@ -118,6 +119,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
+#endif
 	
 	// rebind new default framebuffer (+set correct state)
 	if(is_default_framebuffer) {
@@ -133,10 +135,12 @@ void pipeline::destroy_framebuffers() {
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
+#if !defined(OCLRASTER_USE_DRAW_PIXELS)
 	if(copy_fbo_tex_id != 0) glDeleteTextures(1, &copy_fbo_tex_id);
 	if(copy_fbo_id != 0) glDeleteFramebuffers(1, &copy_fbo_id);
 	copy_fbo_tex_id = 0;
 	copy_fbo_id = 0;
+#endif
 }
 
 void pipeline::swap() {
@@ -168,14 +172,19 @@ void pipeline::swap() {
 	
 	// copy opencl framebuffer to blit framebuffer/texture
 	auto fbo_data = fbo_img->map(opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
+#if !defined(OCLRASTER_USE_DRAW_PIXELS)
 #if !defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, copy_fbo_id);
 #endif
 	glBindTexture(GL_TEXTURE_2D, copy_fbo_tex_id);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, default_fb_size.x, default_fb_size.y,
 					GL_RGBA, GL_UNSIGNED_BYTE, (const unsigned char*)fbo_data);
+#else
+	glDrawPixels(default_fb_size.x, default_fb_size.y, GL_RGBA, GL_UNSIGNED_BYTE, fbo_data);
+#endif
 	fbo_img->unmap(fbo_data);
 	
+#if !defined(OCLRASTER_USE_DRAW_PIXELS)
 #if !defined(OCLRASTER_IOS)
 	// blit
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
@@ -205,6 +214,7 @@ void pipeline::swap() {
 #if !defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
+#endif
 #endif
 	
 	default_framebuffer.clear();
