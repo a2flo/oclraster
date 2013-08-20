@@ -57,10 +57,19 @@ public:
 			   const bool clear_depth = true,
 			   const bool clear_stencil = true) const;
 	
-	// clear colors/values are clamped to the used image format types
-	// e.g.: UINT_8 is used, clear color is set to ~0 => will use 255u
-	void set_clear_color(const ulong4 value = ulong4 { 0, 0, 0, 0 });
-	const ulong4& get_clear_color() const;
+	// NOTE: integer and float image formats use a separate clear color to allow for more
+	// precise and type specific clear color handling.
+	// for integer formats: clear colors/values are clamped to the used image format types
+	//                      e.g.: UINT_8 is used, clear color is set to ~0 => will use 255u
+	// for float formats: the clear color is simply converted/casted to the lower type
+	void set_clear_color_int(const ulong4 value = ulong4 { 0, 0, 0, 0 });
+	void set_clear_color_float(const double4 value = double4 { 0.0, 0.0, 0.0, 0.0 });
+	const ulong4& get_clear_color_int() const;
+	const double4& get_clear_color_float() const;
+	
+	// for simplicity, there is also a generic set_clear_color function that will set the clear color
+	// for both integer and float formats (note that this can lead to imprecise integer values)
+	void set_clear_color(const double4 value = double4 { 0.0, 0.0, 0.0, 0.0 });
 	
 	void set_clear_depth(const float value = std::numeric_limits<float>::max());
 	const float& get_clear_depth() const;
@@ -88,7 +97,8 @@ protected:
 	image* stencil_buffer = nullptr;
 	
 	//
-	ulong4 clear_color { 0, 0, 0, 0 };
+	ulong4 clear_color_int { 0, 0, 0, 0 };
+	double4 clear_color_float { 0.0, 0.0, 0.0, 0.0 };
 	float clear_depth { std::numeric_limits<float>::max() };
 	unsigned long long int clear_stencil { 0 };
 	

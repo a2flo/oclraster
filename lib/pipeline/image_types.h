@@ -35,6 +35,7 @@ enum class IMAGE_TYPE : unsigned short int {
 	FLOAT_64,	//!< double (note: must be supported by the device)
 	__MAX_TYPE
 };
+enum_class_hash(IMAGE_TYPE)
 
 enum class IMAGE_CHANNEL : unsigned short int {
 	NONE,		//!< only used internally!
@@ -44,6 +45,7 @@ enum class IMAGE_CHANNEL : unsigned short int {
 	RGBA,
 	__MAX_CHANNEL
 };
+enum_class_hash(IMAGE_CHANNEL)
 
 //
 struct __attribute__((packed)) image_type {

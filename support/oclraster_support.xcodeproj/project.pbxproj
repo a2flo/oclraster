@@ -478,6 +478,7 @@
 					"-Wshorten-64-to-32",
 					"-Wnewline-eof",
 					"-Wnon-virtual-dtor",
+					"-Wno-nested-anon-types",
 				);
 			};
 			name = Debug;
@@ -539,6 +540,7 @@
 					"-Wshorten-64-to-32",
 					"-Wnewline-eof",
 					"-Wnon-virtual-dtor",
+					"-Wno-nested-anon-types",
 				);
 			};
 			name = Release;

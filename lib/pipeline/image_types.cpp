@@ -18,6 +18,7 @@
 
 #include "global.h"
 #include "image_types.h"
+#include "vector4.h"
 
 static constexpr array<const char*, (size_t)IMAGE_TYPE::__MAX_TYPE> data_type_str_table {
 	{
@@ -62,6 +63,14 @@ size_t image_type::pixel_size() const {
 	}
 	oclr_unreachable();
 }
+
+// and while we're at it, make sure that cpu/host side vector4 types that are used for images have the correct size
+static_assert(sizeof(uchar4) == 1 * 4, "invalid uchar4 size");
+static_assert(sizeof(ushort4) == 2 * 4, "invalid ushort4 size");
+static_assert(sizeof(uint4) == 4 * 4, "invalid uint4 size");
+static_assert(sizeof(ulong4) == 8 * 4, "invalid ulong4 size");
+static_assert(sizeof(float4) == 4 * 4, "invalid float4 size");
+static_assert(sizeof(double4) == 8 * 4, "invalid double4 size");
 
 string image_data_type_to_string(const IMAGE_TYPE& img_data_type) {
 	return data_type_str_table[(size_t)img_data_type];

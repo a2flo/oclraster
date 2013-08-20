@@ -193,7 +193,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	framebuffer rtt_fb = framebuffer::create_with_images(render_size.x, render_size.y,
 														 {{ IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA }},
 														 { IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R });
-	rtt_fb.set_clear_color(ulong4 { 0, 76, 180, 255 });
+	rtt_fb.set_clear_color_int(ulong4 { 0, 76, 180, 255 });
 	
 	// init done
 	oclraster::release_context();

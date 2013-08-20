@@ -46,8 +46,8 @@ static constexpr char template_framebuffer_program[] { u8R"OCLRASTER_RAWSTR(
 	
 	//
 	kernel void clear_framebuffer(//###OCLRASTER_FRAMEBUFFER_IMAGES###
+								  //###OCLRASTER_FRAMEBUFFER_CLEAR_COLORS###
 								  const uint2 framebuffer_size,
-								  const ulong4 clear_color_value,
 #if defined(CLEAR_DEPTH)
 								  const float clear_depth_value,
 #endif
@@ -73,6 +73,7 @@ static constexpr char template_framebuffer_program[] { u8R"OCLRASTER_RAWSTR(
 	}
 )OCLRASTER_RAWSTR"};
 
+// static, usable across all framebuffers
 class framebuffer_program {
 public:
 	framebuffer_program() = delete;
@@ -85,18 +86,22 @@ public:
 		image_type depth_image;
 		image_type stencil_image;
 	};
+	struct clear_kernel {
+		weak_ptr<opencl::kernel_object> kernel;
+		vector<IMAGE_TYPE> clear_image_types; // unique set of the images data types
+	};
 	static vector<image_spec*> compiled_image_kernels;
-	static unordered_map<image_spec*, weak_ptr<opencl::kernel_object>> kernels;
-	static weak_ptr<opencl::kernel_object> get_clear_kernel(const image_spec spec);
-	static weak_ptr<opencl::kernel_object> build_kernel(const image_spec& spec);
+	static unordered_map<image_spec*, clear_kernel> kernels;
+	static const clear_kernel& get_clear_kernel(const image_spec& spec);
+	static const clear_kernel& build_kernel(const image_spec& spec);
 	
 	static void delete_kernels();
 	
 };
 vector<framebuffer_program::image_spec*> framebuffer_program::compiled_image_kernels;
-unordered_map<framebuffer_program::image_spec*, weak_ptr<opencl::kernel_object>> framebuffer_program::kernels;
+unordered_map<framebuffer_program::image_spec*, framebuffer_program::clear_kernel> framebuffer_program::kernels;
 
-weak_ptr<opencl::kernel_object> framebuffer_program::get_clear_kernel(const image_spec spec) {
+const framebuffer_program::clear_kernel& framebuffer_program::get_clear_kernel(const image_spec& spec) {
 	const size_t spec_size = spec.images.size();
 	for(const auto& kernel : kernels) {
 		if(kernel.first->images.size() != spec_size) continue;
@@ -118,20 +123,31 @@ weak_ptr<opencl::kernel_object> framebuffer_program::get_clear_kernel(const imag
 	return build_kernel(spec);
 }
 
-weak_ptr<opencl::kernel_object> framebuffer_program::build_kernel(const image_spec& spec) {
+const framebuffer_program::clear_kernel& framebuffer_program::build_kernel(const image_spec& spec) {
 	image_spec* new_spec = new image_spec(spec);
 	compiled_image_kernels.emplace_back(new_spec);
 	
 	//
 	string program_code { template_framebuffer_program };
-	string kernel_image_parameters = "", clear_calls = "", img_spec_str = "";
+	string kernel_image_parameters = "", clear_colors = "", clear_calls = "", img_spec_str = "";
+	unordered_set<IMAGE_TYPE> clear_image_types;
+	vector<IMAGE_TYPE> clear_image_types_vec;
 	size_t img_idx = 0;
 	for(const auto& type : spec.images) {
+		clear_image_types.emplace(type.data_type);
 		const auto type_str = type.to_string();
 		img_spec_str += "." + type_str;
 		kernel_image_parameters += "global " + type_str + "* image_" + size_t2string(img_idx) + ",\n";
-		clear_calls += "clear_image(image_" + size_t2string(img_idx) + ", offset, clear_color_value);\n";
+		clear_calls += "clear_image(image_" + size_t2string(img_idx) + ", offset, clear_color_value_" + image_data_type_to_string(type.data_type) + ");\n";
 		img_idx++;
+	}
+	
+	for(const auto& type : clear_image_types) {
+		// note: we need a set to get all image data types once (unique set), but we need a vector for consistency/ordering
+		clear_image_types_vec.emplace_back(type);
+		
+		const string data_type_str = image_data_type_to_string(type);
+		clear_colors += "const " + data_type_str + "4 clear_color_value_" + data_type_str + ",\n";
 	}
 	
 	string build_options = "";
@@ -149,6 +165,7 @@ weak_ptr<opencl::kernel_object> framebuffer_program::build_kernel(const image_sp
 	img_spec_str += ".stencil_"+spec.stencil_image.to_string();
 	
 	core::find_and_replace(program_code, "//###OCLRASTER_FRAMEBUFFER_IMAGES###", kernel_image_parameters);
+	core::find_and_replace(program_code, "//###OCLRASTER_FRAMEBUFFER_CLEAR_COLORS###", clear_colors);
 	core::find_and_replace(program_code, "//###OCLRASTER_FRAMEBUFFER_CLEAR_CALLS###", clear_calls);
 	
 	//
@@ -159,8 +176,8 @@ weak_ptr<opencl::kernel_object> framebuffer_program::build_kernel(const image_sp
 		oclr_debug("kernel source: %s", program_code);
 	}
 #endif
-	kernels.emplace(new_spec, kernel);
-	return kernel;
+	kernels.emplace(new_spec, framebuffer_program::clear_kernel { kernel, std::move(clear_image_types_vec) });
+	return kernels.at(new_spec);
 }
 
 void framebuffer_program::delete_kernels() {
@@ -381,8 +398,9 @@ void framebuffer::clear(const vector<size_t> image_indices, const bool depth_cle
 	//
 	unsigned int argc = 0;
 	auto clear_kernel = framebuffer_program::get_clear_kernel(spec);
-	ocl->use_kernel(clear_kernel);
+	ocl->use_kernel(clear_kernel.kernel);
 	
+	// framebuffer images/attachments
 	for(const auto& idx : *indices) {
 		ocl->set_kernel_argument(argc++, images[idx]->get_data_buffer());
 	}
@@ -393,8 +411,57 @@ void framebuffer::clear(const vector<size_t> image_indices, const bool depth_cle
 		ocl->set_kernel_argument(argc++, stencil_buffer->get_data_buffer());
 	}
 	
+	// type specific clear colors
+	for(const auto& clear_type : clear_kernel.clear_image_types) {
+		// for integer formats: AND the ulong4 clear color
+		// for float formats: just convert/cast
+		switch(clear_type) {
+			case IMAGE_TYPE::INT_8:
+			case IMAGE_TYPE::UINT_8:
+				ocl->set_kernel_argument(argc++, uchar4 {
+					clear_color_int.x & 0xFF,
+					clear_color_int.y & 0xFF,
+					clear_color_int.z & 0xFF,
+					clear_color_int.w & 0xFF,
+				});
+				break;
+			case IMAGE_TYPE::INT_16:
+			case IMAGE_TYPE::UINT_16:
+				ocl->set_kernel_argument(argc++, ushort4 {
+					clear_color_int.x & 0xFFFF,
+					clear_color_int.y & 0xFFFF,
+					clear_color_int.z & 0xFFFF,
+					clear_color_int.w & 0xFFFF,
+				});
+				break;
+			case IMAGE_TYPE::INT_32:
+			case IMAGE_TYPE::UINT_32:
+				ocl->set_kernel_argument(argc++, uint4 {
+					clear_color_int.x & 0xFFFFFFFF,
+					clear_color_int.y & 0xFFFFFFFF,
+					clear_color_int.z & 0xFFFFFFFF,
+					clear_color_int.w & 0xFFFFFFFF,
+				});
+				break;
+			case IMAGE_TYPE::FLOAT_16:
+			case IMAGE_TYPE::FLOAT_32:
+				ocl->set_kernel_argument(argc++, float4 { clear_color_float });
+				break;
+			case IMAGE_TYPE::INT_64:
+			case IMAGE_TYPE::UINT_64:
+				ocl->set_kernel_argument(argc++, clear_color_int);
+				break;
+			case IMAGE_TYPE::FLOAT_64:
+				ocl->set_kernel_argument(argc++, clear_color_float);
+				break;
+			case IMAGE_TYPE::NONE:
+			case IMAGE_TYPE::__MAX_TYPE:
+				oclr_unreachable();
+		}
+	}
+	
+	//
 	ocl->set_kernel_argument(argc++, size);
-	ocl->set_kernel_argument(argc++, clear_color);
 	if(depth_clear && depth_buffer != nullptr) {
 		ocl->set_kernel_argument(argc++, clear_depth);
 	}
@@ -421,12 +488,28 @@ void framebuffer::clear(const vector<size_t> image_indices, const bool depth_cle
 	ocl->run_kernel();
 }
 
-void framebuffer::set_clear_color(const ulong4 value) {
-	clear_color = value;
+void framebuffer::set_clear_color(const double4 value) {
+	clear_color_int.set((unsigned long long int)value.x,
+						(unsigned long long int)value.y,
+						(unsigned long long int)value.z,
+						(unsigned long long int)value.w);
+	clear_color_float = value;
 }
 
-const ulong4& framebuffer::get_clear_color() const {
-	return clear_color;
+void framebuffer::set_clear_color_int(const ulong4 value) {
+	clear_color_int = value;
+}
+
+void framebuffer::set_clear_color_float(const double4 value) {
+	clear_color_float = value;
+}
+
+const ulong4& framebuffer::get_clear_color_int() const {
+	return clear_color_int;
+}
+
+const double4& framebuffer::get_clear_color_float() const {
+	return clear_color_float;
 }
 
 void framebuffer::set_clear_depth(const float value) {
