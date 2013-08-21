@@ -132,7 +132,9 @@ void init_gl_funcs() {
 	if(_glGetFramebufferAttachmentParameteriv_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGetFramebufferAttachmentParameteriv\"!");
 	if(_glGenerateMipmap_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGenerateMipmap\"!");
 	if(_glBlitFramebuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glBlitFramebuffer\"!");
-#endif
 }
+#else
+void init_gl_funcs() {}
+#endif
 
 #endif
