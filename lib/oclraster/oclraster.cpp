@@ -545,7 +545,9 @@ void oclraster::start_draw() {
 	acquire_context();
 	
 	// draws ogl stuff
+#if !defined(OCLRASTER_USE_DRAW_PIXELS)
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+#endif
 	glViewport(0, 0, (unsigned int)config.width, (unsigned int)config.height);
 	
 	// clear the color and depth buffers

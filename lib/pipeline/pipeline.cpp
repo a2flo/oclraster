@@ -133,6 +133,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 void pipeline::destroy_framebuffers() {
 	framebuffer::destroy_images(default_framebuffer);
 	
+#if !defined(OCLRASTER_USE_DRAW_PIXELS)
 	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
 #if !defined(OCLRASTER_USE_DRAW_PIXELS)
@@ -140,6 +141,7 @@ void pipeline::destroy_framebuffers() {
 	if(copy_fbo_id != 0) glDeleteFramebuffers(1, &copy_fbo_id);
 	copy_fbo_tex_id = 0;
 	copy_fbo_id = 0;
+#endif
 #endif
 }
 

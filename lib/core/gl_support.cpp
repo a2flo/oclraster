@@ -19,7 +19,11 @@
 #if !defined(__APPLE__)
 
 #include "gl_support.h"
+#include "global.h"
 #include "core/logger.h"
+
+// no need to get any fbo function pointers if glDrawPixels is used
+#if !defined(OCLRASTER_USE_DRAW_PIXELS)
 
 #if defined(__WINDOWS__) || defined(WIN_UNIXENV)
 #define glGetProcAddress(x) wglGetProcAddress(x)
@@ -128,6 +132,7 @@ void init_gl_funcs() {
 	if(_glGetFramebufferAttachmentParameteriv_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGetFramebufferAttachmentParameteriv\"!");
 	if(_glGenerateMipmap_ptr == nullptr) oclr_error("couldn't get function pointer to \"glGenerateMipmap\"!");
 	if(_glBlitFramebuffer_ptr == nullptr) oclr_error("couldn't get function pointer to \"glBlitFramebuffer\"!");
+#endif
 }
 
 #endif
