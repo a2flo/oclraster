@@ -35,7 +35,9 @@ Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (
 * OS X: 10.7+
 * Linux: any x64 distribution that supports the AMD, Intel or Nvidia OpenCL SDK/drivers
 * FreeBSD: 10.0+ (amd64; i386 support is uncertain)
-* OpenGL 2.0+ (with support for ARB_framebuffer_object or EXT_framebuffer_object + EXT_framebuffer_blit) or OpenGL 3.2+ Core
+* OpenGL 1.1+
+** support for OpenGL 3.0+ or ARB_framebuffer_object or EXT_framebuffer_object + EXT_framebuffer_blit is recommended
+** glDrawPixels is supported as a fallback option, but has to be enabled at build time via "./premake.sh gldrawpixels" (note: this can run on the Microsoft GDI driver or weird X11 forwarding setups)
 ** note that OpenGL is only needed to actually display the framebuffer
 * OpenCL 1.1+ capable GPU/CPU and platform (GeForce 400+, Radeon HD5+, Core2+, Athlon64+)
 * OpenCL extension support for:
