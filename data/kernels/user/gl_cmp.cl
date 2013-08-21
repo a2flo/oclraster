@@ -54,7 +54,7 @@ oclraster_framebuffer {
 
 bool rasterize_main() {
 #if 0
-	const sampler_t linear_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
+	const oclr_sampler_t linear_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
 	
 	// check if lit by light (compute attenuation)
 	float3 light_dir = rp_uniforms->light_position.xyz - output_attributes->vertex.xyz;

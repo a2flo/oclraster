@@ -15,7 +15,7 @@ oclraster_framebuffer {
 };
 
 bool rasterize_main() {
-	const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
+	const oclr_sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
 	const float4 color = image_read(diffuse_texture, sampler, output_attributes->tex_coord);
 	framebuffer->color = color;
 	return true;
