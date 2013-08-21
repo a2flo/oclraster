@@ -1121,9 +1121,18 @@ void opencl::init(bool use_platform_devices, const size_t platform_index,
 	
 	// context has been created, query image format information
 	img_formats.clear();
-	context->getSupportedImageFormats(CL_MEM_READ_WRITE, CL_MEM_OBJECT_IMAGE2D, &img_formats);
-	if(img_formats.empty()) {
-		oclr_error("no supported image formats!");
+	if(platform_vendor != PLATFORM_VENDOR::POCL) {
+		context->getSupportedImageFormats(CL_MEM_READ_WRITE, CL_MEM_OBJECT_IMAGE2D, &img_formats);
+		if(img_formats.empty()) {
+			oclr_error("no supported image formats!");
+		}
+	}
+	else {
+		// pocl has too many issues and doesn't have full image support
+		// -> disable it and don't get any "supported" image formats
+		for(const auto& dev : devices) {
+			dev->img_support = false;
+		}
 	}
 	
 	// un-#if-0 for debug output
