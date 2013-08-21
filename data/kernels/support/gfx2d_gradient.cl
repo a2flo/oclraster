@@ -44,7 +44,7 @@ bool gfx2d_rasterization() {
 	gradient_diagonal_rl(color);
 #endif
 	
-	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color.xyz, color.w);
+	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color.xyz, (float3)(color.w));
 	framebuffer->color.w = color.w + (framebuffer->color.w * (1.0f - color.w));
 	
 	return true;

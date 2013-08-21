@@ -68,7 +68,7 @@ bool gfx2d_rasterization() {
 	interpolator_dir *= (rp_uniforms->orientation.zw - rp_uniforms->orientation.xy);
 	const float2 tex_coord = fmod(interpolator_dir + rp_uniforms->orientation.xy, (float2)(1.0f, 1.0f));
 	
-	const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
+	const oclr_sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_LINEAR;
 #if !defined(TEXTURE_OPTION_TEX_ARRAY)
 	float4 color = image_read(texture, sampler, tex_coord);
 #else
@@ -101,7 +101,7 @@ bool gfx2d_rasterization() {
 	
 	// output:
 #if defined(TEXTURE_STD) || defined(TEXTURE_MADD_COLOR) || defined(TEXTURE_GRADIENT)
-	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color.xyz, color.w);
+	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color.xyz, (float3)(color.w));
 	framebuffer->color.w = color.w + (framebuffer->color.w * (1.0f - color.w));
 #endif
 	

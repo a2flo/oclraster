@@ -65,7 +65,7 @@ oclraster_framebuffer {
 };
 
 bool gfx2d_rasterization() {
-	const sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+	const oclr_sampler_t point_sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	const float3 color = image_read(font_texture, point_sampler, output_attributes->tex_coord.xy).xyz * rp_uniforms->font_color.w;
 	const float3 color_sign = sign(color); // sign = 0 if color = 0, otherwise 1
 	const float max_alpha = (color_sign.x * color_sign.y * color_sign.z) * rp_uniforms->font_color.w; // 0 or font color alpha

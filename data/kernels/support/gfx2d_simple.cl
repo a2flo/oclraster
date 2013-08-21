@@ -1,4 +1,6 @@
 
+#include "support/gfx2d.h"
+
 #if defined(OCLRASTER_TRANSFORM_PROGRAM)
 //////////////////////////////////////////////////////////////////
 // transform program
@@ -34,7 +36,7 @@ bool gfx2d_rasterization() {
 	const float4 color = rp_uniforms->color;
 	
 	// -> output
-	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color.xyz, color.w);
+	framebuffer->color.xyz = linear_blend(framebuffer->color.xyz, color.xyz, (float3)(color.w));
 	framebuffer->color.w = color.w + (framebuffer->color.w * (1.0f - color.w));
 	
 	return true;
