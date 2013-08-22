@@ -2,9 +2,6 @@
 #ifndef __OCLRASTER_SUPPORT_GFX2D_H__
 #define __OCLRASTER_SUPPORT_GFX2D_H__
 
-// recommended for internal use only!
-#define linear_blend(v0, v1, interp) (mad(v1 - v0, interp, v0))
-
 // gradient computation
 #define compute_gradient(dst_color, interpolator_) { \
 	const float interpolator = interpolator_; \

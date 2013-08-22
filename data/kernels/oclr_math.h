@@ -50,6 +50,29 @@ OCLRASTER_FUNC float4 FUNC_OVERLOAD interpolate(const float4 v0, const float4 v1
 }
 
 //
+OCLRASTER_FUNC float FUNC_OVERLOAD linear_blend(const float v0, const float v1, const float interp) {
+	return mad(v1 - v0, interp, v0);
+}
+OCLRASTER_FUNC float2 FUNC_OVERLOAD linear_blend(const float2 v0, const float2 v1, const float interp) {
+	return mad(v1 - v0, (float2)(interp), v0);
+}
+OCLRASTER_FUNC float2 FUNC_OVERLOAD linear_blend(const float2 v0, const float2 v1, const float2 interp) {
+	return mad(v1 - v0, interp, v0);
+}
+OCLRASTER_FUNC float3 FUNC_OVERLOAD linear_blend(const float3 v0, const float3 v1, const float interp) {
+	return mad(v1 - v0, (float3)(interp), v0);
+}
+OCLRASTER_FUNC float3 FUNC_OVERLOAD linear_blend(const float3 v0, const float3 v1, const float3 interp) {
+	return mad(v1 - v0, interp, v0);
+}
+OCLRASTER_FUNC float4 FUNC_OVERLOAD linear_blend(const float4 v0, const float4 v1, const float interp) {
+	return mad(v1 - v0, (float4)(interp), v0);
+}
+OCLRASTER_FUNC float4 FUNC_OVERLOAD linear_blend(const float4 v0, const float4 v1, const float4 interp) {
+	return mad(v1 - v0, interp, v0);
+}
+
+//
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
