@@ -72,6 +72,30 @@ OCLRASTER_FUNC float4 FUNC_OVERLOAD linear_blend(const float4 v0, const float4 v
 	return mad(v1 - v0, interp, v0);
 }
 
+#if defined(OCLRASTER_DOUBLE_SUPPORT)
+OCLRASTER_FUNC double FUNC_OVERLOAD linear_blend(const double v0, const double v1, const double interp) {
+	return mad(v1 - v0, interp, v0);
+}
+OCLRASTER_FUNC double2 FUNC_OVERLOAD linear_blend(const double2 v0, const double2 v1, const double interp) {
+	return mad(v1 - v0, (double2)(interp), v0);
+}
+OCLRASTER_FUNC double2 FUNC_OVERLOAD linear_blend(const double2 v0, const double2 v1, const double2 interp) {
+	return mad(v1 - v0, interp, v0);
+}
+OCLRASTER_FUNC double3 FUNC_OVERLOAD linear_blend(const double3 v0, const double3 v1, const double interp) {
+	return mad(v1 - v0, (double3)(interp), v0);
+}
+OCLRASTER_FUNC double3 FUNC_OVERLOAD linear_blend(const double3 v0, const double3 v1, const double3 interp) {
+	return mad(v1 - v0, interp, v0);
+}
+OCLRASTER_FUNC double4 FUNC_OVERLOAD linear_blend(const double4 v0, const double4 v1, const double interp) {
+	return mad(v1 - v0, (double4)(interp), v0);
+}
+OCLRASTER_FUNC double4 FUNC_OVERLOAD linear_blend(const double4 v0, const double4 v1, const double4 interp) {
+	return mad(v1 - v0, interp, v0);
+}
+#endif
+
 //
 #if defined(__clang__)
 #pragma clang diagnostic pop
