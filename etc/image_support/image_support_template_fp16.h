@@ -1,13 +1,10 @@
 
-#define IMG_READ_FUNC_FILTER_CONCAT(return_type, filter) image_read_##return_type##_##filter
+#define IMG_READ_FUNC_FILTER_CONCAT(return_type, filter) image_read_##return_type##_##filter##_sw
 #define IMG_READ_FUNC_FILTER_EVAL(return_type, filter) IMG_READ_FUNC_FILTER_CONCAT(return_type, filter)
 #define IMG_READ_FUNC_FILTER_NAME(filter) IMG_READ_FUNC_FILTER_EVAL(RETURN_TYPE, filter)
-#define IMG_READ_FUNC_CONCAT(return_name) image_read##return_name
+#define IMG_READ_FUNC_CONCAT(return_name) image_read##return_name##_sw
 #define IMG_READ_FUNC_EVAL(return_name) IMG_READ_FUNC_CONCAT(return_name)
 #define IMG_READ_FUNC_NAME() IMG_READ_FUNC_EVAL(FUNC_RETURN_NAME)
-#define IMG_WRITE_FUNC_CONCAT(return_name) image_write##return_name
-#define IMG_WRITE_FUNC_EVAL(return_name) IMG_WRITE_FUNC_CONCAT(return_name)
-#define IMG_WRITE_FUNC_NAME() IMG_WRITE_FUNC_EVAL(FUNC_RETURN_NAME)
 #define HALF_VEC_LOAD_CONCAT(vecn) vload_half##vecn
 #define HALF_VEC_LOAD_EVAL(vecn) HALF_VEC_LOAD_CONCAT(vecn)
 #define HALF_VEC_LOAD HALF_VEC_LOAD_EVAL(VECN)
@@ -87,7 +84,7 @@ RETURN_TYPE_VEC4 FUNC_OVERLOAD OCLRASTER_FUNC IMG_READ_FUNC_NAME()(global const 
 
 //////////////////
 // write functions
-void FUNC_OVERLOAD OCLRASTER_FUNC IMG_WRITE_FUNC_NAME()(global IMG_TYPE* img, const uint2 coord, const RETURN_TYPE_VEC4 color) {
+void FUNC_OVERLOAD OCLRASTER_FUNC image_write_sw(global IMG_TYPE* img, const uint2 coord, const RETURN_TYPE_VEC4 color) {
 	const uint2 img_size = oclr_get_image_size((image_header_ptr)img);
 	const uint offset = coord.y * img_size.x + coord.x;
 	global IMG_TYPE* img_data_ptr = (global IMG_TYPE*)((global uchar*)img + OCLRASTER_IMAGE_HEADER_SIZE);

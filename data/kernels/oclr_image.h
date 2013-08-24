@@ -13,11 +13,13 @@
 
 // note that the image (header) is actually 4096-byte aligned,
 // but certain implementations (amd) can't handle aligned values > 128
+typedef struct __attribute__((packed,
 #if !defined(PLATFORM_AMD)
-typedef struct __attribute__((packed, aligned(OCLRASTER_IMAGE_HEADER_SIZE))) {
+							  aligned(OCLRASTER_IMAGE_HEADER_SIZE)
 #else
-typedef struct __attribute__((packed, aligned(128))) {
+							  aligned(128)
 #endif
+							  )) {
 	const ushort type;
 	const ushort channel_order;
 	const ushort width;
@@ -83,19 +85,19 @@ typedef unsigned int oclr_sampler_t;
 #if defined(POCL)
 int4 FUNC_OVERLOAD read_imagei(image2d_t img, sampler_t sampler, float2 coord) {
 	printf("read_imagei is not supported by pocl");
-	return (int4)(0, 0, 0, 0);
+	return (int4)(0);
 }
 int4 FUNC_OVERLOAD read_imagei(image2d_t img, sampler_t sampler, int2 coord) {
 	printf("read_imagei is not supported by pocl");
-	return (int4)(0, 0, 0, 0);
+	return (int4)(0);
 }
 uint4 FUNC_OVERLOAD read_imageui(image2d_t img, sampler_t sampler, float2 coord) {
 	printf("read_imageui is not supported by pocl");
-	return (uint4)(0u, 0u, 0u, 0u);
+	return (uint4)(0u);
 }
 uint4 FUNC_OVERLOAD read_imageui(image2d_t img, sampler_t sampler, int2 coord) {
 	printf("read_imageui is not supported by pocl");
-	return (uint4)(0u, 0u, 0u, 0u);
+	return (uint4)(0u);
 }
 void FUNC_OVERLOAD write_imageui(image2d_t img, int2 coord, uint4 color) {
 	printf("write_imageui is not supported by pocl");
@@ -103,43 +105,88 @@ void FUNC_OVERLOAD write_imageui(image2d_t img, int2 coord, uint4 color) {
 #endif
 
 // image read functions for native images
-OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_hw(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imagef(img, sampler, coord);
 }
-OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_hw(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
 	return read_imagef(img, sampler, convert_int2(coord));
 }
-OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_hw(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imagei(img, sampler, coord);
 }
-OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_hw(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
 	return read_imagei(img, sampler, convert_int2(coord));
 }
-OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_hw(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
 	return read_imageui(img, sampler, coord);
 }
-OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_hw(read_only image2d_t img, const sampler_t sampler, const uint2 coord) {
 	return read_imageui(img, sampler, convert_int2(coord));
 }
 
-OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_float_nearest(read_only image2d_t img, const float2 coord) {
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_float_nearest_hw(read_only image2d_t img, const float2 coord) {
 	const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 	return read_imagef(img, sampler, coord);
 }
 
 // image write functions for native images
-OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const float4 color) {
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(write_only image2d_t img, const uint2 coord, const float4 color) {
 	write_imagef(img, convert_int2(coord), color);
 }
-OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const int4 color) {
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(write_only image2d_t img, const uint2 coord, const int4 color) {
 	write_imagei(img, convert_int2(coord), color);
 }
-OCLRASTER_FUNC void FUNC_OVERLOAD image_write(write_only image2d_t img, const uint2 coord, const uint4 color) {
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(write_only image2d_t img, const uint2 coord, const uint4 color) {
 	write_imageui(img, convert_int2(coord), color);
 }
 
-// image_read* and image_write* functions for buffer-based images
+// image_read* and image_write* functions for buffer-based/software images
 #include "oclr_image_support.h"
+
+// dummy image functions that are necessary for __builtin_choose_expr to function properly
+// __builtin_choose_expr will do syntax checking on both expressions
+// -> need to have fake sw/hw image functions with the resp. other type (sw taking image2d_t, hw taking mem ptrs)
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_sw(read_only image2d_t img, const sampler_t sampler, const float2 coord) { return (float4)(0.0f); }
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_sw(read_only image2d_t img, const sampler_t sampler, const uint2 coord) { return (float4)(0.0f); }
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_sw(read_only image2d_t img, const sampler_t sampler, const float2 coord) { return (int4)(0); }
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_sw(read_only image2d_t img, const sampler_t sampler, const uint2 coord) { return (int4)(0); }
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_sw(read_only image2d_t img, const sampler_t sampler, const float2 coord) { return (uint4)(0u); }
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_sw(read_only image2d_t img, const sampler_t sampler, const uint2 coord) { return (uint4)(0u); }
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write_sw(write_only image2d_t img, const uint2 coord, const float4 color) {}
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write_sw(write_only image2d_t img, const uint2 coord, const int4 color) {}
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write_sw(write_only image2d_t img, const uint2 coord, const uint4 color) {}
+
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_hw(global const void* img, const sampler_t sampler, const float2 coord) { return (float4)(0.0f); }
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_hw(global const void* img, const sampler_t sampler, const uint2 coord) { return (float4)(0.0f); }
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_hw(global const void* img, const sampler_t sampler, const float2 coord) { return (int4)(0); }
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_hw(global const void* img, const sampler_t sampler, const uint2 coord) { return (int4)(0); }
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_hw(global const void* img, const sampler_t sampler, const float2 coord) { return (uint4)(0u); }
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_hw(global const void* img, const sampler_t sampler, const uint2 coord) { return (uint4)(0u); }
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(global void* img, const uint2 coord, const float4 color) {}
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(global void* img, const uint2 coord, const int4 color) {}
+OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(global void* img, const uint2 coord, const uint4 color) {}
+
+// now that both hw and sw image functions are defined, add image_read/image_write macros that will
+// select the appropriate hw or sw image function depending on the argument type
+#define image_read(img, sampler, coord) \
+__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(img), image2d_t), \
+					  image_read_hw(img, sampler, coord), \
+					  image_read_sw(img, sampler, coord))
+
+#define image_read_int(img, sampler, coord) \
+__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(img), image2d_t), \
+					  image_read_int_hw(img, sampler, coord), \
+					  image_read_int_sw(img, sampler, coord))
+
+#define image_read_uint(img, sampler, coord) \
+__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(img), image2d_t), \
+					  image_read_uint_hw(img, sampler, coord), \
+					  image_read_uint_sw(img, sampler, coord))
+
+#define image_write(img, coord, color) \
+__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(img), image2d_t), \
+					  image_write_hw(img, coord, color), \
+					  image_write_sw(img, coord, color))
 
 //
 #if defined(__clang__)
