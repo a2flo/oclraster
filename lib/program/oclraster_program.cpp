@@ -481,6 +481,13 @@ string oclraster_program::create_user_kernel_parameters(const kernel_spec& spec,
 		if(!spec.image_spec[i].native) {
 			// buffer based image
 			type_str = "global ";
+			if(ocl->get_platform_vendor() != opencl::PLATFORM_VENDOR::AMD) {
+				// be aware that this is only part of a hack to get some degree of type differentiation in the intel opencl compiler,
+				// which sadly explicitly prohibits the use of "typeof" or "__typeof__"
+				// -> use "__alignof__" instead -> add alignment to buffer-based/software images (native/hardware images have a 4 or 8 byte alignment)
+				// note that this will work on all clang (or gcc) based compilers, not the amd compiler (which doesn't need this hack however)
+				type_str += "__attribute__((aligned(16))) ";
+			}
 			if(images.image_specifiers[i] == ACCESS_TYPE::READ &&
 			   !images.is_framebuffer[i]) {
 				type_str += "const ";

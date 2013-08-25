@@ -143,6 +143,8 @@ OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(write_only image2d_t img, const
 // image_read* and image_write* functions for buffer-based/software images
 #include "oclr_image_support.h"
 
+// the amd compiler doesn't need these workarounds and can simply use c++ to select the appropriate hardware or software image function
+#if !defined(PLATFORM_AMD)
 // dummy image functions that are necessary for __builtin_choose_expr to function properly
 // __builtin_choose_expr will do syntax checking on both expressions
 // -> need to have fake sw/hw image functions with the resp. other type (sw taking image2d_t, hw taking mem ptrs)
@@ -169,24 +171,80 @@ OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(global void* img, const uint2 c
 // now that both hw and sw image functions are defined, add image_read/image_write macros that will
 // select the appropriate hw or sw image function depending on the argument type
 #define image_read(img, sampler, coord) \
-__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(img), image2d_t), \
+__builtin_choose_expr(__alignof__(img) != 16, \
 					  image_read_hw(img, sampler, coord), \
 					  image_read_sw(img, sampler, coord))
 
 #define image_read_int(img, sampler, coord) \
-__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(img), image2d_t), \
+__builtin_choose_expr(__alignof__(img) != 16, \
 					  image_read_int_hw(img, sampler, coord), \
 					  image_read_int_sw(img, sampler, coord))
 
 #define image_read_uint(img, sampler, coord) \
-__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(img), image2d_t), \
+__builtin_choose_expr(__alignof__(img) != 16, \
 					  image_read_uint_hw(img, sampler, coord), \
 					  image_read_uint_sw(img, sampler, coord))
 
 #define image_write(img, coord, color) \
-__builtin_choose_expr(__builtin_types_compatible_p(__typeof__(img), image2d_t), \
+__builtin_choose_expr(__alignof__(img) != 16, \
 					  image_write_hw(img, coord, color), \
 					  image_write_sw(img, coord, color))
+
+#else
+// ... and now for the proper c++ solution to this problem:
+#include "oclr_cpp.h"
+
+template<class T>
+struct is_native_image : integral_constant<bool,
+										   is_same<image1d_t, typename remove_cv<T>::type>::value ||
+										   is_same<image2d_t, typename remove_cv<T>::type>::value ||
+										   is_same<image3d_t, typename remove_cv<T>::type>::value> {};
+
+template <typename image_type, typename coord_type,
+		  typename enable_if<!is_native_image<image_type>::value, int>::type = 0>
+float4 image_read(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+	return image_read_sw(img, sampler, coord);
+}
+template <typename image_type, typename coord_type,
+		  typename enable_if<is_native_image<image_type>::value, int>::type = 0>
+float4 image_read(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+	return image_read_hw(img, sampler, coord);
+}
+
+template <typename image_type, typename coord_type,
+		  typename enable_if<!is_native_image<image_type>::value, int>::type = 0>
+int4 image_read_int(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+	return image_read_int_sw(img, sampler, coord);
+}
+template <typename image_type, typename coord_type,
+		  typename enable_if<is_native_image<image_type>::value, int>::type = 0>
+int4 image_read_int(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+	return image_read_int_hw(img, sampler, coord);
+}
+
+template <typename image_type, typename coord_type,
+		  typename enable_if<!is_native_image<image_type>::value, int>::type = 0>
+uint4 image_read_uint(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+	return image_read_uint_sw(img, sampler, coord);
+}
+template <typename image_type, typename coord_type,
+		  typename enable_if<is_native_image<image_type>::value, int>::type = 0>
+uint4 image_read_uint(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+	return image_read_uint_hw(img, sampler, coord);
+}
+
+template <typename image_type, typename color_type,
+		  typename enable_if<!is_native_image<image_type>::value, int>::type = 0>
+void image_read(image_type img, const uint2 coord, const color_type color) {
+	return image_write_sw(img, coord, color);
+}
+template <typename image_type, typename color_type,
+		  typename enable_if<is_native_image<image_type>::value, int>::type = 0>
+void image_read(image_type img, const uint2 coord, const color_type color) {
+	return image_write_hw(img, coord, color);
+}
+
+#endif
 
 //
 #if defined(__clang__)
