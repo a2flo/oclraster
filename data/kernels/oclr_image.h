@@ -148,12 +148,12 @@ OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(write_only image2d_t img, const
 // dummy image functions that are necessary for __builtin_choose_expr to function properly
 // __builtin_choose_expr will do syntax checking on both expressions
 // -> need to have fake sw/hw image functions with the resp. other type (sw taking image2d_t, hw taking mem ptrs)
-OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_sw(read_only image2d_t img, const sampler_t sampler, const float2 coord) { return (float4)(0.0f); }
-OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_sw(read_only image2d_t img, const sampler_t sampler, const uint2 coord) { return (float4)(0.0f); }
-OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_sw(read_only image2d_t img, const sampler_t sampler, const float2 coord) { return (int4)(0); }
-OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_sw(read_only image2d_t img, const sampler_t sampler, const uint2 coord) { return (int4)(0); }
-OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_sw(read_only image2d_t img, const sampler_t sampler, const float2 coord) { return (uint4)(0u); }
-OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_sw(read_only image2d_t img, const sampler_t sampler, const uint2 coord) { return (uint4)(0u); }
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_sw(read_only image2d_t img, const oclr_sampler_t sampler, const float2 coord) { return (float4)(0.0f); }
+OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_sw(read_only image2d_t img, const oclr_sampler_t sampler, const uint2 coord) { return (float4)(0.0f); }
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_sw(read_only image2d_t img, const oclr_sampler_t sampler, const float2 coord) { return (int4)(0); }
+OCLRASTER_FUNC int4 FUNC_OVERLOAD image_read_int_sw(read_only image2d_t img, const oclr_sampler_t sampler, const uint2 coord) { return (int4)(0); }
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_sw(read_only image2d_t img, const oclr_sampler_t sampler, const float2 coord) { return (uint4)(0u); }
+OCLRASTER_FUNC uint4 FUNC_OVERLOAD image_read_uint_sw(read_only image2d_t img, const oclr_sampler_t sampler, const uint2 coord) { return (uint4)(0u); }
 OCLRASTER_FUNC void FUNC_OVERLOAD image_write_sw(write_only image2d_t img, const uint2 coord, const float4 color) {}
 OCLRASTER_FUNC void FUNC_OVERLOAD image_write_sw(write_only image2d_t img, const uint2 coord, const int4 color) {}
 OCLRASTER_FUNC void FUNC_OVERLOAD image_write_sw(write_only image2d_t img, const uint2 coord, const uint4 color) {}
@@ -170,6 +170,7 @@ OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(global void* img, const uint2 c
 
 // now that both hw and sw image functions are defined, add image_read/image_write macros that will
 // select the appropriate hw or sw image function depending on the argument type
+#if !defined(PLATFORM_INTEL)
 #define image_read(img, sampler, coord) \
 __builtin_choose_expr(__alignof__(img) != 16, \
 					  image_read_hw(img, sampler, coord), \
@@ -184,11 +185,38 @@ __builtin_choose_expr(__alignof__(img) != 16, \
 __builtin_choose_expr(__alignof__(img) != 16, \
 					  image_read_uint_hw(img, sampler, coord), \
 					  image_read_uint_sw(img, sampler, coord))
+#else
+// the intel opencl compiler explicitly needs a sampler_t variable
+#define image_read(img, sampler, coord) \
+({ \
+	const sampler_t hw_sampler = sampler; \
+	__builtin_choose_expr(__alignof__(img) != 16, \
+						  image_read_hw(img, hw_sampler, coord), \
+						  image_read_sw(img, sampler, coord)); \
+)}
+
+#define image_read_int(img, sampler, coord) \
+({ \
+	const sampler_t hw_sampler = sampler; \
+	__builtin_choose_expr(__alignof__(img) != 16, \
+						  image_read_int_hw(img, hw_sampler, coord), \
+						  image_read_int_sw(img, sampler, coord)); \
+)}
+
+#define image_read_uint(img, sampler, coord) \
+({ \
+	const sampler_t hw_sampler = sampler; \
+	__builtin_choose_expr(__alignof__(img) != 16, \
+						  image_read_uint_hw(img, hw_sampler, coord), \
+						  image_read_uint_sw(img, sampler, coord)); \
+)}
+#endif
 
 #define image_write(img, coord, color) \
 __builtin_choose_expr(__alignof__(img) != 16, \
 					  image_write_hw(img, coord, color), \
 					  image_write_sw(img, coord, color))
+//
 
 #else
 // ... and now for the proper c++ solution to this problem:
