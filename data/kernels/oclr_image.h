@@ -193,7 +193,7 @@ __builtin_choose_expr(__alignof__(img) != 16, \
 	__builtin_choose_expr(__alignof__(img) != 16, \
 						  image_read_hw(img, hw_sampler, coord), \
 						  image_read_sw(img, sampler, coord)); \
-)}
+})
 
 #define image_read_int(img, sampler, coord) \
 ({ \
@@ -201,7 +201,7 @@ __builtin_choose_expr(__alignof__(img) != 16, \
 	__builtin_choose_expr(__alignof__(img) != 16, \
 						  image_read_int_hw(img, hw_sampler, coord), \
 						  image_read_int_sw(img, sampler, coord)); \
-)}
+})
 
 #define image_read_uint(img, sampler, coord) \
 ({ \
@@ -209,7 +209,7 @@ __builtin_choose_expr(__alignof__(img) != 16, \
 	__builtin_choose_expr(__alignof__(img) != 16, \
 						  image_read_uint_hw(img, hw_sampler, coord), \
 						  image_read_uint_sw(img, sampler, coord)); \
-)}
+})
 #endif
 
 #define image_write(img, coord, color) \
