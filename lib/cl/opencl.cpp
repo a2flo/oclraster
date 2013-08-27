@@ -131,7 +131,7 @@ vector<pair<opencl_base::PLATFORM_VENDOR, string>> opencl_base::get_platforms() 
 #endif
 	
 #if defined(OCLRASTER_CUDA_CL)
-	available_platforms.push_back({ PLATFORM_VENDOR::NVIDIA, "cuda" });
+	available_platforms.push_back({ PLATFORM_VENDOR::CUDA, "cuda" });
 #endif
 	
 	return available_platforms;
@@ -145,6 +145,7 @@ string opencl_base::platform_vendor_to_str(const opencl_base::PLATFORM_VENDOR& p
 		case PLATFORM_VENDOR::APPLE: return "APPLE";
 		case PLATFORM_VENDOR::FREEOCL: return "FREEOCL";
 		case PLATFORM_VENDOR::POCL: return "POCL";
+		case PLATFORM_VENDOR::CUDA: return "CUDA";
 		case PLATFORM_VENDOR::UNKNOWN: break;
 	}
 	return "UNKNOWN";

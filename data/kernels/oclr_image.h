@@ -127,7 +127,7 @@ OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(write_only image2d_t img, const
 #include "oclr_image_support.h"
 
 // the amd compiler doesn't need these workarounds and can simply use c++ to select the appropriate hardware or software image function
-#if !defined(PLATFORM_AMD) && !defined(PLATFORM_POCL)
+#if !defined(PLATFORM_AMD) && !defined(PLATFORM_POCL) && !defined(OCLRASTER_CUDA_CL)
 // dummy image functions that are necessary for __builtin_choose_expr to function properly
 // __builtin_choose_expr will do syntax checking on both expressions
 // -> need to have fake sw/hw image functions with the resp. other type (sw taking image2d_t, hw taking mem ptrs)
@@ -208,9 +208,12 @@ __builtin_choose_expr(__alignof__(img) != 16, \
 #define image_read_uint(img, sampler, coord) image_read_uint_sw(img, sampler, coord)
 #define image_write(img, coord, color) image_write_sw(img, coord, color)
 
-#else // amd opencl c++
+#else // amd opencl c++ and cuda c++
 // ... and now for the proper c++ solution to this problem:
+#if !defined(OCLRASTER_CUDA_CL)
+// note: already included and preprocessed by cuda
 #include "oclr_cpp.h"
+#endif
 
 template<class T>
 struct is_native_image : integral_constant<bool,
@@ -220,45 +223,45 @@ struct is_native_image : integral_constant<bool,
 
 template <typename image_type, typename coord_type,
 		  typename enable_if<!is_native_image<image_type>::value, int>::type = 0>
-float4 image_read(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+OCLRASTER_FUNC float4 image_read(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
 	return image_read_sw(img, sampler, coord);
 }
 template <typename image_type, typename coord_type,
 		  typename enable_if<is_native_image<image_type>::value, int>::type = 0>
-float4 image_read(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+OCLRASTER_FUNC float4 image_read(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
 	return image_read_hw(img, sampler, coord);
 }
 
 template <typename image_type, typename coord_type,
 		  typename enable_if<!is_native_image<image_type>::value, int>::type = 0>
-int4 image_read_int(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+OCLRASTER_FUNC int4 image_read_int(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
 	return image_read_int_sw(img, sampler, coord);
 }
 template <typename image_type, typename coord_type,
 		  typename enable_if<is_native_image<image_type>::value, int>::type = 0>
-int4 image_read_int(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+OCLRASTER_FUNC int4 image_read_int(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
 	return image_read_int_hw(img, sampler, coord);
 }
 
 template <typename image_type, typename coord_type,
 		  typename enable_if<!is_native_image<image_type>::value, int>::type = 0>
-uint4 image_read_uint(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+OCLRASTER_FUNC uint4 image_read_uint(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
 	return image_read_uint_sw(img, sampler, coord);
 }
 template <typename image_type, typename coord_type,
 		  typename enable_if<is_native_image<image_type>::value, int>::type = 0>
-uint4 image_read_uint(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
+OCLRASTER_FUNC uint4 image_read_uint(image_type img, const oclr_sampler_t sampler, const coord_type coord) {
 	return image_read_uint_hw(img, sampler, coord);
 }
 
 template <typename image_type, typename color_type,
 		  typename enable_if<!is_native_image<image_type>::value, int>::type = 0>
-void image_read(image_type img, const uint2 coord, const color_type color) {
+OCLRASTER_FUNC void image_read(image_type img, const uint2 coord, const color_type color) {
 	return image_write_sw(img, coord, color);
 }
 template <typename image_type, typename color_type,
 		  typename enable_if<is_native_image<image_type>::value, int>::type = 0>
-void image_read(image_type img, const uint2 coord, const color_type color) {
+OCLRASTER_FUNC void image_read(image_type img, const uint2 coord, const color_type color) {
 	return image_write_hw(img, coord, color);
 }
 

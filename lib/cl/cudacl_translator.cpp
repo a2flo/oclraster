@@ -241,9 +241,9 @@ void cudacl_translate(const string& cl_source,
 			{ regex("(__)?read_only ", regex::optimize), " " },
 			{ regex("(__)?write_only ", regex::optimize), " " },
 			{ regex("(__)?read_write ", regex::optimize), " " },
-			{ regex("image1d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
+			//{ regex("image1d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
 			//{ regex("image2d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
-			{ regex("image3d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
+			//{ regex("image3d_t", regex::optimize), "texture<uchar, 4, 0>" }, // TODO
 		}
 	};
 	timer.add("keyword regex", false);

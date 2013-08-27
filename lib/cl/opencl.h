@@ -121,6 +121,7 @@ public:
 		APPLE,
 		FREEOCL,
 		POCL,
+		CUDA,
 		UNKNOWN
 	};
 	enum class CL_VERSION {

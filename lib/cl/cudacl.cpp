@@ -297,7 +297,7 @@ void cudacl::init(bool use_platform_devices oclr_unused, const size_t platform_i
 	//
 	if(!supported) return;
 	
-	platform_vendor = PLATFORM_VENDOR::NVIDIA;
+	platform_vendor = PLATFORM_VENDOR::CUDA;
 	platform_cl_version = CL_VERSION::CL_1_2;
 	
 	//

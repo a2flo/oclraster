@@ -391,7 +391,9 @@ enum {
 };
 
 // native image functions (no-ops for now)
+typedef texture<uchar, cudaTextureType1D, cudaReadModeElementType> image1d_t;
 typedef texture<uchar, cudaTextureType2D, cudaReadModeElementType> image2d_t;
+typedef texture<uchar, cudaTextureType3D, cudaReadModeElementType> image3d_t;
 template <class coord_type> OCLRASTER_FUNC float4 read_imagef(image2d_t img, const sampler_t& sampler, const coord_type& coord) {
 	return float4(0.0f);
 };
