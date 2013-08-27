@@ -81,28 +81,9 @@ INT_TEXEL_MIX(long, long4, double, 1.0)
 // note: use this always and everywhere (except where emulating opencl functions)
 typedef unsigned int oclr_sampler_t;
 
-// pocl doesn't support all native image functions -> define them
-#if defined(POCL)
-int4 FUNC_OVERLOAD read_imagei(image2d_t img, sampler_t sampler, float2 coord) {
-	printf("read_imagei is not supported by pocl");
-	return (int4)(0);
-}
-int4 FUNC_OVERLOAD read_imagei(image2d_t img, sampler_t sampler, int2 coord) {
-	printf("read_imagei is not supported by pocl");
-	return (int4)(0);
-}
-uint4 FUNC_OVERLOAD read_imageui(image2d_t img, sampler_t sampler, float2 coord) {
-	printf("read_imageui is not supported by pocl");
-	return (uint4)(0u);
-}
-uint4 FUNC_OVERLOAD read_imageui(image2d_t img, sampler_t sampler, int2 coord) {
-	printf("read_imageui is not supported by pocl");
-	return (uint4)(0u);
-}
-void FUNC_OVERLOAD write_imageui(image2d_t img, int2 coord, uint4 color) {
-	printf("write_imageui is not supported by pocl");
-}
-#endif
+// pocl doesn't support all native image functions and the supported ones have a few issues
+// also, pocls "native" image functions won't be faster than oclrasters software image functions
+#if !defined(PLATFORM_POCL)
 
 // image read functions for native images
 OCLRASTER_FUNC float4 FUNC_OVERLOAD image_read_hw(read_only image2d_t img, const sampler_t sampler, const float2 coord) {
@@ -140,11 +121,13 @@ OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(write_only image2d_t img, const
 	write_imageui(img, convert_int2(coord), color);
 }
 
+#endif
+
 // image_read* and image_write* functions for buffer-based/software images
 #include "oclr_image_support.h"
 
 // the amd compiler doesn't need these workarounds and can simply use c++ to select the appropriate hardware or software image function
-#if !defined(PLATFORM_AMD)
+#if !defined(PLATFORM_AMD) && !defined(PLATFORM_POCL)
 // dummy image functions that are necessary for __builtin_choose_expr to function properly
 // __builtin_choose_expr will do syntax checking on both expressions
 // -> need to have fake sw/hw image functions with the resp. other type (sw taking image2d_t, hw taking mem ptrs)
@@ -218,7 +201,14 @@ __builtin_choose_expr(__alignof__(img) != 16, \
 					  image_write_sw(img, coord, color))
 //
 
-#else
+#elif defined(PLATFORM_POCL)
+// for pocl: simply forward to the software image functions
+#define image_read(img, sampler, coord) image_read_sw(img, sampler, coord)
+#define image_read_int(img, sampler, coord) image_read_int_sw(img, sampler, coord)
+#define image_read_uint(img, sampler, coord) image_read_uint_sw(img, sampler, coord)
+#define image_write(img, coord, color) image_write_sw(img, coord, color)
+
+#else // amd opencl c++
 // ... and now for the proper c++ solution to this problem:
 #include "oclr_cpp.h"
 
