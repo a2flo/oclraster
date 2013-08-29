@@ -673,8 +673,7 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 				" -DNVIDIA"+
 				" -DGPU"+
 				" -DPLATFORM_"+platform_vendor_to_str(platform_vendor)+
-				" -DLOCAL_MEM_SIZE=6144"
-				//" -DLOCAL_MEM_SIZE=49152", // TODO: always set to 48k for now?
+				" -DLOCAL_MEM_SIZE=49152", // TODO: always set to 48k for now?
 			};
 			ptx_code = cudacl_compiler::compile(cuda_source,
 												identifier,
