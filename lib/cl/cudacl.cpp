@@ -721,7 +721,8 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 		const CUjit_option jit_options[] {
 			CU_JIT_TARGET,
 			CU_JIT_GENERATE_LINE_INFO,
-			CU_JIT_GENERATE_DEBUG_INFO
+			CU_JIT_GENERATE_DEBUG_INFO,
+			CU_JIT_MAX_REGISTERS
 		};
 		const unsigned int option_count = sizeof(jit_options) / sizeof(CUjit_option);
 		const struct alignas(void*) {
@@ -734,6 +735,7 @@ weak_ptr<opencl_base::kernel_object> cudacl::add_kernel_src(const string& identi
 			{ .ui = cc_target },
 			{ .ui = (oclraster::get_cuda_profiling() || oclraster::get_cuda_debug()) ? 1u : 0u },
 			{ .ui = oclraster::get_cuda_debug() ? 1u : 0u },
+			{ .ui = 32u }
 		};
 		static_assert(option_count == (sizeof(jit_option_values) / sizeof(void*)), "mismatching option count");
 		
