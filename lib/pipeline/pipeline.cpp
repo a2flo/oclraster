@@ -36,7 +36,7 @@ struct __attribute__((packed, aligned(16))) constant_camera_data {
 pipeline::pipeline() :
 default_framebuffer(0, 0),
 event_handler_fnctr(this, &pipeline::event_handler) {
-	create_framebuffers(size2(oclraster::get_width(), oclraster::get_height()));
+	create_framebuffers(size2(floor::get_width(), floor::get_height()));
 	state.framebuffer_size = default_framebuffer.get_size();
 	state.active_framebuffer = &default_framebuffer;
 	state.camera_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
@@ -46,7 +46,7 @@ event_handler_fnctr(this, &pipeline::event_handler) {
 	state.scissor_test = 0;
 	state.backface_culling = 1;
 	
-	oclraster::get_event()->add_internal_event_handler(event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
+	floor::get_event()->add_internal_event_handler(event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
 	
 #if defined(OCLRASTER_IOS)
 	static const float fullscreen_triangle[6] { 1.0f, 1.0f, 1.0f, -3.0f, -3.0f, 1.0f };
@@ -58,7 +58,7 @@ event_handler_fnctr(this, &pipeline::event_handler) {
 }
 
 pipeline::~pipeline() {
-	oclraster::get_event()->remove_event_handler(event_handler_fnctr);
+	floor::get_event()->remove_event_handler(event_handler_fnctr);
 	
 	destroy_framebuffers();
 	
@@ -88,7 +88,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 	// destroy old framebuffers first
 	destroy_framebuffers();
 	
-	const uint2 scaled_size = float2(size) / oclraster::get_upscaling();
+	const uint2 scaled_size = float2(size) / floor::get_upscaling();
 	log_debug("size: %v -> %v", size, scaled_size);
 	
 	//
@@ -170,7 +170,7 @@ void pipeline::swap() {
 #if defined(OCLRASTER_IOS)
 	glBindFramebuffer(GL_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 #endif
-	glViewport(0, 0, oclraster::get_width(), oclraster::get_height());
+	glViewport(0, 0, floor::get_width(), floor::get_height());
 	
 	// copy opencl framebuffer to blit framebuffer/texture
 	auto fbo_data = fbo_img->map(opencl::MAP_BUFFER_FLAG::READ | opencl::MAP_BUFFER_FLAG::BLOCK);
@@ -191,7 +191,7 @@ void pipeline::swap() {
 	// blit
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 	glBlitFramebuffer(0, 0, default_fb_size.x, default_fb_size.y,
-					  0, 0, oclraster::get_width(), oclraster::get_height(),
+					  0, 0, floor::get_width(), floor::get_height(),
 					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 #else
 	// draw
@@ -393,7 +393,7 @@ void pipeline::set_camera_setup_from_camera(camera* cam_) {
 	
 	const float2 fp_framebuffer_size { (float)state.framebuffer_size.x, (float)state.framebuffer_size.y };
 	const float aspect_ratio = fp_framebuffer_size.x / fp_framebuffer_size.y;
-	const float angle_ratio = tanf(DEG2RAD(oclraster::get_fov() * 0.5f)) * 2.0f;
+	const float angle_ratio = tanf(DEG2RAD(floor::get_fov() * 0.5f)) * 2.0f;
 	
 	const float3 forward_(cam_->get_forward());
 	const float3 up_(cam_->get_up());

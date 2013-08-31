@@ -83,8 +83,8 @@ const opencl::buffer_object* binning_stage::bin(draw_state& state) {
 	if(!dumped) {
 		dumped = true;
 		ocl->finish();
-		ocl->dump_buffer(queue_buffer, oclraster::data_path("dump/queue.bin"));
-		ocl->dump_buffer(bin_distribution_counter, oclraster::data_path("dump/bindist.bin"));
+		ocl->dump_buffer(queue_buffer, floor::data_path("dump/queue.bin"));
+		ocl->dump_buffer(bin_distribution_counter, floor::data_path("dump/bindist.bin"));
 	}
 #endif
 	

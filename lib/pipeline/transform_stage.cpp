@@ -52,13 +52,13 @@ void transform_stage::transform(draw_state& state) {
 	static bool dumped = false;
 	if(!dumped) {
 		dumped = true;
-		ocl->dump_buffer(state.transformed_vertices_buffer, oclraster::data_path("dump/tvbuffer.bin"));
+		ocl->dump_buffer(state.transformed_vertices_buffer, floor::data_path("dump/tvbuffer.bin"));
 		
 		//
 		unsigned int buffer_num = 0;
 		const auto find_and_dump_buffer = [&](const string& name) -> void {
 			const auto buffer = state.user_buffers.find(name);
-			ocl->dump_buffer((opencl::buffer_object*)&buffer->second, oclraster::data_path("dump/tuser_"+uint2string(buffer_num)+".hex"));
+			ocl->dump_buffer((opencl::buffer_object*)&buffer->second, floor::data_path("dump/tuser_"+uint2string(buffer_num)+".hex"));
 			buffer_num++;
 		};
 		

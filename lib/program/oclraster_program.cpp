@@ -795,7 +795,7 @@ string oclraster_program::preprocess_code(const string& raw_code) {
 	state->output_type = TCC_OUTPUT_PREPROCESS;
 	
 	// split build options and let tcc parse them
-	const string kernels_include_path = "-I" + core::strip_path(oclraster::kernel_path("")) + " ";
+	const string kernels_include_path = "-I" + core::strip_path(floor::kernel_path("")) + " ";
 	const auto build_option_args = core::tokenize(kernels_include_path+build_options, ' ');
 	const size_t argc = build_option_args.size();
 	vector<const char*> argv;

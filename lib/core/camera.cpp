@@ -19,7 +19,7 @@
 #include "camera.h"
 #include "oclraster.h"
 
-camera::camera() : evt(oclraster::get_event()),
+camera::camera() : evt(floor::get_event()),
 keyboard_handler(this, &camera::key_handler) {
 	evt->add_event_handler(keyboard_handler, EVENT_TYPE::KEY_DOWN, EVENT_TYPE::KEY_UP);
 }
@@ -58,7 +58,7 @@ void camera::run() {
 		int cursor_pos_x = 0;
 		int cursor_pos_y = 0;
 		
-		const uint2 screen_size_int(oclraster::get_width(), oclraster::get_height());
+		const uint2 screen_size_int(floor::get_width(), floor::get_height());
 		const double2 screen_size(screen_size_int);
 		
 		////////////////////////////////
@@ -70,7 +70,7 @@ void camera::run() {
 		if(xpos != 0.5 || ypos != 0.5) {
 			rotation.x -= (0.5 - ypos) * rotation_speed;
 			rotation.y -= (0.5 - xpos) * rotation_speed;
-			SDL_WarpMouseInWindow(oclraster::get_window(), screen_size_int.x/2, screen_size_int.y/2);
+			SDL_WarpMouseInWindow(floor::get_window(), screen_size_int.x/2, screen_size_int.y/2);
 		}
 		////////////////////////////////
 		// os x version
@@ -86,7 +86,7 @@ void camera::run() {
 			else ignore_next_rotation--;
 			
 			const double2 center_point(screen_size * 0.5);
-			SDL_WarpMouseInWindow(oclraster::get_window(), round(center_point.x), round(center_point.y));
+			SDL_WarpMouseInWindow(floor::get_window(), round(center_point.x), round(center_point.y));
 		}
 #endif
 		////////////////////////////////
@@ -179,7 +179,7 @@ void camera::set_keyboard_input(const bool& state) {
  */
 void camera::set_mouse_input(const bool& state) {
 	// grab input
-	SDL_SetWindowGrab(oclraster::get_window(), (state ? SDL_TRUE : SDL_FALSE));
+	SDL_SetWindowGrab(floor::get_window(), (state ? SDL_TRUE : SDL_FALSE));
 	
 #if defined(__APPLE__)
 	// this effictively calls CGAssociateMouseAndMouseCursorPosition (which will lock the cursor to the window)
@@ -188,8 +188,8 @@ void camera::set_mouse_input(const bool& state) {
 	
 	// this fixes some weird mouse positioning when switching from grab to non-grab mode
 	if(mouse_input && !state) {
-		const double2 center_point(double2(oclraster::get_width(), oclraster::get_height()) * 0.5);
-		SDL_WarpMouseInWindow(oclraster::get_window(), round(center_point.x), round(center_point.y));
+		const double2 center_point(double2(floor::get_width(), floor::get_height()) * 0.5);
+		SDL_WarpMouseInWindow(floor::get_window(), round(center_point.x), round(center_point.y));
 	}
 #endif
 	
