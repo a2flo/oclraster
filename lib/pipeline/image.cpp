@@ -19,6 +19,10 @@
 #include "image.h"
 #include "oclraster.h"
 
+// 2d array: [IMAGE_TYPE][IMAGE_CHANNEL] -> cl::ImageFormat (-> will be (0, 0) if not supported)
+static array<array<cl::ImageFormat, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL>, (size_t)IMAGE_TYPE::__MAX_TYPE> internal_image_format_mapping;
+
+//
 bool is_correct_format(const SDL_PixelFormat& format, const IMAGE_CHANNEL& channel_order);
 bool is_correct_format(const SDL_PixelFormat& format, const IMAGE_CHANNEL& channel_order) {
 	switch(channel_order) {
@@ -282,7 +286,7 @@ void image::create_buffer(const void* pixels) {
 		// look for a supported/compatible image format
 		if(native_format.image_channel_data_type == 0 ||
 		   native_format.image_channel_order == 0) {
-			native_format = ocl->get_image_format(data_type, channel_order);
+			native_format = get_image_format(data_type, channel_order);
 		}
 		if(native_format.image_channel_data_type == 0 ||
 		   native_format.image_channel_order == 0) {
@@ -595,4 +599,20 @@ void image::invalidate() {
 
 bool image::is_valid() const {
 	return valid;
+}
+
+cl::ImageFormat image::get_image_format(const IMAGE_TYPE& img_data_type, const IMAGE_CHANNEL img_channel_type) const {
+	const auto data_idx = (typename underlying_type<IMAGE_TYPE>::type)img_data_type;
+	const auto channel_idx = (typename underlying_type<IMAGE_CHANNEL>::type)img_channel_type;
+#if defined(OCLRASTER_DEBUG)
+	if(data_idx >= internal_image_format_mapping.size()) {
+		log_error("invalid data_type: %u!", data_idx);
+		return cl::ImageFormat(0, 0);
+	}
+	if(channel_idx >= internal_image_format_mapping[data_idx].size()) {
+		log_error("invalid channel_type: %u!", channel_idx);
+		return cl::ImageFormat(0, 0);
+	}
+#endif
+	return internal_image_format_mapping[data_idx][channel_idx];
 }

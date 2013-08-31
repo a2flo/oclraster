@@ -61,6 +61,31 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 	floor::init(callpath_, datapath_);
 	// TODO: window title?
 	// TODO: ocl->add_internal_kernels(...);
+	
+	ocl->add_internal_kernels(vector<opencl_base::internal_kernel_info> {
+		{ "BIN_RASTERIZE", "bin_rasterize.cl", "oclraster_bin",
+			" -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+			" -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)
+		},
+		
+		{ "PROCESSING.PERSPECTIVE", "processing.cl", "oclraster_processing",
+			" -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+			" -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
+			" -DOCLRASTER_PROJECTION_PERSPECTIVE"
+		},
+		
+		{ "PROCESSING.ORTHOGRAPHIC", "processing.cl", "oclraster_processing",
+			" -DBIN_SIZE="+uint2string(OCLRASTER_BIN_SIZE)+
+			" -DBATCH_SIZE="+uint2string(OCLRASTER_BATCH_SIZE)+
+			" -DOCLRASTER_PROJECTION_ORTHOGRAPHIC"
+		}
+		
+#if defined(OCLRASTER_FXAA)
+		,
+		{ "FXAA.LUMA", "luma_pass.cl", "framebuffer_luma", "" },
+		{ "FXAA", "fxaa_pass.cl", "framebuffer_fxaa", "" }
+#endif
+	});
 }
 
 void oclraster::destroy() {

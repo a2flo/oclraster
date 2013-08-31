@@ -141,6 +141,9 @@ protected:
 	//
 	void create_buffer(const void* pixels);
 	
+	//
+	cl::ImageFormat get_image_format(const IMAGE_TYPE& data_type, const IMAGE_CHANNEL channel_type) const;
+	
 };
 
 #endif

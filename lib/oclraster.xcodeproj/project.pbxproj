@@ -525,6 +525,10 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = .;
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					/usr/lib,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "-fparse-all-comments";
@@ -604,6 +608,10 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = .;
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					/usr/lib,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				OTHER_CFLAGS = "-fparse-all-comments";
 				OTHER_LDFLAGS = "-lfloor";
@@ -696,6 +704,7 @@
 					"-fdiagnostics-show-template-tree",
 				);
 				OTHER_LDFLAGS = (
+					"-lfloord",
 					"-weak_framework",
 					CUDA,
 				);
@@ -752,6 +761,7 @@
 					"-fdiagnostics-show-template-tree",
 				);
 				OTHER_LDFLAGS = (
+					"-lfloor",
 					"-weak_framework",
 					CUDA,
 				);
