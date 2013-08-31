@@ -20,7 +20,7 @@
 #include "oclraster.h"
 
 // 2d array: [IMAGE_TYPE][IMAGE_CHANNEL] -> cl::ImageFormat (-> will be (0, 0) if not supported)
-static array<array<cl::ImageFormat, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL>, (size_t)IMAGE_TYPE::__MAX_TYPE> internal_image_format_mapping;
+array<array<cl::ImageFormat, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL>, (size_t)IMAGE_TYPE::__MAX_TYPE> image::internal_image_format_mapping;
 
 //
 bool is_correct_format(const SDL_PixelFormat& format, const IMAGE_CHANNEL& channel_order);

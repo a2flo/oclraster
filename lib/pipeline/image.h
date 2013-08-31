@@ -122,6 +122,10 @@ public:
 	void invalidate();
 	bool is_valid() const;
 	
+	// obviously for internal use, but still might be interesting externally
+	// however: read-only!
+	static array<array<cl::ImageFormat, (size_t)IMAGE_CHANNEL::__MAX_CHANNEL>, (size_t)IMAGE_TYPE::__MAX_TYPE> internal_image_format_mapping;
+	
 protected:
 	BACKING backing;
 	image_type img_type;
