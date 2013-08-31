@@ -20,15 +20,15 @@
 #include "oclraster.h"
 #include <regex>
 
-#include "libtcc.h"
+#include "tccpp/libtcc.h"
 extern "C" {
-#include "tcc.h"
+#include "tccpp/tcc.h"
 }
 
-oclraster_program::oclraster_program(const string& code oclr_unused,
+oclraster_program::oclraster_program(const string& code floor_unused,
 									 const string entry_function_,
 									 const string build_options_,
-									 const kernel_spec default_spec_ oclr_unused) :
+									 const kernel_spec default_spec_ floor_unused) :
 entry_function(entry_function_), build_options(build_options_), kernel_function_name("oclraster_program") {
 }
 
@@ -88,18 +88,18 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 				// find first ' ' space char and open '{' bracket and extract the structs name
 				const size_t space_pos = code.find_first_of(" {", struct_pos);
 				const size_t open_bracket_pos = code.find("{", struct_pos);
-				if(space_pos == string::npos || code[space_pos] == '{') throw oclraster_exception("no struct name");
-				if(open_bracket_pos == string::npos) throw oclraster_exception("no struct open bracket");
+				if(space_pos == string::npos || code[space_pos] == '{') throw floor_exception("no struct name");
+				if(open_bracket_pos == string::npos) throw floor_exception("no struct open bracket");
 				const string struct_name = core::trim(code.substr(space_pos+1, open_bracket_pos-space_pos-1));
-				//oclr_msg("struct type: \"%s\"", type.first);
-				//oclr_msg("struct name: \"%s\"", struct_name);
+				//log_msg("struct type: \"%s\"", type.first);
+				//log_msg("struct name: \"%s\"", struct_name);
 				
 				// open/close bracket match
 				size_t bracket_pos = open_bracket_pos;
 				size_t open_bracket_count = 1;
 				while(open_bracket_count > 0) {
 					bracket_pos = code.find_first_of("{}", bracket_pos + 1);
-					if(bracket_pos == string::npos) throw oclraster_exception("struct open/close bracket mismatch");
+					if(bracket_pos == string::npos) throw floor_exception("struct open/close bracket mismatch");
 					code[bracket_pos] == '{' ? open_bracket_count++ : open_bracket_count--;
 				}
 				const size_t close_bracket_pos = bracket_pos;
@@ -107,15 +107,15 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 				//
 				const size_t end_semicolon_pos = code.find(";", close_bracket_pos+1);
 				if(end_semicolon_pos == string::npos) {
-					throw oclraster_exception("end-semicolon missing from struct \""+struct_name+"\"!");
+					throw floor_exception("end-semicolon missing from struct \""+struct_name+"\"!");
 				}
 				const string object_name = core::trim(code.substr(close_bracket_pos+1,
 																  end_semicolon_pos-close_bracket_pos-1));
-				//oclr_msg("object name: \"%s\"", object_name);
+				//log_msg("object name: \"%s\"", object_name);
 				
 				//
 				string struct_interior = code.substr(open_bracket_pos+1, close_bracket_pos-open_bracket_pos-1);
-				//oclr_msg("struct interior:\n\t%s\n", struct_interior);
+				//log_msg("struct interior:\n\t%s\n", struct_interior);
 				
 				// strip unnecessary whitespace and comments, and condense
 				static const regex rx_space("\\s+", regex::optimize);
@@ -130,7 +130,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 				struct_interior = regex_replace(struct_interior, rx_space, " ");
 				struct_interior = regex_replace(struct_interior, rx_semicolon_space, ";");
 				struct_interior = core::trim(struct_interior);
-				//oclr_msg("post-regex interior: >%s<", struct_interior);
+				//log_msg("post-regex interior: >%s<", struct_interior);
 				
 				// extract all member variables
 				vector<string> variable_names, variable_types, variable_specifiers;
@@ -138,14 +138,14 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 				while((semicolon_pos = struct_interior.find(";", last_semicolon_pos)) != string::npos) {
 					const string var_decl = struct_interior.substr(last_semicolon_pos,
 																   semicolon_pos-last_semicolon_pos);
-					//oclr_msg("decl: >%s<", var_decl);
+					//log_msg("decl: >%s<", var_decl);
 					
 					const size_t name_start_pos = var_decl.rfind(" ");
 					if(name_start_pos == string::npos) {
-						throw oclraster_exception("invalid variable declaration: \""+var_decl+"\"");
+						throw floor_exception("invalid variable declaration: \""+var_decl+"\"");
 					}
 					const string var_name = var_decl.substr(name_start_pos+1, var_decl.length()-name_start_pos-1);
-					//oclr_msg("name: >%s<", var_name);
+					//log_msg("name: >%s<", var_name);
 					variable_names.emplace_back(var_name);
 					
 					// check if type has an additional specifier (for images: read_only, write_only, read_write)
@@ -154,16 +154,16 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 					if(specifiers.find(start_token) != specifiers.end()) {
 						const string var_type = regex_replace(var_decl.substr(type_start_pos+1, name_start_pos-type_start_pos-1),
 															  rx_space, ""); // need to strip any whitespace
-						//oclr_msg("type (s): >%s<", var_type);
+						//log_msg("type (s): >%s<", var_type);
 						variable_types.emplace_back(var_type);
 						
 						const string var_spec = var_decl.substr(0, type_start_pos);
-						//oclr_msg("spec: >%s<", var_spec);
+						//log_msg("spec: >%s<", var_spec);
 						variable_specifiers.emplace_back(var_spec);
 					}
 					else {
 						const string var_type = core::trim(var_decl.substr(0, name_start_pos));
-						//oclr_msg("type: >%s<", var_type);
+						//log_msg("type: >%s<", var_type);
 						variable_types.emplace_back(var_type);
 						variable_specifiers.emplace_back("");
 					}
@@ -270,7 +270,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 							break;
 						case STRUCT_TYPE::BUFFERS:
 						case STRUCT_TYPE::IMAGES:
-						case STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
+						case STRUCT_TYPE::FRAMEBUFFER: floor_unreachable();
 					}
 					struct_code += " {\n";
 					for(size_t var_index = 0; var_index < oclr_struct.variables.size(); var_index++) {
@@ -297,7 +297,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 		// check if entry function exists, and if so, replace it with a modified function name
 		const regex rx_entry_function("("+entry_function+")\\s*\\(\\s*\\)", regex::optimize);
 		if(!regex_search(code, rx_entry_function)) {
-			throw oclraster_exception("entry function \""+entry_function+"\" not found!");
+			throw floor_exception("entry function \""+entry_function+"\" not found!");
 		}
 		processed_code = regex_replace(processed_code, rx_entry_function,
 									   "OCLRASTER_FUNC oclraster_user_"+entry_function+"("+entry_function_params+")");
@@ -320,7 +320,7 @@ void oclraster_program::process_program(const string& raw_code, const kernel_spe
 		// else: no images in kernel/program -> just one kernel / "empty image spec"
 		build_kernel(spec);
 	}
-	catch(oclraster_exception& ex) {
+	catch(floor_exception& ex) {
 		invalidate(ex.what());
 	}
 	valid = true;
@@ -335,7 +335,7 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_spe
 	if(!ocl->is_full_double_support()) {
 		for(const auto& img_type : spec.image_spec) {
 			if(img_type.data_type == IMAGE_TYPE::FLOAT_64) {
-				oclr_error("can't use a double/FLOAT_64 image format when one or more opencl devices do not support doubles!");
+				log_error("can't use a double/FLOAT_64 image format when one or more opencl devices do not support doubles!");
 				kernels.emplace(new_spec, opencl::null_kernel_object);
 				return opencl::null_kernel_object;
 			}
@@ -405,10 +405,10 @@ weak_ptr<opencl::kernel_object> oclraster_program::build_kernel(const kernel_spe
 																 image_defines+
 																 framebuffer_options+
 																 " "+build_options);
-	//oclr_msg("%s:\n%s\n", identifier, program_code);
+	//log_msg("%s:\n%s\n", identifier, program_code);
 #if defined(OCLRASTER_DEBUG)
 	if(kernel.use_count() == 0) {
-		oclr_debug("kernel source: %s", program_code);
+		log_debug("kernel source: %s", program_code);
 	}
 #endif
 	kernels.emplace(new_spec, kernel);
@@ -471,7 +471,7 @@ string oclraster_program::create_user_kernel_parameters(const kernel_spec& spec,
 				break;
 			case oclraster_program::STRUCT_TYPE::BUFFERS:
 			case oclraster_program::STRUCT_TYPE::IMAGES:
-			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
+			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: floor_unreachable();
 		}
 		kernel_parameters += oclr_struct->name + "* user_buffer_"+size_t2string(user_buffer_count)+",\n";
 		user_buffer_count++;
@@ -513,7 +513,7 @@ string oclraster_program::create_user_kernel_parameters(const kernel_spec& spec,
 			}
 			else {
 				// this shouldn't actually happen and be caught much earlier, but you never know ...
-				oclr_error("native images can not have a read_write access qualifier!");
+				log_error("native images can not have a read_write access qualifier!");
 				type_str += "read_only "; // default to read_only
 			}
 			type_str += "image2d_t ";
@@ -544,7 +544,7 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 		const bool has_hint = (hint_start != string::npos && hint_end != string::npos);
 		if((hint_start != string::npos && hint_end == string::npos) ||
 		   (hint_start == string::npos && hint_end != string::npos)) {
-			throw oclraster_exception("invalid image declaration: \""+var_type+"\"");
+			throw floor_exception("invalid image declaration: \""+var_type+"\"");
 		}
 		
 		// figure out the image var type of this image
@@ -555,14 +555,14 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 			if(image_type == "image1d") image_var_type = IMAGE_VAR_TYPE::IMAGE_1D;
 			else if(image_type == "image2d") image_var_type = IMAGE_VAR_TYPE::IMAGE_2D;
 			else if(image_type == "image3d") image_var_type = IMAGE_VAR_TYPE::IMAGE_3D;
-			else throw oclraster_exception("invalid image declaration: \""+var_type+"\"");
+			else throw floor_exception("invalid image declaration: \""+var_type+"\"");
 		}
 		else {
 			// framebuffer
 			if(image_type == "image2d") image_var_type = IMAGE_VAR_TYPE::IMAGE_2D;
 			else if(image_type == "depth_image") image_var_type = IMAGE_VAR_TYPE::DEPTH_IMAGE;
 			else if(image_type == "stencil_image") image_var_type = IMAGE_VAR_TYPE::STENCIL_IMAGE;
-			else throw oclraster_exception("invalid framebuffer image declaration: \""+var_type+"\"");
+			else throw floor_exception("invalid framebuffer image declaration: \""+var_type+"\"");
 		}
 		image_types.emplace_back(image_var_type);
 		
@@ -572,7 +572,7 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 		if(has_hint) {
 			const string hint = var_type.substr(hint_start+1, hint_end-hint_start-1);
 			const auto comma_pos = hint.find(",");
-			if(comma_pos == string::npos) throw oclraster_exception("invalid image hint declaration: \""+hint+"\"");
+			if(comma_pos == string::npos) throw floor_exception("invalid image hint declaration: \""+hint+"\"");
 			
 			const string data_type = hint.substr(0, comma_pos);
 			const string channel_type = hint.substr(comma_pos+1, hint.length()-comma_pos-1);
@@ -588,13 +588,13 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 			else if(data_type == "FLOAT_16") img_data_type = IMAGE_TYPE::FLOAT_16;
 			else if(data_type == "FLOAT_32") img_data_type = IMAGE_TYPE::FLOAT_32;
 			else if(data_type == "FLOAT_64") img_data_type = IMAGE_TYPE::FLOAT_64;
-			else throw oclraster_exception("invalid image hint declaration (invalid data type): \""+hint+"\"");
+			else throw floor_exception("invalid image hint declaration (invalid data type): \""+hint+"\"");
 			
 			if(channel_type == "R") img_channel_type = IMAGE_CHANNEL::R;
 			else if(channel_type == "RG") img_channel_type = IMAGE_CHANNEL::RG;
 			else if(channel_type == "RGB") img_channel_type = IMAGE_CHANNEL::RGB;
 			else if(channel_type == "RGBA") img_channel_type = IMAGE_CHANNEL::RGBA;
-			else throw oclraster_exception("invalid image hint declaration (invalid channel type): \""+hint+"\"");
+			else throw floor_exception("invalid image hint declaration (invalid channel type): \""+hint+"\"");
 			
 			image_hints.emplace_back(img_data_type, img_channel_type);
 		}
@@ -611,17 +611,17 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 		// check hints of framebuffer image types
 		if(has_hint) {
 			if(image_var_type == IMAGE_VAR_TYPE::DEPTH_IMAGE) {
-				throw oclraster_exception("depth_image hint is not allowed!");
+				throw floor_exception("depth_image hint is not allowed!");
 			}
 			else if(image_var_type == IMAGE_VAR_TYPE::STENCIL_IMAGE) {
 				if(img_data_type != IMAGE_TYPE::UINT_8 &&
 				   img_data_type != IMAGE_TYPE::UINT_16 &&
 				   img_data_type != IMAGE_TYPE::UINT_32 &&
 				   img_data_type != IMAGE_TYPE::UINT_64) {
-					throw oclraster_exception("stencil_image hint: data type must be UINT_* (not " + image_hints.back().to_string() + ")!");
+					throw floor_exception("stencil_image hint: data type must be UINT_* (not " + image_hints.back().to_string() + ")!");
 				}
 				else if(img_channel_type != IMAGE_CHANNEL::R) {
-					throw oclraster_exception("stencil_image hint: channel type must be R (not " + image_hints.back().to_string() + ")!");
+					throw floor_exception("stencil_image hint: channel type must be R (not " + image_hints.back().to_string() + ")!");
 				}
 			}
 		}
@@ -634,7 +634,7 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 			else if(var_spec == "read_write" || var_spec == "") {
 				image_specifiers.emplace_back(ACCESS_TYPE::READ_WRITE);
 			}
-			else throw oclraster_exception("invalid image access specifier: \""+var_spec+"\"");
+			else throw floor_exception("invalid image access specifier: \""+var_spec+"\"");
 		}
 		else {
 			// framebuffer
@@ -649,7 +649,7 @@ void oclraster_program::process_image_struct(const vector<string>& variable_name
 											   image_var_type == IMAGE_VAR_TYPE::STENCIL_IMAGE) ?
 											  ACCESS_TYPE::READ : ACCESS_TYPE::READ_WRITE);
 			}
-			else throw oclraster_exception("invalid framebuffer image access specifier: \""+var_spec+"\"");
+			else throw floor_exception("invalid framebuffer image access specifier: \""+var_spec+"\"");
 		}
 	}
 	
@@ -689,7 +689,7 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	}
 	kernel_code += "}"; // eol
 	
-	//oclr_debug("generated kernel file:\n%s\n", kernel_code);
+	//log_debug("generated kernel file:\n%s\n", kernel_code);
 	
 	// and compile
 	stringstream id_stream;
@@ -698,7 +698,7 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	weak_ptr<opencl::kernel_object> kernel_obj = ocl->add_kernel_src(unique_identifier, kernel_code, "struct_info");
 	auto kernel_ptr = kernel_obj.lock();
 	if(kernel_ptr == nullptr) {
-		oclr_error("failed to create STRUCT_INFO kernel!");
+		log_error("failed to create STRUCT_INFO kernel!");
 		return;
 	}
 	
@@ -711,7 +711,7 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 	for(size_t dev_num = 0; dev_num < devices.size(); dev_num++) {
 		// this has to be executed for all devices, since each device can have its own struct/member sizes/offsets
 		ocl->set_active_device(devices[dev_num]->type);
-		//oclr_msg("DEVICE: %s", devices[dev_num]->name);
+		//log_msg("DEVICE: %s", devices[dev_num]->name);
 		
 		// read/write is necessary, because of atomic_xchg
 		opencl::buffer_object* info_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |
@@ -727,13 +727,13 @@ void oclraster_program::generate_struct_info_cl_program(oclraster_struct_info& s
 		
 		oclraster_struct_info::device_struct_info dev_info;
 		dev_info.struct_size = info_buffer_results[0];
-		//oclr_msg("struct \"%s\" size: %d", struct_info.name, dev_info.struct_size);
+		//log_msg("struct \"%s\" size: %d", struct_info.name, dev_info.struct_size);
 		dev_info.sizes.resize(struct_info.variables.size());
 		dev_info.offsets.resize(struct_info.variables.size());
 		for(size_t i = 0; i < struct_info.variables.size(); i++) {
 			dev_info.sizes[i] = info_buffer_results[(i*2) + 1];
 			dev_info.offsets[i] = info_buffer_results[(i*2) + 2];
-			//oclr_msg("\tmember \"%s\": size: %d, offset: %d",
+			//log_msg("\tmember \"%s\": size: %d, offset: %d",
 			//		 struct_info.variables[i], dev_info.sizes[i], dev_info.offsets[i]);
 		}
 		struct_info.device_infos.emplace(devices[dev_num], dev_info);
@@ -755,7 +755,7 @@ bool oclraster_program::is_valid() const {
 
 void oclraster_program::invalidate(const string error_info) {
 	valid = false;
-	oclr_error("there was an error processing your program%s",
+	log_error("there was an error processing your program%s",
 			   error_info != "" ? ": " + error_info + "!" : "");
 }
 
@@ -770,11 +770,11 @@ const oclraster_program::oclraster_image_info& oclraster_program::get_images() c
 weak_ptr<opencl::kernel_object> oclraster_program::get_kernel(const kernel_spec spec) {
 	//
 	if(kernels.empty() || compiled_kernels.empty()) {
-		oclr_error("no kernel has been compiled for this program!");
+		log_error("no kernel has been compiled for this program!");
 		return opencl::null_kernel_object;
 	}
 	if(spec.image_spec.size() != compiled_kernels[0]->image_spec.size()) {
-		oclr_error("invalid kernel image spec size (%u) - should be (%u)!",
+		log_error("invalid kernel image spec size (%u) - should be (%u)!",
 				   spec.image_spec.size(), compiled_kernels[0]->image_spec.size());
 		return opencl::null_kernel_object;
 	}
@@ -813,7 +813,7 @@ string oclraster_program::preprocess_code(const string& raw_code) {
 	
 	// cleanup + return
 	tcc_delete(state);
-	//oclr_msg("preprocessed code: %s", ret_code);
+	//log_msg("preprocessed code: %s", ret_code);
 	return ret_code;
 }
 
@@ -830,7 +830,7 @@ string oclraster_program::create_depth_test_function(const kernel_spec& spec) co
 		case DEPTH_FUNCTION::NOT_EQUAL: depth_test_func += "incoming != current"; break;
 		case DEPTH_FUNCTION::GREATER_OR_EQUAL: depth_test_func += "incoming >= current"; break;
 		case DEPTH_FUNCTION::ALWAYS: depth_test_func += "true"; break;
-		case DEPTH_FUNCTION::CUSTOM: oclr_unreachable();
+		case DEPTH_FUNCTION::CUSTOM: floor_unreachable();
 	}
 	depth_test_func += ")";
 	return depth_test_func;

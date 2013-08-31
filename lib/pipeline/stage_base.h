@@ -19,7 +19,7 @@
 #ifndef __OCLRASTER_STAGE_BASE_H__
 #define __OCLRASTER_STAGE_BASE_H__
 
-#include "cl/opencl.h"
+#include "cl/opencl.hpp"
 #include "program/oclraster_program.h"
 
 struct draw_state;

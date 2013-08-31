@@ -350,7 +350,7 @@ string rasterization_program::specialized_processing(const string& code,
 			}
 			break;
 			case oclraster_program::STRUCT_TYPE::IMAGES:
-			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
+			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: floor_unreachable();
 		}
 		cur_user_buffer++;
 	}
@@ -461,7 +461,7 @@ string rasterization_program::specialized_processing(const string& code,
 	core::find_and_replace(program_code, "//###OCLRASTER_FRAMEBUFFER_WRITE###", framebuffer_write_code);
 	
 	// done
-	//oclr_msg("generated rasterize user program: %s", program_code);
+	//log_msg("generated rasterize user program: %s", program_code);
 	return program_code;
 }
 

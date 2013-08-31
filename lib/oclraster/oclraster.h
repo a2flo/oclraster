@@ -20,20 +20,20 @@
 #define __OCLRASTER_H__
 
 #include "oclraster/global.h"
-#include "core/core.h"
-#include "core/file_io.h"
-#include "core/event.h"
-#include "core/xml.h"
-#include "core/vector3.h"
-#include "core/matrix4.h"
-#include "core/unicode.h"
+#include "core/core.hpp"
+#include "core/file_io.hpp"
+#include "core/event.hpp"
+#include "core/xml.hpp"
+#include "core/vector3.hpp"
+#include "core/matrix4.hpp"
+#include "core/unicode.hpp"
 
 class opencl_base;
 extern opencl_base* ocl;
 
 class pipeline;
 
-class OCLRASTER_API oclraster {
+class FLOOR_API oclraster {
 public:
 	static void init(const char* callpath_, const char* datapath_);
 	static void destroy();

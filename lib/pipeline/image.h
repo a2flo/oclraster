@@ -19,7 +19,7 @@
 #ifndef __OCLRASTER_IMAGE_H__
 #define __OCLRASTER_IMAGE_H__
 
-#include "cl/opencl.h"
+#include "cl/opencl.hpp"
 #include "pipeline/image_types.h"
 
 class image {

@@ -173,7 +173,7 @@ const framebuffer_program::clear_kernel& framebuffer_program::build_kernel(const
 	weak_ptr<opencl::kernel_object> kernel = ocl->add_kernel_src(identifier, program_code, "clear_framebuffer", build_options);
 #if defined(OCLRASTER_DEBUG)
 	if(kernel.use_count() == 0) {
-		oclr_debug("kernel source: %s", program_code);
+		log_debug("kernel source: %s", program_code);
 	}
 #endif
 	kernels.emplace(new_spec, framebuffer_program::clear_kernel { kernel, std::move(clear_image_types_vec) });
@@ -204,13 +204,13 @@ framebuffer framebuffer::create_with_images(const unsigned int& width, const uns
 	for(const auto& img_type : image_types) {
 		if(img_type.first == IMAGE_TYPE::NONE ||
 		   img_type.second == IMAGE_CHANNEL::NONE) {
-			oclr_error("framebuffer images without a type are not allowed!");
+			log_error("framebuffer images without a type are not allowed!");
 			return ret_fb;
 		}
 	}
 	if(!((depth_type.first == IMAGE_TYPE::NONE && depth_type.second == IMAGE_CHANNEL::NONE) ||
 		 (depth_type.first == IMAGE_TYPE::FLOAT_32 && depth_type.second == IMAGE_CHANNEL::R))) {
-		oclr_error("framebuffer depth type must either be NONE or FLOAT_32/R");
+		log_error("framebuffer depth type must either be NONE or FLOAT_32/R");
 		return ret_fb;
 	}
 	if(!((stencil_type.first == IMAGE_TYPE::NONE && stencil_type.second == IMAGE_CHANNEL::NONE) ||
@@ -218,7 +218,7 @@ framebuffer framebuffer::create_with_images(const unsigned int& width, const uns
 		 (stencil_type.first == IMAGE_TYPE::UINT_16 && stencil_type.second == IMAGE_CHANNEL::R) ||
 		 (stencil_type.first == IMAGE_TYPE::UINT_32 && stencil_type.second == IMAGE_CHANNEL::R) ||
 		 (stencil_type.first == IMAGE_TYPE::UINT_64 && stencil_type.second == IMAGE_CHANNEL::R))) {
-		oclr_error("framebuffer stencil type must either be NONE or UINT_*/R");
+		log_error("framebuffer stencil type must either be NONE or UINT_*/R");
 		return ret_fb;
 	}
 	
@@ -318,7 +318,7 @@ void framebuffer::detach(const size_t& index) {
 	const size_t attachment_count = images.size();
 #if defined(OCLRASTER_DEBUG)
 	if(index >= attachment_count) {
-		oclr_error("invalid index: %u - current framebuffer attachment count is only %u!", index, attachment_count);
+		log_error("invalid index: %u - current framebuffer attachment count is only %u!", index, attachment_count);
 		return;
 	}
 #endif
@@ -344,7 +344,7 @@ size_t framebuffer::get_attachment_count() const {
 void framebuffer::attach_depth_buffer(image& img) {
 	if(!((img.get_data_type() == IMAGE_TYPE::NONE && img.get_channel_order() == IMAGE_CHANNEL::NONE) ||
 		 (img.get_data_type() == IMAGE_TYPE::FLOAT_32 && img.get_channel_order() == IMAGE_CHANNEL::R))) {
-		oclr_error("framebuffer depth type must either be NONE or FLOAT_32/R");
+		log_error("framebuffer depth type must either be NONE or FLOAT_32/R");
 		return;
 	}
 	depth_buffer = &img;
@@ -359,7 +359,7 @@ void framebuffer::attach_stencil_buffer(image& img) {
 		 (img.get_data_type() == IMAGE_TYPE::UINT_16 && img.get_channel_order() == IMAGE_CHANNEL::R) ||
 		 (img.get_data_type() == IMAGE_TYPE::UINT_32 && img.get_channel_order() == IMAGE_CHANNEL::R) ||
 		 (img.get_data_type() == IMAGE_TYPE::UINT_64 && img.get_channel_order() == IMAGE_CHANNEL::R))) {
-		oclr_error("framebuffer stencil type must either be NONE or UINT_*/R");
+		log_error("framebuffer stencil type must either be NONE or UINT_*/R");
 		return;
 	}
 	stencil_buffer = &img;
@@ -456,7 +456,7 @@ void framebuffer::clear(const vector<size_t> image_indices, const bool depth_cle
 				break;
 			case IMAGE_TYPE::NONE:
 			case IMAGE_TYPE::__MAX_TYPE:
-				oclr_unreachable();
+				floor_unreachable();
 		}
 	}
 	

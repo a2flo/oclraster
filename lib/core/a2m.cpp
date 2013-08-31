@@ -17,8 +17,8 @@
  */
 
 #include "a2m.h"
-#include "file_io.h"
-#include "core.h"
+#include "core/file_io.hpp"
+#include "core/core.hpp"
 #include "oclraster.h"
 
 static constexpr unsigned int A2M_VERSION = 2u;
@@ -61,7 +61,7 @@ void a2m::load(const string& filename) {
 	char file_type[8];
 	file.get_block(file_type, 8);
 	if(strncmp(file_type, "A2EMODEL", 8) != 0) {
-		oclr_error("non supported file type for %s: %s!", filename, file_type);
+		log_error("non supported file type for %s: %s!", filename, file_type);
 		file.close();
 		return;
 	}
@@ -69,7 +69,7 @@ void a2m::load(const string& filename) {
 	// get model version
 	const unsigned int version = file.get_uint();
 	if(version != A2M_VERSION) {
-		oclr_error("wrong model file version %u - should be %u!", version, A2M_VERSION);
+		log_error("wrong model file version %u - should be %u!", version, A2M_VERSION);
 		file.close();
 		return;
 	}
@@ -77,7 +77,7 @@ void a2m::load(const string& filename) {
 	// get model type and abort if it's not 0x00 (note: 0x02 is not supported any more)
 	const char mtype = file.get_char();
 	if(mtype != 0x00) {
-		oclr_error("non supported model type: %u!", (unsigned int)(mtype & 0xFF));
+		log_error("non supported model type: %u!", (unsigned int)(mtype & 0xFF));
 		file.close();
 		return;
 	}

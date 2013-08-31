@@ -34,7 +34,7 @@ void processing_stage::process(draw_state& state, const PRIMITIVE_TYPE type) {
 	
 	const auto index_buffer = state.user_buffers.find("index_buffer");
 	if(index_buffer == state.user_buffers.cend()) {
-		oclr_error("index buffer not bound!");
+		log_error("index buffer not bound!");
 		return;
 	}
 	ocl->set_kernel_argument(argc++, &index_buffer->second);

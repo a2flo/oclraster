@@ -20,10 +20,10 @@
 #define __OCLRASTER_CAMERA_H__
 
 #include "oclraster/global.h"
-#include "core/core.h"
-#include "core/event.h"
+#include "core/core.hpp"
+#include "core/event.hpp"
 
-class OCLRASTER_API camera {
+class FLOOR_API camera {
 public:
 	camera();
 	virtual ~camera();

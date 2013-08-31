@@ -21,7 +21,7 @@
 
 // oclraster version and build/compiler info
 #include "build_version.h"
-#include "core/util.h"
+#include "core/util.hpp"
 #define OCLRASTER_MAJOR_VERSION "0"
 #define OCLRASTER_MINOR_VERSION "0"
 #define OCLRASTER_REVISION_VERSION "5"

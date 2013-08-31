@@ -18,7 +18,7 @@
 
 #include "global.h"
 #include "image_types.h"
-#include "vector4.h"
+#include "core/vector4.hpp"
 
 static constexpr array<const char*, (size_t)IMAGE_TYPE::__MAX_TYPE> data_type_str_table {
 	{
@@ -61,7 +61,7 @@ size_t image_type::pixel_size() const {
 		case IMAGE_TYPE::__MAX_TYPE:
 			return 0;
 	}
-	oclr_unreachable();
+	floor_unreachable();
 }
 
 // and while we're at it, make sure that cpu/host side vector4 types that are used for images have the correct size

@@ -20,7 +20,7 @@
 #define __OCLRASTER_BINNING_STAGE_H__
 
 #include "oclraster/global.h"
-#include "cl/opencl.h"
+#include "cl/opencl.hpp"
 
 struct draw_state;
 class binning_stage {

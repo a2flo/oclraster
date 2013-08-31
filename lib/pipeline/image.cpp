@@ -77,7 +77,7 @@ bool is_correct_format(const SDL_PixelFormat& format, const IMAGE_CHANNEL& chann
 #endif
 		case IMAGE_CHANNEL::NONE:
 		case IMAGE_CHANNEL::__MAX_CHANNEL:
-			oclr_unreachable();
+			floor_unreachable();
 	}
 	return true;
 }
@@ -85,7 +85,7 @@ bool is_correct_format(const SDL_PixelFormat& format, const IMAGE_CHANNEL& chann
 image image::from_file(const string& filename, const BACKING& backing,
 					   const IMAGE_TYPE& type, const IMAGE_CHANNEL& channel_order) {
 	const auto fail_return = [&filename, &backing](const string& error_msg) -> image {
-		oclr_error("%s (\"%s\"): %s!", error_msg, filename, SDL_GetError());
+		log_error("%s (\"%s\"): %s!", error_msg, filename, SDL_GetError());
 		const unsigned int fail_pixel = 0xDEADBEEF;
 		auto img = image(1, 1, backing, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA, &fail_pixel);
 		img.invalidate();
@@ -207,7 +207,7 @@ image image::from_file(const string& filename, const BACKING& backing,
 #endif
 			case IMAGE_CHANNEL::NONE:
 			case IMAGE_CHANNEL::__MAX_CHANNEL:
-				oclr_unreachable();
+				floor_unreachable();
 		}
 		
 		SDL_Surface* converted_surface = SDL_ConvertSurface(surface, &correct_format, 0);
@@ -247,12 +247,12 @@ backing(BACKING::IMAGE), img_type(type, channel_order_), data_type(type), channe
 void image::create_buffer(const void* pixels) {
 #if defined(OCLRASTER_DEBUG)
 	if(data_type >= IMAGE_TYPE::__MAX_TYPE) {
-		oclr_error("invalid image type: %u!", data_type);
+		log_error("invalid image type: %u!", data_type);
 		invalidate();
 		return;
 	}
 	if(channel_order >= IMAGE_CHANNEL::__MAX_CHANNEL) {
-		oclr_error("invalid image channel order type: %u!", channel_order);
+		log_error("invalid image channel order type: %u!", channel_order);
 		invalidate();
 		return;
 	}
@@ -272,7 +272,7 @@ void image::create_buffer(const void* pixels) {
 			}
 			if(!found) {
 				// not supported, reset and look for a compatible one
-				oclr_error("specified native image format (%X %X) not supported - checking for compatible image format ...",
+				log_error("specified native image format (%X %X) not supported - checking for compatible image format ...",
 						   native_format.image_channel_data_type, native_format.image_channel_order);
 				native_format.image_channel_data_type = 0;
 				native_format.image_channel_order = 0;
@@ -286,7 +286,7 @@ void image::create_buffer(const void* pixels) {
 		}
 		if(native_format.image_channel_data_type == 0 ||
 		   native_format.image_channel_order == 0) {
-			oclr_error("image format \"%s\" is not natively supported - falling back to buffer based image backing!",
+			log_error("image format \"%s\" is not natively supported - falling back to buffer based image backing!",
 					   image_type { data_type, channel_order }.to_string());
 			backing = BACKING::BUFFER;
 		}
@@ -339,7 +339,7 @@ void image::create_buffer(const void* pixels) {
 											native_format.image_channel_order, native_format.image_channel_data_type,
 											size.x, size.y, (void*)pixels);
 		if(buffer->image_buffer == nullptr) {
-			oclr_error("image buffer creation failed!");
+			log_error("image buffer creation failed!");
 			invalidate();
 			return;
 		}
@@ -506,7 +506,7 @@ const void* __attribute__((aligned(128))) image::map(const opencl::MAP_BUFFER_FL
 	if((access_type & opencl::MAP_BUFFER_FLAG::READ_WRITE) == opencl::MAP_BUFFER_FLAG::READ_WRITE ||
 	   (access_type & opencl::MAP_BUFFER_FLAG::WRITE) == opencl::MAP_BUFFER_FLAG::WRITE ||
 	   (access_type & opencl::MAP_BUFFER_FLAG::WRITE_INVALIDATE) == opencl::MAP_BUFFER_FLAG::WRITE_INVALIDATE) {
-		oclr_error("access-type must be opencl::MAP_BUFFER_FLAG::READ when using the const map function!");
+		log_error("access-type must be opencl::MAP_BUFFER_FLAG::READ when using the const map function!");
 		return nullptr;
 	}
 #endif
@@ -529,11 +529,11 @@ void* __attribute__((aligned(128))) image::map_region(const uint2 offset, const 
 		// mapping a region with a width other than the images width is not possible when buffer based backing is used,
 		// because there is no way to specify a row offset when mapping a buffer (+then, there wouldn't be a way to offset by the header size)
 		if(offset.x != 0) {
-			oclr_error("map x-offset must be 0 when BUFFER backing is used!");
+			log_error("map x-offset must be 0 when BUFFER backing is used!");
 			return nullptr;
 		}
 		if(map_size.x != size.x) {
-			oclr_error("map x-size must match image x-size when BUFFER backing is used!");
+			log_error("map x-size must match image x-size when BUFFER backing is used!");
 			return nullptr;
 		}
 		
@@ -567,7 +567,7 @@ bool image::modify_backing(const BACKING& new_backing) {
 	
 	// this can only happen, if IMAGE backing should be used, but it's falling back to BUFFER backing
 	if(old_backing == backing) {
-		oclr_error("failed to modify image backing!");
+		log_error("failed to modify image backing!");
 		return false;
 	}
 	

@@ -19,14 +19,14 @@
 #ifndef __OCLRASTER_PIPELINE_H__
 #define __OCLRASTER_PIPELINE_H__
 
-#include "cl/opencl.h"
+#include "cl/opencl.hpp"
 #include "pipeline/transform_stage.h"
 #include "pipeline/processing_stage.h"
 #include "pipeline/binning_stage.h"
 #include "pipeline/rasterization_stage.h"
 #include "pipeline/image.h"
 #include "pipeline/framebuffer.h"
-#include "core/event.h"
+#include "core/event.hpp"
 #include "core/camera.h"
 #include "program/oclraster_program.h"
 #include "program/transform_program.h"

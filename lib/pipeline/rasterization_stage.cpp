@@ -62,7 +62,7 @@ void rasterization_stage::rasterize(draw_state& state,
 	
 	const auto index_buffer = state.user_buffers.find("index_buffer");
 	if(index_buffer == state.user_buffers.cend()) {
-		oclr_error("index buffer not bound!");
+		log_error("index buffer not bound!");
 		return;
 	}
 	ocl->set_kernel_argument(argc++, &index_buffer->second);

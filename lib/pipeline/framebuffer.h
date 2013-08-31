@@ -19,7 +19,7 @@
 #ifndef __OCLRASTER_FRAMEBUFFER_H__
 #define __OCLRASTER_FRAMEBUFFER_H__
 
-#include "cl/opencl.h"
+#include "cl/opencl.hpp"
 #include "pipeline/image.h"
 
 class framebuffer {

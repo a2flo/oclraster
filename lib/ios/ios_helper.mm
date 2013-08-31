@@ -45,21 +45,21 @@ static void log_pretty_print(const char* log, const char* code) {
 	const vector<string> code_lines { core::tokenize(string(code), '\n') };
 	for(const string& line : lines) {
 		if(line.size() == 0) continue;
-		oclr_log("## \033[31m%s\033[m", line);
+		log_undecorated("## \033[31m%s\033[m", line);
 		
 		// find code line and print it (+/- 1 line)
 		if(regex_match(line, regex_result, rx_log_line)) {
 			const size_t src_line_num = string2size_t(regex_result[1]) - 1;
 			if(src_line_num < code_lines.size()) {
 				if(src_line_num != 0) {
-					oclr_log("\033[37m%s\033[m", code_lines[src_line_num-1]);
+					log_undecorated("\033[37m%s\033[m", code_lines[src_line_num-1]);
 				}
-				oclr_log("\033[31m%s\033[m", code_lines[src_line_num]);
+				log_undecorated("\033[31m%s\033[m", code_lines[src_line_num]);
 				if(src_line_num+1 < code_lines.size()) {
-					oclr_log("\033[37m%s\033[m", code_lines[src_line_num+1]);
+					log_undecorated("\033[37m%s\033[m", code_lines[src_line_num+1]);
 				}
 			}
-			oclr_log("");
+			log_undecorated("");
 		}
 	}
 }
@@ -90,7 +90,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 	glGetShaderiv(shd_obj.vertex_shader, GL_COMPILE_STATUS, &success);
 	if(!success) {
 		glGetShaderInfoLog(shd_obj.vertex_shader, OCLRASTER_SHADER_LOG_SIZE, nullptr, info_log);
-		oclr_error("error in vertex shader \"%s\" compilation!", shd.name);
+		log_error("error in vertex shader \"%s\" compilation!", shd.name);
 		log_pretty_print(info_log, vs_text);
 		return;
 	}
@@ -102,7 +102,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 	glGetShaderiv(shd_obj.fragment_shader, GL_COMPILE_STATUS, &success);
 	if(!success) {
 		glGetShaderInfoLog(shd_obj.fragment_shader, OCLRASTER_SHADER_LOG_SIZE, nullptr, info_log);
-		oclr_error("error in fragment shader \"%s\" compilation!", shd.name);
+		log_error("error in fragment shader \"%s\" compilation!", shd.name);
 		log_pretty_print(info_log, fs_text);
 		return;
 	}
@@ -118,7 +118,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 	glGetProgramiv(shd_obj.program, GL_LINK_STATUS, &success);
 	if(!success) {
 		glGetProgramInfoLog(shd_obj.program, OCLRASTER_SHADER_LOG_SIZE, nullptr, info_log);
-		oclr_error("error in program \"%s\" linkage!\nInfo log: %s", shd.name, info_log);
+		log_error("error in program \"%s\" linkage!\nInfo log: %s", shd.name, info_log);
 		return;
 	}
 	glUseProgram(shd_obj.program);
@@ -181,7 +181,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 	glGetProgramiv(shd_obj.program, GL_VALIDATE_STATUS, &success);
 	if(!success) {
 		glGetProgramInfoLog(shd_obj.program, OCLRASTER_SHADER_LOG_SIZE, nullptr, info_log);
-		oclr_error("error in program \"%s\" validation!\nInfo log: %s", shd.name, info_log);
+		log_error("error in program \"%s\" validation!\nInfo log: %s", shd.name, info_log);
 		return;
 	}
 	else {
@@ -189,7 +189,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 		
 		// check if shader will run in software (if so, print out a debug message)
 		if(strstr((const char*)info_log, (const char*)"software") != nullptr) {
-			oclr_debug("program \"%s\" validation: %s", shd.name, info_log);
+			log_debug("program \"%s\" validation: %s", shd.name, info_log);
 		}
 	}
 	

@@ -17,14 +17,14 @@
 
 #include "oclraster/oclraster.h"
 #include "oclraster/oclraster_version.h"
-#include "cl/opencl.h"
-#include "core/gl_support.h"
+#include "cl/opencl.hpp"
+#include "core/gl_support.hpp"
 #include "pipeline/framebuffer.h"
 #include "pipeline/pipeline.h"
 
 #if defined(__APPLE__)
 #if !defined(OCLRASTER_IOS)
-#include "osx/osx_helper.h"
+#include "osx/osx_helper.hpp"
 #else
 #include "ios/ios_helper.h"
 #endif
@@ -66,8 +66,8 @@ extern string template_rasterization_program;
 
 // dll main for windows dll export
 #if defined(__WINDOWS__)
-BOOL APIENTRY DllMain(HANDLE hModule oclr_unused, DWORD ul_reason_for_call, LPVOID lpReserved oclr_unused);
-BOOL APIENTRY DllMain(HANDLE hModule oclr_unused, DWORD ul_reason_for_call, LPVOID lpReserved oclr_unused) {
+BOOL APIENTRY DllMain(HANDLE hModule floor_unused, DWORD ul_reason_for_call, LPVOID lpReserved floor_unused);
+BOOL APIENTRY DllMain(HANDLE hModule floor_unused, DWORD ul_reason_for_call, LPVOID lpReserved floor_unused) {
 	switch(ul_reason_for_call) {
 		case DLL_PROCESS_ATTACH:
 		case DLL_THREAD_ATTACH:
@@ -181,7 +181,7 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 	evt->add_internal_event_handler(*event_handler_fnctr, EVENT_TYPE::WINDOW_RESIZE, EVENT_TYPE::KERNEL_RELOAD);
 	
 	// print out oclraster info
-	oclr_debug("%s", (OCLRASTER_VERSION_STRING).c_str());
+	log_debug("%s", (OCLRASTER_VERSION_STRING).c_str());
 	
 	// load config
 	const string config_filename(string("config.xml") +
@@ -226,7 +226,7 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 }
 
 void oclraster::destroy() {
-	oclr_debug("destroying oclraster ...");
+	log_debug("destroying oclraster ...");
 	
 	acquire_context();
 	
@@ -245,7 +245,7 @@ void oclraster::destroy() {
 	
 	release_context();
 
-	oclr_debug("oclraster destroyed!");
+	log_debug("oclraster destroyed!");
 	
 	SDL_GL_DeleteContext(config.ctx);
 	SDL_DestroyWindow(config.wnd);
@@ -255,15 +255,15 @@ void oclraster::destroy() {
 }
 
 void oclraster::init_internal() {
-	oclr_debug("initializing oclraster");
+	log_debug("initializing oclraster");
 
 	// initialize sdl
 	if(SDL_Init(SDL_INIT_VIDEO) == -1) {
-		oclr_error("can't init SDL: %s", SDL_GetError());
+		log_error("can't init SDL: %s", SDL_GetError());
 		exit(1);
 	}
 	else {
-		oclr_debug("sdl initialized");
+		log_debug("sdl initialized");
 	}
 	atexit(SDL_Quit);
 
@@ -278,10 +278,10 @@ void oclraster::init_internal() {
 		config.flags |= SDL_WINDOW_FULLSCREEN;
 		config.flags |= SDL_WINDOW_BORDERLESS;
 		windows_pos.set(0, 0);
-		oclr_debug("fullscreen enabled");
+		log_debug("fullscreen enabled");
 	}
 	else {
-		oclr_debug("fullscreen disabled");
+		log_debug("fullscreen disabled");
 	}
 #else
 	config.flags |= SDL_WINDOW_FULLSCREEN;
@@ -289,7 +289,7 @@ void oclraster::init_internal() {
 	config.flags |= SDL_WINDOW_BORDERLESS;
 #endif
 
-	oclr_debug("vsync %s", config.vsync ? "enabled" : "disabled");
+	log_debug("vsync %s", config.vsync ? "enabled" : "disabled");
 	
 	// gl attributes
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -326,33 +326,33 @@ void oclraster::init_internal() {
 	config.wnd = SDL_CreateWindow("oclraster", 0, 0, (unsigned int)config.width, (unsigned int)config.height, config.flags);
 #endif
 	if(config.wnd == nullptr) {
-		oclr_error("can't create window: %s", SDL_GetError());
+		log_error("can't create window: %s", SDL_GetError());
 		exit(1);
 	}
 	else {
 		SDL_GetWindowSize(config.wnd, (int*)&config.width, (int*)&config.height);
-		oclr_debug("video mode set: w%u h%u", config.width, config.height);
+		log_debug("video mode set: w%u h%u", config.width, config.height);
 	}
 	
 #if defined(OCLRASTER_IOS)
 	if(SDL_SetWindowDisplayMode(config.wnd, &fullscreen_mode) < 0) {
-		oclr_error("can't set up fullscreen display mode: %s", SDL_GetError());
+		log_error("can't set up fullscreen display mode: %s", SDL_GetError());
 		exit(1);
 	}
 	SDL_GetWindowSize(config.wnd, (int*)&config.width, (int*)&config.height);
-	oclr_debug("fullscreen mode set: w%u h%u", config.width, config.height);
+	log_debug("fullscreen mode set: w%u h%u", config.width, config.height);
 	SDL_ShowWindow(config.wnd);
 #endif
 	
 	config.ctx = SDL_GL_CreateContext(config.wnd);
 	if(config.ctx == nullptr) {
-		oclr_error("can't create opengl context: %s", SDL_GetError());
+		log_error("can't create opengl context: %s", SDL_GetError());
 		exit(1);
 	}
 #if !defined(OCLRASTER_IOS)
 	// has to be set after context creation
 	if(config.vsync && SDL_GL_SetSwapInterval(1) == -1) {
-		oclr_error("error setting the gl swap interval to 1 (vsync): %s", SDL_GetError());
+		log_error("error setting the gl swap interval to 1 (vsync): %s", SDL_GetError());
 		SDL_ClearError();
 	}
 	
@@ -361,11 +361,11 @@ void oclraster::init_internal() {
 	CGLContextObj cgl_ctx = CGLGetCurrentContext();
 	CGLError cgl_err = CGLEnable(cgl_ctx, kCGLCEMPEngine);
 	if(cgl_err != kCGLNoError) {
-		oclr_error("unable to set multi-threaded opengl context (%X: %X): %s!",
+		log_error("unable to set multi-threaded opengl context (%X: %X): %s!",
 				  (size_t)cgl_ctx, cgl_err, CGLErrorString(cgl_err));
 	}
 	else {
-		oclr_debug("multi-threaded opengl context enabled!");
+		log_debug("multi-threaded opengl context enabled!");
 	}
 #endif
 #endif
@@ -391,7 +391,7 @@ void oclraster::init_internal() {
 	else {
 #else
 		if(config.opencl_platform == "cuda") {
-			oclr_error("CUDA support is not enabled!");
+			log_error("CUDA support is not enabled!");
 		}
 #endif
 		ocl = new opencl(core::strip_path(string(datapath + kernelpath)).c_str(), config.wnd, config.clear_cache);
@@ -408,17 +408,17 @@ void oclraster::init_internal() {
 	//
 	int tmp = 0;
 	SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &tmp);
-	oclr_debug("double buffering %s", tmp == 1 ? "enabled" : "disabled");
+	log_debug("double buffering %s", tmp == 1 ? "enabled" : "disabled");
 
 	// print out some opengl informations
-	oclr_debug("vendor: %s", glGetString(GL_VENDOR));
-	oclr_debug("renderer: %s", glGetString(GL_RENDERER));
-	oclr_debug("version: %s", glGetString(GL_VERSION));
+	log_debug("vendor: %s", glGetString(GL_VENDOR));
+	log_debug("renderer: %s", glGetString(GL_RENDERER));
+	log_debug("version: %s", glGetString(GL_VERSION));
 	
 	if(SDL_GetCurrentVideoDriver() == nullptr) {
-		oclr_error("couldn't get video driver: %s!", SDL_GetError());
+		log_error("couldn't get video driver: %s!", SDL_GetError());
 	}
-	else oclr_debug("video driver: %s", SDL_GetCurrentVideoDriver());
+	else log_debug("video driver: %s", SDL_GetCurrentVideoDriver());
 	
 	evt->set_ldouble_click_time((unsigned int)config.ldouble_click_time);
 	evt->set_rdouble_click_time((unsigned int)config.rdouble_click_time);
@@ -426,7 +426,7 @@ void oclraster::init_internal() {
 	
 	// initialize ogl
 	init_gl();
-	oclr_debug("opengl initialized");
+	log_debug("opengl initialized");
 
 	// resize stuff
 	resize_window();
@@ -522,7 +522,7 @@ void oclraster::set_fullscreen(const bool& state) {
 	if(state == config.fullscreen) return;
 	config.fullscreen = state;
 	if(SDL_SetWindowFullscreen(config.wnd, (SDL_bool)state) != 0) {
-		oclr_error("failed to %s fullscreen: %s!",
+		log_error("failed to %s fullscreen: %s!",
 				  (state ? "enable" : "disable"), SDL_GetError());
 	}
 	evt->add_event(EVENT_TYPE::WINDOW_RESIZE,
@@ -546,7 +546,7 @@ void oclraster::start_draw() {
 	
 	// draws ogl stuff
 #if !defined(OCLRASTER_USE_DRAW_PIXELS)
-	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindFramebuffer(GL_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 #endif
 	glViewport(0, 0, (unsigned int)config.width, (unsigned int)config.height);
 	
@@ -568,22 +568,22 @@ void oclraster::stop_draw() {
 		case GL_NO_ERROR:
 			break;
 		case GL_INVALID_ENUM:
-			oclr_error("OpenGL error: invalid enum!");
+			log_error("OpenGL error: invalid enum!");
 			break;
 		case GL_INVALID_VALUE:
-			oclr_error("OpenGL error: invalid value!");
+			log_error("OpenGL error: invalid value!");
 			break;
 		case GL_INVALID_OPERATION:
-			oclr_error("OpenGL error: invalid operation!");
+			log_error("OpenGL error: invalid operation!");
 			break;
 		case GL_OUT_OF_MEMORY:
-			oclr_error("OpenGL error: out of memory!");
+			log_error("OpenGL error: out of memory!");
 			break;
 		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			oclr_error("OpenGL error: invalid framebuffer operation!");
+			log_error("OpenGL error: invalid framebuffer operation!");
 			break;
 		default:
-			oclr_error("unknown OpenGL error: %u!");
+			log_error("unknown OpenGL error: %u!");
 			break;
 	}
 	
@@ -821,7 +821,7 @@ void oclraster::acquire_context() {
 	const unsigned int cur_active_locks = config.ctx_active_locks++;
 	if(cur_active_locks == 0) {
 		if(SDL_GL_MakeCurrent(config.wnd, config.ctx) != 0) {
-			oclr_error("couldn't make gl context current: %s!", SDL_GetError());
+			log_error("couldn't make gl context current: %s!", SDL_GetError());
 			return;
 		}
 		if(ocl != nullptr && ocl->is_supported()) {
@@ -829,7 +829,7 @@ void oclraster::acquire_context() {
 		}
 	}
 #if defined(OCLRASTER_IOS)
-	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindFramebuffer(GL_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 #endif
 }
 
@@ -842,7 +842,7 @@ void oclraster::release_context() {
 			ocl->deactivate_context();
 		}
 		if(SDL_GL_MakeCurrent(config.wnd, nullptr) != 0) {
-			oclr_error("couldn't release current gl context: %s!", SDL_GetError());
+			log_error("couldn't release current gl context: %s!", SDL_GetError());
 			return;
 		}
 	}
@@ -861,11 +861,11 @@ bool oclraster::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 #if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 		template_transform_program = file_io::file_to_string(data_path("kernels/template_transform_program.cl"));
 		if(template_transform_program == "") {
-			oclr_error("failed to load template_transform_program!");
+			log_error("failed to load template_transform_program!");
 		}
 		template_rasterization_program = file_io::file_to_string(data_path("kernels/template_rasterization_program.cl"));
 		if(template_rasterization_program == "") {
-			oclr_error("failed to load template_rasterization_program!");
+			log_error("failed to load template_rasterization_program!");
 		}
 #endif
 		

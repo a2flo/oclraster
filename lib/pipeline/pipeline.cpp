@@ -89,7 +89,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 	destroy_framebuffers();
 	
 	const uint2 scaled_size = float2(size) / oclraster::get_upscaling();
-	oclr_debug("size: %v -> %v", size, scaled_size);
+	log_debug("size: %v -> %v", size, scaled_size);
 	
 	//
 	default_framebuffer = framebuffer::create_with_images(scaled_size.x, scaled_size.y,
@@ -117,7 +117,7 @@ void pipeline::create_framebuffers(const uint2& size) {
 				 scaled_size.x, scaled_size.y,
 				 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindFramebuffer(GL_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
 #endif
 	
@@ -134,7 +134,7 @@ void pipeline::destroy_framebuffers() {
 	framebuffer::destroy_images(default_framebuffer);
 	
 #if !defined(OCLRASTER_USE_DRAW_PIXELS)
-	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindFramebuffer(GL_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
 #if !defined(OCLRASTER_USE_DRAW_PIXELS)
 	if(copy_fbo_tex_id != 0) glDeleteTextures(1, &copy_fbo_tex_id);
@@ -168,7 +168,7 @@ void pipeline::swap() {
 	
 	// draw/blit to screen
 #if defined(OCLRASTER_IOS)
-	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindFramebuffer(GL_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 #endif
 	glViewport(0, 0, oclraster::get_width(), oclraster::get_height());
 	
@@ -189,7 +189,7 @@ void pipeline::swap() {
 #if !defined(OCLRASTER_USE_DRAW_PIXELS)
 #if !defined(OCLRASTER_IOS)
 	// blit
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 	glBlitFramebuffer(0, 0, default_fb_size.x, default_fb_size.y,
 					  0, 0, oclraster::get_width(), oclraster::get_height(),
 					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -214,7 +214,7 @@ void pipeline::swap() {
 #endif
 	
 #if !defined(OCLRASTER_IOS)
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
 #endif
 #endif
@@ -234,7 +234,7 @@ void pipeline::draw_instanced(const PRIMITIVE_TYPE type,
 							  const unsigned int instance_count) {
 	if(instance_count == 0) return;
 	if(element_range.second <= element_range.first) {
-		oclr_error("invalid element range: %u - %u", element_range.first, element_range.second);
+		log_error("invalid element range: %u - %u", element_range.first, element_range.second);
 		return;
 	}
 	
@@ -401,13 +401,13 @@ void pipeline::set_camera_setup_from_camera(camera* cam_) {
 	const float3 right { (up_ ^ forward_).normalized() };
 	const float3 up { (forward_ ^ right).normalized() };
 	const float3 forward { forward_.normalized() };
-	//oclr_debug("right: %v, up: %v, forward: %v", right, up, forward);
+	//log_debug("right: %v, up: %v, forward: %v", right, up, forward);
 	
 	const float3 width_vec { right * angle_ratio * aspect_ratio };
 	const float3 height_vec { up * angle_ratio };
 	const float3 half_width_vec { width_vec * 0.5f };
 	const float3 half_height_vec { height_vec * 0.5f };
-	//oclr_debug("w/h: %v %v, %f %f", width_vec, height_vec, aspect_ratio, angle_ratio);
+	//log_debug("w/h: %v %v, %f %f", width_vec, height_vec, aspect_ratio, angle_ratio);
 	
 	state.cam_setup.position = cam_->get_position();
 	state.cam_setup.x_vec = width_vec / fp_framebuffer_size.x;

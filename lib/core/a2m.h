@@ -20,9 +20,9 @@
 #define __OCLRASTER_A2M_H__
 
 #include "oclraster/global.h"
-#include "core/vector2.h"
-#include "core/vector3.h"
-#include "cl/opencl.h"
+#include "core/vector2.hpp"
+#include "core/vector3.hpp"
+#include "cl/opencl.hpp"
 #include "pipeline/transform_stage.h"
 
 class a2m {

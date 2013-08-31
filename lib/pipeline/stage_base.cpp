@@ -32,7 +32,7 @@ bool stage_base::bind_user_buffers(const draw_state& state, const oclraster_prog
 		const auto buffer = state.user_buffers.find(name);
 		// TODO: only check this in debug mode?
 		if(buffer == state.user_buffers.cend()) {
-			oclr_error("buffer \"%s\" not bound!", name);
+			log_error("buffer \"%s\" not bound!", name);
 			return false;
 		}
 		ocl->set_kernel_argument(argc++, &buffer->second);
@@ -57,7 +57,7 @@ bool stage_base::bind_user_buffers(const draw_state& state, const oclraster_prog
 		if(images.is_framebuffer[i]) {
 			// framebuffer
 			if(fb == nullptr) {
-				oclr_error("no framebuffer is currently bound!");
+				log_error("no framebuffer is currently bound!");
 				return false;
 			}
 			const image* img = nullptr;
@@ -74,7 +74,7 @@ bool stage_base::bind_user_buffers(const draw_state& state, const oclraster_prog
 					break;
 			}
 			if(img == nullptr) {
-				oclr_error("framebuffer image \"%s\" not bound!", images.image_names[i]);
+				log_error("framebuffer image \"%s\" not bound!", images.image_names[i]);
 				return false;
 			}
 			ocl->set_kernel_argument(argc++, img->get_buffer());
@@ -85,7 +85,7 @@ bool stage_base::bind_user_buffers(const draw_state& state, const oclraster_prog
 			const auto img = state.user_images.find(img_name);
 			// TODO: only check this in debug mode?
 			if(img == state.user_images.cend()) {
-				oclr_error("image \"%s\" not bound!", img_name);
+				log_error("image \"%s\" not bound!", img_name);
 				return false;
 			}
 			ocl->set_kernel_argument(argc++, img->second.get_buffer());
@@ -103,7 +103,7 @@ bool stage_base::create_kernel_spec(const draw_state& state, const oclraster_pro
 		if(images.is_framebuffer[i]) {
 			// framebuffer
 			if(fb == nullptr) {
-				oclr_error("no framebuffer is currently bound!");
+				log_error("no framebuffer is currently bound!");
 				return false;
 			}
 			const image* img = nullptr;
@@ -120,7 +120,7 @@ bool stage_base::create_kernel_spec(const draw_state& state, const oclraster_pro
 					break;
 			}
 			if(img == nullptr) {
-				oclr_error("framebuffer image \"%s\" not bound!", images.image_names[i]);
+				log_error("framebuffer image \"%s\" not bound!", images.image_names[i]);
 				return false;
 			}
 			spec.image_spec.emplace_back(img->get_image_type());
@@ -130,7 +130,7 @@ bool stage_base::create_kernel_spec(const draw_state& state, const oclraster_pro
 			const auto& img_name = images.image_names[i];
 			const auto img = state.user_images.find(img_name);
 			if(img == state.user_images.cend()) {
-				oclr_error("image \"%s\" not bound!", img_name);
+				log_error("image \"%s\" not bound!", img_name);
 				return false;
 			}
 			spec.image_spec.emplace_back(img->second.get_image_type());

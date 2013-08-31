@@ -19,7 +19,7 @@
 #ifndef __OCLRASTER_RASTERIZATION_STAGE_H__
 #define __OCLRASTER_RASTERIZATION_STAGE_H__
 
-#include "cl/opencl.h"
+#include "cl/opencl.hpp"
 #include "pipeline/stage_base.h"
 
 enum class PRIMITIVE_TYPE : unsigned int;

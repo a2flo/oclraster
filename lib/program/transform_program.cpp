@@ -139,7 +139,7 @@ string transform_program::specialized_processing(const string& code,
 			}
 			break;
 			case oclraster_program::STRUCT_TYPE::IMAGES:
-			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: oclr_unreachable();
+			case oclraster_program::STRUCT_TYPE::FRAMEBUFFER: floor_unreachable();
 		}
 		cur_user_buffer++;
 	}
@@ -158,7 +158,7 @@ string transform_program::specialized_processing(const string& code,
 	}
 	
 	// done
-	//oclr_msg("generated transform user program: %s", program_code);
+	//log_msg("generated transform user program: %s", program_code);
 	return program_code;
 }
 
