@@ -684,8 +684,8 @@
 					.,
 					/usr/local/include/floor,
 				);
-				INSTALL_PATH = "@executable_path/../Resources";
-				LD_DYLIB_INSTALL_NAME = "@executable_path/../Resources/$(EXECUTABLE_PATH)";
+				INSTALL_PATH = "@rpath";
+				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/X11/lib,
@@ -741,8 +741,8 @@
 					.,
 					/usr/local/include/floor,
 				);
-				INSTALL_PATH = "@executable_path/../Resources";
-				LD_DYLIB_INSTALL_NAME = "@executable_path/../Resources/$(EXECUTABLE_PATH)";
+				INSTALL_PATH = "@rpath";
+				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/X11/lib,
