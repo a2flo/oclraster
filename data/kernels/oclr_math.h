@@ -72,7 +72,7 @@ OCLRASTER_FUNC float4 FUNC_OVERLOAD linear_blend(const float4 v0, const float4 v
 	return mad(v1 - v0, interp, v0);
 }
 
-#if defined(OCLRASTER_DOUBLE_SUPPORT)
+#if defined(FLOOR_DOUBLE_SUPPORT)
 OCLRASTER_FUNC double FUNC_OVERLOAD linear_blend(const double v0, const double v1, const double interp) {
 	return mad(v1 - v0, interp, v0);
 }

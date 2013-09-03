@@ -43,7 +43,7 @@ OCLRASTER_FUNC float FUNC_OVERLOAD texel_mix(float x, float y, float a) { return
 OCLRASTER_FUNC float2 FUNC_OVERLOAD texel_mix(float2 x, float2 y, float a) { return linear_blend(x, y, a); }
 OCLRASTER_FUNC float3 FUNC_OVERLOAD texel_mix(float3 x, float3 y, float a) { return linear_blend(x, y, a); }
 OCLRASTER_FUNC float4 FUNC_OVERLOAD texel_mix(float4 x, float4 y, float a) { return linear_blend(x, y, a); }
-#if defined(OCLRASTER_DOUBLE_SUPPORT)
+#if defined(FLOOR_DOUBLE_SUPPORT)
 OCLRASTER_FUNC double FUNC_OVERLOAD texel_mix(double x, double y, float a) { return linear_blend(x, y, (double)a); }
 OCLRASTER_FUNC double2 FUNC_OVERLOAD texel_mix(double2 x, double2 y, float a) { return linear_blend(x, y, (double)a); }
 OCLRASTER_FUNC double3 FUNC_OVERLOAD texel_mix(double3 x, double3 y, float a) { return linear_blend(x, y, (double)a); }
@@ -64,7 +64,7 @@ INT_TEXEL_MIX(int, int, float, 1.0f)
 INT_TEXEL_MIX(int, int2, float, 1.0f)
 INT_TEXEL_MIX(int, int3, float, 1.0f)
 INT_TEXEL_MIX(int, int4, float, 1.0f)
-#if defined(OCLRASTER_DOUBLE_SUPPORT)
+#if defined(FLOOR_DOUBLE_SUPPORT)
 INT_TEXEL_MIX(ulong, ulong, double, 1.0)
 INT_TEXEL_MIX(ulong, ulong2, double, 1.0)
 INT_TEXEL_MIX(ulong, ulong3, double, 1.0)
@@ -127,7 +127,7 @@ OCLRASTER_FUNC void FUNC_OVERLOAD image_write_hw(write_only image2d_t img, const
 #include "oclr_image_support.h"
 
 // the amd compiler doesn't need these workarounds and can simply use c++ to select the appropriate hardware or software image function
-#if !defined(PLATFORM_AMD) && !defined(PLATFORM_POCL) && !defined(OCLRASTER_CUDA_CL)
+#if !defined(PLATFORM_AMD) && !defined(PLATFORM_POCL) && !defined(FLOOR_CUDA_CL)
 // dummy image functions that are necessary for __builtin_choose_expr to function properly
 // __builtin_choose_expr will do syntax checking on both expressions
 // -> need to have fake sw/hw image functions with the resp. other type (sw taking image2d_t, hw taking mem ptrs)
@@ -210,7 +210,7 @@ __builtin_choose_expr(__alignof__(img) != 16, \
 
 #else // amd opencl c++ and cuda c++
 // ... and now for the proper c++ solution to this problem:
-#if !defined(OCLRASTER_CUDA_CL)
+#if !defined(FLOOR_CUDA_CL)
 // note: already included and preprocessed by cuda
 #include "oclr_cpp.h"
 #endif

@@ -121,7 +121,7 @@ for type in "${defs[@]}"; do
 		fi
 		if [[ ${img_type} == "double" ]]; then
 			is_double_type=1
-			CLEAR_CODE+="#if defined(OCLRASTER_DOUBLE_SUPPORT)\n"
+			CLEAR_CODE+="#if defined(FLOOR_DOUBLE_SUPPORT)\n"
 		fi
 		
 		CLEAR_CODE+=$(clang -E -DIMG_TYPE_VEC=${img_type_vec} -DIMG_TYPE=${img_type} -DCHANNEL_COUNT=${i} \

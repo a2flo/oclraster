@@ -7,14 +7,14 @@
 #undef __APPLE__
 #endif
 
-#if (!defined(CPU) && !defined(OCLRASTER_CUDA_CL))
+#if (!defined(CPU) && !defined(FLOOR_CUDA_CL))
 #if !(defined(OS_X_VERSION) && (OS_X_VERSION >= 1090))
 #undef printf
 #define printf(x, ...)
 #endif
 #endif
 
-#if !defined(OCLRASTER_CUDA_CL)
+#if !defined(FLOOR_CUDA_CL)
 #if !defined(PLATFORM_AMD)
 #define OCLRASTER_FUNC inline
 #else
@@ -66,7 +66,7 @@
 #pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics : enable
 #pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
 #pragma OPENCL EXTENSION cl_khr_local_int32_extended_atomics : enable
-#if defined(OCLRASTER_DOUBLE_SUPPORT)
+#if defined(FLOOR_DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 #endif
 #endif

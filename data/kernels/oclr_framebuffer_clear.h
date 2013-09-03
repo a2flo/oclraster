@@ -164,25 +164,25 @@ void FUNC_OVERLOAD OCLRASTER_FUNC clear_image(global float4* img, const uint off
  img[offset] = clear_color;
 }
 
-#if defined(OCLRASTER_DOUBLE_SUPPORT)
+#if defined(FLOOR_DOUBLE_SUPPORT)
 void FUNC_OVERLOAD OCLRASTER_FUNC clear_image(global double* img, const uint offset, const double4 clear_color) {
  img[offset] = clear_color.x;
 }
 #endif
 
-#if defined(OCLRASTER_DOUBLE_SUPPORT)
+#if defined(FLOOR_DOUBLE_SUPPORT)
 void FUNC_OVERLOAD OCLRASTER_FUNC clear_image(global double2* img, const uint offset, const double4 clear_color) {
  img[offset] = clear_color.xy;
 }
 #endif
 
-#if defined(OCLRASTER_DOUBLE_SUPPORT)
+#if defined(FLOOR_DOUBLE_SUPPORT)
 void FUNC_OVERLOAD OCLRASTER_FUNC clear_image(global double3* img, const uint offset, const double4 clear_color) {
  img[offset] = clear_color.xyz;
 }
 #endif
 
-#if defined(OCLRASTER_DOUBLE_SUPPORT)
+#if defined(FLOOR_DOUBLE_SUPPORT)
 void FUNC_OVERLOAD OCLRASTER_FUNC clear_image(global double4* img, const uint offset, const double4 clear_color) {
  img[offset] = clear_color;
 }
