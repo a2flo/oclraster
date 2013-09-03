@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE config PUBLIC "-//OCLRASTER//DTD config 1.0//EN" "config.dtd">
+<!DOCTYPE config PUBLIC "-//FLOOR//DTD config 1.0//EN" "config.dtd">
 <config>
 	<!-- screen resolution and fullscreen/vsync/dpi-overwrite settings -->
 	<screen width="1280" height="720" fullscreen="0" vsync="0" dpi="0"/>

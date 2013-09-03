@@ -59,8 +59,10 @@ BOOL APIENTRY DllMain(HANDLE hModule floor_unused, DWORD ul_reason_for_call, LPV
  */
 void oclraster::init(const char* callpath_, const char* datapath_) {
 	floor::init(callpath_, datapath_);
-	// TODO: window title?
-	// TODO: ocl->add_internal_kernels(...);
+	floor::set_caption("oclraster");
+	
+	// print out oclraster info
+	log_debug("%s", (OCLRASTER_VERSION_STRING).c_str());
 	
 	// create image type/channel mappings
 	static const array<vector<cl_channel_type>, (size_t)IMAGE_TYPE::__MAX_TYPE> type_mapping {
