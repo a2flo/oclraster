@@ -8,8 +8,6 @@ Among the main goals are to provide a simple host API and an easy way to program
 
 In regard to the implemented features, this software pipeline supports fully programmable depth testing and blending, which are both not possible on today’s graphics hardware, instanced rendering, scissor testing, the previously mentioned vertex and fragment stage programmability, miscellaneous buffer objects in a simplified and unified way, 2D images (hardware accelerated formats and software emulation for unsupported formats), framebuffers and multiple render targets with less restrictions than hardware pipelines, and of course rendering with perspective and orthographic projection modes. Other OpenGL 2.0-level features are however not supported. These include stencil testing (which can however be partially simulated in software by simply using an additional framebuffer attachment), anti-aliasing, 1D and 3D images, occlusion querrying and all of the now obsolete legacy draw functions and modes. The reasons for this are not of any technical nature that would prevent their implementation, but rather due to the time constraints of this thesis/project.
 
-Note: this is a partial "fork" of "a2elight":https://github.com/a2flo/a2elight (initialization, core, event and initial OpenCL/CUDA functionality)
-
 *Software Requirements and Important Information:*
 * on Windows:
 ** if you have an AMD or Intel CPU: please install the "Intel OpenCL SDK for Windows (64-bit)":http://software.intel.com/en-us/vcsource/tools/opencl-sdk
