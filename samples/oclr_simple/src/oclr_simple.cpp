@@ -206,7 +206,7 @@ int main(int argc floor_unused, char* argv[]) {
 			floor::set_caption(caption.str());
 		}
 		
-		floor::start_draw();
+		oclraster::start_draw();
 		cam->run();
 		p->set_camera(cam); // update pipeline camera
 #if 0 // enable this to test a custom depth test function
@@ -272,7 +272,7 @@ int main(int argc floor_unused, char* argv[]) {
 		p->bind_image("fp_noise", *fp_noise);
 		p->draw(PRIMITIVE_TYPE::TRIANGLE, model->get_vertex_count(), { 0, model->get_index_count(0) });
 		
-		floor::stop_draw();
+		oclraster::stop_draw();
 	}
 	
 	// cleanup

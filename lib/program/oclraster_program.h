@@ -19,6 +19,7 @@
 #ifndef __OCLRASTER_OCLRASTER_PROGRAM_H__
 #define __OCLRASTER_OCLRASTER_PROGRAM_H__
 
+#include "oclraster/global.h"
 #include "cl/opencl.hpp"
 #include "pipeline/image.h"
 #include "pipeline/image_types.h"

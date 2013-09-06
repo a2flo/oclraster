@@ -32,6 +32,7 @@
 
 // init statics
 pipeline* oclraster::active_pipeline = nullptr;
+event::handler* oclraster::event_handler_fnctr = nullptr;
 
 #if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 // from transform_program.cpp and rasterization_program.cpp for debugging purposes:
@@ -149,6 +150,9 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 								   // TODO: FLOOR_STRUCT_ALIGNMENT is already present, use it?
 								   " -DOCLRASTER_STRUCT_ALIGNMENT="+uint2string(OCLRASTER_STRUCT_ALIGNMENT));
 	
+	// add "kernel reload" event handler (must be done before calling "add_internal_kernels", which will trigger a reload)
+	event_handler_fnctr = new event::handler(&oclraster::event_handler);
+	floor::get_event()->add_internal_event_handler(*event_handler_fnctr, EVENT_TYPE::KERNEL_RELOAD);
 	
 	// finally: add internal kernels
 	ocl->add_internal_kernels(vector<opencl_base::internal_kernel_info> {
@@ -179,7 +183,25 @@ void oclraster::init(const char* callpath_, const char* datapath_) {
 
 void oclraster::destroy() {
 	log_debug("destroying oclraster ...");
+	
+	floor::acquire_context();
+	floor::get_event()->remove_event_handler(*event_handler_fnctr);
+	delete event_handler_fnctr;
+	delete_clear_kernels();
+	floor::release_context();
+	
 	floor::destroy();
+}
+
+void oclraster::start_draw() {
+	floor::start_draw();
+}
+
+void oclraster::stop_draw() {
+	if(active_pipeline != nullptr) {
+		active_pipeline->swap();
+	}
+	floor::stop_draw();
 }
 
 void oclraster::set_active_pipeline(pipeline* active_pipeline_) {
@@ -188,4 +210,25 @@ void oclraster::set_active_pipeline(pipeline* active_pipeline_) {
 
 pipeline* oclraster::get_active_pipeline() {
 	return active_pipeline;
+}
+
+bool oclraster::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
+	if(type == EVENT_TYPE::KERNEL_RELOAD) {
+#if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
+		template_transform_program = file_io::file_to_string(floor::data_path("kernels/template_transform_program.cl"));
+		if(template_transform_program == "") {
+			log_error("failed to load template_transform_program!");
+		}
+		template_rasterization_program = file_io::file_to_string(floor::data_path("kernels/template_rasterization_program.cl"));
+		if(template_rasterization_program == "") {
+			log_error("failed to load template_rasterization_program!");
+		}
+#endif
+		
+		// deletes all framebuffer clear kernels
+		delete_clear_kernels();
+		
+		return true;
+	}
+	return false;
 }

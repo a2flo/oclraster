@@ -38,6 +38,9 @@ public:
 	static void init(const char* callpath_, const char* datapath_);
 	static void destroy();
 	
+	static void start_draw();
+	static void stop_draw();
+	
 	static void set_active_pipeline(pipeline* active_pipeline);
 	static pipeline* get_active_pipeline();
 	
@@ -47,6 +50,10 @@ protected:
 	oclraster& operator=(const oclraster&) = delete;
 	
 	static pipeline* active_pipeline;
+	
+	// window event handlers
+	static event::handler* event_handler_fnctr;
+	static bool event_handler(EVENT_TYPE type, shared_ptr<event_object> obj);
 
 };
 
