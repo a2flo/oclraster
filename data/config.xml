@@ -4,6 +4,15 @@
 	<!-- screen resolution and fullscreen/vsync/dpi-overwrite settings -->
 	<screen width="1280" height="720" fullscreen="0" vsync="0" dpi="0"/>
 	<!--<screen width="1920" height="1080" fullscreen="1" vsync="1" dpi="0"/>-->
+	
+	<!-- logging options (apply to both console and file logging)
+	 verbosity: 0 = none, 1 = +error, 2 = +debug, 3 = +msg, 4 = +undecorated output
+	 append_mode: boolean, if enabled, this will, for each logging operation, open the log file in append mode, write to it and close it again
+	 separate_msg_file: boolean, if enabled and verbosity >= 3, this will log msgs into a separate file
+	 log_filename: relative filename of the log file, relative to the current working directory
+	 msg_filename: relative filename of the msg log file, only used/created if separate_msg_file = true
+	-->
+	<logging verbosity="4" append_mode="false" separate_msg_file="false" log_filename="log.txt" msg_filename="msg.txt"/>
 
 	<!-- you might want to change the field of view and upscaling, but near/far should remain at 0.1/1000 -->
 	<projection fov="45.0" near="0.1" far="1000.0" upscaling="1.0"/>
