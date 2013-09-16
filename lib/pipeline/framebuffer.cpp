@@ -259,13 +259,13 @@ framebuffer::framebuffer(const unsigned int& width, const unsigned int& height) 
 framebuffer::~framebuffer() {
 }
 
-framebuffer::framebuffer(framebuffer&& fb) : size(fb.size), images(fb.images), depth_buffer(fb.depth_buffer), stencil_buffer(fb.stencil_buffer) {
+framebuffer::framebuffer(framebuffer&& fb) noexcept : size(fb.size), images(fb.images), depth_buffer(fb.depth_buffer), stencil_buffer(fb.stencil_buffer) {
 	fb.images.clear();
 	fb.depth_buffer = nullptr;
 	fb.stencil_buffer = nullptr;
 }
 
-framebuffer& framebuffer::operator=(framebuffer&& fb) {
+framebuffer& framebuffer::operator=(framebuffer&& fb) noexcept {
 	this->size = fb.size;
 	this->images = std::move(fb.images);
 	this->depth_buffer = fb.depth_buffer;

@@ -362,7 +362,7 @@ image::~image() {
 	}
 }
 
-image::image(image&& img) :
+image::image(image&& img) noexcept :
 backing(img.backing), img_type(img.img_type), data_type(img.data_type), channel_order(img.channel_order),
 size(img.size), buffer(img.buffer), native_format(img.native_format) {
 	img.invalidate();

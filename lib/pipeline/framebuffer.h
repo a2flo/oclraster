@@ -37,8 +37,8 @@ public:
 	//
 	framebuffer(const unsigned int& width, const unsigned int& height);
 	~framebuffer();
-	framebuffer(framebuffer&& fb);
-	framebuffer& operator=(framebuffer&& fb);
+	framebuffer(framebuffer&& fb) noexcept;
+	framebuffer& operator=(framebuffer&& fb) noexcept;
 	
 	void set_size(const uint2& size);
 	const uint2& get_size() const;

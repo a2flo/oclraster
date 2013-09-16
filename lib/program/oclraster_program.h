@@ -78,7 +78,7 @@ public:
 		
 		kernel_spec(const kernel_spec& spec) :
 		image_spec(spec.image_spec), projection(spec.projection), depth(spec.depth) {}
-		kernel_spec(kernel_spec&& spec) : image_spec(), projection(spec.projection), depth(spec.depth) {
+		kernel_spec(kernel_spec&& spec) noexcept : image_spec(), projection(spec.projection), depth(spec.depth) {
 			this->image_spec.swap(spec.image_spec);
 		}
 		kernel_spec(const vector<image_type> image_spec_ = vector<image_type> {},

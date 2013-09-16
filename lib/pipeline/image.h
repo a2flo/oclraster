@@ -42,7 +42,7 @@ public:
 		  const IMAGE_CHANNEL& channel_order,
 		  const cl::ImageFormat& native_format,
 		  const void* pixels = nullptr);
-	image(image&& img);
+	image(image&& img) noexcept;
 	~image();
 	
 	// this uses SDL2_image to create an image from a .png file

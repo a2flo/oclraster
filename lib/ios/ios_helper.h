@@ -19,8 +19,8 @@
 #ifndef __OCLRASTER_IOS_HELPER_H__
 #define __OCLRASTER_IOS_HELPER_H__
 
-#include "core/gl_support.h"
-#include "core/cpp_headers.h"
+#include "core/gl_support.hpp"
+#include "core/cpp_headers.hpp"
 #include <regex>
 
 struct shader_object {

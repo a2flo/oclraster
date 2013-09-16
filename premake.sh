@@ -101,7 +101,7 @@ premake4 --cc=gcc --os=${BUILD_OS} gmake ${BUILD_ARGS}
 sed -i -e 's/\${MAKE}/\${MAKE} -j '${BUILD_CPU_COUNT}'/' Makefile
 
 if [ $BUILD_USE_CLANG == 1 ]; then
-	# this seems to be the most portable way of insert chars in front of a file
+	# this seems to be the most portable way of inserting chars in front of a file
 	# note that "sed -i "1i ..." file" is not portable!
 	mv Makefile Makefile.tmp
 	echo "export CC=clang" > Makefile

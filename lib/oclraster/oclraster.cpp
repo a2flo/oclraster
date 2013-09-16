@@ -195,6 +195,15 @@ void oclraster::destroy() {
 
 void oclraster::start_draw() {
 	floor::start_draw();
+	
+	// draws ogl stuff
+#if !defined(OCLRASTER_USE_DRAW_PIXELS)
+	glBindFramebuffer(GL_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
+#endif
+	glViewport(0, 0, floor::get_width(), floor::get_height());
+	
+	// clear the color and depth buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void oclraster::stop_draw() {
