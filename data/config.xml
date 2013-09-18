@@ -2,7 +2,7 @@
 <!DOCTYPE config PUBLIC "-//FLOOR//DTD config 1.0//EN" "config.dtd">
 <config>
 	<!-- screen resolution and fullscreen/vsync/dpi-overwrite settings -->
-	<screen width="1280" height="720" fullscreen="0" vsync="0" dpi="0"/>
+	<screen width="1280" height="720" fullscreen="0" vsync="0" dpi="0" stereo="0"/>
 	<!--<screen width="1920" height="1080" fullscreen="1" vsync="1" dpi="0"/>-->
 	
 	<!-- logging options (apply to both console and file logging)
