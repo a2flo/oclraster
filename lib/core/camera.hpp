@@ -16,10 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_CAMERA_H__
-#define __OCLRASTER_CAMERA_H__
+#ifndef __OCLRASTER_CAMERA_HPP__
+#define __OCLRASTER_CAMERA_HPP__
 
-#include "oclraster/global.h"
+#include "oclraster/global.hpp"
 #include "core/core.hpp"
 #include "core/event.hpp"
 

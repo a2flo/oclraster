@@ -16,12 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_TOGGLE_BUTTON_H__
-#define __OCLRASTER_SUPPORT_GUI_TOGGLE_BUTTON_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_TOGGLE_BUTTON_HPP__
+#define __OCLRASTER_SUPPORT_GUI_TOGGLE_BUTTON_HPP__
 
-#include "gui/objects/gui_text.h"
+#include "gui/objects/gui_text.hpp"
 
-class OCLRASTER_API gui_toggle_button : public gui_object {
+class FLOOR_API gui_toggle_button : public gui_object {
 public:
 	gui_toggle_button(const float2& size, const float2& position);
 	virtual ~gui_toggle_button();

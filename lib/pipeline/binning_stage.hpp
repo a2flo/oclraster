@@ -16,10 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_BINNING_STAGE_H__
-#define __OCLRASTER_BINNING_STAGE_H__
+#ifndef __OCLRASTER_BINNING_STAGE_HPP__
+#define __OCLRASTER_BINNING_STAGE_HPP__
 
-#include "oclraster/global.h"
+#include "oclraster/global.hpp"
 #include "cl/opencl.hpp"
 
 struct draw_state;

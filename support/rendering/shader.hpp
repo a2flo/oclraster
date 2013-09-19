@@ -16,13 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_SHADER_H__
-#define __OCLRASTER_SUPPORT_SHADER_H__
+#ifndef __OCLRASTER_SUPPORT_SHADER_HPP__
+#define __OCLRASTER_SUPPORT_SHADER_HPP__
 
-#include <oclraster_support/global.h>
-#include <oclraster/pipeline/pipeline.h>
-#include <oclraster/program/transform_program.h>
-#include <oclraster/program/rasterization_program.h>
+#include <oclraster_support/global.hpp>
+#include <oclraster/pipeline/pipeline.hpp>
+#include <oclraster/program/transform_program.hpp>
+#include <oclraster/program/rasterization_program.hpp>
 
 class shader_helper {
 public:

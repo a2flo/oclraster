@@ -16,13 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_pop_up_button.h"
-#include "gui_window.h"
-#include "core/event.h"
-#include "gui.h"
-#include "threading/task.h"
-#include "font.h"
-#include "oclraster_support.h"
+#include "gui_pop_up_button.hpp"
+#include "gui_window.hpp"
+#include "core/event.hpp"
+#include "gui.hpp"
+#include "threading/task.hpp"
+#include "font.hpp"
+#include "oclraster_support.hpp"
 
 ////
 class gui_pop_up_window : public gui_window {
@@ -109,7 +109,7 @@ void gui_pop_up_window::draw() {
 				false);
 	
 	// draw items
-	const pnt mouse_pos(oclraster::get_event()->get_mouse_pos());
+	const pnt mouse_pos(floor::get_event()->get_mouse_pos());
 	float y_offset = margin + overlay_position.y;
 	const float4 font_color(theme->get_color_scheme().get("TEXT_INVERSE"));
 	const float4 font_color_active(theme->get_color_scheme().get("TEXT"));
@@ -143,7 +143,7 @@ void gui_pop_up_window::draw() {
 	stop_draw();
 }
 
-bool gui_pop_up_window::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj oclr_unused, const ipnt& point) {
+bool gui_pop_up_window::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj floor_unused, const ipnt& point) {
 	// handle select
 	if(type == EVENT_TYPE::MOUSE_LEFT_UP &&
 	   point.x >= 0 &&
@@ -190,14 +190,14 @@ void gui_pop_up_button::draw() {
 	// TODO: handle disabled state
 	theme->draw("pop_up_button", state.active ? "active" : "normal",
 				position_abs, size_abs, true, true,
-				[this](const string& str oclr_unused) -> string {
+				[this](const string& str floor_unused) -> string {
 					if(selected_item == nullptr) return "";
 					return selected_item->second;
 				});
 }
 
 
-bool gui_pop_up_button::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj oclr_unused, const ipnt& point oclr_unused) {
+bool gui_pop_up_button::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj floor_unused, const ipnt& point floor_unused) {
 	if(!state.visible || !state.enabled) return false;
 	switch(type) {
 		case EVENT_TYPE::MOUSE_LEFT_DOWN:
@@ -225,24 +225,24 @@ void gui_pop_up_button::set_active(const bool& active_state) {
 
 void gui_pop_up_button::open_selection_wnd() {
 	task::spawn([this]() {
-		oclraster::acquire_context();
+		floor::acquire_context();
 		ui->lock();
 		selection_wnd = ui->add<gui_pop_up_window>(float2(1.0f), float2(0.0f), this,
 												   rel_to_abs_position(position_abs), size_abs,
 												   display_items);
 		ui->unlock();
-		oclraster::release_context();
+		floor::release_context();
 	});
 }
 
 void gui_pop_up_button::close_selection_wnd() {
 	if(selection_wnd == nullptr) return;
 	task::spawn([this]() {
-		oclraster::acquire_context();
+		floor::acquire_context();
 		ui->lock();
 		ui->remove(selection_wnd);
 		selection_wnd = nullptr;
 		ui->unlock();
-		oclraster::release_context();
+		floor::release_context();
 	});
 }

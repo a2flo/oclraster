@@ -16,14 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_A2M_H__
-#define __OCLRASTER_A2M_H__
+#ifndef __OCLRASTER_A2M_HPP__
+#define __OCLRASTER_A2M_HPP__
 
-#include "oclraster/global.h"
+#include "oclraster/global.hpp"
 #include "core/vector2.hpp"
 #include "core/vector3.hpp"
 #include "cl/opencl.hpp"
-#include "pipeline/transform_stage.h"
+#include "pipeline/transform_stage.hpp"
 
 class a2m {
 public:

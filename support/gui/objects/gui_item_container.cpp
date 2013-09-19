@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_item_container.h"
-#include "gui_event.h"
+#include "gui_item_container.hpp"
+#include "gui_event.hpp"
 
 gui_item_container::gui_item_container(const float2& size_, const float2& position_, const GUI_EVENT select_event_) :
 gui_object(size_, position_), select_event(select_event_) {
@@ -34,7 +34,7 @@ void gui_item_container::clear() {
 
 void gui_item_container::add_item(const string& identifier, const string& label) {
 	if(items.count(identifier) > 0) {
-		oclr_error("an item with the identifier \"%s\" already exists!", identifier);
+		log_error("an item with the identifier \"%s\" already exists!", identifier);
 		return;
 	}
 	const auto iter = items.insert(make_pair(identifier, label));
@@ -51,7 +51,7 @@ void gui_item_container::remove_item(const string& identifier) {
 	const auto disp_iter = find(begin(display_items), end(display_items), &*iter);
 	
 	if(iter == items.end()) {
-		oclr_error("no item with the identifier \"%s\" found!", identifier);
+		log_error("no item with the identifier \"%s\" found!", identifier);
 		return;
 	}
 	if(selected_item == &*iter) {
@@ -61,7 +61,7 @@ void gui_item_container::remove_item(const string& identifier) {
 	items.erase(iter);
 	
 	if(disp_iter == end(display_items)) {
-		oclr_error("display item for identifier \"%s\" not found!", identifier);
+		log_error("display item for identifier \"%s\" not found!", identifier);
 	}
 	else display_items.erase(disp_iter);
 	
@@ -77,7 +77,7 @@ const pair<const string, string>* gui_item_container::get_selected_item() const 
 void gui_item_container::set_selected_item(const string& identifier, const bool event_on_equal) {
 	const auto iter = items.find(identifier);
 	if(iter == items.end()) {
-		oclr_error("no item with the identifier \"%s\" found!", identifier);
+		log_error("no item with the identifier \"%s\" found!", identifier);
 		return;
 	}
 	if(selected_item != &*iter || event_on_equal) {
@@ -88,7 +88,7 @@ void gui_item_container::set_selected_item(const string& identifier, const bool 
 
 void gui_item_container::set_selected_item(const size_t& index, const bool event_on_equal) {
 	if(index >= display_items.size()) {
-		oclr_error("index \"%u\" is greater than the amount of items!", index);
+		log_error("index \"%u\" is greater than the amount of items!", index);
 		return;
 	}
 	if(selected_item != display_items[index] || event_on_equal) {

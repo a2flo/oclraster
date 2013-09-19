@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "oclraster_program.h"
-#include "oclraster.h"
+#include "oclraster_program.hpp"
+#include "oclraster.hpp"
 #include <regex>
 
 #include "tccpp/libtcc.h"

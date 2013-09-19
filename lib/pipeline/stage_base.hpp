@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_STAGE_BASE_H__
-#define __OCLRASTER_STAGE_BASE_H__
+#ifndef __OCLRASTER_STAGE_BASE_HPP__
+#define __OCLRASTER_STAGE_BASE_HPP__
 
 #include "cl/opencl.hpp"
-#include "program/oclraster_program.h"
+#include "program/oclraster_program.hpp"
 
 struct draw_state;
 class stage_base {

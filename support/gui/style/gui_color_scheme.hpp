@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_COLOR_SCHEME_H__
-#define __OCLRASTER_SUPPORT_GUI_COLOR_SCHEME_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_COLOR_SCHEME_HPP__
+#define __OCLRASTER_SUPPORT_GUI_COLOR_SCHEME_HPP__
 
-#include "oclraster_support/global.h"
-#include "core/xml.h"
+#include "oclraster_support/global.hpp"
+#include "core/xml.hpp"
 
 class xml;
 class gui_color_scheme {

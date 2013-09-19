@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_surface.h"
-#include "gui.h"
-#include "rendering/gfx2d.h"
-#include "rendering/shader.h"
-#include "oclraster_support.h"
+#include "gui_surface.hpp"
+#include "gui.hpp"
+#include "rendering/gfx2d.hpp"
+#include "rendering/shader.hpp"
+#include "oclraster_support.hpp"
 
 gui_surface::gui_surface(const float2& buffer_size_, const float2& offset_, const SURFACE_FLAGS flags_) :
 flags(flags_), buffer_size(buffer_size_), buffer(0, 0), offset(offset_) {
@@ -48,7 +48,7 @@ void gui_surface::delete_buffer() {
 void gui_surface::resize(const float2& buffer_size_) {
 	uint2 buffer_size_abs_ = ((flags & SURFACE_FLAGS::ABSOLUTE_SIZE) == SURFACE_FLAGS::ABSOLUTE_SIZE ?
 							  buffer_size_.rounded() :
-							  buffer_size_ * float2(oclraster::get_width(), oclraster::get_height()));
+							  buffer_size_ * float2(floor::get_width(), floor::get_height()));
 	if(buffer.get_attachment_count() != 0 &&
 	   buffer_size_abs.x == buffer_size_abs_.x && buffer_size_abs.y == buffer_size_abs_.y) {
 		// same size, nothing to do here
@@ -107,7 +107,7 @@ void gui_surface::set_offset(const float2& offset_) {
 	
 	// set blit vbo rectangle data
 	offset = offset_;
-	uint2 offset_abs = offset * float2(oclraster::get_width(), oclraster::get_height());
+	uint2 offset_abs = offset * float2(floor::get_width(), floor::get_height());
 	extent.set(offset_abs.x, offset_abs.y, offset_abs.x + buffer.get_size().x, offset_abs.y + buffer.get_size().y);
 	const array<float4, 4> points {
 		{

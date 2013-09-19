@@ -16,12 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "oclraster_support.h"
-#include "oclraster_support_version.h"
-#include "rendering/gfx2d.h"
-#include "rendering/shader.h"
-#include "rendering/texman.h"
-#include "gui/gui.h"
+#include "oclraster_support.hpp"
+#include "oclraster_support_version.hpp"
+#include "rendering/gfx2d.hpp"
+#include "rendering/shader.hpp"
+#include "rendering/texman.hpp"
+#include "gui/gui.hpp"
 
 // init statics
 pipeline* oclraster_support::oclr_pipeline = nullptr;
@@ -29,7 +29,7 @@ gui* oclraster_support::ui = nullptr;
 
 void oclraster_support::init(pipeline* oclr_pipeline_) {
 	// print out oclraster_support info
-	oclr_debug("%s", OCLRASTER_SUPPORT_VERSION_STRING);
+	log_debug("%s", OCLRASTER_SUPPORT_VERSION_STRING);
 	
 	oclr_pipeline = oclr_pipeline_;
 	shader_helper::init(oclr_pipeline_);

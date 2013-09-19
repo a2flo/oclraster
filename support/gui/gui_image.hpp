@@ -16,13 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_IMAGE_H__
-#define __OCLRASTER_SUPPORT_GUI_IMAGE_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_IMAGE_HPP__
+#define __OCLRASTER_SUPPORT_GUI_IMAGE_HPP__
 
-#include "oclraster_support/global.h"
-#include <oclraster/pipeline/image.h>
+#include "oclraster_support/global.hpp"
+#include <oclraster/pipeline/image.hpp>
 
-class OCLRASTER_API gui_image {
+class FLOOR_API gui_image {
 public:
 	gui_image();
 	~gui_image();

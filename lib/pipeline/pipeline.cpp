@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "pipeline.h"
-#include "oclraster.h"
+#include "pipeline.hpp"
+#include "oclraster.hpp"
 
 #if defined(OCLRASTER_IOS)
-#include "ios_helper.h"
+#include "ios_helper.hpp"
 #endif
 
 struct __attribute__((packed, aligned(16))) constant_camera_data {

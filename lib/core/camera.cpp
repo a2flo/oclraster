@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "camera.h"
-#include "oclraster.h"
+#include "camera.hpp"
+#include "oclraster.hpp"
 
 camera::camera() : evt(floor::get_event()),
 keyboard_handler(this, &camera::key_handler) {

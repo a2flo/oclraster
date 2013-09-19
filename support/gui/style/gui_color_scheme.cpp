@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_color_scheme.h"
+#include "gui_color_scheme.hpp"
 
 #define A2E_COLOR_SCHEME_VERSION 1
 
-gui_color_scheme::gui_color_scheme() : x(oclraster::get_xml()) {
+gui_color_scheme::gui_color_scheme() : x(floor::get_xml()) {
 }
 
 gui_color_scheme::~gui_color_scheme() {
@@ -31,15 +31,15 @@ bool gui_color_scheme::load(const string& filename) {
 	colors.clear();
 	
 	//
-	xml::xml_doc ui_doc = x->process_file(oclraster::data_path(filename), false); // TODO: DTD!
+	xml::xml_doc ui_doc = x->process_file(floor::data_path(filename), false); // TODO: DTD!
 	if(!ui_doc.valid) {
-		oclr_error("couldn't process color scheme file %s!", filename);
+		log_error("couldn't process color scheme file %s!", filename);
 		return false;
 	}
 	
 	const size_t doc_version = ui_doc.get<size_t>("a2e_color_scheme.version");
 	if(doc_version != A2E_COLOR_SCHEME_VERSION) {
-		oclr_error("invalid color scheme version: %u (should be %u)!",
+		log_error("invalid color scheme version: %u (should be %u)!",
 				  doc_version, A2E_COLOR_SCHEME_VERSION);
 		return false;
 	}
@@ -55,16 +55,16 @@ bool gui_color_scheme::load(const string& filename) {
 	return true;
 }
 
-void gui_color_scheme::process_node(const xml::xml_node* node, const xml::xml_node* parent oclr_unused) {
+void gui_color_scheme::process_node(const xml::xml_node* node, const xml::xml_node* parent floor_unused) {
 	// process node itself
 	const string name = (*node)["name"];
 	const string color = (*node)["value"];
 	if(name == "INVALID" || color == "INVALID") {
-		oclr_error("incomplete color definition");
+		log_error("incomplete color definition");
 		return;
 	}
 	if(colors.count(name) > 0) {
-		oclr_error("a color definition with such a name (%s) already exists!", name);
+		log_error("a color definition with such a name (%s) already exists!", name);
 		return;
 	}
 	
@@ -73,7 +73,7 @@ void gui_color_scheme::process_node(const xml::xml_node* node, const xml::xml_no
 		// first: a float4 color (RGBA)
 		const vector<string> tokens = core::tokenize(color, ',');
 		if(tokens.size() != 4) {
-			oclr_error("invalid float4 color: %s", color);
+			log_error("invalid float4 color: %s", color);
 			return;
 		}
 		colors.insert(make_pair(name, float4(strtof(tokens[0].c_str(), nullptr),
@@ -100,7 +100,7 @@ const float4 gui_color_scheme::get(const string& name) const {
 	static const float4 invalid_color(0.0f, 1.0f, 0.0f, 1.0f);
 	const auto color = colors.find(name);
 	if(color == colors.cend()) {
-		oclr_error("invalid color name: %s!", name);
+		log_error("invalid color name: %s!", name);
 		return invalid_color;
 	}
 	return color->second;

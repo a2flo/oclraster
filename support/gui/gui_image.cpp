@@ -16,9 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_image.h"
-#include "rendering/gfx2d.h"
-#include "rendering/texman.h"
+#include "gui_image.hpp"
+#include "rendering/gfx2d.hpp"
+#include "rendering/texman.hpp"
 
 gui_image::gui_image() {
 }

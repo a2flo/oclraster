@@ -16,13 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_OCLRASTER_PROGRAM_H__
-#define __OCLRASTER_OCLRASTER_PROGRAM_H__
+#ifndef __OCLRASTER_OCLRASTER_PROGRAM_HPP__
+#define __OCLRASTER_OCLRASTER_PROGRAM_HPP__
 
-#include "oclraster/global.h"
+#include "oclraster/global.hpp"
 #include "cl/opencl.hpp"
-#include "pipeline/image.h"
-#include "pipeline/image_types.h"
+#include "pipeline/image.hpp"
+#include "pipeline/image_types.hpp"
 
 // TODO: this should be in a different header
 enum class PROJECTION : unsigned int {

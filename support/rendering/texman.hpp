@@ -16,14 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_TEXMAN_H__
-#define __OCLRASTER_SUPPORT_TEXMAN_H__
+#ifndef __OCLRASTER_SUPPORT_TEXMAN_HPP__
+#define __OCLRASTER_SUPPORT_TEXMAN_HPP__
 
-#include <oclraster_support/global.h>
+#include <oclraster_support/global.hpp>
 
 class pipeline;
 class image;
-class OCLRASTER_API texture_manager {
+class FLOOR_API texture_manager {
 public:
 	texture_manager() = delete;
 	~texture_manager() = delete;

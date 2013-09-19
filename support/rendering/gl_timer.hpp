@@ -16,13 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GL_TIMER_H__
-#define __OCLRASTER_SUPPORT_GL_TIMER_H__
+#ifndef __OCLRASTER_SUPPORT_GL_TIMER_HPP__
+#define __OCLRASTER_SUPPORT_GL_TIMER_HPP__
 
-#include <oclraster_support/global.h>
+#include <oclraster_support/global.hpp>
 
 // TODO: implement this (for now this is just a dummy class)
-class OCLRASTER_API gl_timer {
+class FLOOR_API gl_timer {
 public:
 	//
 	gl_timer() = delete;
@@ -47,7 +47,7 @@ public:
 	static void state_check() {}
 	
 	static void start_frame() {}
-	static void mark(const string& identifier oclr_unused) {}
+	static void mark(const string& identifier floor_unused) {}
 	static void stop_frame() {}
 	
 };

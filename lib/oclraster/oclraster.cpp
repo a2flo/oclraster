@@ -15,18 +15,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "oclraster/oclraster.h"
-#include "oclraster/oclraster_version.h"
+#include "oclraster/oclraster.hpp"
+#include "oclraster/oclraster_version.hpp"
 #include "cl/opencl.hpp"
 #include "core/gl_support.hpp"
-#include "pipeline/framebuffer.h"
-#include "pipeline/pipeline.h"
+#include "pipeline/framebuffer.hpp"
+#include "pipeline/pipeline.hpp"
 
 #if defined(__APPLE__)
 #if !defined(OCLRASTER_IOS)
 #include "osx/osx_helper.hpp"
 #else
-#include "ios/ios_helper.h"
+#include "ios/ios_helper.hpp"
 #endif
 #endif
 

@@ -16,15 +16,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_H__
-#define __OCLRASTER_SUPPORT_H__
+#ifndef __OCLRASTER_SUPPORT_HPP__
+#define __OCLRASTER_SUPPORT_HPP__
 
-#include "oclraster_support/global.h"
-#include <oclraster/oclraster.h>
-#include <oclraster/pipeline/pipeline.h>
+#include "oclraster_support/global.hpp"
+#include <oclraster/oclraster.hpp>
+#include <oclraster/pipeline/pipeline.hpp>
 
 class gui;
-class OCLRASTER_API oclraster_support {
+class FLOOR_API oclraster_support {
 public:
 	static void init(pipeline* oclr_pipeline);
 	static void destroy();

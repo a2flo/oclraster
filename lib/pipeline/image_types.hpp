@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_IMAGE_TYPES_H__
-#define __OCLRASTER_IMAGE_TYPES_H__
+#ifndef __OCLRASTER_IMAGE_TYPES_HPP__
+#define __OCLRASTER_IMAGE_TYPES_HPP__
 
 // this directly maps to opencl types (6.1.1)
 enum class IMAGE_TYPE : unsigned short int {

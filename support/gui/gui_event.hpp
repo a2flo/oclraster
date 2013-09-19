@@ -16,10 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_EVENT_H__
-#define __OCLRASTER_SUPPORT_GUI_EVENT_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_EVENT_HPP__
+#define __OCLRASTER_SUPPORT_GUI_EVENT_HPP__
 
-#include "core/event_objects.h"
+#include "core/event_objects.hpp"
 
 // gui event types (addition to EVENT_TYPE)
 enum class GUI_EVENT : unsigned int {

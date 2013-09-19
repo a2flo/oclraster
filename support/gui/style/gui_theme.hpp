@@ -16,13 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_THEME_H__
-#define __OCLRASTER_SUPPORT_GUI_THEME_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_THEME_HPP__
+#define __OCLRASTER_SUPPORT_GUI_THEME_HPP__
 
-#include "oclraster_support/global.h"
-#include "core/xml.h"
-#include "gui_color_scheme.h"
-#include "rendering/gfx2d.h"
+#include "oclraster_support/global.hpp"
+#include "core/xml.hpp"
+#include "gui_color_scheme.hpp"
+#include "rendering/gfx2d.hpp"
 
 class xml;
 class font_manager;
@@ -40,8 +40,8 @@ public:
 	void draw(const string& type, const string& state,
 			  const float2& offset, const float2& size,
 			  const bool clear = true, const bool scissor = true,
-			  std::function<string(const string&)> text_lookup = [](const string& str oclr_unused){return "";},
-			  std::function<image*(const string&)> texture_lookup = [](const string& tex_name oclr_unused){return nullptr;});
+			  std::function<string(const string&)> text_lookup = [](const string& str floor_unused){return "";},
+			  std::function<image*(const string&)> texture_lookup = [](const string& tex_name floor_unused){return nullptr;});
 	
 	const gui_color_scheme& get_color_scheme() const;
 	

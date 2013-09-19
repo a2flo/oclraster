@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_window.h"
-#include "oclraster_support.h"
+#include "gui_window.hpp"
+#include "oclraster_support.hpp"
 
 gui_window::gui_window(const float2& buffer_size_, const float2& position_) :
 gui_object(buffer_size_, position_), gui_surface(buffer_size_, position_) {

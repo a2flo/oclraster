@@ -16,9 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "texman.h"
-#include <oclraster/oclraster.h>
-#include <oclraster/pipeline/image.h>
+#include "texman.hpp"
+#include <oclraster/oclraster.hpp>
+#include <oclraster/pipeline/image.hpp>
 
 pipeline* texture_manager::oclr_pipeline = nullptr;
 image* texture_manager::dummy_texture = nullptr;

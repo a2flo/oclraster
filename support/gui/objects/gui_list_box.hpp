@@ -16,12 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_LIST_BOX_H__
-#define __OCLRASTER_SUPPORT_GUI_LIST_BOX_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_LIST_BOX_HPP__
+#define __OCLRASTER_SUPPORT_GUI_LIST_BOX_HPP__
 
-#include "gui/objects/gui_item_container.h"
+#include "gui/objects/gui_item_container.hpp"
 
-class OCLRASTER_API gui_list_box : public gui_item_container {
+class FLOOR_API gui_list_box : public gui_item_container {
 public:
 	gui_list_box(const float2& size, const float2& position);
 	virtual ~gui_list_box();

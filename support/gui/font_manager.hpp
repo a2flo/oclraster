@@ -16,12 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_FONT_MANAGER_H__
-#define __OCLRASTER_SUPPORT_FONT_MANAGER_H__
+#ifndef __OCLRASTER_SUPPORT_FONT_MANAGER_HPP__
+#define __OCLRASTER_SUPPORT_FONT_MANAGER_HPP__
 
-#include "oclraster_support/global.h"
-#include "threading/thread_base.h"
-#include "gui/font.h"
+#include "oclraster_support/global.hpp"
+#include "threading/thread_base.hpp"
+#include "gui/font.hpp"
 
 /*! @class font_manager
  *  @brief loads and caches fonts
@@ -29,7 +29,7 @@
 
 struct FT_LibraryRec_;
 typedef struct FT_LibraryRec_* FT_Library;
-class OCLRASTER_API font_manager : public thread_base {
+class FLOOR_API font_manager : public thread_base {
 public:
 	font_manager();
 	virtual ~font_manager();

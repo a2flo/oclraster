@@ -17,9 +17,9 @@
  */
 
 
-#include "shader.h"
-#include <oclraster/threading/task.h>
-#include <oclraster/program/oclraster_program.h>
+#include "shader.hpp"
+#include <floor/threading/task.hpp>
+#include <oclraster/program/oclraster_program.hpp>
 
 pipeline* shader_helper::oclr_pipeline = nullptr;
 
@@ -42,12 +42,12 @@ shader_helper::oclr_shader::oclr_shader(const string& tp_filename,
 								  initializer_list<pair<string, string>> options) {
 	// load
 	string tp_str = "", rp_str = "";
-	if(!file_io::file_to_string(oclraster::kernel_path("support/"+tp_filename), tp_str)) {
-		oclr_error("couldn't open tp program \"%s\"!", tp_filename);
+	if(!file_io::file_to_string(floor::kernel_path("support/"+tp_filename), tp_str)) {
+		log_error("couldn't open tp program \"%s\"!", tp_filename);
 		return;
 	}
-	if(!file_io::file_to_string(oclraster::kernel_path("support/"+rp_filename), rp_str)) {
-		oclr_error("couldn't open rp program \"%s\"!", rp_filename);
+	if(!file_io::file_to_string(floor::kernel_path("support/"+rp_filename), rp_str)) {
+		log_error("couldn't open rp program \"%s\"!", rp_filename);
 		return;
 	}
 	
@@ -56,7 +56,7 @@ shader_helper::oclr_shader::oclr_shader(const string& tp_filename,
 		shaders.emplace(option.first, pair<transform_program*, rasterization_program*> { nullptr, nullptr });
 	}
 	for(const auto& option : options) {
-		oclr_msg("compiling %s / %s ...", option.first, option.second);
+		log_msg("compiling %s / %s ...", option.first, option.second);
 		pair<transform_program*, rasterization_program*>* shader = &shaders[option.first];
 		static const oclraster_program::kernel_spec default_spec {
 			{},
@@ -86,7 +86,7 @@ void shader_helper::oclr_shader::use(const string option,
 									 const opencl::buffer_object* transform_uniforms) {
 	const auto shd_iter = shaders.find(option);
 	if(shd_iter == shaders.end()) {
-		oclr_error("shader option \"%s\" doesn't exist!", option);
+		log_error("shader option \"%s\" doesn't exist!", option);
 		return;
 	}
 	oclr_pipeline->bind_program(*shd_iter->second.first);
@@ -116,12 +116,12 @@ void shader_helper::init(pipeline* p_) {
 												sizeof(float) * primitives_rp_uniform_buffer_size);
 	
 	//
-	oclraster::get_event()->add_internal_event_handler(evt_handler, EVENT_TYPE::KERNEL_RELOAD);
+	floor::get_event()->add_internal_event_handler(evt_handler, EVENT_TYPE::KERNEL_RELOAD);
 	reload_shaders();
 }
 
 void shader_helper::destroy() {
-	oclraster::get_event()->remove_event_handler(evt_handler);
+	floor::get_event()->remove_event_handler(evt_handler);
 	
 	if(primitives_tp_uniforms != nullptr) {
 		ocl->delete_buffer(primitives_tp_uniforms);
@@ -194,12 +194,12 @@ void shader_helper::reload_shaders() {
 		this_thread::yield();
 	}
 	const auto timer_end = SDL_GetPerformanceCounter();
-	oclr_msg("compilation time: %fs (%u)",
+	log_msg("compilation time: %fs (%u)",
 			 float(timer_end - timer_start) / float(SDL_GetPerformanceFrequency()),
 			 (timer_end - timer_start));
 }
 
-bool shader_helper::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool shader_helper::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::KERNEL_RELOAD) {
 		shader_helper::reload_shaders();
 	}

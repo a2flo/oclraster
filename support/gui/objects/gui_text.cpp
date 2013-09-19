@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_text.h"
-#include "core/core.h"
+#include "gui_text.hpp"
+#include "core/core.hpp"
 
 gui_text::gui_text(const float2& size_, const float2& position_) :
 gui_object(size_, position_) {
@@ -34,7 +34,7 @@ void gui_text::draw() {
 	// TODO: handle centering
 	theme->draw("text", shade ? "normal_shade" : "normal",
 				position_abs, size_abs, true, true,
-				[this](const string& str oclr_unused) { return label; });
+				[this](const string& str floor_unused) { return label; });
 }
 
 void gui_text::set_label(const string& label_) {

@@ -16,14 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_H__
-#define __OCLRASTER_SUPPORT_GUI_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_HPP__
+#define __OCLRASTER_SUPPORT_GUI_HPP__
 
-#include "oclraster_support/global.h"
-#include "threading/thread_base.h"
-#include "core/event.h"
-#include "gui/objects/gui_object.h"
-#include "gui/style/gui_surface.h"
+#include "oclraster_support/global.hpp"
+#include "threading/thread_base.hpp"
+#include "core/event.hpp"
+#include "gui/objects/gui_object.hpp"
+#include "gui/style/gui_surface.hpp"
 
 /*! @class gui
  *  @brief graphical user interface functions
@@ -40,7 +40,7 @@ enum class DRAW_MODE_UI : unsigned int {
 };
 typedef functor<void, const DRAW_MODE_UI, framebuffer*> ui_draw_callback;
 
-class OCLRASTER_API gui : public thread_base {
+class FLOOR_API gui : public thread_base {
 public:
 	gui(const string& theme_name);
 	~gui();

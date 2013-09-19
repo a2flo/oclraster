@@ -16,12 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_SUPPORT_VERSION__
-#define __OCLRASTER_SUPPORT_VERSION__
+#ifndef __OCLRASTER_SUPPORT_VERSION_HPP__
+#define __OCLRASTER_SUPPORT_VERSION_HPP__
 
 //
-#include "build_version.h"
-#include <oclraster/oclraster_version.h>
+#include "build_version.hpp"
+#include <oclraster/oclraster_version.hpp>
 
 #define OCLRASTER_SUPPORT_VERSION_STRING (string("oclraster_support ")+OCLRASTER_PLATFORM+OCLRASTER_DEBUG_STR \
 " v"+(OCLRASTER_MAJOR_VERSION)+"."+(OCLRASTER_MINOR_VERSION)+"."+(OCLRASTER_REVISION_VERSION)+(OCLRASTER_DEV_STAGE_VERSION)+"-"+size_t2string(OCLRASTER_SUPPORT_BUILD_VERSION)+\

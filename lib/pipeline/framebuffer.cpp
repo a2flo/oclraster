@@ -16,15 +16,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "framebuffer.h"
-#include "oclraster.h"
-#include "oclraster_program.h"
-#include "pipeline.h"
+#include "framebuffer.hpp"
+#include "oclraster.hpp"
+#include "oclraster_program.hpp"
+#include "pipeline.hpp"
 
 //
 static constexpr char template_framebuffer_program[] { u8R"OCLRASTER_RAWSTR(
-	#include "oclr_global.h"
-	#include "oclr_framebuffer_clear.h"
+	#include "oclr_global.hpp"
+	#include "oclr_framebuffer_clear.hpp"
 	
 	//
 	void OCLRASTER_FUNC clear_depth(global float* depth_image, const uint offset, const float clear_depth) {

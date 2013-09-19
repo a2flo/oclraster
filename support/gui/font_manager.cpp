@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "font_manager.h"
+#include "font_manager.hpp"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -26,27 +26,27 @@ thread_base("font_manager"),
 fonts(), ft_library(nullptr) {
 	// init freetype
 	if(FT_Init_FreeType(&ft_library) != 0) {
-		oclr_error("failed to initialize freetype library!");
+		log_error("failed to initialize freetype library!");
 	}
 	
 	// these should always exist
 	add_font_family("DEJAVU_SANS_SERIF", vector<string> {
-		oclraster::data_path("fonts/DejaVuSans.ttf"),
-		oclraster::data_path("fonts/DejaVuSans-Oblique.ttf"),
-		oclraster::data_path("fonts/DejaVuSans-Bold.ttf"),
-		oclraster::data_path("fonts/DejaVuSans-BoldOblique.ttf")
+		floor::data_path("fonts/DejaVuSans.ttf"),
+		floor::data_path("fonts/DejaVuSans-Oblique.ttf"),
+		floor::data_path("fonts/DejaVuSans-Bold.ttf"),
+		floor::data_path("fonts/DejaVuSans-BoldOblique.ttf")
 	});
 	add_font_family("DEJAVU_SERIF", vector<string> {
-		oclraster::data_path("fonts/DejaVuSerif.ttf"),
-		oclraster::data_path("fonts/DejaVuSerif-Italic.ttf"),
-		oclraster::data_path("fonts/DejaVuSerif-Bold.ttf"),
-		oclraster::data_path("fonts/DejaVuSerif-BoldItalic.ttf")
+		floor::data_path("fonts/DejaVuSerif.ttf"),
+		floor::data_path("fonts/DejaVuSerif-Italic.ttf"),
+		floor::data_path("fonts/DejaVuSerif-Bold.ttf"),
+		floor::data_path("fonts/DejaVuSerif-BoldItalic.ttf")
 	});
 	add_font_family("DEJAVU_MONOSPACE", vector<string> {
-		oclraster::data_path("fonts/DejaVuSansMono.ttf"),
-		oclraster::data_path("fonts/DejaVuSansMono-Oblique.ttf"),
-		oclraster::data_path("fonts/DejaVuSansMono-Bold.ttf"),
-		oclraster::data_path("fonts/DejaVuSansMono-BoldOblique.ttf")
+		floor::data_path("fonts/DejaVuSansMono.ttf"),
+		floor::data_path("fonts/DejaVuSansMono-Oblique.ttf"),
+		floor::data_path("fonts/DejaVuSansMono-Bold.ttf"),
+		floor::data_path("fonts/DejaVuSansMono-BoldOblique.ttf")
 	});
 	
 	// TODO: add system font overrides to config
@@ -77,22 +77,22 @@ fonts(), ft_library(nullptr) {
 #else // linux/*bsd/x11
 	// there isn't much choice here ...
 	add_font_family("SYSTEM_SANS_SERIF", vector<string> {
-		oclraster::data_path("fonts/DejaVuSans.ttf"),
-		oclraster::data_path("fonts/DejaVuSans-Oblique.ttf"),
-		oclraster::data_path("fonts/DejaVuSans-Bold.ttf"),
-		oclraster::data_path("fonts/DejaVuSans-BoldOblique.ttf")
+		floor::data_path("fonts/DejaVuSans.ttf"),
+		floor::data_path("fonts/DejaVuSans-Oblique.ttf"),
+		floor::data_path("fonts/DejaVuSans-Bold.ttf"),
+		floor::data_path("fonts/DejaVuSans-BoldOblique.ttf")
 	});
 	add_font_family("SYSTEM_SERIF", vector<string> {
-		oclraster::data_path("fonts/DejaVuSerif.ttf"),
-		oclraster::data_path("fonts/DejaVuSerif-Italic.ttf"),
-		oclraster::data_path("fonts/DejaVuSerif-Bold.ttf"),
-		oclraster::data_path("fonts/DejaVuSerif-BoldItalic.ttf")
+		floor::data_path("fonts/DejaVuSerif.ttf"),
+		floor::data_path("fonts/DejaVuSerif-Italic.ttf"),
+		floor::data_path("fonts/DejaVuSerif-Bold.ttf"),
+		floor::data_path("fonts/DejaVuSerif-BoldItalic.ttf")
 	});
 	add_font_family("SYSTEM_MONOSPACE", vector<string> {
-		oclraster::data_path("fonts/DejaVuSansMono.ttf"),
-		oclraster::data_path("fonts/DejaVuSansMono-Oblique.ttf"),
-		oclraster::data_path("fonts/DejaVuSansMono-Bold.ttf"),
-		oclraster::data_path("fonts/DejaVuSansMono-BoldOblique.ttf")
+		floor::data_path("fonts/DejaVuSansMono.ttf"),
+		floor::data_path("fonts/DejaVuSansMono-Oblique.ttf"),
+		floor::data_path("fonts/DejaVuSansMono-Bold.ttf"),
+		floor::data_path("fonts/DejaVuSansMono-BoldOblique.ttf")
 	});
 #endif
 	
@@ -102,7 +102,7 @@ fonts(), ft_library(nullptr) {
 }
 
 font_manager::~font_manager() {
-	oclr_debug("deleting font_manager object");
+	log_debug("deleting font_manager object");
 	
 	// delete all fonts
 	for(const auto& fnt : fonts) {
@@ -112,10 +112,10 @@ font_manager::~font_manager() {
 	
 	// free freetype
 	if(FT_Done_FreeType(ft_library) != 0) {
-		oclr_error("failed to free freetype library!");
+		log_error("failed to free freetype library!");
 	}
 
-	oclr_debug("font_manager object deleted");
+	log_debug("font_manager object deleted");
 }
 
 void font_manager::run() {
@@ -142,7 +142,7 @@ font& font_manager::add_font_family(const string& identifier, const vector<strin
 bool font_manager::remove_font(const string& identifier) {
 	const auto iter = fonts.find(identifier);
 	if(iter == fonts.end()) {
-		oclr_error("invalid font %s!", identifier);
+		log_error("invalid font %s!", identifier);
 		return false;
 	}
 	

@@ -16,14 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_POP_UP_BUTTON_H__
-#define __OCLRASTER_SUPPORT_GUI_POP_UP_BUTTON_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_POP_UP_BUTTON_HPP__
+#define __OCLRASTER_SUPPORT_GUI_POP_UP_BUTTON_HPP__
 
-#include "gui/objects/gui_text.h"
-#include "gui/objects/gui_item_container.h"
+#include "gui/objects/gui_text.hpp"
+#include "gui/objects/gui_item_container.hpp"
 
 class gui_pop_up_window;
-class OCLRASTER_API gui_pop_up_button : public gui_item_container {
+class FLOOR_API gui_pop_up_button : public gui_item_container {
 public:
 	gui_pop_up_button(const float2& size, const float2& position);
 	virtual ~gui_pop_up_button();

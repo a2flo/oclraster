@@ -16,13 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_FONT_H__
-#define __OCLRASTER_SUPPORT_FONT_H__
+#ifndef __OCLRASTER_SUPPORT_FONT_HPP__
+#define __OCLRASTER_SUPPORT_FONT_HPP__
 
-#include "oclraster_support/global.h"
-#include "core/event.h"
-#include <oclraster/cl/opencl.h>
-#include <oclraster/pipeline/image.h>
+#include "oclraster_support/global.hpp"
+#include "core/event.hpp"
+#include <floor/cl/opencl.hpp>
+#include <oclraster/pipeline/image.hpp>
 
 /*! @class font
  *  @brief stores a font and can be used for drawing
@@ -32,7 +32,7 @@ class font_manager;
 typedef struct FT_FaceRec_* FT_Face;
 enum class EVENT_TYPE : unsigned int;
 struct event_object;
-class OCLRASTER_API font {
+class FLOOR_API font {
 public:
 	//! single font file or font collection
 	font(font_manager* fm, const string& filename);

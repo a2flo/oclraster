@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_theme.h"
-#include "font_manager.h"
-#include "font.h"
-#include "oclraster_support.h"
-#include "rendering/texman.h"
+#include "gui_theme.hpp"
+#include "font_manager.hpp"
+#include "font.hpp"
+#include "oclraster_support.hpp"
+#include "rendering/texman.hpp"
 
 #define A2E_THEME_VERSION 1
 #define A2E_UI_OBJECT_VERSION 1
@@ -73,9 +73,9 @@ static gui_theme::ui_float2 str_to_ui_float2(const string& str) {
 };
 
 //
-gui_theme::gui_theme(font_manager* fm_) : fm(fm_), x(oclraster::get_xml()), scheme() {
+gui_theme::gui_theme(font_manager* fm_) : fm(fm_), x(floor::get_xml()), scheme() {
 	fnt = fm->get_font("SYSTEM_SANS_SERIF");
-	screen_dpi = oclraster::get_dpi();
+	screen_dpi = floor::get_dpi();
 }
 
 gui_theme::~gui_theme() {
@@ -87,7 +87,7 @@ const gui_color_scheme& gui_theme::get_color_scheme() const {
 
 void gui_theme::reload() {
 	if(filename == "") {
-		oclr_error("no theme has been loaded yet!");
+		log_error("no theme has been loaded yet!");
 		return;
 	}
 	
@@ -97,16 +97,16 @@ void gui_theme::reload() {
 }
 
 bool gui_theme::load(const string& filename_) {
-	xml::xml_doc ui_doc = x->process_file(oclraster::data_path(filename_), false); // TODO: DTD!
+	xml::xml_doc ui_doc = x->process_file(floor::data_path(filename_), false); // TODO: DTD!
 	if(!ui_doc.valid || filename_.rfind("/") == string::npos) {
-		oclr_error("couldn't process theme file %s!", filename_);
+		log_error("couldn't process theme file %s!", filename_);
 		return false;
 	}
 	const string theme_path = filename_.substr(0, filename_.rfind("/") + 1);
 	
 	const size_t doc_version = ui_doc.get<size_t>("a2e_theme.version");
 	if(doc_version != A2E_THEME_VERSION) {
-		oclr_error("invalid theme version: %u (should be %u)!",
+		log_error("invalid theme version: %u (should be %u)!",
 				  doc_version, A2E_THEME_VERSION);
 		return false;
 	}
@@ -114,18 +114,18 @@ bool gui_theme::load(const string& filename_) {
 	// load color scheme
 	const string scheme_filename = ui_doc.get<string>("a2e_theme.colors");
 	if(scheme_filename == "INVALID") {
-		oclr_error("no color scheme specified in theme \"%s\"!", filename_);
+		log_error("no color scheme specified in theme \"%s\"!", filename_);
 		return false;
 	}
 	if(!scheme.load(theme_path + scheme_filename)) {
-		oclr_error("failed to load color scheme \"%s\" for theme \"%s\"!", scheme_filename, filename_);
+		log_error("failed to load color scheme \"%s\" for theme \"%s\"!", scheme_filename, filename_);
 		return false;
 	}
 	
 	//
 	const xml::xml_node* theme_node = ui_doc.get_node("a2e_theme");
 	if(theme_node == nullptr || theme_node->children.empty()) {
-		oclr_error("theme \"%s\" is empty!", filename_);
+		log_error("theme \"%s\" is empty!", filename_);
 		return false;
 	}
 	
@@ -139,15 +139,15 @@ bool gui_theme::load(const string& filename_) {
 			}
 			else {
 				if(obj_filename == "INVALID") {
-					oclr_error("filename is missing for object in theme \"%s\"!", filename_);
+					log_error("filename is missing for object in theme \"%s\"!", filename_);
 				}
 				else {
-					oclr_error("type is missing for object in theme \"%s\"!", filename_);
+					log_error("type is missing for object in theme \"%s\"!", filename_);
 				}
 			}
 		}
 		else if(node.first[0] != '#') {
-			oclr_error("unknown node \"%s\" in theme \"%s\"!", node.first, filename_);
+			log_error("unknown node \"%s\" in theme \"%s\"!", node.first, filename_);
 		}
 	}
 	filename = filename_;
@@ -155,15 +155,15 @@ bool gui_theme::load(const string& filename_) {
 }
 
 bool gui_theme::load_ui_object(const string& type, const string& obj_filename) {
-	xml::xml_doc ui_object_doc = x->process_file(oclraster::data_path(obj_filename), false); // TODO: DTD!
+	xml::xml_doc ui_object_doc = x->process_file(floor::data_path(obj_filename), false); // TODO: DTD!
 	if(!ui_object_doc.valid) {
-		oclr_error("couldn't process ui object file %s!", obj_filename);
+		log_error("couldn't process ui object file %s!", obj_filename);
 		return false;
 	}
 	
 	const size_t obj_version = ui_object_doc.get<size_t>("a2e_ui_object.version");
 	if(obj_version != A2E_UI_OBJECT_VERSION) {
-		oclr_error("invalid ui object version: %u (should be %u)!",
+		log_error("invalid ui object version: %u (should be %u)!",
 				  obj_version, A2E_UI_OBJECT_VERSION);
 		return false;
 	}
@@ -171,7 +171,7 @@ bool gui_theme::load_ui_object(const string& type, const string& obj_filename) {
 	//
 	const xml::xml_node* obj_node = ui_object_doc.get_node("a2e_ui_object");
 	if(obj_node == nullptr || obj_node->children.empty()) {
-		oclr_error("ui object \"%s\" is empty!", obj_filename);
+		log_error("ui object \"%s\" is empty!", obj_filename);
 		return false;
 	}
 	
@@ -184,7 +184,7 @@ bool gui_theme::load_ui_object(const string& type, const string& obj_filename) {
 			obj->states.insert(make_pair((*node.second)["type"], unique_ptr<gui_ui_object::state>(st)));
 		}
 		else if(node.first[0] != '#') {
-			oclr_error("unknown node \"%s\" in ui object \"%s\"!", node.first, obj_filename);
+			log_error("unknown node \"%s\" in ui object \"%s\"!", node.first, obj_filename);
 		}
 	}
 	ui_objects.insert(make_pair(type, unique_ptr<gui_ui_object>(obj)));
@@ -216,7 +216,7 @@ void gui_theme::process_primitive(gui_ui_object::state* st, const xml::xml_node*
 	};
 	const auto primitive_iter = primitive_lookup.find(node->name());
 	if(primitive_iter == primitive_lookup.cend()) {
-		oclr_error("invalid primitive type specified: %s!", node->name());
+		log_error("invalid primitive type specified: %s!", node->name());
 		return;
 	}
 	const PRIMITIVE_TYPE primitive { primitive_iter->second };
@@ -233,12 +233,12 @@ void gui_theme::process_primitive(gui_ui_object::state* st, const xml::xml_node*
 	};
 	const string style_str(primitive != PRIMITIVE_TYPE::TEXT ? (*node)["style"] : "text");
 	if(style_str == "INVALID") {
-		oclr_error("no style specified for primitive: %s", node->name());
+		log_error("no style specified for primitive: %s", node->name());
 		return;
 	}
 	const auto style_iter = style_lookup.find(style_str);
 	if(style_iter == style_lookup.cend()) {
-		oclr_error("invalid style (%s) specified for primitive: %s", style_str, node->name());
+		log_error("invalid style (%s) specified for primitive: %s", style_str, node->name());
 		return;
 	}
 	const DRAW_STYLE style { style_iter->second };
@@ -246,7 +246,7 @@ void gui_theme::process_primitive(gui_ui_object::state* st, const xml::xml_node*
 	// make sure primitive and style tags got the necessary attributes (not completely achievable with dtd)
 	if((style == DRAW_STYLE::TEXTURE || style == DRAW_STYLE::BORDER_TEXTURE) &&
 	   (*node)["name"] == "INVALID") {
-		oclr_error("no texture filename specified for primitive: %s!", node->name());
+		log_error("no texture filename specified for primitive: %s!", node->name());
 		return;
 	}
 	
@@ -289,7 +289,7 @@ unique_ptr<gui_theme::point_compute_data> gui_theme::process_point_compute_data(
 					else if(token == "bottom_left") corners |= gfx2d::CORNER::BOTTOM_LEFT;
 					else if(token == "top_left") corners |= gfx2d::CORNER::TOP_LEFT;
 					else {
-						oclr_error("unknown corner token: %s!", token);
+						log_error("unknown corner token: %s!", token);
 					}
 				}
 				return corners;
@@ -320,7 +320,7 @@ unique_ptr<gui_theme::point_compute_data> gui_theme::process_point_compute_data(
 			return make_unique<pc_text>(str_to_ui_float2((*node)["position"]),
 										string((*node)["id"]));
 	}
-	oclr_unreachable();
+	floor_unreachable();
 }
 
 unique_ptr<gui_theme::draw_style_data> gui_theme::process_draw_style_data(const gui_theme::DRAW_STYLE style, const xml::xml_node* node) {
@@ -328,7 +328,7 @@ unique_ptr<gui_theme::draw_style_data> gui_theme::process_draw_style_data(const 
 	const auto str_to_float4 = [](const string& float4_str) -> float4 {
 		const vector<string> float4_tokens { core::tokenize(float4_str, ',') };
 		if(float4_tokens.size() != 4) {
-			oclr_error("invalid float4 token count: %u!", float4_tokens.size());
+			log_error("invalid float4 token count: %u!", float4_tokens.size());
 			return float4(0.0f, 1.0f, 0.0f, 1.0f); // green -> invalid color/float4
 		}
 		return float4(string2float(float4_tokens[0]),
@@ -358,7 +358,7 @@ unique_ptr<gui_theme::draw_style_data> gui_theme::process_draw_style_data(const 
 		
 		const auto iter = types.find(gradient_str);
 		if(iter == types.cend()) {
-			oclr_error("invalid gradient type: %s!", gradient_str);
+			log_error("invalid gradient type: %s!", gradient_str);
 			return gfx2d::GRADIENT_TYPE::HORIZONTAL;
 		}
 		return iter->second;
@@ -388,7 +388,7 @@ unique_ptr<gui_theme::draw_style_data> gui_theme::process_draw_style_data(const 
 		
 		const auto coords_tokens = core::tokenize(coords_str, ';');
 		if(coords_tokens.size() != 2) {
-			oclr_error("invalid coord token count (%u) for coords: %s!", coords_tokens.size(), coords_str);
+			log_error("invalid coord token count (%u) for coords: %s!", coords_tokens.size(), coords_str);
 			return make_pair(float2(0.0f), float2(1.0f));
 		}
 		
@@ -424,7 +424,7 @@ unique_ptr<gui_theme::draw_style_data> gui_theme::process_draw_style_data(const 
 			image* texture = nullptr;
 			if(tex_name.find(".png") != string::npos) {
 				// TODO: stores textures; add/allow internal engine image names?
-				texture = texture_manager::add_texture(oclraster::data_path(tex_name));
+				texture = texture_manager::add_texture(floor::data_path(tex_name));
 				tex_name = "";
 			}
 			auto coords = str_to_coords((*node)["coords"]);
@@ -483,7 +483,7 @@ unique_ptr<gui_theme::draw_style_data> gui_theme::process_draw_style_data(const 
 		case DRAW_STYLE::TEXT:
 			return make_unique<ds_text>(str_to_ui_color((*node)["color"]));
 	}
-	oclr_unreachable();
+	floor_unreachable();
 }
 
 //
@@ -494,7 +494,7 @@ void gui_theme::draw(const string& type, const string& state,
 					 std::function<image*(const string&)> texture_lookup) {
 	const auto iter = ui_objects.find(type);
 	if(iter == ui_objects.cend()) {
-		oclr_error("invalid type: %s!", type);
+		log_error("invalid type: %s!", type);
 		return;
 	}
 	
@@ -502,7 +502,7 @@ void gui_theme::draw(const string& type, const string& state,
 	gui_ui_object* ui_obj = iter->second.get();
 	const auto state_iter = ui_obj->states.find(state);
 	if(state_iter == ui_obj->states.cend()) {
-		oclr_error("invalid state: %s!", state);
+		log_error("invalid state: %s!", state);
 		return;
 	}
 	
@@ -735,7 +735,7 @@ void gui_theme::draw(const string& type, const string& state,
 				if(!ds->texture_name.empty()) {
 					ds->texture = texture_lookup(ds->texture_name);
 					if(ds->texture == 0) {
-						oclr_error("texture \"%s\" not found!", ds->texture_name);
+						log_error("texture \"%s\" not found!", ds->texture_name);
 						ds->texture = texture_manager::get_dummy_texture();
 					}
 				}

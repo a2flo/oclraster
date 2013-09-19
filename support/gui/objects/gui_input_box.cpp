@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_input_box.h"
-#include "font.h"
-#include "gui.h"
-#include "threading/task.h"
-#include "oclraster_support.h"
+#include "gui_input_box.hpp"
+#include "font.hpp"
+#include "gui.hpp"
+#include "threading/task.hpp"
+#include "oclraster_support.hpp"
 
 gui_input_box::gui_input_box(const float2& size_, const float2& position_) :
 gui_object(size_, position_) {
@@ -112,7 +112,7 @@ void gui_input_box::set_active(const bool& active_state) {
 	redraw();
 }
 
-bool gui_input_box::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj oclr_unused, const ipnt& point) {
+bool gui_input_box::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj floor_unused, const ipnt& point) {
 	if(!state.visible || !state.enabled) return false;
 	switch(type) {
 		// left and right mouse button will have the same behavior for now
@@ -154,7 +154,7 @@ bool gui_input_box::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<
 }
 
 #define invalid_input_cursor_err() \
-{ oclr_error("line #%u: invalid input_cursor \"%u\" (#input: %u)", __LINE__, input_cursor, unicode_input.size()); }
+{ log_error("line #%u: invalid input_cursor \"%u\" (#input: %u)", __LINE__, input_cursor, unicode_input.size()); }
 
 bool gui_input_box::handle_key_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj) {
 	if(!state.visible || !state.enabled || !state.active) return false;
@@ -165,9 +165,9 @@ bool gui_input_box::handle_key_event(const EVENT_TYPE& type, const shared_ptr<ev
 			
 			// check if we need to cache the key/character
 			if(!fnt->is_cached(key_evt->key)) {
-				oclraster::acquire_context();
+				floor::acquire_context();
 				fnt->cache(key_evt->key, key_evt->key);
-				oclraster::release_context();
+				floor::release_context();
 			}
 			
 			if(input_cursor != -1) {

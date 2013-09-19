@@ -16,10 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "a2m.h"
+#include "a2m.hpp"
 #include "core/file_io.hpp"
 #include "core/core.hpp"
-#include "oclraster.h"
+#include "oclraster.hpp"
 
 static constexpr unsigned int A2M_VERSION = 2u;
 

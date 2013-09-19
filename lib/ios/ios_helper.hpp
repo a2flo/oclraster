@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_IOS_HELPER_H__
-#define __OCLRASTER_IOS_HELPER_H__
+#ifndef __OCLRASTER_IOS_HELPER_HPP__
+#define __OCLRASTER_IOS_HELPER_HPP__
 
 #include "core/gl_support.hpp"
 #include "core/cpp_headers.hpp"

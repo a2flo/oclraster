@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "global.h"
-#include "image_types.h"
+#include "global.hpp"
+#include "image_types.hpp"
 #include "core/vector4.hpp"
 
 static constexpr array<const char*, (size_t)IMAGE_TYPE::__MAX_TYPE> data_type_str_table {

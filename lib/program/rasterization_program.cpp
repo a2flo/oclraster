@@ -16,17 +16,17 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "rasterization_program.h"
+#include "rasterization_program.hpp"
 
 #if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 string template_rasterization_program { "" };
 #else
 static constexpr char template_rasterization_program[] { u8R"OCLRASTER_RAWSTR(
-	#include "oclr_global.h"
-	#include "oclr_math.h"
-	#include "oclr_matrix.h"
-	#include "oclr_image.h"
-	#include "oclr_primitive_assembly.h"
+	#include "oclr_global.hpp"
+	#include "oclr_math.hpp"
+	#include "oclr_matrix.hpp"
+	#include "oclr_image.hpp"
+	#include "oclr_primitive_assembly.hpp"
 
 	typedef struct __attribute__((packed, aligned(4))) {
 		// VV0: 0 - 2

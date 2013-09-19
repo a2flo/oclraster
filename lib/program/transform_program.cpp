@@ -16,18 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "transform_program.h"
-#include "image.h"
+#include "transform_program.hpp"
+#include "image.hpp"
 
 #if defined(OCLRASTER_INTERNAL_PROGRAM_DEBUG)
 string template_transform_program { "" };
 #else
 // awesome raw string literals are awesome
 static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
-	#include "oclr_global.h"
-	#include "oclr_math.h"
-	#include "oclr_matrix.h"
-	#include "oclr_image.h"
+	#include "oclr_global.hpp"
+	#include "oclr_math.hpp"
+	#include "oclr_matrix.hpp"
+	#include "oclr_image.hpp"
 	
 	typedef struct __attribute__((packed, aligned(16))) {
 		float4 camera_position;

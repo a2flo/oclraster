@@ -231,7 +231,7 @@ project "liboclraster"
 	kind "SharedLib"
 	language "C++"
 
-	files { "lib/**.h", "lib/**.hpp", "lib/**.cpp", "lib/**.cc", "lib/**.c" }
+	files { "lib/**.hpp", "lib/**.cpp" }
 	basedir "lib"
 	targetdir "bin"
 	includedirs { "lib/",
@@ -273,7 +273,7 @@ project "oclr_simple"
 	targetname "oclr_simple"
 	kind "ConsoleApp"
 	language "C++"
-	files { "samples/oclr_simple/src/**.h", "samples/oclr_simple/src/**.cpp" }
+	files { "samples/oclr_simple/src/**.hpp", "samples/oclr_simple/src/**.cpp" }
 	basedir "samples/oclr_simple"
 	targetdir "bin"
 
@@ -303,7 +303,7 @@ project "oclr_rtt"
 	targetname "oclr_rtt"
 	kind "ConsoleApp"
 	language "C++"
-	files { "samples/oclr_rtt/src/**.h", "samples/oclr_rtt/src/**.cpp" }
+	files { "samples/oclr_rtt/src/**.hpp", "samples/oclr_rtt/src/**.cpp" }
 	basedir "samples/oclr_rtt"
 	targetdir "bin"
 
@@ -333,7 +333,7 @@ project "oclr_volume"
 	targetname "oclr_volume"
 	kind "ConsoleApp"
 	language "C++"
-	files { "samples/oclr_volume/src/**.h", "samples/oclr_volume/src/**.cpp" }
+	files { "samples/oclr_volume/src/**.hpp", "samples/oclr_volume/src/**.cpp" }
 	basedir "samples/oclr_volume"
 	targetdir "bin"
 
@@ -366,7 +366,7 @@ project "liboclraster_support"
 	kind "SharedLib"
 	language "C++"
 
-	files { "support/**.h", "support/**.cpp" }
+	files { "support/**.hpp", "support/**.cpp" }
 	basedir "support"
 	targetdir "bin"
 	includedirs { "support/",
@@ -406,7 +406,7 @@ project "oclr_ui"
 	targetname "oclr_ui"
 	kind "ConsoleApp"
 	language "C++"
-	files { "samples/oclr_ui/src/**.h", "samples/oclr_ui/src/**.cpp" }
+	files { "samples/oclr_ui/src/**.hpp", "samples/oclr_ui/src/**.cpp" }
 	basedir "samples/oclr_ui"
 	targetdir "bin"
 

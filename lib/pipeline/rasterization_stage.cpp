@@ -16,9 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "rasterization_stage.h"
-#include "pipeline.h"
-#include "oclraster.h"
+#include "rasterization_stage.hpp"
+#include "pipeline.hpp"
+#include "oclraster.hpp"
 
 rasterization_stage::rasterization_stage() : stage_base() {
 	bin_distribution_counter = ocl->create_buffer(opencl::BUFFER_FLAG::READ_WRITE |

@@ -16,9 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "stage_base.h"
-#include "pipeline.h"
-#include "oclraster.h"
+#include "stage_base.hpp"
+#include "pipeline.hpp"
+#include "oclraster.hpp"
 
 stage_base::stage_base() {
 }

@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_FRAMEBUFFER_H__
-#define __OCLRASTER_FRAMEBUFFER_H__
+#ifndef __OCLRASTER_FRAMEBUFFER_HPP__
+#define __OCLRASTER_FRAMEBUFFER_HPP__
 
 #include "cl/opencl.hpp"
-#include "pipeline/image.h"
+#include "pipeline/image.hpp"
 
 class framebuffer {
 public:

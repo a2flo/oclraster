@@ -16,22 +16,22 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_OBJECT_H__
-#define __OCLRASTER_SUPPORT_GUI_OBJECT_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_OBJECT_HPP__
+#define __OCLRASTER_SUPPORT_GUI_OBJECT_HPP__
 
-#include "oclraster_support/global.h"
-#include "core/vector2.h"
+#include "oclraster_support/global.hpp"
+#include "core/vector2.hpp"
 
 // since all inheriting classes will need this, include it here:
-#include "gui/style/gui_theme.h"
-#include "gui/gui_event.h"
+#include "gui/style/gui_theme.hpp"
+#include "gui/gui_event.hpp"
 
 /*! @class gui_object
  *  @brief gui object element functions
  */
 
 class gui;
-class OCLRASTER_API gui_object {
+class FLOOR_API gui_object {
 public:
 	gui_object(const float2& size, const float2& position);
 	virtual ~gui_object();

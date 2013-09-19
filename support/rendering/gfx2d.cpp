@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gfx2d.h"
+#include "gfx2d.hpp"
 
 pipeline* gfx2d::oclr_pipeline = nullptr;
 
@@ -79,7 +79,7 @@ void gfx2d::compute_ellipsoid_points(vector<primitive_properties::primitive_poin
 void gfx2d::upload_points_and_draw(const primitive_properties& props) {
 	// TODO: fix this
 	if(props.points.size()*4 > primitive_buffer_size) {
-		oclr_error("too many primitives!");
+		log_error("too many primitives!");
 		return;
 	}
 	

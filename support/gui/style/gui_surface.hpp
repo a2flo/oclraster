@@ -16,12 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GUI_SURFACE_H__
-#define __OCLRASTER_SUPPORT_GUI_SURFACE_H__
+#ifndef __OCLRASTER_SUPPORT_GUI_SURFACE_HPP__
+#define __OCLRASTER_SUPPORT_GUI_SURFACE_HPP__
 
-#include "oclraster_support/global.h"
-#include "core/vector2.h"
-#include <oclraster/pipeline/framebuffer.h>
+#include "oclraster_support/global.hpp"
+#include "core/vector2.hpp"
+#include <oclraster/pipeline/framebuffer.hpp>
 
 class gui_surface {
 public:

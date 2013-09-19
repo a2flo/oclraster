@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_toggle_button.h"
-#include "gui.h"
+#include "gui_toggle_button.hpp"
+#include "gui.hpp"
 
 gui_toggle_button::gui_toggle_button(const float2& size_, const float2& position_) :
 gui_object(size_, position_) {
@@ -33,10 +33,10 @@ void gui_toggle_button::draw() {
 	// TODO: handle disabled state
 	theme->draw("toggle_button", toggled ? "toggled" : "normal",
 				position_abs, size_abs, true, true,
-				[this](const string& str oclr_unused) { return toggled ? toggled_label : untoggled_label; });
+				[this](const string& str floor_unused) { return toggled ? toggled_label : untoggled_label; });
 }
 
-bool gui_toggle_button::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj, const ipnt& point oclr_unused) {
+bool gui_toggle_button::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj, const ipnt& point floor_unused) {
 	if(!state.visible || !state.enabled) return false;
 	switch(type) {
 		case EVENT_TYPE::MOUSE_LEFT_DOWN:

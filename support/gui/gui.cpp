@@ -16,18 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui.h"
-#include "rendering/shader.h"
-#include "rendering/gfx2d.h"
-#include "rendering/gl_timer.h"
-#include "gui/font_manager.h"
-#include "gui/style/gui_theme.h"
-#include "gui/objects/gui_window.h"
-#include "oclraster_support.h"
+#include "gui.hpp"
+#include "rendering/shader.hpp"
+#include "rendering/gfx2d.hpp"
+#include "rendering/gl_timer.hpp"
+#include "gui/font_manager.hpp"
+#include "gui/style/gui_theme.hpp"
+#include "gui/objects/gui_window.hpp"
+#include "oclraster_support.hpp"
 
 gui::gui(const string& theme_name) :
 thread_base("gui"),
-evt(oclraster::get_event()),
+evt(floor::get_event()),
 fm(new font_manager()),
 theme(new gui_theme(fm)),
 oclr_pipeline(oclraster_support::get_pipeline()),
@@ -81,7 +81,7 @@ window_handler_fnctr(this, &gui::window_handler) {
 											 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 											 sizeof(float4) * 4);
 	
-	recreate_buffers(size2(oclraster::get_width(), oclraster::get_height()));
+	recreate_buffers(size2(floor::get_width(), floor::get_height()));
 	
 	// load theme
 	theme->load("gui/"+theme_name+"/"+theme_name+".a2etheme");
@@ -95,7 +95,7 @@ window_handler_fnctr(this, &gui::window_handler) {
 }
 
 gui::~gui() {
-	oclr_debug("deleting gui object");
+	log_debug("deleting gui object");
 	
 	set_thread_should_finish();
 	
@@ -125,7 +125,7 @@ gui::~gui() {
 		ocl->delete_buffer(fullscreen_indices);
 	}
 
-	oclr_debug("gui object deleted");
+	log_debug("gui object deleted");
 }
 
 void gui::draw() {
@@ -380,7 +380,7 @@ gui_simple_callback* gui::add_draw_callback(const DRAW_MODE_UI& mode, ui_draw_ca
 	auto& callbacks = draw_callbacks[mode == DRAW_MODE_UI::PRE_UI ? 0 : 1];
 	const auto iter = find(begin(callbacks), end(callbacks), &cb);
 	if(iter != end(callbacks)) {
-		oclr_error("this ui draw callback already exists!");
+		log_error("this ui draw callback already exists!");
 		return nullptr;
 	}
 	callbacks.emplace_back(&cb);
@@ -398,7 +398,7 @@ void gui::delete_draw_callback(ui_draw_callback& cb) {
 	const auto iter_1 = find(begin(draw_callbacks[1]), end(draw_callbacks[1]), &cb);
 	
 	if(iter_0 == end(draw_callbacks[0]) && iter_1 == end(draw_callbacks[1])) {
-		oclr_error("no such ui draw callback does exist!");
+		log_error("no such ui draw callback does exist!");
 		return;
 	}
 	
@@ -478,7 +478,7 @@ void gui::unlock() {
 
 bool gui::set_clipboard_text(const string& text) {
 	if(SDL_SetClipboardText(text.c_str()) != 0) {
-		oclr_error("couldn't set clipboard text: %s!", SDL_GetError());
+		log_error("couldn't set clipboard text: %s!", SDL_GetError());
 		return false;
 	}
 	clipboard_text = text;

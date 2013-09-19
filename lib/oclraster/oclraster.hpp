@@ -16,10 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_H__
-#define __OCLRASTER_H__
+#ifndef __OCLRASTER_HPP__
+#define __OCLRASTER_HPP__
 
-#include "oclraster/global.h"
+#include "oclraster/global.hpp"
 #include "core/core.hpp"
 #include "core/file_io.hpp"
 #include "core/event.hpp"

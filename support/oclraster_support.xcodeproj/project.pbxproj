@@ -8,66 +8,112 @@
 
 /* Begin PBXBuildFile section */
 		5C053F90160CB31400540A7B /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C053F8F160CB31400540A7B /* libz.dylib */; };
+		5C14175C17EAF73C0062C779 /* oclraster_support.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14175817EAF73C0062C779 /* oclraster_support.cpp */; };
+		5C14175D17EAF73C0062C779 /* oclraster_support.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14175917EAF73C0062C779 /* oclraster_support.hpp */; };
+		5C14175E17EAF73C0062C779 /* oclraster_support_version.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14175A17EAF73C0062C779 /* oclraster_support_version.hpp */; };
+		5C14175F17EAF73C0062C779 /* global.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14175B17EAF73C0062C779 /* global.hpp */; };
+		5C14176717EAF7530062C779 /* gfx2d.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14176017EAF7530062C779 /* gfx2d.hpp */; };
+		5C14176817EAF7530062C779 /* shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14176117EAF7530062C779 /* shader.cpp */; };
+		5C14176917EAF7530062C779 /* gfx2d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14176217EAF7530062C779 /* gfx2d.cpp */; };
+		5C14176A17EAF7530062C779 /* shader.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14176317EAF7530062C779 /* shader.hpp */; };
+		5C14176B17EAF7530062C779 /* texman.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14176417EAF7530062C779 /* texman.cpp */; };
+		5C14176C17EAF7530062C779 /* gl_timer.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14176517EAF7530062C779 /* gl_timer.hpp */; };
+		5C14176D17EAF7530062C779 /* texman.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14176617EAF7530062C779 /* texman.hpp */; };
+		5C14177717EAF75B0062C779 /* font.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14176E17EAF75B0062C779 /* font.cpp */; };
+		5C14177817EAF75B0062C779 /* gui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14176F17EAF75B0062C779 /* gui.cpp */; };
+		5C14177917EAF75B0062C779 /* font.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14177017EAF75B0062C779 /* font.hpp */; };
+		5C14177A17EAF75B0062C779 /* font_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14177117EAF75B0062C779 /* font_manager.cpp */; };
+		5C14177B17EAF75B0062C779 /* gui.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14177217EAF75B0062C779 /* gui.hpp */; };
+		5C14177C17EAF75B0062C779 /* gui_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14177317EAF75B0062C779 /* gui_image.cpp */; };
+		5C14177D17EAF75B0062C779 /* gui_event.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14177417EAF75B0062C779 /* gui_event.hpp */; };
+		5C14177E17EAF75B0062C779 /* font_manager.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14177517EAF75B0062C779 /* font_manager.hpp */; };
+		5C14177F17EAF75B0062C779 /* gui_image.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14177617EAF75B0062C779 /* gui_image.hpp */; };
+		5C14178617EAF7600062C779 /* gui_theme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14178017EAF7600062C779 /* gui_theme.cpp */; };
+		5C14178717EAF7600062C779 /* gui_theme.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14178117EAF7600062C779 /* gui_theme.hpp */; };
+		5C14178817EAF7600062C779 /* gui_surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14178217EAF7600062C779 /* gui_surface.cpp */; };
+		5C14178917EAF7600062C779 /* gui_color_scheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14178317EAF7600062C779 /* gui_color_scheme.cpp */; };
+		5C14178A17EAF7600062C779 /* gui_surface.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14178417EAF7600062C779 /* gui_surface.hpp */; };
+		5C14178B17EAF7600062C779 /* gui_color_scheme.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14178517EAF7600062C779 /* gui_color_scheme.hpp */; };
+		5C1417A017EAF7660062C779 /* gui_input_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14178C17EAF7660062C779 /* gui_input_box.cpp */; };
+		5C1417A117EAF7660062C779 /* gui_pop_up_button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14178D17EAF7660062C779 /* gui_pop_up_button.cpp */; };
+		5C1417A217EAF7660062C779 /* gui_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14178E17EAF7660062C779 /* gui_object.cpp */; };
+		5C1417A317EAF7660062C779 /* gui_object.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14178F17EAF7660062C779 /* gui_object.hpp */; };
+		5C1417A417EAF7660062C779 /* gui_window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14179017EAF7660062C779 /* gui_window.cpp */; };
+		5C1417A517EAF7660062C779 /* gui_list_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14179117EAF7660062C779 /* gui_list_box.cpp */; };
+		5C1417A617EAF7660062C779 /* gui_slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14179217EAF7660062C779 /* gui_slider.cpp */; };
+		5C1417A717EAF7660062C779 /* gui_item_container.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14179317EAF7660062C779 /* gui_item_container.cpp */; };
+		5C1417A817EAF7660062C779 /* gui_toggle_button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14179417EAF7660062C779 /* gui_toggle_button.cpp */; };
+		5C1417A917EAF7660062C779 /* gui_button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14179517EAF7660062C779 /* gui_button.cpp */; };
+		5C1417AA17EAF7660062C779 /* gui_input_box.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14179617EAF7660062C779 /* gui_input_box.hpp */; };
+		5C1417AB17EAF7660062C779 /* gui_window.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14179717EAF7660062C779 /* gui_window.hpp */; };
+		5C1417AC17EAF7660062C779 /* gui_item_container.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14179817EAF7660062C779 /* gui_item_container.hpp */; };
+		5C1417AD17EAF7660062C779 /* gui_slider.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14179917EAF7660062C779 /* gui_slider.hpp */; };
+		5C1417AE17EAF7660062C779 /* gui_toggle_button.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14179A17EAF7660062C779 /* gui_toggle_button.hpp */; };
+		5C1417AF17EAF7660062C779 /* gui_pop_up_button.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14179B17EAF7660062C779 /* gui_pop_up_button.hpp */; };
+		5C1417B017EAF7660062C779 /* gui_text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C14179C17EAF7660062C779 /* gui_text.cpp */; };
+		5C1417B117EAF7660062C779 /* gui_list_box.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14179D17EAF7660062C779 /* gui_list_box.hpp */; };
+		5C1417B217EAF7660062C779 /* gui_text.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14179E17EAF7660062C779 /* gui_text.hpp */; };
+		5C1417B317EAF7660062C779 /* gui_button.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 5C14179F17EAF7660062C779 /* gui_button.hpp */; };
 		5C20264F159612C700D52A32 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CBCBF52158C139E007A661C /* ApplicationServices.framework */; };
 		5C2C9275140AA9D900AC808C /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C2C9274140AA9D900AC808C /* libxml2.dylib */; };
 		5C61BDAC1231D32000FD3451 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C61BDA81231D32000FD3451 /* AppKit.framework */; };
 		5C61BDAD1231D32000FD3451 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C61BDA91231D32000FD3451 /* Cocoa.framework */; };
 		5C61BDAE1231D32000FD3451 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C61BDAA1231D32000FD3451 /* OpenCL.framework */; };
 		5C61BDAF1231D32000FD3451 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C61BDAB1231D32000FD3451 /* OpenGL.framework */; };
-		5CB5D935172256520067DEF0 /* font_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D92C172256520067DEF0 /* font_manager.cpp */; };
-		5CB5D936172256520067DEF0 /* font_manager.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D92D172256520067DEF0 /* font_manager.h */; };
-		5CB5D937172256520067DEF0 /* font.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D92E172256520067DEF0 /* font.cpp */; };
-		5CB5D938172256520067DEF0 /* font.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D92F172256520067DEF0 /* font.h */; };
-		5CB5D939172256520067DEF0 /* gui_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D930172256520067DEF0 /* gui_event.h */; };
-		5CB5D93A172256520067DEF0 /* gui_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D931172256520067DEF0 /* gui_image.cpp */; };
-		5CB5D93B172256520067DEF0 /* gui_image.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D932172256520067DEF0 /* gui_image.h */; };
-		5CB5D93C172256520067DEF0 /* gui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D933172256520067DEF0 /* gui.cpp */; };
-		5CB5D93D172256520067DEF0 /* gui.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D934172256520067DEF0 /* gui.h */; };
-		5CB5D95A1722565C0067DEF0 /* gui_button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D93F1722565C0067DEF0 /* gui_button.cpp */; };
-		5CB5D95B1722565C0067DEF0 /* gui_button.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9401722565C0067DEF0 /* gui_button.h */; };
-		5CB5D95C1722565C0067DEF0 /* gui_input_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9411722565C0067DEF0 /* gui_input_box.cpp */; };
-		5CB5D95D1722565C0067DEF0 /* gui_input_box.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9421722565C0067DEF0 /* gui_input_box.h */; };
-		5CB5D95E1722565C0067DEF0 /* gui_item_container.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9431722565C0067DEF0 /* gui_item_container.cpp */; };
-		5CB5D95F1722565C0067DEF0 /* gui_item_container.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9441722565C0067DEF0 /* gui_item_container.h */; };
-		5CB5D9601722565C0067DEF0 /* gui_list_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9451722565C0067DEF0 /* gui_list_box.cpp */; };
-		5CB5D9611722565C0067DEF0 /* gui_list_box.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9461722565C0067DEF0 /* gui_list_box.h */; };
-		5CB5D9621722565C0067DEF0 /* gui_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9471722565C0067DEF0 /* gui_object.cpp */; };
-		5CB5D9631722565C0067DEF0 /* gui_object.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9481722565C0067DEF0 /* gui_object.h */; };
-		5CB5D9641722565C0067DEF0 /* gui_pop_up_button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9491722565C0067DEF0 /* gui_pop_up_button.cpp */; };
-		5CB5D9651722565C0067DEF0 /* gui_pop_up_button.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D94A1722565C0067DEF0 /* gui_pop_up_button.h */; };
-		5CB5D9661722565C0067DEF0 /* gui_slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D94B1722565C0067DEF0 /* gui_slider.cpp */; };
-		5CB5D9671722565C0067DEF0 /* gui_slider.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D94C1722565C0067DEF0 /* gui_slider.h */; };
-		5CB5D9681722565C0067DEF0 /* gui_text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D94D1722565C0067DEF0 /* gui_text.cpp */; };
-		5CB5D9691722565C0067DEF0 /* gui_text.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D94E1722565C0067DEF0 /* gui_text.h */; };
-		5CB5D96A1722565C0067DEF0 /* gui_toggle_button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D94F1722565C0067DEF0 /* gui_toggle_button.cpp */; };
-		5CB5D96B1722565C0067DEF0 /* gui_toggle_button.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9501722565C0067DEF0 /* gui_toggle_button.h */; };
-		5CB5D96C1722565C0067DEF0 /* gui_window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9511722565C0067DEF0 /* gui_window.cpp */; };
-		5CB5D96D1722565C0067DEF0 /* gui_window.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9521722565C0067DEF0 /* gui_window.h */; };
-		5CB5D96E1722565C0067DEF0 /* gui_color_scheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9541722565C0067DEF0 /* gui_color_scheme.cpp */; };
-		5CB5D96F1722565C0067DEF0 /* gui_color_scheme.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9551722565C0067DEF0 /* gui_color_scheme.h */; };
-		5CB5D9701722565C0067DEF0 /* gui_surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9561722565C0067DEF0 /* gui_surface.cpp */; };
-		5CB5D9711722565C0067DEF0 /* gui_surface.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9571722565C0067DEF0 /* gui_surface.h */; };
-		5CB5D9721722565C0067DEF0 /* gui_theme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9581722565C0067DEF0 /* gui_theme.cpp */; };
-		5CB5D9731722565C0067DEF0 /* gui_theme.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D9591722565C0067DEF0 /* gui_theme.h */; };
-		5CB5D975172323FB0067DEF0 /* shader.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D974172323FB0067DEF0 /* shader.h */; };
-		5CB5D977172324390067DEF0 /* gl_timer.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D976172324390067DEF0 /* gl_timer.h */; };
-		5CB5D9791723278F0067DEF0 /* shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D9781723278F0067DEF0 /* shader.cpp */; };
-		5CB5D97C1723A80D0067DEF0 /* texman.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CB5D97A1723A80C0067DEF0 /* texman.cpp */; };
-		5CB5D97D1723A80D0067DEF0 /* texman.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CB5D97B1723A80D0067DEF0 /* texman.h */; };
 		5CC97E3E1501677200AB0D95 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CC97E3C1501677200AB0D95 /* SDL2.framework */; };
 		5CC97E3F1501677200AB0D95 /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CC97E3D1501677200AB0D95 /* SDL2_image.framework */; };
-		5CCC96341641B36D005C3DE4 /* oclraster_support.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CCC96301641B36D005C3DE4 /* oclraster_support.cpp */; };
-		5CCC96351641B36D005C3DE4 /* oclraster_support.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CCC96311641B36D005C3DE4 /* oclraster_support.h */; };
-		5CCC96361641B36D005C3DE4 /* oclraster_support_version.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CCC96321641B36D005C3DE4 /* oclraster_support_version.h */; };
-		5CCC96371641B36D005C3DE4 /* global.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CCC96331641B36D005C3DE4 /* global.h */; };
 		5CE84CB416AEFE78005F1C6F /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CD83A3D1540FB4F002E5954 /* libfreetype.6.dylib */; };
-		5CE84CB916AF0264005F1C6F /* gfx2d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CE84CB716AF0264005F1C6F /* gfx2d.cpp */; };
-		5CE84CBA16AF0264005F1C6F /* gfx2d.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CE84CB816AF0264005F1C6F /* gfx2d.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		5C053F8F160CB31400540A7B /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		5C05F790123171DA00D122BF /* liboclraster_supportd.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = liboclraster_supportd.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C14175817EAF73C0062C779 /* oclraster_support.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = oclraster_support.cpp; path = oclraster_support/oclraster_support.cpp; sourceTree = SOURCE_ROOT; };
+		5C14175917EAF73C0062C779 /* oclraster_support.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = oclraster_support.hpp; path = oclraster_support/oclraster_support.hpp; sourceTree = SOURCE_ROOT; };
+		5C14175A17EAF73C0062C779 /* oclraster_support_version.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = oclraster_support_version.hpp; path = oclraster_support/oclraster_support_version.hpp; sourceTree = SOURCE_ROOT; };
+		5C14175B17EAF73C0062C779 /* global.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = global.hpp; path = oclraster_support/global.hpp; sourceTree = SOURCE_ROOT; };
+		5C14176017EAF7530062C779 /* gfx2d.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gfx2d.hpp; sourceTree = "<group>"; };
+		5C14176117EAF7530062C779 /* shader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shader.cpp; sourceTree = "<group>"; };
+		5C14176217EAF7530062C779 /* gfx2d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gfx2d.cpp; sourceTree = "<group>"; };
+		5C14176317EAF7530062C779 /* shader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = shader.hpp; sourceTree = "<group>"; };
+		5C14176417EAF7530062C779 /* texman.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = texman.cpp; sourceTree = "<group>"; };
+		5C14176517EAF7530062C779 /* gl_timer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gl_timer.hpp; sourceTree = "<group>"; };
+		5C14176617EAF7530062C779 /* texman.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = texman.hpp; sourceTree = "<group>"; };
+		5C14176E17EAF75B0062C779 /* font.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = font.cpp; sourceTree = "<group>"; };
+		5C14176F17EAF75B0062C779 /* gui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui.cpp; sourceTree = "<group>"; };
+		5C14177017EAF75B0062C779 /* font.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = font.hpp; sourceTree = "<group>"; };
+		5C14177117EAF75B0062C779 /* font_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = font_manager.cpp; sourceTree = "<group>"; };
+		5C14177217EAF75B0062C779 /* gui.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui.hpp; sourceTree = "<group>"; };
+		5C14177317EAF75B0062C779 /* gui_image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_image.cpp; sourceTree = "<group>"; };
+		5C14177417EAF75B0062C779 /* gui_event.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_event.hpp; sourceTree = "<group>"; };
+		5C14177517EAF75B0062C779 /* font_manager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = font_manager.hpp; sourceTree = "<group>"; };
+		5C14177617EAF75B0062C779 /* gui_image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_image.hpp; sourceTree = "<group>"; };
+		5C14178017EAF7600062C779 /* gui_theme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_theme.cpp; sourceTree = "<group>"; };
+		5C14178117EAF7600062C779 /* gui_theme.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_theme.hpp; sourceTree = "<group>"; };
+		5C14178217EAF7600062C779 /* gui_surface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_surface.cpp; sourceTree = "<group>"; };
+		5C14178317EAF7600062C779 /* gui_color_scheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_color_scheme.cpp; sourceTree = "<group>"; };
+		5C14178417EAF7600062C779 /* gui_surface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_surface.hpp; sourceTree = "<group>"; };
+		5C14178517EAF7600062C779 /* gui_color_scheme.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_color_scheme.hpp; sourceTree = "<group>"; };
+		5C14178C17EAF7660062C779 /* gui_input_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_input_box.cpp; sourceTree = "<group>"; };
+		5C14178D17EAF7660062C779 /* gui_pop_up_button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_pop_up_button.cpp; sourceTree = "<group>"; };
+		5C14178E17EAF7660062C779 /* gui_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_object.cpp; sourceTree = "<group>"; };
+		5C14178F17EAF7660062C779 /* gui_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_object.hpp; sourceTree = "<group>"; };
+		5C14179017EAF7660062C779 /* gui_window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_window.cpp; sourceTree = "<group>"; };
+		5C14179117EAF7660062C779 /* gui_list_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_list_box.cpp; sourceTree = "<group>"; };
+		5C14179217EAF7660062C779 /* gui_slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_slider.cpp; sourceTree = "<group>"; };
+		5C14179317EAF7660062C779 /* gui_item_container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_item_container.cpp; sourceTree = "<group>"; };
+		5C14179417EAF7660062C779 /* gui_toggle_button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_toggle_button.cpp; sourceTree = "<group>"; };
+		5C14179517EAF7660062C779 /* gui_button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_button.cpp; sourceTree = "<group>"; };
+		5C14179617EAF7660062C779 /* gui_input_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_input_box.hpp; sourceTree = "<group>"; };
+		5C14179717EAF7660062C779 /* gui_window.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_window.hpp; sourceTree = "<group>"; };
+		5C14179817EAF7660062C779 /* gui_item_container.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_item_container.hpp; sourceTree = "<group>"; };
+		5C14179917EAF7660062C779 /* gui_slider.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_slider.hpp; sourceTree = "<group>"; };
+		5C14179A17EAF7660062C779 /* gui_toggle_button.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_toggle_button.hpp; sourceTree = "<group>"; };
+		5C14179B17EAF7660062C779 /* gui_pop_up_button.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_pop_up_button.hpp; sourceTree = "<group>"; };
+		5C14179C17EAF7660062C779 /* gui_text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_text.cpp; sourceTree = "<group>"; };
+		5C14179D17EAF7660062C779 /* gui_list_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_list_box.hpp; sourceTree = "<group>"; };
+		5C14179E17EAF7660062C779 /* gui_text.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_text.hpp; sourceTree = "<group>"; };
+		5C14179F17EAF7660062C779 /* gui_button.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gui_button.hpp; sourceTree = "<group>"; };
 		5C2C9274140AA9D900AC808C /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
 		5C61BDA81231D32000FD3451 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		5C61BDA91231D32000FD3451 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -75,46 +121,6 @@
 		5C61BDAB1231D32000FD3451 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
 		5C7CB6451716D38E00C6A3D7 /* gfx2d.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; name = gfx2d.h; path = ../data/kernels/support/gfx2d.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.opencl; };
 		5C7CB6461716D40F00C6A3D7 /* gfx2d_simple.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; name = gfx2d_simple.cl; path = ../data/kernels/support/gfx2d_simple.cl; sourceTree = "<group>"; };
-		5CB5D92C172256520067DEF0 /* font_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = font_manager.cpp; sourceTree = "<group>"; };
-		5CB5D92D172256520067DEF0 /* font_manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = font_manager.h; sourceTree = "<group>"; };
-		5CB5D92E172256520067DEF0 /* font.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = font.cpp; sourceTree = "<group>"; };
-		5CB5D92F172256520067DEF0 /* font.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = font.h; sourceTree = "<group>"; };
-		5CB5D930172256520067DEF0 /* gui_event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_event.h; sourceTree = "<group>"; };
-		5CB5D931172256520067DEF0 /* gui_image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_image.cpp; sourceTree = "<group>"; };
-		5CB5D932172256520067DEF0 /* gui_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_image.h; sourceTree = "<group>"; };
-		5CB5D933172256520067DEF0 /* gui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui.cpp; sourceTree = "<group>"; };
-		5CB5D934172256520067DEF0 /* gui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui.h; sourceTree = "<group>"; };
-		5CB5D93F1722565C0067DEF0 /* gui_button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_button.cpp; sourceTree = "<group>"; };
-		5CB5D9401722565C0067DEF0 /* gui_button.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_button.h; sourceTree = "<group>"; };
-		5CB5D9411722565C0067DEF0 /* gui_input_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_input_box.cpp; sourceTree = "<group>"; };
-		5CB5D9421722565C0067DEF0 /* gui_input_box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_input_box.h; sourceTree = "<group>"; };
-		5CB5D9431722565C0067DEF0 /* gui_item_container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_item_container.cpp; sourceTree = "<group>"; };
-		5CB5D9441722565C0067DEF0 /* gui_item_container.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_item_container.h; sourceTree = "<group>"; };
-		5CB5D9451722565C0067DEF0 /* gui_list_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_list_box.cpp; sourceTree = "<group>"; };
-		5CB5D9461722565C0067DEF0 /* gui_list_box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_list_box.h; sourceTree = "<group>"; };
-		5CB5D9471722565C0067DEF0 /* gui_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_object.cpp; sourceTree = "<group>"; };
-		5CB5D9481722565C0067DEF0 /* gui_object.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_object.h; sourceTree = "<group>"; };
-		5CB5D9491722565C0067DEF0 /* gui_pop_up_button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_pop_up_button.cpp; sourceTree = "<group>"; };
-		5CB5D94A1722565C0067DEF0 /* gui_pop_up_button.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_pop_up_button.h; sourceTree = "<group>"; };
-		5CB5D94B1722565C0067DEF0 /* gui_slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_slider.cpp; sourceTree = "<group>"; };
-		5CB5D94C1722565C0067DEF0 /* gui_slider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_slider.h; sourceTree = "<group>"; };
-		5CB5D94D1722565C0067DEF0 /* gui_text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_text.cpp; sourceTree = "<group>"; };
-		5CB5D94E1722565C0067DEF0 /* gui_text.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_text.h; sourceTree = "<group>"; };
-		5CB5D94F1722565C0067DEF0 /* gui_toggle_button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_toggle_button.cpp; sourceTree = "<group>"; };
-		5CB5D9501722565C0067DEF0 /* gui_toggle_button.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_toggle_button.h; sourceTree = "<group>"; };
-		5CB5D9511722565C0067DEF0 /* gui_window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_window.cpp; sourceTree = "<group>"; };
-		5CB5D9521722565C0067DEF0 /* gui_window.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_window.h; sourceTree = "<group>"; };
-		5CB5D9541722565C0067DEF0 /* gui_color_scheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_color_scheme.cpp; sourceTree = "<group>"; };
-		5CB5D9551722565C0067DEF0 /* gui_color_scheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_color_scheme.h; sourceTree = "<group>"; };
-		5CB5D9561722565C0067DEF0 /* gui_surface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_surface.cpp; sourceTree = "<group>"; };
-		5CB5D9571722565C0067DEF0 /* gui_surface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_surface.h; sourceTree = "<group>"; };
-		5CB5D9581722565C0067DEF0 /* gui_theme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui_theme.cpp; sourceTree = "<group>"; };
-		5CB5D9591722565C0067DEF0 /* gui_theme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui_theme.h; sourceTree = "<group>"; };
-		5CB5D974172323FB0067DEF0 /* shader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader.h; sourceTree = "<group>"; };
-		5CB5D976172324390067DEF0 /* gl_timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gl_timer.h; sourceTree = "<group>"; };
-		5CB5D9781723278F0067DEF0 /* shader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shader.cpp; sourceTree = "<group>"; };
-		5CB5D97A1723A80C0067DEF0 /* texman.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = texman.cpp; sourceTree = "<group>"; };
-		5CB5D97B1723A80D0067DEF0 /* texman.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = texman.h; sourceTree = "<group>"; };
 		5CB5D97E1723AFC40067DEF0 /* gfx2d_blend.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; name = gfx2d_blend.cl; path = ../data/kernels/support/gfx2d_blend.cl; sourceTree = "<group>"; };
 		5CBCBF52158C139E007A661C /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		5CBD7DAA15FC5B1400FB3954 /* CUDA.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CUDA.framework; path = /Library/Frameworks/CUDA.framework; sourceTree = "<group>"; };
@@ -123,13 +129,7 @@
 		5CC689051716D276006BD36B /* gfx2d_gradient.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; name = gfx2d_gradient.cl; path = ../data/kernels/support/gfx2d_gradient.cl; sourceTree = "<group>"; };
 		5CC97E3C1501677200AB0D95 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = Library/Frameworks/SDL2.framework; sourceTree = SDKROOT; };
 		5CC97E3D1501677200AB0D95 /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = Library/Frameworks/SDL2_image.framework; sourceTree = SDKROOT; };
-		5CCC96301641B36D005C3DE4 /* oclraster_support.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = oclraster_support.cpp; path = oclraster_support/oclraster_support.cpp; sourceTree = SOURCE_ROOT; };
-		5CCC96311641B36D005C3DE4 /* oclraster_support.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oclraster_support.h; path = oclraster_support/oclraster_support.h; sourceTree = SOURCE_ROOT; };
-		5CCC96321641B36D005C3DE4 /* oclraster_support_version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oclraster_support_version.h; path = oclraster_support/oclraster_support_version.h; sourceTree = SOURCE_ROOT; };
-		5CCC96331641B36D005C3DE4 /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = global.h; path = oclraster_support/global.h; sourceTree = SOURCE_ROOT; };
 		5CD83A3D1540FB4F002E5954 /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.6.dylib; path = /opt/X11/lib/libfreetype.6.dylib; sourceTree = "<absolute>"; };
-		5CE84CB716AF0264005F1C6F /* gfx2d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gfx2d.cpp; sourceTree = "<group>"; };
-		5CE84CB816AF0264005F1C6F /* gfx2d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gfx2d.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,10 +166,10 @@
 		5C05F789123171DA00D122BF /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				5CCC96301641B36D005C3DE4 /* oclraster_support.cpp */,
-				5CCC96311641B36D005C3DE4 /* oclraster_support.h */,
-				5CCC96321641B36D005C3DE4 /* oclraster_support_version.h */,
-				5CCC96331641B36D005C3DE4 /* global.h */,
+				5C14175817EAF73C0062C779 /* oclraster_support.cpp */,
+				5C14175917EAF73C0062C779 /* oclraster_support.hpp */,
+				5C14175A17EAF73C0062C779 /* oclraster_support_version.hpp */,
+				5C14175B17EAF73C0062C779 /* global.hpp */,
 				5CE84CB516AF0264005F1C6F /* gui */,
 				5CE84CB616AF0264005F1C6F /* rendering */,
 			);
@@ -205,26 +205,26 @@
 		5CB5D93E1722565C0067DEF0 /* objects */ = {
 			isa = PBXGroup;
 			children = (
-				5CB5D93F1722565C0067DEF0 /* gui_button.cpp */,
-				5CB5D9401722565C0067DEF0 /* gui_button.h */,
-				5CB5D9411722565C0067DEF0 /* gui_input_box.cpp */,
-				5CB5D9421722565C0067DEF0 /* gui_input_box.h */,
-				5CB5D9431722565C0067DEF0 /* gui_item_container.cpp */,
-				5CB5D9441722565C0067DEF0 /* gui_item_container.h */,
-				5CB5D9451722565C0067DEF0 /* gui_list_box.cpp */,
-				5CB5D9461722565C0067DEF0 /* gui_list_box.h */,
-				5CB5D9471722565C0067DEF0 /* gui_object.cpp */,
-				5CB5D9481722565C0067DEF0 /* gui_object.h */,
-				5CB5D9491722565C0067DEF0 /* gui_pop_up_button.cpp */,
-				5CB5D94A1722565C0067DEF0 /* gui_pop_up_button.h */,
-				5CB5D94B1722565C0067DEF0 /* gui_slider.cpp */,
-				5CB5D94C1722565C0067DEF0 /* gui_slider.h */,
-				5CB5D94D1722565C0067DEF0 /* gui_text.cpp */,
-				5CB5D94E1722565C0067DEF0 /* gui_text.h */,
-				5CB5D94F1722565C0067DEF0 /* gui_toggle_button.cpp */,
-				5CB5D9501722565C0067DEF0 /* gui_toggle_button.h */,
-				5CB5D9511722565C0067DEF0 /* gui_window.cpp */,
-				5CB5D9521722565C0067DEF0 /* gui_window.h */,
+				5C14178C17EAF7660062C779 /* gui_input_box.cpp */,
+				5C14178D17EAF7660062C779 /* gui_pop_up_button.cpp */,
+				5C14178E17EAF7660062C779 /* gui_object.cpp */,
+				5C14178F17EAF7660062C779 /* gui_object.hpp */,
+				5C14179017EAF7660062C779 /* gui_window.cpp */,
+				5C14179117EAF7660062C779 /* gui_list_box.cpp */,
+				5C14179217EAF7660062C779 /* gui_slider.cpp */,
+				5C14179317EAF7660062C779 /* gui_item_container.cpp */,
+				5C14179417EAF7660062C779 /* gui_toggle_button.cpp */,
+				5C14179517EAF7660062C779 /* gui_button.cpp */,
+				5C14179617EAF7660062C779 /* gui_input_box.hpp */,
+				5C14179717EAF7660062C779 /* gui_window.hpp */,
+				5C14179817EAF7660062C779 /* gui_item_container.hpp */,
+				5C14179917EAF7660062C779 /* gui_slider.hpp */,
+				5C14179A17EAF7660062C779 /* gui_toggle_button.hpp */,
+				5C14179B17EAF7660062C779 /* gui_pop_up_button.hpp */,
+				5C14179C17EAF7660062C779 /* gui_text.cpp */,
+				5C14179D17EAF7660062C779 /* gui_list_box.hpp */,
+				5C14179E17EAF7660062C779 /* gui_text.hpp */,
+				5C14179F17EAF7660062C779 /* gui_button.hpp */,
 			);
 			path = objects;
 			sourceTree = "<group>";
@@ -232,12 +232,12 @@
 		5CB5D9531722565C0067DEF0 /* style */ = {
 			isa = PBXGroup;
 			children = (
-				5CB5D9541722565C0067DEF0 /* gui_color_scheme.cpp */,
-				5CB5D9551722565C0067DEF0 /* gui_color_scheme.h */,
-				5CB5D9561722565C0067DEF0 /* gui_surface.cpp */,
-				5CB5D9571722565C0067DEF0 /* gui_surface.h */,
-				5CB5D9581722565C0067DEF0 /* gui_theme.cpp */,
-				5CB5D9591722565C0067DEF0 /* gui_theme.h */,
+				5C14178017EAF7600062C779 /* gui_theme.cpp */,
+				5C14178117EAF7600062C779 /* gui_theme.hpp */,
+				5C14178217EAF7600062C779 /* gui_surface.cpp */,
+				5C14178317EAF7600062C779 /* gui_color_scheme.cpp */,
+				5C14178417EAF7600062C779 /* gui_surface.hpp */,
+				5C14178517EAF7600062C779 /* gui_color_scheme.hpp */,
 			);
 			path = style;
 			sourceTree = "<group>";
@@ -259,15 +259,15 @@
 		5CE84CB516AF0264005F1C6F /* gui */ = {
 			isa = PBXGroup;
 			children = (
-				5CB5D92C172256520067DEF0 /* font_manager.cpp */,
-				5CB5D92D172256520067DEF0 /* font_manager.h */,
-				5CB5D92E172256520067DEF0 /* font.cpp */,
-				5CB5D92F172256520067DEF0 /* font.h */,
-				5CB5D930172256520067DEF0 /* gui_event.h */,
-				5CB5D931172256520067DEF0 /* gui_image.cpp */,
-				5CB5D932172256520067DEF0 /* gui_image.h */,
-				5CB5D933172256520067DEF0 /* gui.cpp */,
-				5CB5D934172256520067DEF0 /* gui.h */,
+				5C14176E17EAF75B0062C779 /* font.cpp */,
+				5C14176F17EAF75B0062C779 /* gui.cpp */,
+				5C14177017EAF75B0062C779 /* font.hpp */,
+				5C14177117EAF75B0062C779 /* font_manager.cpp */,
+				5C14177217EAF75B0062C779 /* gui.hpp */,
+				5C14177317EAF75B0062C779 /* gui_image.cpp */,
+				5C14177417EAF75B0062C779 /* gui_event.hpp */,
+				5C14177517EAF75B0062C779 /* font_manager.hpp */,
+				5C14177617EAF75B0062C779 /* gui_image.hpp */,
 				5CB5D93E1722565C0067DEF0 /* objects */,
 				5CB5D9531722565C0067DEF0 /* style */,
 			);
@@ -277,13 +277,13 @@
 		5CE84CB616AF0264005F1C6F /* rendering */ = {
 			isa = PBXGroup;
 			children = (
-				5CE84CB716AF0264005F1C6F /* gfx2d.cpp */,
-				5CE84CB816AF0264005F1C6F /* gfx2d.h */,
-				5CB5D9781723278F0067DEF0 /* shader.cpp */,
-				5CB5D974172323FB0067DEF0 /* shader.h */,
-				5CB5D976172324390067DEF0 /* gl_timer.h */,
-				5CB5D97A1723A80C0067DEF0 /* texman.cpp */,
-				5CB5D97B1723A80D0067DEF0 /* texman.h */,
+				5C14176017EAF7530062C779 /* gfx2d.hpp */,
+				5C14176117EAF7530062C779 /* shader.cpp */,
+				5C14176217EAF7530062C779 /* gfx2d.cpp */,
+				5C14176317EAF7530062C779 /* shader.hpp */,
+				5C14176417EAF7530062C779 /* texman.cpp */,
+				5C14176517EAF7530062C779 /* gl_timer.hpp */,
+				5C14176617EAF7530062C779 /* texman.hpp */,
 			);
 			path = rendering;
 			sourceTree = SOURCE_ROOT;
@@ -295,31 +295,31 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5CCC96351641B36D005C3DE4 /* oclraster_support.h in Headers */,
-				5CCC96361641B36D005C3DE4 /* oclraster_support_version.h in Headers */,
-				5CCC96371641B36D005C3DE4 /* global.h in Headers */,
-				5CE84CBA16AF0264005F1C6F /* gfx2d.h in Headers */,
-				5CB5D936172256520067DEF0 /* font_manager.h in Headers */,
-				5CB5D938172256520067DEF0 /* font.h in Headers */,
-				5CB5D939172256520067DEF0 /* gui_event.h in Headers */,
-				5CB5D93B172256520067DEF0 /* gui_image.h in Headers */,
-				5CB5D93D172256520067DEF0 /* gui.h in Headers */,
-				5CB5D95B1722565C0067DEF0 /* gui_button.h in Headers */,
-				5CB5D95D1722565C0067DEF0 /* gui_input_box.h in Headers */,
-				5CB5D95F1722565C0067DEF0 /* gui_item_container.h in Headers */,
-				5CB5D9611722565C0067DEF0 /* gui_list_box.h in Headers */,
-				5CB5D9631722565C0067DEF0 /* gui_object.h in Headers */,
-				5CB5D9651722565C0067DEF0 /* gui_pop_up_button.h in Headers */,
-				5CB5D9671722565C0067DEF0 /* gui_slider.h in Headers */,
-				5CB5D9691722565C0067DEF0 /* gui_text.h in Headers */,
-				5CB5D96B1722565C0067DEF0 /* gui_toggle_button.h in Headers */,
-				5CB5D96D1722565C0067DEF0 /* gui_window.h in Headers */,
-				5CB5D96F1722565C0067DEF0 /* gui_color_scheme.h in Headers */,
-				5CB5D9711722565C0067DEF0 /* gui_surface.h in Headers */,
-				5CB5D9731722565C0067DEF0 /* gui_theme.h in Headers */,
-				5CB5D975172323FB0067DEF0 /* shader.h in Headers */,
-				5CB5D977172324390067DEF0 /* gl_timer.h in Headers */,
-				5CB5D97D1723A80D0067DEF0 /* texman.h in Headers */,
+				5C14176A17EAF7530062C779 /* shader.hpp in Headers */,
+				5C14178717EAF7600062C779 /* gui_theme.hpp in Headers */,
+				5C14175D17EAF73C0062C779 /* oclraster_support.hpp in Headers */,
+				5C14175F17EAF73C0062C779 /* global.hpp in Headers */,
+				5C1417B117EAF7660062C779 /* gui_list_box.hpp in Headers */,
+				5C14176C17EAF7530062C779 /* gl_timer.hpp in Headers */,
+				5C14177E17EAF75B0062C779 /* font_manager.hpp in Headers */,
+				5C14178A17EAF7600062C779 /* gui_surface.hpp in Headers */,
+				5C1417AE17EAF7660062C779 /* gui_toggle_button.hpp in Headers */,
+				5C1417AD17EAF7660062C779 /* gui_slider.hpp in Headers */,
+				5C14176717EAF7530062C779 /* gfx2d.hpp in Headers */,
+				5C1417AC17EAF7660062C779 /* gui_item_container.hpp in Headers */,
+				5C1417AF17EAF7660062C779 /* gui_pop_up_button.hpp in Headers */,
+				5C1417B317EAF7660062C779 /* gui_button.hpp in Headers */,
+				5C14178B17EAF7600062C779 /* gui_color_scheme.hpp in Headers */,
+				5C14177F17EAF75B0062C779 /* gui_image.hpp in Headers */,
+				5C14177917EAF75B0062C779 /* font.hpp in Headers */,
+				5C1417AA17EAF7660062C779 /* gui_input_box.hpp in Headers */,
+				5C14177B17EAF75B0062C779 /* gui.hpp in Headers */,
+				5C14177D17EAF75B0062C779 /* gui_event.hpp in Headers */,
+				5C1417B217EAF7660062C779 /* gui_text.hpp in Headers */,
+				5C14176D17EAF7530062C779 /* texman.hpp in Headers */,
+				5C14175E17EAF73C0062C779 /* oclraster_support_version.hpp in Headers */,
+				5C1417AB17EAF7660062C779 /* gui_window.hpp in Headers */,
+				5C1417A317EAF7660062C779 /* gui_object.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,27 +390,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5CCC96341641B36D005C3DE4 /* oclraster_support.cpp in Sources */,
-				5CE84CB916AF0264005F1C6F /* gfx2d.cpp in Sources */,
-				5CB5D935172256520067DEF0 /* font_manager.cpp in Sources */,
-				5CB5D937172256520067DEF0 /* font.cpp in Sources */,
-				5CB5D93A172256520067DEF0 /* gui_image.cpp in Sources */,
-				5CB5D93C172256520067DEF0 /* gui.cpp in Sources */,
-				5CB5D95A1722565C0067DEF0 /* gui_button.cpp in Sources */,
-				5CB5D95C1722565C0067DEF0 /* gui_input_box.cpp in Sources */,
-				5CB5D95E1722565C0067DEF0 /* gui_item_container.cpp in Sources */,
-				5CB5D9601722565C0067DEF0 /* gui_list_box.cpp in Sources */,
-				5CB5D9621722565C0067DEF0 /* gui_object.cpp in Sources */,
-				5CB5D9641722565C0067DEF0 /* gui_pop_up_button.cpp in Sources */,
-				5CB5D9661722565C0067DEF0 /* gui_slider.cpp in Sources */,
-				5CB5D9681722565C0067DEF0 /* gui_text.cpp in Sources */,
-				5CB5D96A1722565C0067DEF0 /* gui_toggle_button.cpp in Sources */,
-				5CB5D96C1722565C0067DEF0 /* gui_window.cpp in Sources */,
-				5CB5D96E1722565C0067DEF0 /* gui_color_scheme.cpp in Sources */,
-				5CB5D9701722565C0067DEF0 /* gui_surface.cpp in Sources */,
-				5CB5D9721722565C0067DEF0 /* gui_theme.cpp in Sources */,
-				5CB5D9791723278F0067DEF0 /* shader.cpp in Sources */,
-				5CB5D97C1723A80D0067DEF0 /* texman.cpp in Sources */,
+				5C14176B17EAF7530062C779 /* texman.cpp in Sources */,
+				5C1417A817EAF7660062C779 /* gui_toggle_button.cpp in Sources */,
+				5C14176817EAF7530062C779 /* shader.cpp in Sources */,
+				5C1417A917EAF7660062C779 /* gui_button.cpp in Sources */,
+				5C14176917EAF7530062C779 /* gfx2d.cpp in Sources */,
+				5C1417A617EAF7660062C779 /* gui_slider.cpp in Sources */,
+				5C1417A717EAF7660062C779 /* gui_item_container.cpp in Sources */,
+				5C14178817EAF7600062C779 /* gui_surface.cpp in Sources */,
+				5C14177817EAF75B0062C779 /* gui.cpp in Sources */,
+				5C1417A117EAF7660062C779 /* gui_pop_up_button.cpp in Sources */,
+				5C1417A417EAF7660062C779 /* gui_window.cpp in Sources */,
+				5C1417A217EAF7660062C779 /* gui_object.cpp in Sources */,
+				5C14177717EAF75B0062C779 /* font.cpp in Sources */,
+				5C1417A517EAF7660062C779 /* gui_list_box.cpp in Sources */,
+				5C14177C17EAF75B0062C779 /* gui_image.cpp in Sources */,
+				5C1417B017EAF7660062C779 /* gui_text.cpp in Sources */,
+				5C14175C17EAF73C0062C779 /* oclraster_support.cpp in Sources */,
+				5C14178617EAF7600062C779 /* gui_theme.cpp in Sources */,
+				5C14177A17EAF75B0062C779 /* font_manager.cpp in Sources */,
+				5C1417A017EAF7660062C779 /* gui_input_box.cpp in Sources */,
+				5C14178917EAF7600062C779 /* gui_color_scheme.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -420,6 +420,7 @@
 		5C05F79A123171DA00D122BF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -427,9 +428,9 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CONFIGURATION_BUILD_DIR = ../bin;
-				CURRENT_PROJECT_VERSION = 0.0.5;
-				DYLIB_COMPATIBILITY_VERSION = 0.0.5;
-				DYLIB_CURRENT_VERSION = 0.0.5;
+				CURRENT_PROJECT_VERSION = 0.0.6;
+				DYLIB_COMPATIBILITY_VERSION = 0.0.6;
+				DYLIB_CURRENT_VERSION = 0.0.6;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
 				GCC_ENABLE_SSE41_EXTENSIONS = YES;
@@ -451,8 +452,13 @@
 				HEADER_SEARCH_PATHS = .;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lfloord",
+					"-loclrasterd",
+				);
 				SDKROOT = macosx;
 				STRINGS_FILE_OUTPUT_ENCODING = "UTF-8";
+				VALID_ARCHS = x86_64;
 				WARNING_CFLAGS = (
 					"-Weverything",
 					"-Wno-c++98-compat",
@@ -493,6 +499,7 @@
 		5C05F79B123171DA00D122BF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -500,9 +507,9 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CONFIGURATION_BUILD_DIR = ../bin;
-				CURRENT_PROJECT_VERSION = 0.0.5;
-				DYLIB_COMPATIBILITY_VERSION = 0.0.5;
-				DYLIB_CURRENT_VERSION = 0.0.5;
+				CURRENT_PROJECT_VERSION = 0.0.6;
+				DYLIB_COMPATIBILITY_VERSION = 0.0.6;
+				DYLIB_CURRENT_VERSION = 0.0.6;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
 				GCC_ENABLE_SSE41_EXTENSIONS = YES;
@@ -520,8 +527,13 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = .;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_LDFLAGS = (
+					"-lfloor",
+					"-loclraster",
+				);
 				SDKROOT = macosx;
 				STRINGS_FILE_OUTPUT_ENCODING = "UTF-8";
+				VALID_ARCHS = x86_64;
 				WARNING_CFLAGS = (
 					"-Weverything",
 					"-Wno-c++98-compat",
@@ -562,7 +574,7 @@
 		5C05F79D123171DA00D122BF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
@@ -586,6 +598,7 @@
 					/usr/include,
 					/usr/local/include,
 					/usr/local/include/oclraster,
+					/usr/local/include/floor,
 				);
 				INSTALL_PATH = "@executable_path/../Resources";
 				LD_DYLIB_INSTALL_NAME = "@executable_path/../Resources/$(EXECUTABLE_PATH)";
@@ -593,6 +606,8 @@
 					"$(inherited)",
 					/usr/X11/lib,
 					/opt/X11/lib,
+					/usr/local/lib,
+					/usr/lib,
 				);
 				LLVM_LTO = NO;
 				ONLY_ACTIVE_ARCH = YES;
@@ -609,7 +624,6 @@
 					"-fno-elide-type",
 					"-fdiagnostics-show-template-tree",
 				);
-				OTHER_LDFLAGS = "-loclrasterd";
 				PRODUCT_NAME = liboclraster_supportd;
 				SDKROOT = macosx;
 			};
@@ -618,7 +632,7 @@
 		5C05F79E123171DA00D122BF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
@@ -641,6 +655,7 @@
 					/usr/include,
 					/usr/local/include,
 					/usr/local/include/oclraster,
+					/usr/local/include/floor,
 				);
 				INSTALL_PATH = "@executable_path/../Resources";
 				LD_DYLIB_INSTALL_NAME = "@executable_path/../Resources/$(EXECUTABLE_PATH)";
@@ -648,6 +663,8 @@
 					"$(inherited)",
 					/usr/X11/lib,
 					/opt/X11/lib,
+					/usr/local/lib,
+					/usr/lib,
 				);
 				LLVM_LTO = NO;
 				ONLY_ACTIVE_ARCH = YES;
@@ -664,7 +681,6 @@
 					"-fno-elide-type",
 					"-fdiagnostics-show-template-tree",
 				);
-				OTHER_LDFLAGS = "-loclraster";
 				PRODUCT_NAME = liboclraster_support;
 				SDKROOT = macosx;
 			};

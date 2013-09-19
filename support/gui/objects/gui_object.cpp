@@ -16,14 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_object.h"
-#include "gui/gui.h"
-#include "threading/task.h"
-#include "font_manager.h"
-#include "oclraster_support.h"
+#include "gui_object.hpp"
+#include "gui/gui.hpp"
+#include "threading/task.hpp"
+#include "font_manager.hpp"
+#include "oclraster_support.hpp"
 
 gui_object::gui_object(const float2& size_, const float2& position_) :
-ui(oclraster_support::get_gui()), theme(ui->get_theme()), evt(oclraster::get_event()), fm(ui->get_font_manager()), fnt(fm->get_font("SYSTEM_SANS_SERIF")), size(size_), position(position_) {
+ui(oclraster_support::get_gui()), theme(ui->get_theme()), evt(floor::get_event()), fm(ui->get_font_manager()), fnt(fm->get_font("SYSTEM_SANS_SERIF")), size(size_), position(position_) {
 	compute_abs_values();
 }
 
@@ -88,7 +88,7 @@ bool gui_object::is_active() const {
 void gui_object::compute_abs_values() {
 	const float2 parent_size(parent != nullptr ?
 							 parent->get_size_abs() :
-							 float2(oclraster::get_width(), oclraster::get_height()));
+							 float2(floor::get_width(), floor::get_height()));
 	position_abs = position * parent_size;
 	size_abs = size * parent_size;
 	rectangle_abs.set(position_abs.x, position_abs.y,
@@ -162,11 +162,11 @@ const set<gui_object*>& gui_object::get_children() const {
 	return children;
 }
 
-bool gui_object::handle_mouse_event(const EVENT_TYPE& type oclr_unused, const shared_ptr<event_object>& obj oclr_unused, const ipnt& point oclr_unused) {
+bool gui_object::handle_mouse_event(const EVENT_TYPE& type floor_unused, const shared_ptr<event_object>& obj floor_unused, const ipnt& point floor_unused) {
 	return false;
 }
 
-bool gui_object::handle_key_event(const EVENT_TYPE& type oclr_unused, const shared_ptr<event_object>& obj oclr_unused) {
+bool gui_object::handle_key_event(const EVENT_TYPE& type floor_unused, const shared_ptr<event_object>& obj floor_unused) {
 	return false;
 }
 
@@ -229,6 +229,6 @@ void gui_object::remove_handlers() {
 	unlock();
 }
 
-bool gui_object::should_handle_mouse_event(const EVENT_TYPE& type oclr_unused, const ipnt& point) const {
+bool gui_object::should_handle_mouse_event(const EVENT_TYPE& type floor_unused, const ipnt& point) const {
 	return gfx2d::is_pnt_in_rectangle(get_rectangle_abs(), point);
 }

@@ -16,18 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SUPPORT_GFX2D_H__
-#define __OCLRASTER_SUPPORT_GFX2D_H__
+#ifndef __OCLRASTER_SUPPORT_GFX2D_HPP__
+#define __OCLRASTER_SUPPORT_GFX2D_HPP__
 
-#include <oclraster_support/global.h>
-#include <oclraster/oclraster.h>
-#include <oclraster/core/core.h>
-#include <oclraster/core/event.h>
-#include <oclraster/cl/opencl.h>
-#include <oclraster/pipeline/pipeline.h>
-#include <oclraster/program/transform_program.h>
-#include <oclraster/program/rasterization_program.h>
-#include "rendering/shader.h"
+#include <oclraster_support/global.hpp>
+#include <oclraster/oclraster.hpp>
+#include <floor/core/core.hpp>
+#include <floor/core/event.hpp>
+#include <floor/cl/opencl.hpp>
+#include <oclraster/pipeline/pipeline.hpp>
+#include <oclraster/program/transform_program.hpp>
+#include <oclraster/program/rasterization_program.hpp>
+#include "rendering/shader.hpp"
 
 #define __GFX2D_POINT_COMPUTE_FUNCS(F, DS_FUNC, DS_NAME) \
 F(gfx2d::point_compute_point, point, DS_FUNC, DS_NAME) \
@@ -51,7 +51,7 @@ template<typename... Args> static void draw_ ##pc_name ##_ ##ds_name(const Args&
 	draw<pc_func<ds_func>>(args...); \
 }
 
-class OCLRASTER_API gfx2d {
+class FLOOR_API gfx2d {
 public:
 	//
 	gfx2d() = delete;
@@ -550,8 +550,8 @@ struct gfx2d::draw_style_texture {
 protected:
 	static void draw(const primitive_properties& props,
 					 const image& texture,
-					 const bool is_tex_array oclr_unused,
-					 const float layer oclr_unused,
+					 const bool is_tex_array floor_unused,
+					 const float layer floor_unused,
 					 const coord bottom_left,
 					 const coord top_right,
 					 const float draw_depth,
@@ -572,8 +572,8 @@ protected:
 	}
 	static void draw(const primitive_properties& props,
 					 const image& texture,
-					 const bool is_tex_array oclr_unused,
-					 const float layer oclr_unused,
+					 const bool is_tex_array floor_unused,
+					 const float layer floor_unused,
 					 const float4 mul_color,
 					 const float4 add_color,
 					 const coord bottom_left,
@@ -597,8 +597,8 @@ protected:
 	}
 	static void draw(const primitive_properties& props,
 					 const image& texture,
-					 const bool is_tex_array oclr_unused,
-					 const float layer oclr_unused,
+					 const bool is_tex_array floor_unused,
+					 const float layer floor_unused,
 					 const float4 mul_color,
 					 const float4 add_color,
 					 const float4& gradient_stops,

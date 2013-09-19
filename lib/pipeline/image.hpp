@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_IMAGE_H__
-#define __OCLRASTER_IMAGE_H__
+#ifndef __OCLRASTER_IMAGE_HPP__
+#define __OCLRASTER_IMAGE_HPP__
 
 #include "cl/opencl.hpp"
-#include "pipeline/image_types.h"
+#include "pipeline/image_types.hpp"
 
 class image {
 public:

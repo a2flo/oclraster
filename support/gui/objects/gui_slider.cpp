@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gui_slider.h"
-#include "gui.h"
+#include "gui_slider.hpp"
+#include "gui.hpp"
 
 gui_slider::gui_slider(const float2& size_, const float2& position_) :
 gui_object(size_, position_) {
@@ -45,7 +45,7 @@ void gui_slider::compute_abs_values() {
 	slider_width = float(rectangle_abs.x2 - rectangle_abs.x1) - (knob_offset * 2.0f);
 }
 
-bool gui_slider::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj oclr_unused, const ipnt& point) {
+bool gui_slider::handle_mouse_event(const EVENT_TYPE& type, const shared_ptr<event_object>& obj floor_unused, const ipnt& point) {
 	if(!state.visible || !state.enabled) return false;
 	switch(type) {
 		case EVENT_TYPE::MOUSE_LEFT_DOWN:
