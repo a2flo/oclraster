@@ -1,26 +1,26 @@
 // NOTE: this is an automatically generated file!
 // If you need to change anything in here, please have a look at etc/cuda_support/cuda_support.sh
-// don't include this header on it's own, but rather include oclr_cuda_base.h
+// don't include this header on it's own, but rather include floor_cuda_base.hpp
 
-#ifndef __OCLRASTER_CUDA_CONVERSION_HPP__
-#define __OCLRASTER_CUDA_CONVERSION_HPP__
+#ifndef __FLOOR_CUDA_CONVERSION_HPP__
+#define __FLOOR_CUDA_CONVERSION_HPP__
 
-template<class dst_type, size_t saturated_convert, class src_type> OCLRASTER_FUNC dst_type convert_cuda_type(const src_type val) { /* fail here if not specialized */ }
+template<class dst_type, size_t saturated_convert, class src_type> FLOOR_FUNC dst_type convert_cuda_type(const src_type val) { /* fail here if not specialized */ }
 
-template<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> OCLRASTER_FUNC dst_typen convert_cuda_type2(const src_typen val) {
+template<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> FLOOR_FUNC dst_typen convert_cuda_type2(const src_typen val) {
 	dst_typen dst;
 	dst.x = convert_cuda_type<dst_type, saturated_convert, src_type>(val.x);
 	dst.y = convert_cuda_type<dst_type, saturated_convert, src_type>(val.y);
 	return dst;
 }
-template<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> OCLRASTER_FUNC dst_typen convert_cuda_type3(const src_typen val) {
+template<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> FLOOR_FUNC dst_typen convert_cuda_type3(const src_typen val) {
 	dst_typen dst;
 	dst.x = convert_cuda_type<dst_type, saturated_convert, src_type>(val.x);
 	dst.y = convert_cuda_type<dst_type, saturated_convert, src_type>(val.y);
 	dst.z = convert_cuda_type<dst_type, saturated_convert, src_type>(val.z);
 	return dst;
 }
-template<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> OCLRASTER_FUNC dst_typen convert_cuda_type4(const src_typen val) {
+template<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> FLOOR_FUNC dst_typen convert_cuda_type4(const src_typen val) {
 	dst_typen dst;
 	dst.x = convert_cuda_type<dst_type, saturated_convert, src_type>(val.x);
 	dst.y = convert_cuda_type<dst_type, saturated_convert, src_type>(val.y);
@@ -34,206 +34,206 @@ dst_type as_typen(const src_type src) {
 	return *(dst_type*)&src;
 };
 
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, uchar>(const uchar val) { return val; }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, uchar>(const uchar val) { return val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, uchar>(const uchar val) { return (ushort)val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, uchar>(const uchar val) { return (ushort)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, uchar>(const uchar val) { return (uint)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, uchar>(const uchar val) { return (uint)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, uchar>(const uchar val) { return (ulong)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, uchar>(const uchar val) { return (ulong)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, uchar>(const uchar val) { return (char)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, uchar>(const uchar val) { return (char)val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, uchar>(const uchar val) { return (short)val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, uchar>(const uchar val) { return (short)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, uchar>(const uchar val) { return (int)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, uchar>(const uchar val) { return (int)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, uchar>(const uchar val) { return (long)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, uchar>(const uchar val) { return (long)val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, uchar>(const uchar val) { return (float)__uint2float_rn((uint)val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, uchar>(const uchar val) { return (float)__uint2float_rn((uint)val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, uchar>(const uchar val) { return (double)__uint2double_rn((uint)val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, uchar>(const uchar val) { return (double)__uint2double_rn((uint)val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, ushort>(const ushort val) { return (uchar)val; }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, ushort>(const ushort val) { return (uchar)clamp(val, 0u, 0xFFu); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, ushort>(const ushort val) { return val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, ushort>(const ushort val) { return val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, ushort>(const ushort val) { return (uint)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, ushort>(const ushort val) { return (uint)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, ushort>(const ushort val) { return (ulong)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, ushort>(const ushort val) { return (ulong)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, ushort>(const ushort val) { return (char)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, ushort>(const ushort val) { return (char)clamp(val, 0xFF, 0x7F); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, ushort>(const ushort val) { return (short)val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, ushort>(const ushort val) { return (short)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, ushort>(const ushort val) { return (int)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, ushort>(const ushort val) { return (int)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, ushort>(const ushort val) { return (long)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, ushort>(const ushort val) { return (long)val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, ushort>(const ushort val) { return (float)__uint2float_rn((uint)val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, ushort>(const ushort val) { return (float)__uint2float_rn((uint)val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, ushort>(const ushort val) { return (double)__uint2double_rn((uint)val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, ushort>(const ushort val) { return (double)__uint2double_rn((uint)val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, uint>(const uint val) { return (uchar)val; }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, uint>(const uint val) { return (uchar)clamp(val, 0u, 0xFFu); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, uint>(const uint val) { return (ushort)val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, uint>(const uint val) { return (ushort)clamp(val, 0u, 0xFFFFu); }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, uint>(const uint val) { return val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, uint>(const uint val) { return val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, uint>(const uint val) { return (ulong)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, uint>(const uint val) { return (ulong)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, uint>(const uint val) { return (char)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, uint>(const uint val) { return (char)clamp(val, 0xFF, 0x7F); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, uint>(const uint val) { return (short)val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, uint>(const uint val) { return (short)clamp(val, 0xFFFF, 0x7FFF); }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, uint>(const uint val) { return (int)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, uint>(const uint val) { return (int)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, uint>(const uint val) { return (long)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, uint>(const uint val) { return (long)val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, uint>(const uint val) { return (float)__uint2float_rn(val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, uint>(const uint val) { return (float)__uint2float_rn(val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, uint>(const uint val) { return (double)__uint2double_rn(val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, uint>(const uint val) { return (double)__uint2double_rn(val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, ulong>(const ulong val) { return (uchar)val; }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, ulong>(const ulong val) { return (uchar)clamp(val, 0u, 0xFFu); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, ulong>(const ulong val) { return (ushort)val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, ulong>(const ulong val) { return (ushort)clamp(val, 0u, 0xFFFFu); }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, ulong>(const ulong val) { return (uint)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, ulong>(const ulong val) { return (uint)clamp(val, 0u, 0xFFFFFFFFu); }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, ulong>(const ulong val) { return val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, ulong>(const ulong val) { return val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, ulong>(const ulong val) { return (char)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, ulong>(const ulong val) { return (char)clamp(val, 0xFF, 0x7F); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, ulong>(const ulong val) { return (short)val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, ulong>(const ulong val) { return (short)clamp(val, 0xFFFF, 0x7FFF); }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, ulong>(const ulong val) { return (int)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, ulong>(const ulong val) { return (int)clamp(val, ~0, 0x7FFFFFFF); }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, ulong>(const ulong val) { return (long)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, ulong>(const ulong val) { return (long)val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, ulong>(const ulong val) { return (float)__ull2float_rn(val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, ulong>(const ulong val) { return (float)__ull2float_rn(val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, ulong>(const ulong val) { return (double)__ull2double_rn(val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, ulong>(const ulong val) { return (double)__ull2double_rn(val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, char>(const char val) { return (uchar)val; }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, char>(const char val) { return (uchar)val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, char>(const char val) { return (ushort)val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, char>(const char val) { return (ushort)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, char>(const char val) { return (uint)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, char>(const char val) { return (uint)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, char>(const char val) { return (ulong)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, char>(const char val) { return (ulong)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, char>(const char val) { return val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, char>(const char val) { return val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, char>(const char val) { return (short)val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, char>(const char val) { return (short)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, char>(const char val) { return (int)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, char>(const char val) { return (int)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, char>(const char val) { return (long)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, char>(const char val) { return (long)val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, char>(const char val) { return (float)__int2float_rn((int)val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, char>(const char val) { return (float)__int2float_rn((int)val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, char>(const char val) { return (double)__int2double_rn((int)val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, char>(const char val) { return (double)__int2double_rn((int)val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, short>(const short val) { return (uchar)val; }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, short>(const short val) { return (uchar)clamp(val, 0u, 0xFFu); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, short>(const short val) { return (ushort)val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, short>(const short val) { return (ushort)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, short>(const short val) { return (uint)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, short>(const short val) { return (uint)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, short>(const short val) { return (ulong)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, short>(const short val) { return (ulong)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, short>(const short val) { return (char)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, short>(const short val) { return (char)clamp(val, 0xFF, 0x7F); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, short>(const short val) { return val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, short>(const short val) { return val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, short>(const short val) { return (int)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, short>(const short val) { return (int)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, short>(const short val) { return (long)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, short>(const short val) { return (long)val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, short>(const short val) { return (float)__int2float_rn((int)val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, short>(const short val) { return (float)__int2float_rn((int)val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, short>(const short val) { return (double)__int2double_rn((int)val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, short>(const short val) { return (double)__int2double_rn((int)val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, int>(const int val) { return (uchar)val; }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, int>(const int val) { return (uchar)clamp(val, 0u, 0xFFu); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, int>(const int val) { return (ushort)val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, int>(const int val) { return (ushort)clamp(val, 0u, 0xFFFFu); }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, int>(const int val) { return (uint)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, int>(const int val) { return (uint)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, int>(const int val) { return (ulong)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, int>(const int val) { return (ulong)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, int>(const int val) { return (char)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, int>(const int val) { return (char)clamp(val, 0xFF, 0x7F); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, int>(const int val) { return (short)val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, int>(const int val) { return (short)clamp(val, 0xFFFF, 0x7FFF); }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, int>(const int val) { return val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, int>(const int val) { return val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, int>(const int val) { return (long)val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, int>(const int val) { return (long)val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, int>(const int val) { return (float)__int2float_rn(val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, int>(const int val) { return (float)__int2float_rn(val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, int>(const int val) { return (double)__int2double_rn(val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, int>(const int val) { return (double)__int2double_rn(val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, long>(const long val) { return (uchar)val; }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, long>(const long val) { return (uchar)clamp(val, 0u, 0xFFu); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, long>(const long val) { return (ushort)val; }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, long>(const long val) { return (ushort)clamp(val, 0u, 0xFFFFu); }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, long>(const long val) { return (uint)val; }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, long>(const long val) { return (uint)clamp(val, 0u, 0xFFFFFFFFu); }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, long>(const long val) { return (ulong)val; }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, long>(const long val) { return (ulong)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, long>(const long val) { return (char)val; }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, long>(const long val) { return (char)clamp(val, 0xFF, 0x7F); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, long>(const long val) { return (short)val; }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, long>(const long val) { return (short)clamp(val, 0xFFFF, 0x7FFF); }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, long>(const long val) { return (int)val; }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, long>(const long val) { return (int)clamp(val, ~0, 0x7FFFFFFF); }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, long>(const long val) { return val; }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, long>(const long val) { return val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, long>(const long val) { return (float)__ll2float_rn(val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, long>(const long val) { return (float)__ll2float_rn(val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, long>(const long val) { return (double)__ll2double_rn(val); }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, long>(const long val) { return (double)__ll2double_rn(val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, float>(const float val) { return (uchar)__float2uint_rz(val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, float>(const float val) { return (uchar)clamp(__float2uint_rz(val), 0u, 0xFFu); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, float>(const float val) { return (ushort)__float2uint_rz(val); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, float>(const float val) { return (ushort)clamp(__float2uint_rz(val), 0u, 0xFFFFu); }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, float>(const float val) { return (uint)__float2uint_rz(val); }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, float>(const float val) { return (uint)__float2uint_rz(val); }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, float>(const float val) { return (ulong)__float2ull_rz(val); }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, float>(const float val) { return (ulong)__float2ull_rz(val); }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, float>(const float val) { return (char)__float2int_rz(val); }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, float>(const float val) { return (char)clamp(__float2int_rz(val), 0xFF, 0x7F); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, float>(const float val) { return (short)__float2int_rz(val); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, float>(const float val) { return (short)clamp(__float2int_rz(val), 0xFFFF, 0x7FFF); }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, float>(const float val) { return (int)__float2int_rz(val); }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, float>(const float val) { return (int)__float2int_rz(val); }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, float>(const float val) { return (long)__float2ll_rz(val); }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, float>(const float val) { return (long)__float2ll_rz(val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, float>(const float val) { return val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, float>(const float val) { return val; }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, float>(const float val) { return (double)val; }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, float>(const float val) { return (double)val; }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 0, double>(const double val) { return (uchar)__double2uint_rz(val); }
-template<> OCLRASTER_FUNC uchar convert_cuda_type<uchar, 1, double>(const double val) { return (uchar)clamp(__double2uint_rz(val), 0u, 0xFFu); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 0, double>(const double val) { return (ushort)__double2uint_rz(val); }
-template<> OCLRASTER_FUNC ushort convert_cuda_type<ushort, 1, double>(const double val) { return (ushort)clamp(__double2uint_rz(val), 0u, 0xFFFFu); }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 0, double>(const double val) { return (uint)__double2uint_rz(val); }
-template<> OCLRASTER_FUNC uint convert_cuda_type<uint, 1, double>(const double val) { return (uint)clamp(__double2uint_rz(val), 0u, 0xFFFFFFFFu); }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 0, double>(const double val) { return (ulong)__double2ull_rz(val); }
-template<> OCLRASTER_FUNC ulong convert_cuda_type<ulong, 1, double>(const double val) { return (ulong)__double2ull_rz(val); }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 0, double>(const double val) { return (char)__double2int_rz(val); }
-template<> OCLRASTER_FUNC char convert_cuda_type<char, 1, double>(const double val) { return (char)clamp(__double2int_rz(val), 0xFF, 0x7F); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 0, double>(const double val) { return (short)__double2int_rz(val); }
-template<> OCLRASTER_FUNC short convert_cuda_type<short, 1, double>(const double val) { return (short)clamp(__double2int_rz(val), 0xFFFF, 0x7FFF); }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 0, double>(const double val) { return (int)__double2int_rz(val); }
-template<> OCLRASTER_FUNC int convert_cuda_type<int, 1, double>(const double val) { return (int)clamp(__double2int_rz(val), ~0, 0x7FFFFFFF); }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 0, double>(const double val) { return (long)__double2ll_rz(val); }
-template<> OCLRASTER_FUNC long convert_cuda_type<long, 1, double>(const double val) { return (long)__double2ll_rz(val); }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 0, double>(const double val) { return (float)val; }
-template<> OCLRASTER_FUNC float convert_cuda_type<float, 1, double>(const double val) { return (float)val; }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 0, double>(const double val) { return val; }
-template<> OCLRASTER_FUNC double convert_cuda_type<double, 1, double>(const double val) { return val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, uchar>(const uchar val) { return val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, uchar>(const uchar val) { return val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, uchar>(const uchar val) { return (ushort)val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, uchar>(const uchar val) { return (ushort)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, uchar>(const uchar val) { return (uint)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, uchar>(const uchar val) { return (uint)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, uchar>(const uchar val) { return (ulong)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, uchar>(const uchar val) { return (ulong)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, uchar>(const uchar val) { return (char)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, uchar>(const uchar val) { return (char)val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, uchar>(const uchar val) { return (short)val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, uchar>(const uchar val) { return (short)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, uchar>(const uchar val) { return (int)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, uchar>(const uchar val) { return (int)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, uchar>(const uchar val) { return (long)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, uchar>(const uchar val) { return (long)val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, uchar>(const uchar val) { return (float)__uint2float_rn((uint)val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, uchar>(const uchar val) { return (float)__uint2float_rn((uint)val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, uchar>(const uchar val) { return (double)__uint2double_rn((uint)val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, uchar>(const uchar val) { return (double)__uint2double_rn((uint)val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, ushort>(const ushort val) { return (uchar)val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, ushort>(const ushort val) { return (uchar)clamp(val, 0u, 0xFFu); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, ushort>(const ushort val) { return val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, ushort>(const ushort val) { return val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, ushort>(const ushort val) { return (uint)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, ushort>(const ushort val) { return (uint)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, ushort>(const ushort val) { return (ulong)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, ushort>(const ushort val) { return (ulong)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, ushort>(const ushort val) { return (char)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, ushort>(const ushort val) { return (char)clamp(val, 0xFF, 0x7F); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, ushort>(const ushort val) { return (short)val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, ushort>(const ushort val) { return (short)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, ushort>(const ushort val) { return (int)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, ushort>(const ushort val) { return (int)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, ushort>(const ushort val) { return (long)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, ushort>(const ushort val) { return (long)val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, ushort>(const ushort val) { return (float)__uint2float_rn((uint)val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, ushort>(const ushort val) { return (float)__uint2float_rn((uint)val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, ushort>(const ushort val) { return (double)__uint2double_rn((uint)val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, ushort>(const ushort val) { return (double)__uint2double_rn((uint)val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, uint>(const uint val) { return (uchar)val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, uint>(const uint val) { return (uchar)clamp(val, 0u, 0xFFu); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, uint>(const uint val) { return (ushort)val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, uint>(const uint val) { return (ushort)clamp(val, 0u, 0xFFFFu); }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, uint>(const uint val) { return val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, uint>(const uint val) { return val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, uint>(const uint val) { return (ulong)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, uint>(const uint val) { return (ulong)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, uint>(const uint val) { return (char)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, uint>(const uint val) { return (char)clamp(val, 0xFF, 0x7F); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, uint>(const uint val) { return (short)val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, uint>(const uint val) { return (short)clamp(val, 0xFFFF, 0x7FFF); }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, uint>(const uint val) { return (int)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, uint>(const uint val) { return (int)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, uint>(const uint val) { return (long)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, uint>(const uint val) { return (long)val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, uint>(const uint val) { return (float)__uint2float_rn(val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, uint>(const uint val) { return (float)__uint2float_rn(val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, uint>(const uint val) { return (double)__uint2double_rn(val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, uint>(const uint val) { return (double)__uint2double_rn(val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, ulong>(const ulong val) { return (uchar)val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, ulong>(const ulong val) { return (uchar)clamp(val, 0u, 0xFFu); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, ulong>(const ulong val) { return (ushort)val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, ulong>(const ulong val) { return (ushort)clamp(val, 0u, 0xFFFFu); }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, ulong>(const ulong val) { return (uint)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, ulong>(const ulong val) { return (uint)clamp(val, 0u, 0xFFFFFFFFu); }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, ulong>(const ulong val) { return val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, ulong>(const ulong val) { return val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, ulong>(const ulong val) { return (char)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, ulong>(const ulong val) { return (char)clamp(val, 0xFF, 0x7F); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, ulong>(const ulong val) { return (short)val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, ulong>(const ulong val) { return (short)clamp(val, 0xFFFF, 0x7FFF); }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, ulong>(const ulong val) { return (int)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, ulong>(const ulong val) { return (int)clamp(val, ~0, 0x7FFFFFFF); }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, ulong>(const ulong val) { return (long)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, ulong>(const ulong val) { return (long)val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, ulong>(const ulong val) { return (float)__ull2float_rn(val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, ulong>(const ulong val) { return (float)__ull2float_rn(val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, ulong>(const ulong val) { return (double)__ull2double_rn(val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, ulong>(const ulong val) { return (double)__ull2double_rn(val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, char>(const char val) { return (uchar)val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, char>(const char val) { return (uchar)val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, char>(const char val) { return (ushort)val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, char>(const char val) { return (ushort)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, char>(const char val) { return (uint)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, char>(const char val) { return (uint)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, char>(const char val) { return (ulong)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, char>(const char val) { return (ulong)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, char>(const char val) { return val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, char>(const char val) { return val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, char>(const char val) { return (short)val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, char>(const char val) { return (short)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, char>(const char val) { return (int)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, char>(const char val) { return (int)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, char>(const char val) { return (long)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, char>(const char val) { return (long)val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, char>(const char val) { return (float)__int2float_rn((int)val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, char>(const char val) { return (float)__int2float_rn((int)val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, char>(const char val) { return (double)__int2double_rn((int)val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, char>(const char val) { return (double)__int2double_rn((int)val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, short>(const short val) { return (uchar)val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, short>(const short val) { return (uchar)clamp(val, 0u, 0xFFu); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, short>(const short val) { return (ushort)val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, short>(const short val) { return (ushort)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, short>(const short val) { return (uint)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, short>(const short val) { return (uint)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, short>(const short val) { return (ulong)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, short>(const short val) { return (ulong)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, short>(const short val) { return (char)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, short>(const short val) { return (char)clamp(val, 0xFF, 0x7F); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, short>(const short val) { return val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, short>(const short val) { return val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, short>(const short val) { return (int)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, short>(const short val) { return (int)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, short>(const short val) { return (long)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, short>(const short val) { return (long)val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, short>(const short val) { return (float)__int2float_rn((int)val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, short>(const short val) { return (float)__int2float_rn((int)val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, short>(const short val) { return (double)__int2double_rn((int)val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, short>(const short val) { return (double)__int2double_rn((int)val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, int>(const int val) { return (uchar)val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, int>(const int val) { return (uchar)clamp(val, 0u, 0xFFu); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, int>(const int val) { return (ushort)val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, int>(const int val) { return (ushort)clamp(val, 0u, 0xFFFFu); }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, int>(const int val) { return (uint)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, int>(const int val) { return (uint)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, int>(const int val) { return (ulong)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, int>(const int val) { return (ulong)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, int>(const int val) { return (char)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, int>(const int val) { return (char)clamp(val, 0xFF, 0x7F); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, int>(const int val) { return (short)val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, int>(const int val) { return (short)clamp(val, 0xFFFF, 0x7FFF); }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, int>(const int val) { return val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, int>(const int val) { return val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, int>(const int val) { return (long)val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, int>(const int val) { return (long)val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, int>(const int val) { return (float)__int2float_rn(val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, int>(const int val) { return (float)__int2float_rn(val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, int>(const int val) { return (double)__int2double_rn(val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, int>(const int val) { return (double)__int2double_rn(val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, long>(const long val) { return (uchar)val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, long>(const long val) { return (uchar)clamp(val, 0u, 0xFFu); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, long>(const long val) { return (ushort)val; }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, long>(const long val) { return (ushort)clamp(val, 0u, 0xFFFFu); }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, long>(const long val) { return (uint)val; }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, long>(const long val) { return (uint)clamp(val, 0u, 0xFFFFFFFFu); }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, long>(const long val) { return (ulong)val; }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, long>(const long val) { return (ulong)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, long>(const long val) { return (char)val; }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, long>(const long val) { return (char)clamp(val, 0xFF, 0x7F); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, long>(const long val) { return (short)val; }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, long>(const long val) { return (short)clamp(val, 0xFFFF, 0x7FFF); }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, long>(const long val) { return (int)val; }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, long>(const long val) { return (int)clamp(val, ~0, 0x7FFFFFFF); }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, long>(const long val) { return val; }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, long>(const long val) { return val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, long>(const long val) { return (float)__ll2float_rn(val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, long>(const long val) { return (float)__ll2float_rn(val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, long>(const long val) { return (double)__ll2double_rn(val); }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, long>(const long val) { return (double)__ll2double_rn(val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, float>(const float val) { return (uchar)__float2uint_rz(val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, float>(const float val) { return (uchar)clamp(__float2uint_rz(val), 0u, 0xFFu); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, float>(const float val) { return (ushort)__float2uint_rz(val); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, float>(const float val) { return (ushort)clamp(__float2uint_rz(val), 0u, 0xFFFFu); }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, float>(const float val) { return (uint)__float2uint_rz(val); }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, float>(const float val) { return (uint)__float2uint_rz(val); }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, float>(const float val) { return (ulong)__float2ull_rz(val); }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, float>(const float val) { return (ulong)__float2ull_rz(val); }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, float>(const float val) { return (char)__float2int_rz(val); }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, float>(const float val) { return (char)clamp(__float2int_rz(val), 0xFF, 0x7F); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, float>(const float val) { return (short)__float2int_rz(val); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, float>(const float val) { return (short)clamp(__float2int_rz(val), 0xFFFF, 0x7FFF); }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, float>(const float val) { return (int)__float2int_rz(val); }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, float>(const float val) { return (int)__float2int_rz(val); }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, float>(const float val) { return (long)__float2ll_rz(val); }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, float>(const float val) { return (long)__float2ll_rz(val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, float>(const float val) { return val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, float>(const float val) { return val; }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, float>(const float val) { return (double)val; }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, float>(const float val) { return (double)val; }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 0, double>(const double val) { return (uchar)__double2uint_rz(val); }
+template<> FLOOR_FUNC uchar convert_cuda_type<uchar, 1, double>(const double val) { return (uchar)clamp(__double2uint_rz(val), 0u, 0xFFu); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 0, double>(const double val) { return (ushort)__double2uint_rz(val); }
+template<> FLOOR_FUNC ushort convert_cuda_type<ushort, 1, double>(const double val) { return (ushort)clamp(__double2uint_rz(val), 0u, 0xFFFFu); }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 0, double>(const double val) { return (uint)__double2uint_rz(val); }
+template<> FLOOR_FUNC uint convert_cuda_type<uint, 1, double>(const double val) { return (uint)clamp(__double2uint_rz(val), 0u, 0xFFFFFFFFu); }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 0, double>(const double val) { return (ulong)__double2ull_rz(val); }
+template<> FLOOR_FUNC ulong convert_cuda_type<ulong, 1, double>(const double val) { return (ulong)__double2ull_rz(val); }
+template<> FLOOR_FUNC char convert_cuda_type<char, 0, double>(const double val) { return (char)__double2int_rz(val); }
+template<> FLOOR_FUNC char convert_cuda_type<char, 1, double>(const double val) { return (char)clamp(__double2int_rz(val), 0xFF, 0x7F); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 0, double>(const double val) { return (short)__double2int_rz(val); }
+template<> FLOOR_FUNC short convert_cuda_type<short, 1, double>(const double val) { return (short)clamp(__double2int_rz(val), 0xFFFF, 0x7FFF); }
+template<> FLOOR_FUNC int convert_cuda_type<int, 0, double>(const double val) { return (int)__double2int_rz(val); }
+template<> FLOOR_FUNC int convert_cuda_type<int, 1, double>(const double val) { return (int)clamp(__double2int_rz(val), ~0, 0x7FFFFFFF); }
+template<> FLOOR_FUNC long convert_cuda_type<long, 0, double>(const double val) { return (long)__double2ll_rz(val); }
+template<> FLOOR_FUNC long convert_cuda_type<long, 1, double>(const double val) { return (long)__double2ll_rz(val); }
+template<> FLOOR_FUNC float convert_cuda_type<float, 0, double>(const double val) { return (float)val; }
+template<> FLOOR_FUNC float convert_cuda_type<float, 1, double>(const double val) { return (float)val; }
+template<> FLOOR_FUNC double convert_cuda_type<double, 0, double>(const double val) { return val; }
+template<> FLOOR_FUNC double convert_cuda_type<double, 1, double>(const double val) { return val; }
 #define convert_uchar(vec) convert_cuda_type<uchar, 0>(vec)
 #define convert_uchar2(vec) convert_cuda_type2<uchar2, uchar, 0>(vec)
 #define convert_uchar3(vec) convert_cuda_type3<uchar3, uchar, 0>(vec)

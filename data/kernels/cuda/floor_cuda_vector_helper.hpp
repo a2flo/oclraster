@@ -1,9 +1,9 @@
 // NOTE: this is an automatically generated file!
 // If you need to change anything in here, please have a look at etc/cuda_support/cuda_support.sh
-// don't include this header on it's own, but rather include oclr_cuda_base.h
+// don't include this header on it's own, but rather include floor_cuda_base.hpp
 
-#ifndef __OCLRASTER_CUDA_VECTOR_HELPER_HPP__
-#define __OCLRASTER_CUDA_VECTOR_HELPER_HPP__
+#ifndef __FLOOR_CUDA_VECTOR_HELPER_HPP__
+#define __FLOOR_CUDA_VECTOR_HELPER_HPP__
 
 template<class vec_type, size_t target_size> struct vector_mapping {
 	typedef void type;

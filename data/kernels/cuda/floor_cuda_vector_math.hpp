@@ -1,6 +1,6 @@
 
-#ifndef __OCLRASTER_CUDA_VECTOR_MATH_H__
-#define __OCLRASTER_CUDA_VECTOR_MATH_H__
+#ifndef __FLOOR_CUDA_VECTOR_MATH_H__
+#define __FLOOR_CUDA_VECTOR_MATH_H__
 
 //
 #define CUDA_VEC_FUNC_ALIAS(type, cl_func, func) \

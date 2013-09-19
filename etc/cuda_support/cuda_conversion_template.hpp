@@ -19,14 +19,14 @@
 #if (IDENT_CONVERT == 0) && (IDENT_KIND_CONVERT == 0)
 
 #if (IDENT_KIND_CONVERT == 0)
-template<> OCLRASTER_FUNC DST_TYPE convert_cuda_type<DST_TYPE, 0, SRC_TYPE>(const SRC_TYPE val) { return OUTPUT_CONV()MAKE_CONV_FUNC()(INPUT_CONV()val); }
-template<> OCLRASTER_FUNC DST_TYPE convert_cuda_type<DST_TYPE, 1, SRC_TYPE>(const SRC_TYPE val) { return OUTPUT_CONV()SAT_CONVERT(MAKE_CONV_FUNC()(INPUT_CONV()val)); }
+template<> FLOOR_FUNC DST_TYPE convert_cuda_type<DST_TYPE, 0, SRC_TYPE>(const SRC_TYPE val) { return OUTPUT_CONV()MAKE_CONV_FUNC()(INPUT_CONV()val); }
+template<> FLOOR_FUNC DST_TYPE convert_cuda_type<DST_TYPE, 1, SRC_TYPE>(const SRC_TYPE val) { return OUTPUT_CONV()SAT_CONVERT(MAKE_CONV_FUNC()(INPUT_CONV()val)); }
 #else
 #endif
 
 #elif (IDENT_CONVERT == 1) || (IDENT_KIND_CONVERT == 1)
 
-template<> OCLRASTER_FUNC DST_TYPE convert_cuda_type<DST_TYPE, 0, SRC_TYPE>(const SRC_TYPE val) { return OUTPUT_CONV()val; }
-template<> OCLRASTER_FUNC DST_TYPE convert_cuda_type<DST_TYPE, 1, SRC_TYPE>(const SRC_TYPE val) { return OUTPUT_CONV()SAT_CONVERT(val); }
+template<> FLOOR_FUNC DST_TYPE convert_cuda_type<DST_TYPE, 0, SRC_TYPE>(const SRC_TYPE val) { return OUTPUT_CONV()val; }
+template<> FLOOR_FUNC DST_TYPE convert_cuda_type<DST_TYPE, 1, SRC_TYPE>(const SRC_TYPE val) { return OUTPUT_CONV()SAT_CONVERT(val); }
 
 #endif

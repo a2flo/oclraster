@@ -1,9 +1,10 @@
 
-#ifndef __OCLRASTER_CUDA_BASE_H__
-#define __OCLRASTER_CUDA_BASE_H__
+#ifndef __FLOOR_CUDA_BASE_H__
+#define __FLOOR_CUDA_BASE_H__
 
 // defines
-#define OCLRASTER_FUNC inline __device__
+#define FLOOR_FUNC inline __device__
+#define OCLRASTER_FUNC FLOOR_FUNC
 
 // additional vector types
 typedef struct {
@@ -32,14 +33,14 @@ typedef struct {
 } ulong16;
 
 // include generated vector helper templates
-#include "oclr_cuda_vector_helper.hpp"
+#include "floor_cuda_vector_helper.hpp"
 
 // clamp
 // base case, single component: clamp(val, min, max)
 template<class src_type, class dst_type,
 		 typename enable_if<vector_mapping<src_type, 1>::src_vec_size == 1, int>::type = 0,
 		 typename enable_if<vector_mapping<dst_type, 1>::src_vec_size == 1, int>::type = 0>
-OCLRASTER_FUNC dst_type clamp(const src_type src, const dst_type min_val, const dst_type max_val) {
+FLOOR_FUNC dst_type clamp(const src_type src, const dst_type min_val, const dst_type max_val) {
 	const dst_type conv_src = (dst_type)src;
 	// max(src, min_val)
 	const dst_type min_clamp = (conv_src > min_val ? conv_src : min_val);
@@ -52,7 +53,7 @@ template<class src_typen, class dst_type,
 		 class dst_typen = typename vector_mapping<dst_type, 2>::type,
 		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 2, int>::type = 0,
 		 typename enable_if<vector_mapping<dst_type, 1>::src_vec_size == 1, int>::type = 0>
-OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_type min_val, const dst_type max_val) {
+FLOOR_FUNC dst_typen clamp(const src_typen src, const dst_type min_val, const dst_type max_val) {
 	dst_typen ret;
 	ret.x = clamp(src.x, min_val, max_val);
 	ret.y = clamp(src.y, min_val, max_val);
@@ -62,7 +63,7 @@ template<class src_typen, class dst_type,
 		 class dst_typen = typename vector_mapping<dst_type, 3>::type,
 		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 3, int>::type = 0,
 		 typename enable_if<vector_mapping<dst_type, 1>::src_vec_size == 1, int>::type = 0>
-OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_type min_val, const dst_type max_val) {
+FLOOR_FUNC dst_typen clamp(const src_typen src, const dst_type min_val, const dst_type max_val) {
 	dst_typen ret;
 	ret.x = clamp(src.x, min_val, max_val);
 	ret.y = clamp(src.y, min_val, max_val);
@@ -73,7 +74,7 @@ template<class src_typen, class dst_type,
 		 class dst_typen = typename vector_mapping<dst_type, 4>::type,
 		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 4, int>::type = 0,
 		 typename enable_if<vector_mapping<dst_type, 1>::src_vec_size == 1, int>::type = 0>
-OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_type min_val, const dst_type max_val) {
+FLOOR_FUNC dst_typen clamp(const src_typen src, const dst_type min_val, const dst_type max_val) {
 	dst_typen ret;
 	ret.x = clamp(src.x, min_val, max_val);
 	ret.y = clamp(src.y, min_val, max_val);
@@ -86,7 +87,7 @@ OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_type min_val, cons
 template<class src_typen, class dst_typen,
 		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 2, int>::type = 0,
 		 typename enable_if<vector_mapping<dst_typen, 1>::src_vec_size == 2, int>::type = 0>
-OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, const dst_typen max_val) {
+FLOOR_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, const dst_typen max_val) {
 	dst_typen ret;
 	ret.x = clamp(src.x, min_val.x, max_val.x);
 	ret.y = clamp(src.y, min_val.y, max_val.y);
@@ -95,7 +96,7 @@ OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, con
 template<class src_typen, class dst_typen,
 		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 3, int>::type = 0,
 		 typename enable_if<vector_mapping<dst_typen, 1>::src_vec_size == 3, int>::type = 0>
-OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, const dst_typen max_val) {
+FLOOR_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, const dst_typen max_val) {
 	dst_typen ret;
 	ret.x = clamp(src.x, min_val.x, max_val.x);
 	ret.y = clamp(src.y, min_val.y, max_val.y);
@@ -105,7 +106,7 @@ OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, con
 template<class src_typen, class dst_typen,
 		 typename enable_if<vector_mapping<src_typen, 1>::src_vec_size == 4, int>::type = 0,
 		 typename enable_if<vector_mapping<dst_typen, 1>::src_vec_size == 4, int>::type = 0>
-OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, const dst_typen max_val) {
+FLOOR_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, const dst_typen max_val) {
 	dst_typen ret;
 	ret.x = clamp(src.x, min_val.x, max_val.x);
 	ret.y = clamp(src.y, min_val.y, max_val.y);
@@ -115,6 +116,6 @@ OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, con
 }
 
 // include generated cuda type conversion templates
-#include "oclr_cuda_conversion.hpp"
+#include "floor_cuda_conversion.hpp"
 
 #endif

@@ -125,20 +125,20 @@ CONVERSION_CODE=$(echo -e ${CONVERSION_CODE} | grep -v "^$")
 # create and fill final output files
 IFS=""
 
-# oclr_cuda_vector_helper
-echo -e "// NOTE: this is an automatically generated file!\n// If you need to change anything in here, please have a look at etc/cuda_support/cuda_support.sh" > oclr_cuda_vector_helper.hpp
-echo -e "// don't include this header on it's own, but rather include oclr_cuda_base.h\n" >> oclr_cuda_vector_helper.hpp
-echo -e "#ifndef __OCLRASTER_CUDA_VECTOR_HELPER_HPP__\n#define __OCLRASTER_CUDA_VECTOR_HELPER_HPP__\n" >> oclr_cuda_vector_helper.hpp
-echo -e "template<class vec_type, size_t target_size> struct vector_mapping {\n\ttypedef void type;\n\ttypedef void src_type;\n\tstatic const size_t vec_size = 1;\n\tstatic const size_t src_vec_size = 1;\n};\n" >> oclr_cuda_vector_helper.hpp
-echo -e $VEC_HELPER_CODE >> oclr_cuda_vector_helper.hpp
-echo -e "\n#endif" >> oclr_cuda_vector_helper.hpp
+# floor_cuda_vector_helper
+echo -e "// NOTE: this is an automatically generated file!\n// If you need to change anything in here, please have a look at etc/cuda_support/cuda_support.sh" > floor_cuda_vector_helper.hpp
+echo -e "// don't include this header on it's own, but rather include floor_cuda_base.hpp\n" >> floor_cuda_vector_helper.hpp
+echo -e "#ifndef __FLOOR_CUDA_VECTOR_HELPER_HPP__\n#define __FLOOR_CUDA_VECTOR_HELPER_HPP__\n" >> floor_cuda_vector_helper.hpp
+echo -e "template<class vec_type, size_t target_size> struct vector_mapping {\n\ttypedef void type;\n\ttypedef void src_type;\n\tstatic const size_t vec_size = 1;\n\tstatic const size_t src_vec_size = 1;\n};\n" >> floor_cuda_vector_helper.hpp
+echo -e $VEC_HELPER_CODE >> floor_cuda_vector_helper.hpp
+echo -e "\n#endif" >> floor_cuda_vector_helper.hpp
 
-# oclr_cuda_conversion
-echo -e "// NOTE: this is an automatically generated file!\n// If you need to change anything in here, please have a look at etc/cuda_support/cuda_support.sh" > oclr_cuda_conversion.hpp
-echo -e "// don't include this header on it's own, but rather include oclr_cuda_base.h\n" >> oclr_cuda_conversion.hpp
-echo -e "#ifndef __OCLRASTER_CUDA_CONVERSION_HPP__\n#define __OCLRASTER_CUDA_CONVERSION_HPP__\n" >> oclr_cuda_conversion.hpp
-echo -e "template<class dst_type, size_t saturated_convert, class src_type> OCLRASTER_FUNC dst_type convert_cuda_type(const src_type val) { /* fail here if not specialized */ }\n" >> oclr_cuda_conversion.hpp
-echo -e "template<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> OCLRASTER_FUNC dst_typen convert_cuda_type2(const src_typen val) {\n\tdst_typen dst;\n\tdst.x = convert_cuda_type<dst_type, saturated_convert, src_type>(val.x);\n\tdst.y = convert_cuda_type<dst_type, saturated_convert, src_type>(val.y);\n\treturn dst;\n}\ntemplate<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> OCLRASTER_FUNC dst_typen convert_cuda_type3(const src_typen val) {\n\tdst_typen dst;\n\tdst.x = convert_cuda_type<dst_type, saturated_convert, src_type>(val.x);\n\tdst.y = convert_cuda_type<dst_type, saturated_convert, src_type>(val.y);\n\tdst.z = convert_cuda_type<dst_type, saturated_convert, src_type>(val.z);\n\treturn dst;\n}\ntemplate<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> OCLRASTER_FUNC dst_typen convert_cuda_type4(const src_typen val) {\n\tdst_typen dst;\n\tdst.x = convert_cuda_type<dst_type, saturated_convert, src_type>(val.x);\n\tdst.y = convert_cuda_type<dst_type, saturated_convert, src_type>(val.y);\n\tdst.z = convert_cuda_type<dst_type, saturated_convert, src_type>(val.z);\n\tdst.w = convert_cuda_type<dst_type, saturated_convert, src_type>(val.w);\n\treturn dst;\n}\n" >> oclr_cuda_conversion.hpp
-echo -e "template<class dst_type, class src_type, typename enable_if<sizeof(dst_type) == sizeof(src_type), int>::type = 0>\ndst_type as_typen(const src_type src) {\n\treturn *(dst_type*)&src;\n};\n" >> oclr_cuda_conversion.hpp
-echo -e $CONVERSION_CODE >> oclr_cuda_conversion.hpp
-echo -e "\n#endif" >> oclr_cuda_conversion.hpp
+# floor_cuda_conversion
+echo -e "// NOTE: this is an automatically generated file!\n// If you need to change anything in here, please have a look at etc/cuda_support/cuda_support.sh" > floor_cuda_conversion.hpp
+echo -e "// don't include this header on it's own, but rather include floor_cuda_base.hpp\n" >> floor_cuda_conversion.hpp
+echo -e "#ifndef __FLOOR_CUDA_CONVERSION_HPP__\n#define __FLOOR_CUDA_CONVERSION_HPP__\n" >> floor_cuda_conversion.hpp
+echo -e "template<class dst_type, size_t saturated_convert, class src_type> FLOOR_FUNC dst_type convert_cuda_type(const src_type val) { /* fail here if not specialized */ }\n" >> floor_cuda_conversion.hpp
+echo -e "template<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> FLOOR_FUNC dst_typen convert_cuda_type2(const src_typen val) {\n\tdst_typen dst;\n\tdst.x = convert_cuda_type<dst_type, saturated_convert, src_type>(val.x);\n\tdst.y = convert_cuda_type<dst_type, saturated_convert, src_type>(val.y);\n\treturn dst;\n}\ntemplate<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> FLOOR_FUNC dst_typen convert_cuda_type3(const src_typen val) {\n\tdst_typen dst;\n\tdst.x = convert_cuda_type<dst_type, saturated_convert, src_type>(val.x);\n\tdst.y = convert_cuda_type<dst_type, saturated_convert, src_type>(val.y);\n\tdst.z = convert_cuda_type<dst_type, saturated_convert, src_type>(val.z);\n\treturn dst;\n}\ntemplate<class dst_typen, class dst_type, size_t saturated_convert, class src_typen, class src_type = typename vector_mapping<src_typen, 1>::type> FLOOR_FUNC dst_typen convert_cuda_type4(const src_typen val) {\n\tdst_typen dst;\n\tdst.x = convert_cuda_type<dst_type, saturated_convert, src_type>(val.x);\n\tdst.y = convert_cuda_type<dst_type, saturated_convert, src_type>(val.y);\n\tdst.z = convert_cuda_type<dst_type, saturated_convert, src_type>(val.z);\n\tdst.w = convert_cuda_type<dst_type, saturated_convert, src_type>(val.w);\n\treturn dst;\n}\n" >> floor_cuda_conversion.hpp
+echo -e "template<class dst_type, class src_type, typename enable_if<sizeof(dst_type) == sizeof(src_type), int>::type = 0>\ndst_type as_typen(const src_type src) {\n\treturn *(dst_type*)&src;\n};\n" >> floor_cuda_conversion.hpp
+echo -e $CONVERSION_CODE >> floor_cuda_conversion.hpp
+echo -e "\n#endif" >> floor_cuda_conversion.hpp

@@ -1,12 +1,12 @@
 
-#ifndef __OCLRASTER_CUDA_VECTOR4_H__
-#define __OCLRASTER_CUDA_VECTOR4_H__
+#ifndef __FLOOR_CUDA_VECTOR4_H__
+#define __FLOOR_CUDA_VECTOR4_H__
 
 #if defined(__cplusplus)
 
 #undef CUDA_VECTOR_WIDTH
 #define CUDA_VECTOR_WIDTH 4
-#include "oclr_cuda_vector_ops.hpp"
+#include "floor_cuda_vector_ops.hpp"
 
 template <typename T, uint alignment> struct cuda_device_builtin __attribute__((aligned(alignment))) vector4 {
 	T x;

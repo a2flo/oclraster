@@ -1,12 +1,12 @@
 
-#ifndef __OCLRASTER_CUDA_VECTOR3_H__
-#define __OCLRASTER_CUDA_VECTOR3_H__
+#ifndef __FLOOR_CUDA_VECTOR3_H__
+#define __FLOOR_CUDA_VECTOR3_H__
 
 #if defined(__cplusplus)
 
 #undef CUDA_VECTOR_WIDTH
 #define CUDA_VECTOR_WIDTH 3
-#include "oclr_cuda_vector_ops.hpp"
+#include "floor_cuda_vector_ops.hpp"
 
 template <typename T> struct cuda_device_builtin vector3 {
 	T x;

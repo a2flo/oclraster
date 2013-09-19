@@ -1,13 +1,13 @@
 
-#ifndef __OCLRASTER_CUDACL_H__
-#define __OCLRASTER_CUDACL_H__
+#ifndef __FLOOR_CUDACL_H__
+#define __FLOOR_CUDACL_H__
 
-// note: the oclr_cuda_base.h header contains mostly cuda related functions or wrappers,
+// note: the floor_cuda_base.hpp header contains mostly cuda related functions or wrappers,
 // while this header implements most of the opencl built-in functions
 // exceptions:
-//  * type conversions and reinterpretations (oclr_cuda_conversion.h, already included by oclr_cuda_base.h)
-//  * clamp (implemented in oclr_cuda_base.h, as it's required earlier)
-#include "oclr_cuda_base.hpp"
+//  * type conversions and reinterpretations (floor_cuda_conversion.hpp, already included by floor_cuda_base.hpp)
+//  * clamp (implemented in floor_cuda_base.hpp, as it's required earlier)
+#include "floor_cuda_base.hpp"
 
 // global/local work item/dim functions
 OCLRASTER_FUNC uint get_work_dim() {
