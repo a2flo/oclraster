@@ -2,8 +2,8 @@
 // If you need to change anything in here, please have a look at etc/cuda_support/cuda_support.sh
 // don't include this header on it's own, but rather include oclr_cuda_base.h
 
-#ifndef __OCLRASTER_CUDA_CONVERSION_H__
-#define __OCLRASTER_CUDA_CONVERSION_H__
+#ifndef __OCLRASTER_CUDA_CONVERSION_HPP__
+#define __OCLRASTER_CUDA_CONVERSION_HPP__
 
 template<class dst_type, size_t saturated_convert, class src_type> OCLRASTER_FUNC dst_type convert_cuda_type(const src_type val) { /* fail here if not specialized */ }
 
