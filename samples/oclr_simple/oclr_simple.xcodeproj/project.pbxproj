@@ -55,18 +55,18 @@
 /* Begin PBXFileReference section */
 		5C1417B417EAFDE00062C779 /* oclr_simple.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = oclr_simple.hpp; path = src/oclr_simple.hpp; sourceTree = SOURCE_ROOT; };
 		5C1417B517EAFE150062C779 /* oclr_cpp.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cpp.hpp; sourceTree = "<group>"; };
-		5C1417B617EAFE2C0062C779 /* oclr_cuda_base.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_base.hpp; sourceTree = "<group>"; };
-		5C1417B717EAFE2C0062C779 /* oclr_cuda_conversion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_conversion.hpp; sourceTree = "<group>"; };
-		5C1417B817EAFE2C0062C779 /* oclr_cuda_vector_base.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_vector_base.hpp; sourceTree = "<group>"; };
-		5C1417B917EAFE2C0062C779 /* oclr_cuda_vector_helper.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_vector_helper.hpp; sourceTree = "<group>"; };
-		5C1417BA17EAFE2C0062C779 /* oclr_cuda_vector_lib.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_vector_lib.hpp; sourceTree = "<group>"; };
-		5C1417BB17EAFE2C0062C779 /* oclr_cuda_vector_math.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_vector_math.hpp; sourceTree = "<group>"; };
-		5C1417BC17EAFE2C0062C779 /* oclr_cuda_vector_ops.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_vector_ops.hpp; sourceTree = "<group>"; };
-		5C1417BD17EAFE2C0062C779 /* oclr_cuda_vector1.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_vector1.hpp; sourceTree = "<group>"; };
-		5C1417BE17EAFE2C0062C779 /* oclr_cuda_vector2.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_vector2.hpp; sourceTree = "<group>"; };
-		5C1417BF17EAFE2C0062C779 /* oclr_cuda_vector3.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_vector3.hpp; sourceTree = "<group>"; };
-		5C1417C017EAFE2C0062C779 /* oclr_cuda_vector4.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cuda_vector4.hpp; sourceTree = "<group>"; };
-		5C1417C117EAFE2C0062C779 /* oclr_cudacl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oclr_cudacl.hpp; sourceTree = "<group>"; };
+		5C1417C217EB034E0062C779 /* floor_cuda_base.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_base.hpp; sourceTree = "<group>"; };
+		5C1417C317EB034E0062C779 /* floor_cuda_conversion.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_conversion.hpp; sourceTree = "<group>"; };
+		5C1417C417EB034E0062C779 /* floor_cuda_vector_base.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_vector_base.hpp; sourceTree = "<group>"; };
+		5C1417C517EB034E0062C779 /* floor_cuda_vector_helper.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_vector_helper.hpp; sourceTree = "<group>"; };
+		5C1417C617EB034E0062C779 /* floor_cuda_vector_lib.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_vector_lib.hpp; sourceTree = "<group>"; };
+		5C1417C717EB034E0062C779 /* floor_cuda_vector_math.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_vector_math.hpp; sourceTree = "<group>"; };
+		5C1417C817EB034E0062C779 /* floor_cuda_vector_ops.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_vector_ops.hpp; sourceTree = "<group>"; };
+		5C1417C917EB034E0062C779 /* floor_cuda_vector1.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_vector1.hpp; sourceTree = "<group>"; };
+		5C1417CA17EB034E0062C779 /* floor_cuda_vector2.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_vector2.hpp; sourceTree = "<group>"; };
+		5C1417CB17EB034E0062C779 /* floor_cuda_vector3.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_vector3.hpp; sourceTree = "<group>"; };
+		5C1417CC17EB034E0062C779 /* floor_cuda_vector4.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cuda_vector4.hpp; sourceTree = "<group>"; };
+		5C1417CD17EB034E0062C779 /* floor_cudacl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = floor_cudacl.hpp; sourceTree = "<group>"; };
 		5C201511174BD8E7006CFF5B /* fxaa_pass.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = fxaa_pass.cl; sourceTree = "<group>"; };
 		5C201512174BD8E7006CFF5B /* luma_pass.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = luma_pass.cl; sourceTree = "<group>"; };
 		5C2D23CB16D50C1700013DBF /* oclr_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_image.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.opencl; };
@@ -293,18 +293,18 @@
 		5CF478811770D26100265E94 /* cuda */ = {
 			isa = PBXGroup;
 			children = (
-				5C1417B617EAFE2C0062C779 /* oclr_cuda_base.hpp */,
-				5C1417B717EAFE2C0062C779 /* oclr_cuda_conversion.hpp */,
-				5C1417B817EAFE2C0062C779 /* oclr_cuda_vector_base.hpp */,
-				5C1417B917EAFE2C0062C779 /* oclr_cuda_vector_helper.hpp */,
-				5C1417BA17EAFE2C0062C779 /* oclr_cuda_vector_lib.hpp */,
-				5C1417BB17EAFE2C0062C779 /* oclr_cuda_vector_math.hpp */,
-				5C1417BC17EAFE2C0062C779 /* oclr_cuda_vector_ops.hpp */,
-				5C1417BD17EAFE2C0062C779 /* oclr_cuda_vector1.hpp */,
-				5C1417BE17EAFE2C0062C779 /* oclr_cuda_vector2.hpp */,
-				5C1417BF17EAFE2C0062C779 /* oclr_cuda_vector3.hpp */,
-				5C1417C017EAFE2C0062C779 /* oclr_cuda_vector4.hpp */,
-				5C1417C117EAFE2C0062C779 /* oclr_cudacl.hpp */,
+				5C1417C217EB034E0062C779 /* floor_cuda_base.hpp */,
+				5C1417C317EB034E0062C779 /* floor_cuda_conversion.hpp */,
+				5C1417C417EB034E0062C779 /* floor_cuda_vector_base.hpp */,
+				5C1417C517EB034E0062C779 /* floor_cuda_vector_helper.hpp */,
+				5C1417C617EB034E0062C779 /* floor_cuda_vector_lib.hpp */,
+				5C1417C717EB034E0062C779 /* floor_cuda_vector_math.hpp */,
+				5C1417C817EB034E0062C779 /* floor_cuda_vector_ops.hpp */,
+				5C1417C917EB034E0062C779 /* floor_cuda_vector1.hpp */,
+				5C1417CA17EB034E0062C779 /* floor_cuda_vector2.hpp */,
+				5C1417CB17EB034E0062C779 /* floor_cuda_vector3.hpp */,
+				5C1417CC17EB034E0062C779 /* floor_cuda_vector4.hpp */,
+				5C1417CD17EB034E0062C779 /* floor_cudacl.hpp */,
 				5CD8BB2C17825E2100701F71 /* crt */,
 			);
 			path = cuda;
