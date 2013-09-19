@@ -6,7 +6,7 @@ typedef struct _Z7vector3IjE uint3;
 typedef struct _Z6dim3_TIjE dim3;
 
 #if defined(__CUDABE__)
-#include "oclr_cuda_vector_lib.h"
+#include "oclr_cuda_vector_lib.hpp"
 
 #define __SURFACE_FUNCTIONS_H__
 #define __TEXTURE_FETCH_FUNCTIONS_H__

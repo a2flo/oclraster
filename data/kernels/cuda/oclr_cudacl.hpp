@@ -7,7 +7,7 @@
 // exceptions:
 //  * type conversions and reinterpretations (oclr_cuda_conversion.h, already included by oclr_cuda_base.h)
 //  * clamp (implemented in oclr_cuda_base.h, as it's required earlier)
-#include "oclr_cuda_base.h"
+#include "oclr_cuda_base.hpp"
 
 // global/local work item/dim functions
 OCLRASTER_FUNC uint get_work_dim() {

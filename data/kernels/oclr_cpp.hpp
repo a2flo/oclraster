@@ -1,6 +1,6 @@
 
-#ifndef __OCLRASTER_CPP_H__
-#define __OCLRASTER_CPP_H__
+#ifndef __OCLRASTER_CPP_HPP__
+#define __OCLRASTER_CPP_HPP__
 
 // c++ type support (copies the c++11 stl implementation, as it's not available here)
 template<class T> struct remove_const { typedef T type; };

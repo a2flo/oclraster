@@ -24,10 +24,10 @@ string template_transform_program { "" };
 #else
 // awesome raw string literals are awesome
 static constexpr char template_transform_program[] { u8R"OCLRASTER_RAWSTR(
-	#include "oclr_global.hpp"
-	#include "oclr_math.hpp"
-	#include "oclr_matrix.hpp"
-	#include "oclr_image.hpp"
+	#include "oclr_global.h"
+	#include "oclr_math.h"
+	#include "oclr_matrix.h"
+	#include "oclr_image.h"
 	
 	typedef struct __attribute__((packed, aligned(16))) {
 		float4 camera_position;

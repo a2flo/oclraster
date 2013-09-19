@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "oclr_simple.h"
+#include "oclr_simple.hpp"
 
 // global vars, don't change these!
 static bool done { false };

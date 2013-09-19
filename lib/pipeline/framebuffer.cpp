@@ -23,8 +23,8 @@
 
 //
 static constexpr char template_framebuffer_program[] { u8R"OCLRASTER_RAWSTR(
-	#include "oclr_global.hpp"
-	#include "oclr_framebuffer_clear.hpp"
+	#include "oclr_global.h"
+	#include "oclr_framebuffer_clear.h"
 	
 	//
 	void OCLRASTER_FUNC clear_depth(global float* depth_image, const uint offset, const float clear_depth) {

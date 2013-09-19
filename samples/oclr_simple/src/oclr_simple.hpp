@@ -16,18 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SAMPLE_SIMPLE_H__
-#define __OCLRASTER_SAMPLE_SIMPLE_H__
+#ifndef __OCLRASTER_SAMPLE_SIMPLE_HPP__
+#define __OCLRASTER_SAMPLE_SIMPLE_HPP__
 
-#include <oclraster/oclraster.h>
-#include <oclraster/pipeline/pipeline.h>
-#include <oclraster/pipeline/transform_stage.h>
-#include <oclraster/pipeline/image.h>
-#include <oclraster/core/a2m.h>
-#include <oclraster/core/camera.h>
-#include <oclraster/program/oclraster_program.h>
-#include <oclraster/program/transform_program.h>
-#include <oclraster/program/rasterization_program.h>
+#include <oclraster/oclraster.hpp>
+#include <oclraster/pipeline/pipeline.hpp>
+#include <oclraster/pipeline/transform_stage.hpp>
+#include <oclraster/pipeline/image.hpp>
+#include <oclraster/core/a2m.hpp>
+#include <oclraster/core/camera.hpp>
+#include <oclraster/program/oclraster_program.hpp>
+#include <oclraster/program/transform_program.hpp>
+#include <oclraster/program/rasterization_program.hpp>
 
 #define APPLICATION_NAME "oclraster simple sample"
 

@@ -32,7 +32,7 @@ typedef struct {
 } ulong16;
 
 // include generated vector helper templates
-#include "oclr_cuda_vector_helper.h"
+#include "oclr_cuda_vector_helper.hpp"
 
 // clamp
 // base case, single component: clamp(val, min, max)
@@ -115,6 +115,6 @@ OCLRASTER_FUNC dst_typen clamp(const src_typen src, const dst_typen min_val, con
 }
 
 // include generated cuda type conversion templates
-#include "oclr_cuda_conversion.h"
+#include "oclr_cuda_conversion.hpp"
 
 #endif

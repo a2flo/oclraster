@@ -27,7 +27,7 @@ namespace std {
 #define cuda_builtin_typedef __attribute__((__device_builtin__))
 
 #if defined(__cplusplus)
-#include "oclr_cpp.h"
+#include "oclr_cpp.hpp"
 
 //
 #define TEMPLATE_ENABLE_IF_FLOAT class T, typename enable_if<is_same<float, T>::value == 1, int>::type = 0

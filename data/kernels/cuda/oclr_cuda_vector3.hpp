@@ -6,7 +6,7 @@
 
 #undef CUDA_VECTOR_WIDTH
 #define CUDA_VECTOR_WIDTH 3
-#include "oclr_cuda_vector_ops.h"
+#include "oclr_cuda_vector_ops.hpp"
 
 template <typename T> struct cuda_device_builtin vector3 {
 	T x;

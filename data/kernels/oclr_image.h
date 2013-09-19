@@ -212,7 +212,7 @@ __builtin_choose_expr(__alignof__(img) != 16, \
 // ... and now for the proper c++ solution to this problem:
 #if !defined(FLOOR_CUDA_CL)
 // note: already included and preprocessed by cuda
-#include "oclr_cpp.h"
+#include "oclr_cpp.hpp"
 #endif
 
 template<class T>
