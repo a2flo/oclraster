@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "volume.h"
+#include "volume.hpp"
 
 #define MIN_VOLUME_SIZE 32
 #define MAX_VOLUME_SIZE 128
@@ -34,7 +34,7 @@ volume* volume::from_file(const string& filename) {
 	// open and read info/dat file
 	file.open(filename, fstream::in);
 	if(!file.is_open()) {
-		oclr_error("couldn't open %s!", filename);
+		log_error("couldn't open %s!", filename);
 		file.close();
 		return nullptr;
 	}
@@ -63,7 +63,7 @@ volume* volume::from_file(const string& filename) {
 
 	file.open(subfilename.c_str(), fstream::in | fstream::binary);
 	if(!file.is_open()) {
-		oclr_error("couldn't open %s!", subfilename);
+		log_error("couldn't open %s!", subfilename);
 		file.close();
 		return nullptr;
 	}
@@ -105,7 +105,7 @@ volume* volume::from_file(const string& filename) {
 	delete [] read_volume_data;
 	
 	// create and set volume
-	oclr_msg("creating volume \"%s\" with resolution %v!", filename, resolution);
+	log_msg("creating volume \"%s\" with resolution %v!", filename, resolution);
 	volume* new_volume = new volume(volume_data, resolution);
 	delete [] volume_data;
 	return new_volume;

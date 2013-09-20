@@ -19,7 +19,7 @@
 #ifndef __OCLRASTER_GLOBAL_HPP__
 #define __OCLRASTER_GLOBAL_HPP__
 
-#include "core/platform.hpp"
+#include <floor/core/platform.hpp>
 
 // bin x/y size in pixels
 #define OCLRASTER_BIN_SIZE (32u)

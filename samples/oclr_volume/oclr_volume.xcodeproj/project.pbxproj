@@ -55,6 +55,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5C0612AE17EC460900F6724A /* oclr_volume.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = oclr_volume.hpp; path = src/oclr_volume.hpp; sourceTree = SOURCE_ROOT; };
+		5C0612AF17EC460F00F6724A /* volume.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = volume.hpp; path = src/volume.hpp; sourceTree = SOURCE_ROOT; };
 		5C29D5B7170A6C3D009371E2 /* rtt_display_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = rtt_display_fs.cl; sourceTree = "<group>"; };
 		5C29D5B8170A6C3D009371E2 /* rtt_display_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = rtt_display_vs.cl; sourceTree = "<group>"; };
 		5C2D23CB16D50C1700013DBF /* oclr_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_image.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.opencl; };
@@ -85,7 +87,6 @@
 		5C5C189C16C24F2D00AB23E6 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "ios/Default@2x.png"; sourceTree = SOURCE_ROOT; };
 		5C5C18A016C24F4600AB23E6 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = ios/en.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
 		5C728958170D02B10046E43F /* volume.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = volume.cpp; path = src/volume.cpp; sourceTree = SOURCE_ROOT; };
-		5C728959170D02B10046E43F /* volume.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = volume.h; path = src/volume.h; sourceTree = SOURCE_ROOT; };
 		5C72895C170D0A440046E43F /* volume_shader_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = volume_shader_fs.cl; sourceTree = "<group>"; };
 		5C72895D170D0A440046E43F /* volume_shader_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = volume_shader_vs.cl; sourceTree = "<group>"; };
 		5C91650E166685EA00626436 /* oclr_global.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_global.h; sourceTree = "<group>"; };
@@ -102,11 +103,8 @@
 		5CCC966B1641B739005C3DE4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = osx/en.lproj/Credits.rtf; sourceTree = SOURCE_ROOT; };
 		5CCC966D1641B739005C3DE4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = osx/en.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
 		5CCC966F1641B775005C3DE4 /* oclr_volume.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = oclr_volume.cpp; path = src/oclr_volume.cpp; sourceTree = SOURCE_ROOT; };
-		5CCC96701641B775005C3DE4 /* oclr_volume.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oclr_volume.h; path = src/oclr_volume.h; sourceTree = SOURCE_ROOT; };
 		5CCC96761641BAF3005C3DE4 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = Library/Frameworks/SDL2.framework; sourceTree = SDKROOT; };
 		5CCC96771641BAF3005C3DE4 /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = Library/Frameworks/SDL2_image.framework; sourceTree = SDKROOT; };
-		5CCC967B1641BF72005C3DE4 /* cutil_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cutil_math.h; sourceTree = "<group>"; };
-		5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oclr_cudacl.h; sourceTree = "<group>"; };
 		5CE91CED16F00F050044C264 /* debug_fs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_fs.cl; sourceTree = "<group>"; };
 		5CE91CEE16F00F050044C264 /* debug_vs.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = debug_vs.cl; sourceTree = "<group>"; };
 		5CEF6CC616F4FA440044E2DF /* template_rasterization_program.cl */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.opencl; path = template_rasterization_program.cl; sourceTree = "<group>"; };
@@ -218,9 +216,9 @@
 			isa = PBXGroup;
 			children = (
 				5CCC966F1641B775005C3DE4 /* oclr_volume.cpp */,
-				5CCC96701641B775005C3DE4 /* oclr_volume.h */,
+				5C0612AE17EC460900F6724A /* oclr_volume.hpp */,
 				5C728958170D02B10046E43F /* volume.cpp */,
-				5C728959170D02B10046E43F /* volume.h */,
+				5C0612AF17EC460F00F6724A /* volume.hpp */,
 			);
 			path = oclr_volume;
 			sourceTree = "<group>";
@@ -247,8 +245,6 @@
 				5C2D23CB16D50C1700013DBF /* oclr_image.h */,
 				5C55F7F016E4F92E0050946C /* oclr_image_support.h */,
 				5CC688FD1716D059006BD36B /* oclr_primitive_assembly.h */,
-				5CCC967B1641BF72005C3DE4 /* cutil_math.h */,
-				5CCC967E1641BF72005C3DE4 /* oclr_cudacl.h */,
 				5C9165111666946B00626436 /* bin_rasterize.cl */,
 				5CC688FE1716D072006BD36B /* processing.cl */,
 				5CEF6CC616F4FA440044E2DF /* template_rasterization_program.cl */,
@@ -672,9 +668,17 @@
 					/usr/include/libxml2,
 					/usr/local/include,
 					/usr/local/include/oclraster,
+					/usr/local/include/floor,
 				);
 				INFOPLIST_FILE = osx/Info.plist;
-				OTHER_LDFLAGS = "-loclrasterd";
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					/usr/lib,
+				);
+				OTHER_LDFLAGS = (
+					"-lfloord",
+					"-loclrasterd",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)d";
 				WRAPPER_EXTENSION = app;
 			};
@@ -693,9 +697,17 @@
 					/usr/include/libxml2,
 					/usr/local/include,
 					/usr/local/include/oclraster,
+					/usr/local/include/floor,
 				);
 				INFOPLIST_FILE = osx/Info.plist;
-				OTHER_LDFLAGS = "-loclraster";
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					/usr/lib,
+				);
+				OTHER_LDFLAGS = (
+					"-lfloor",
+					"-loclraster",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
