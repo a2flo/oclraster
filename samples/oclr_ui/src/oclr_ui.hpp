@@ -16,30 +16,30 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OCLRASTER_SAMPLE_UI_H__
-#define __OCLRASTER_SAMPLE_UI_H__
+#ifndef __OCLRASTER_SAMPLE_UI_HPP__
+#define __OCLRASTER_SAMPLE_UI_HPP__
 
-#include <oclraster/oclraster.h>
-#include <oclraster/pipeline/pipeline.h>
-#include <oclraster/pipeline/transform_stage.h>
-#include <oclraster/pipeline/image.h>
-#include <oclraster/pipeline/framebuffer.h>
-#include <oclraster/core/a2m.h>
-#include <oclraster/core/camera.h>
-#include <oclraster/program/oclraster_program.h>
-#include <oclraster/program/transform_program.h>
-#include <oclraster/program/rasterization_program.h>
-#include <oclraster_support/oclraster_support.h>
-#include <oclraster_support/rendering/gfx2d.h>
-#include <oclraster_support/gui/gui.h>
-#include <oclraster_support/gui/objects/gui_window.h>
-#include <oclraster_support/gui/objects/gui_button.h>
-#include <oclraster_support/gui/objects/gui_input_box.h>
-#include <oclraster_support/gui/objects/gui_pop_up_button.h>
-#include <oclraster_support/gui/objects/gui_list_box.h>
-#include <oclraster_support/gui/objects/gui_slider.h>
-#include <oclraster_support/gui/font.h>
-#include <oclraster_support/gui/font_manager.h>
+#include <oclraster/oclraster.hpp>
+#include <oclraster/pipeline/pipeline.hpp>
+#include <oclraster/pipeline/transform_stage.hpp>
+#include <oclraster/pipeline/image.hpp>
+#include <oclraster/pipeline/framebuffer.hpp>
+#include <oclraster/core/a2m.hpp>
+#include <oclraster/core/camera.hpp>
+#include <oclraster/program/oclraster_program.hpp>
+#include <oclraster/program/transform_program.hpp>
+#include <oclraster/program/rasterization_program.hpp>
+#include <oclraster_support/oclraster_support.hpp>
+#include <oclraster_support/rendering/gfx2d.hpp>
+#include <oclraster_support/gui/gui.hpp>
+#include <oclraster_support/gui/objects/gui_window.hpp>
+#include <oclraster_support/gui/objects/gui_button.hpp>
+#include <oclraster_support/gui/objects/gui_input_box.hpp>
+#include <oclraster_support/gui/objects/gui_pop_up_button.hpp>
+#include <oclraster_support/gui/objects/gui_list_box.hpp>
+#include <oclraster_support/gui/objects/gui_slider.hpp>
+#include <oclraster_support/gui/font.hpp>
+#include <oclraster_support/gui/font_manager.hpp>
 
 #define APPLICATION_NAME "oclraster ui sample"
 

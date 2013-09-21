@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "oclr_ui.h"
+#include "oclr_ui.hpp"
 
 // global vars, don't change these!
 static bool done = false;
@@ -37,7 +37,7 @@ static gui_button* ui_button { nullptr };
 void primitive_test_draw(const DRAW_MODE_UI draw_mode, const framebuffer* buffer);
 
 
-int main(int argc oclr_unused, char* argv[]) {
+int main(int argc floor_unused, char* argv[]) {
 	// initialize oclraster
 	oclraster::init(argv[0],
 #if !defined(OCLRASTER_IOS)
@@ -46,11 +46,11 @@ int main(int argc oclr_unused, char* argv[]) {
 					(const char*)"/var/mobile/Documents/oclraster/"
 #endif
 					);
-	oclraster::set_caption(APPLICATION_NAME);
-	oclraster::acquire_context();
+	floor::set_caption(APPLICATION_NAME);
+	floor::acquire_context();
 	
 	// init class pointers
-	evt = oclraster::get_event();
+	evt = floor::get_event();
 	//ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_CPU);
 	ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_GPU);
 	
@@ -70,7 +70,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	fm = ui->get_font_manager();
 	ui_theme = ui->get_theme();
 	
-	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
+	a2m* model = new a2m(floor::data_path("monkey_uv.a2m"));
 	
 	// add event handlers
 	event::handler key_handler_fnctr(&key_handler);
@@ -168,15 +168,15 @@ int main(int argc oclr_unused, char* argv[]) {
 	gui_window* local_wnd = ui_wnd;
 	ui_button->add_handler([&local_wnd](GUI_EVENT, gui_object&) {
 		cout << "button press!" << endl;
-		oclraster::acquire_context();
+		floor::acquire_context();
 		local_wnd->lock();
 		local_wnd->set_position(float2(0.1f - ui_wnd->get_position().x, 0.0f));
 		local_wnd->unlock();
-		oclraster::release_context();
+		floor::release_context();
 	}, GUI_EVENT::BUTTON_PRESS);
 	
 	// init done
-	oclraster::release_context();
+	floor::release_context();
 	
 	// main loop
 	while(!done) {
@@ -192,14 +192,13 @@ int main(int argc oclr_unused, char* argv[]) {
 #endif
 		
 		// set caption (app name and fps count)
-		if(oclraster::is_new_fps_count()) {
-			static stringstream caption;
+		if(floor::is_new_fps_count()) {
+			stringstream caption;
 			caption << APPLICATION_NAME;
-			caption << " | " << oclraster::get_fps() << " FPS";
-			caption << " | ~" << oclraster::get_frame_time() << "ms ";
+			caption << " | " << floor::get_fps() << " FPS";
+			caption << " | ~" << floor::get_frame_time() << "ms ";
 			caption << " | Cam: " << cam->get_position();
-			oclraster::set_caption(caption.str().c_str());
-			core::reset(caption);
+			floor::set_caption(caption.str().c_str());
 		}
 		
 		oclraster::start_draw();
@@ -267,12 +266,12 @@ bool load_programs() {
 	
 	
 	for(const auto& shader_filename : shader_filenames) {
-		if(!file_io::file_to_string(oclraster::kernel_path("user/"+shader_filename[0]), vs_str)) {
-			oclr_error("couldn't open vs program!");
+		if(!file_io::file_to_string(floor::kernel_path("user/"+shader_filename[0]), vs_str)) {
+			log_error("couldn't open vs program!");
 			return false;
 		}
-		if(!file_io::file_to_string(oclraster::kernel_path("user/"+shader_filename[1]), fs_str)) {
-			oclr_error("couldn't open fs program!");
+		if(!file_io::file_to_string(floor::kernel_path("user/"+shader_filename[1]), fs_str)) {
+			log_error("couldn't open fs program!");
 			return false;
 		}
 		transform_programs.emplace_back(new transform_program(vs_str, "transform_main"));
@@ -283,7 +282,7 @@ bool load_programs() {
 	return true;
 }
 
-bool kernel_reload_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool kernel_reload_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::KERNEL_RELOAD) {
 		load_programs();
 		return true;
@@ -321,7 +320,7 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 				break;
 			case SDLK_F19:
 			case SDLK_0:
-				oclraster::reload_kernels();
+				floor::reload_kernels();
 				break;
 			default: return false;
 		}
@@ -329,7 +328,7 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	return true;
 }
 
-bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::MOUSE_RIGHT_CLICK) {
 		cam->set_mouse_input(cam->get_mouse_input() ^ true);
 		// TODO: switch cam input
@@ -338,30 +337,30 @@ bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
 	return true;
 }
 
-bool quit_handler(EVENT_TYPE type oclr_unused, shared_ptr<event_object> obj oclr_unused) {
+bool quit_handler(EVENT_TYPE type floor_unused, shared_ptr<event_object> obj floor_unused) {
 	done = true;
 	return true;
 }
 
 #if defined(OCLRASTER_IOS)
-bool touch_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool touch_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::FINGER_UP) {
 		//const shared_ptr<finger_up_event>& touch_evt = (shared_ptr<finger_up_event>&)obj;
-		//oclr_msg("finger up: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
+		//log_msg("finger up: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
 	}
 	/*else if(type == EVENT_TYPE::FINGER_DOWN) {
 		const shared_ptr<finger_down_event>& touch_evt = (shared_ptr<finger_down_event>&)obj;
-		oclr_msg("finger down: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
+		log_msg("finger down: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
 	}
 	else if(type == EVENT_TYPE::FINGER_MOVE) {
 		const shared_ptr<finger_move_event>& touch_evt = (shared_ptr<finger_move_event>&)obj;
-		oclr_msg("finger move: %v -> %v, %u, #%u", touch_evt->position, touch_evt->move, touch_evt->pressure, touch_evt->id);
+		log_msg("finger move: %v -> %v, %u, #%u", touch_evt->position, touch_evt->move, touch_evt->pressure, touch_evt->id);
 	}*/
 	return true;
 }
 #endif
 
-void primitive_test_draw(const DRAW_MODE_UI draw_mode oclr_unused, const framebuffer* buffer oclr_unused) {
+void primitive_test_draw(const DRAW_MODE_UI draw_mode floor_unused, const framebuffer* buffer floor_unused) {
 	// enter 2d rendering
 	p->start_orthographic_rendering();
 	

@@ -16,10 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "gl_renderer.h"
-#include <oclraster/oclraster.h>
-#include <oclraster/core/gl_support.h>
-#include <oclraster/core/camera.h>
+#include "gl_renderer.hpp"
+#include <oclraster/oclraster.hpp>
+#include <floor/core/gl_support.hpp>
+#include <oclraster/core/camera.hpp>
 #include <regex>
 
 //
@@ -77,15 +77,15 @@ void init_gl_renderer() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, oclraster::get_width(), oclraster::get_height(),
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, floor::get_width(), floor::get_height(),
 				 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, copy_fbo_tex_id, 0);
 	
 	glGenRenderbuffers(1, &depth_buffer);
 	glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, oclraster::get_width(), oclraster::get_height());
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, floor::get_width(), floor::get_height());
 	
-	glBindFramebuffer(GL_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
+	glBindFramebuffer(GL_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -123,8 +123,8 @@ void gl_render(camera* cam) {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	const float aspect_ratio = float(oclraster::get_width()) / float(oclraster::get_height());
-	const float angle_ratio = tanf(DEG2RAD(oclraster::get_fov() * 0.5f)) * 2.0f;
+	const float aspect_ratio = float(floor::get_width()) / float(floor::get_height());
+	const float angle_ratio = tanf(DEG2RAD(floor::get_fov() * 0.5f)) * 2.0f;
 	
 	constexpr float z_near = 0.01f, z_far = 1000.0f;
 	matrix4f pm {
@@ -159,14 +159,14 @@ void gl_render(camera* cam) {
 	
 	// blit
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, copy_fbo_id);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, OCLRASTER_DEFAULT_FRAMEBUFFER);
-	glBlitFramebuffer(0, 0, oclraster::get_width(), oclraster::get_height(),
-					  0, 0, oclraster::get_width(), oclraster::get_height(),
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
+	glBlitFramebuffer(0, 0, floor::get_width(), floor::get_height(),
+					  0, 0, floor::get_width(), floor::get_height(),
 					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
-static void log_pretty_print(const char* log, const char* code oclr_unused) {
-	oclr_log("%s", log);
+static void log_pretty_print(const char* log, const char* code floor_unused) {
+	log_undecorated("%s", log);
 }
 
 static bool is_gl_sampler_type(const GLenum& type) {
@@ -195,7 +195,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 	glGetShaderiv(shd_obj.vertex_shader, GL_COMPILE_STATUS, &success);
 	if(!success) {
 		glGetShaderInfoLog(shd_obj.vertex_shader, OCLRASTER_SHADER_LOG_SIZE, nullptr, info_log);
-		oclr_error("error in vertex shader \"%s\" compilation!", shd.name);
+		log_error("error in vertex shader \"%s\" compilation!", shd.name);
 		log_pretty_print(info_log, vs_text);
 		return;
 	}
@@ -207,7 +207,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 	glGetShaderiv(shd_obj.fragment_shader, GL_COMPILE_STATUS, &success);
 	if(!success) {
 		glGetShaderInfoLog(shd_obj.fragment_shader, OCLRASTER_SHADER_LOG_SIZE, nullptr, info_log);
-		oclr_error("error in fragment shader \"%s\" compilation!", shd.name);
+		log_error("error in fragment shader \"%s\" compilation!", shd.name);
 		log_pretty_print(info_log, fs_text);
 		return;
 	}
@@ -223,7 +223,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 	glGetProgramiv(shd_obj.program, GL_LINK_STATUS, &success);
 	if(!success) {
 		glGetProgramInfoLog(shd_obj.program, OCLRASTER_SHADER_LOG_SIZE, nullptr, info_log);
-		oclr_error("error in program \"%s\" linkage!\nInfo log: %s", shd.name, info_log);
+		log_error("error in program \"%s\" linkage!\nInfo log: %s", shd.name, info_log);
 		return;
 	}
 	glUseProgram(shd_obj.program);
@@ -286,7 +286,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 	glGetProgramiv(shd_obj.program, GL_VALIDATE_STATUS, &success);
 	if(!success) {
 		glGetProgramInfoLog(shd_obj.program, OCLRASTER_SHADER_LOG_SIZE, nullptr, info_log);
-		oclr_error("error in program \"%s\" validation!\nInfo log: %s", shd.name, info_log);
+		log_error("error in program \"%s\" validation!\nInfo log: %s", shd.name, info_log);
 		return;
 	}
 	else {
@@ -294,7 +294,7 @@ static void compile_shader(shader_object& shd, const char* vs_text, const char* 
 		
 		// check if shader will run in software (if so, print out a debug message)
 		if(strstr((const char*)info_log, (const char*)"software") != nullptr) {
-			oclr_debug("program \"%s\" validation: %s", shd.name, info_log);
+			log_debug("program \"%s\" validation: %s", shd.name, info_log);
 		}
 	}
 	

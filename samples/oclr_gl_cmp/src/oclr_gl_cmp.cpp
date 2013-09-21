@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "oclr_gl_cmp.h"
-#include "gl_renderer.h"
+#include "oclr_gl_cmp.hpp"
+#include "gl_renderer.hpp"
 
 // global vars, don't change these!
 static bool done { false };
@@ -33,14 +33,14 @@ static pipeline* p { nullptr };
 static atomic<unsigned int> selected_material { 0 };
 static constexpr size_t material_count { 5 };
 
-int main(int argc oclr_unused, char* argv[]) {
+int main(int argc floor_unused, char* argv[]) {
 	// initialize oclraster
 	oclraster::init(argv[0], (const char*)"../data/");
-	oclraster::set_caption(APPLICATION_NAME);
-	oclraster::acquire_context();
+	floor::set_caption(APPLICATION_NAME);
+	floor::acquire_context();
 	
 	// init class pointers
-	evt = oclraster::get_event();
+	evt = floor::get_event();
 	//ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_CPU);
 	ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_GPU);
 	//ocl->set_active_device(opencl_base::DEVICE_TYPE::GPU0);
@@ -193,13 +193,13 @@ int main(int argc oclr_unused, char* argv[]) {
 	array<array<shared_ptr<image>, textures_per_material>, material_count> materials;
 	for(size_t i = 0; i < material_count; i++) {
 		for(size_t j = 0; j < textures_per_material; j++) {
-			materials[i][j] = make_shared<image>(image::from_file(oclraster::data_path(texture_names[(i * textures_per_material) + j]+".png"),
+			materials[i][j] = make_shared<image>(image::from_file(floor::data_path(texture_names[(i * textures_per_material) + j]+".png"),
 																  image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA));
 		}
 	}
 	
 	// init done
-	oclraster::release_context();
+	floor::release_context();
 	
 	// main loop
 	float model_rotation = 0.0f;
@@ -216,16 +216,16 @@ int main(int argc oclr_unused, char* argv[]) {
 #endif
 		
 		// set caption (app name and fps count)
-		if(oclraster::is_new_fps_count()) {
-			const unsigned int fps = oclraster::get_fps();
-			//oclr_log("fps: %u", fps);
+		if(floor::is_new_fps_count()) {
+			const unsigned int fps = floor::get_fps();
+			//log_undecorated("fps: %u", fps);
 			stringstream caption;
 			caption << APPLICATION_NAME;
 			caption << " | " << fps << " FPS";
-			caption << " | ~" << oclraster::get_frame_time() << "ms ";
+			caption << " | ~" << floor::get_frame_time() << "ms ";
 			caption << " | Cam: " << cam->get_position();
 			caption << " " << cam->get_rotation();
-			oclraster::set_caption(caption.str());
+			floor::set_caption(caption.str());
 		}
 		
 		//cout << endl << endl << "################" << endl << endl;
@@ -312,12 +312,12 @@ bool load_programs() {
 		{ "gl_cmp.cl", "gl_cmp.cl" }
 	};
 	
-	if(!file_io::file_to_string(oclraster::kernel_path("user/"+shader_filenames[0]), vs_str)) {
-		oclr_error("couldn't open vs program!");
+	if(!file_io::file_to_string(floor::kernel_path("user/"+shader_filenames[0]), vs_str)) {
+		log_error("couldn't open vs program!");
 		return false;
 	}
-	if(!file_io::file_to_string(oclraster::kernel_path("user/"+shader_filenames[1]), fs_str)) {
-		oclr_error("couldn't open fs program!");
+	if(!file_io::file_to_string(floor::kernel_path("user/"+shader_filenames[1]), fs_str)) {
+		log_error("couldn't open fs program!");
 		return false;
 	}
 	transform_prog = new transform_program(vs_str, "transform_main");
@@ -327,7 +327,7 @@ bool load_programs() {
 	return true;
 }
 
-bool kernel_reload_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool kernel_reload_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::KERNEL_RELOAD) {
 		load_programs();
 		return true;
@@ -360,7 +360,7 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 				break;
 			case SDLK_F19:
 			case SDLK_0:
-				oclraster::reload_kernels();
+				floor::reload_kernels();
 				break;
 			case SDLK_m:
 				update_model ^= true;
@@ -392,14 +392,14 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	return true;
 }
 
-bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::MOUSE_RIGHT_CLICK) {
 		cam->set_mouse_input(cam->get_mouse_input() ^ true);
 	}
 	return true;
 }
 
-bool quit_handler(EVENT_TYPE type oclr_unused, shared_ptr<event_object> obj oclr_unused) {
+bool quit_handler(EVENT_TYPE type floor_unused, shared_ptr<event_object> obj floor_unused) {
 	done = true;
 	return true;
 }

@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "oclr_rtt.h"
+#include "oclr_rtt.hpp"
 
 // global vars, don't change these!
 static bool done = false;
@@ -34,7 +34,7 @@ static rasterization_program* rtt_display_rp { nullptr };
 static pipeline* p { nullptr };
 static constexpr size_t material_count { 1 };
 
-int main(int argc oclr_unused, char* argv[]) {
+int main(int argc floor_unused, char* argv[]) {
 	// initialize oclraster
 	oclraster::init(argv[0],
 #if !defined(OCLRASTER_IOS)
@@ -43,11 +43,11 @@ int main(int argc oclr_unused, char* argv[]) {
 					(const char*)"/var/mobile/Documents/oclraster/"
 #endif
 					);
-	oclraster::set_caption(APPLICATION_NAME);
-	oclraster::acquire_context();
+	floor::set_caption(APPLICATION_NAME);
+	floor::acquire_context();
 	
 	// init class pointers
-	evt = oclraster::get_event();
+	evt = floor::get_event();
 	//ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_CPU);
 	ocl->set_active_device(opencl_base::DEVICE_TYPE::FASTEST_GPU);
 	
@@ -72,7 +72,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	p = new pipeline();
 	oclraster::set_active_pipeline(p);
 	
-	a2m* model = new a2m(oclraster::data_path("monkey_uv.a2m"));
+	a2m* model = new a2m(floor::data_path("monkey_uv.a2m"));
 	
 	// add event handlers
 	event::handler key_handler_fnctr(&key_handler);
@@ -119,9 +119,9 @@ int main(int argc oclr_unused, char* argv[]) {
 	
 	array<array<image, 3>, material_count> materials {{ // excessive braces are excessive
 		{{
-			image::from_file(oclraster::data_path(texture_names[0]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[1]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
-			image::from_file(oclraster::data_path(texture_names[2]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
+			image::from_file(floor::data_path(texture_names[0]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(floor::data_path(texture_names[1]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA),
+			image::from_file(floor::data_path(texture_names[2]+".png"), image::BACKING::IMAGE, IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA)
 		}}
 	}};
 	
@@ -196,7 +196,7 @@ int main(int argc oclr_unused, char* argv[]) {
 	rtt_fb.set_clear_color_int(ulong4 { 0, 76, 180, 255 });
 	
 	// init done
-	oclraster::release_context();
+	floor::release_context();
 	
 	// main loop
 	float model_rotation = 0.0f;
@@ -213,16 +213,16 @@ int main(int argc oclr_unused, char* argv[]) {
 #endif
 		
 		// set caption (app name and fps count)
-		if(oclraster::is_new_fps_count()) {
-			const unsigned int fps = oclraster::get_fps();
-			//oclr_log("fps: %u", fps);
+		if(floor::is_new_fps_count()) {
+			const unsigned int fps = floor::get_fps();
+			//floor_undecorated("fps: %u", fps);
 			stringstream caption;
 			caption << APPLICATION_NAME;
 			caption << " | " << fps << " FPS";
-			caption << " | ~" << oclraster::get_frame_time() << "ms ";
+			caption << " | ~" << floor::get_frame_time() << "ms ";
 			caption << " | Cam: " << cam->get_position();
 			caption << " " << cam->get_rotation();
-			oclraster::set_caption(caption.str());
+			floor::set_caption(caption.str());
 		}
 		
 		oclraster::start_draw();
@@ -309,12 +309,12 @@ bool load_programs() {
 	
 
 	for(const auto& shader_filename : shader_filenames) {
-		if(!file_io::file_to_string(oclraster::kernel_path("user/"+shader_filename[0]), vs_str)) {
-			oclr_error("couldn't open vs program!");
+		if(!file_io::file_to_string(floor::kernel_path("user/"+shader_filename[0]), vs_str)) {
+			log_error("couldn't open vs program!");
 			return false;
 		}
-		if(!file_io::file_to_string(oclraster::kernel_path("user/"+shader_filename[1]), fs_str)) {
-			oclr_error("couldn't open fs program!");
+		if(!file_io::file_to_string(floor::kernel_path("user/"+shader_filename[1]), fs_str)) {
+			log_error("couldn't open fs program!");
 			return false;
 		}
 		transform_programs.emplace_back(new transform_program(vs_str, "transform_main"));
@@ -327,7 +327,7 @@ bool load_programs() {
 	return true;
 }
 
-bool kernel_reload_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool kernel_reload_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::KERNEL_RELOAD) {
 		load_programs();
 		return true;
@@ -360,7 +360,7 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 				break;
 			case SDLK_F19:
 			case SDLK_0:
-				oclraster::reload_kernels();
+				floor::reload_kernels();
 				break;
 			case SDLK_m:
 				update_model ^= true;
@@ -371,7 +371,7 @@ bool key_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 	return true;
 }
 
-bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::MOUSE_RIGHT_CLICK) {
 		cam->set_mouse_input(cam->get_mouse_input() ^ true);
 		// TODO: switch cam input
@@ -380,24 +380,24 @@ bool mouse_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
 	return true;
 }
 
-bool quit_handler(EVENT_TYPE type oclr_unused, shared_ptr<event_object> obj oclr_unused) {
+bool quit_handler(EVENT_TYPE type floor_unused, shared_ptr<event_object> obj floor_unused) {
 	done = true;
 	return true;
 }
 
 #if defined(OCLRASTER_IOS)
-bool touch_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool touch_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::FINGER_UP) {
 		//const shared_ptr<finger_up_event>& touch_evt = (shared_ptr<finger_up_event>&)obj;
-		//oclr_msg("finger up: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
+		//log_msg("finger up: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
 	}
 	/*else if(type == EVENT_TYPE::FINGER_DOWN) {
 		const shared_ptr<finger_down_event>& touch_evt = (shared_ptr<finger_down_event>&)obj;
-		oclr_msg("finger down: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
+		log_msg("finger down: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
 	}
 	else if(type == EVENT_TYPE::FINGER_MOVE) {
 		const shared_ptr<finger_move_event>& touch_evt = (shared_ptr<finger_move_event>&)obj;
-		oclr_msg("finger move: %v -> %v, %u, #%u", touch_evt->position, touch_evt->move, touch_evt->pressure, touch_evt->id);
+		log_msg("finger move: %v -> %v, %u, #%u", touch_evt->position, touch_evt->move, touch_evt->pressure, touch_evt->id);
 	}*/
 	return true;
 }

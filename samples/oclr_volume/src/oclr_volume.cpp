@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 		// set caption (app name and fps count)
 		if(floor::is_new_fps_count()) {
 			const unsigned int fps = floor::get_fps();
-			//oclr_log("fps: %u", fps);
+			//log_undecorated("fps: %u", fps);
 			stringstream caption;
 			caption << APPLICATION_NAME;
 			caption << " | " << fps << " FPS";
@@ -275,7 +275,7 @@ bool quit_handler(EVENT_TYPE type floor_unused, shared_ptr<event_object> obj flo
 }
 
 #if defined(OCLRASTER_IOS)
-bool touch_handler(EVENT_TYPE type, shared_ptr<event_object> obj oclr_unused) {
+bool touch_handler(EVENT_TYPE type, shared_ptr<event_object> obj floor_unused) {
 	if(type == EVENT_TYPE::FINGER_UP) {
 		//const shared_ptr<finger_up_event>& touch_evt = (shared_ptr<finger_up_event>&)obj;
 		//floor_msg("finger up: %v, %u, #%u", touch_evt->position, touch_evt->pressure, touch_evt->id);
