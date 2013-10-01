@@ -59,7 +59,7 @@ BOOL APIENTRY DllMain(HANDLE hModule floor_unused, DWORD ul_reason_for_call, LPV
  *! which is mostly needed when the binary is opened via finder under os x or any file manager under linux
  */
 void oclraster::init(const char* callpath_, const char* datapath_) {
-	floor::init(callpath_, datapath_);
+	floor::init(callpath_, datapath_, false, "config.xml", true);
 	floor::set_caption("oclraster");
 	
 	// print out oclraster info
