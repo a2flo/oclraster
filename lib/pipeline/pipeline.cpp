@@ -34,11 +34,8 @@ struct __attribute__((packed, aligned(16))) constant_camera_data {
 };
 
 pipeline::pipeline() :
-default_framebuffer(0, 0),
 event_handler_fnctr(this, &pipeline::event_handler) {
 	create_framebuffers(size2(floor::get_width(), floor::get_height()));
-	state.framebuffer_size = default_framebuffer.get_size();
-	state.active_framebuffer = &default_framebuffer;
 	state.camera_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 											 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,
 											 sizeof(constant_camera_data));
@@ -83,7 +80,13 @@ bool pipeline::event_handler(EVENT_TYPE type, shared_ptr<event_object> obj) {
 }
 
 void pipeline::create_framebuffers(const uint2& size) {
-	const bool is_default_framebuffer = (state.active_framebuffer == &default_framebuffer);
+	bool is_default_framebuffer = (state.active_framebuffer == nullptr); // only true if uninitialized
+	for(const auto& fb : default_framebuffer) {
+		if(&fb == state.active_framebuffer) {
+			is_default_framebuffer = true;
+			break;
+		}
+	}
 	
 	// destroy old framebuffers first
 	destroy_framebuffers();
@@ -92,9 +95,14 @@ void pipeline::create_framebuffers(const uint2& size) {
 	log_debug("size: %v -> %v", size, scaled_size);
 	
 	//
-	default_framebuffer = framebuffer::create_with_images(scaled_size.x, scaled_size.y,
-														  { { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA } },
-														  { IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R });
+	const size_t default_fb_count = get_framebuffer_count_from_mode(default_framebuffer_mode);
+	for(size_t i = 0; i < default_fb_count; i++) {
+		default_framebuffer.emplace_back(framebuffer::create_with_images(scaled_size.x, scaled_size.y,
+																		 { { IMAGE_TYPE::UINT_8, IMAGE_CHANNEL::RGBA } },
+																		 { IMAGE_TYPE::FLOAT_32, IMAGE_CHANNEL::R }));
+	}
+	// reset default fb counter
+	cur_default_fb = 0;
 	
 #if !defined(OCLRASTER_USE_DRAW_PIXELS)
 	// create a fbo for copying the color framebuffer every frame and displaying it
@@ -127,11 +135,16 @@ void pipeline::create_framebuffers(const uint2& size) {
 	}
 	
 	// do an initial clear
-	default_framebuffer.clear();
+	for(size_t i = 0; i < default_fb_count; i++) {
+		default_framebuffer[i].clear();
+	}
 }
 
 void pipeline::destroy_framebuffers() {
-	framebuffer::destroy_images(default_framebuffer);
+	for(auto& fb : default_framebuffer) {
+		framebuffer::destroy_images(fb);
+	}
+	default_framebuffer.clear();
 	
 #if !defined(OCLRASTER_USE_DRAW_PIXELS)
 	glBindFramebuffer(GL_FRAMEBUFFER, FLOOR_DEFAULT_FRAMEBUFFER);
@@ -146,8 +159,13 @@ void pipeline::destroy_framebuffers() {
 }
 
 void pipeline::swap() {
-	const uint2 default_fb_size = default_framebuffer.get_size();
-	image* fbo_img = default_framebuffer.get_image(0);
+	// TODO: multi-threaded/-process/-context swap
+	// use the currently active default framebuffer for swapping and continue with the next one (if possible)
+	const size_t swap_fb_num = cur_default_fb;
+	
+	//
+	const uint2 default_fb_size = default_framebuffer[swap_fb_num].get_size();
+	image* fbo_img = default_framebuffer[swap_fb_num].get_image(0);
 	
 #if defined(OCLRASTER_FXAA)
 	if(fxaa_state) {
@@ -219,7 +237,14 @@ void pipeline::swap() {
 #endif
 #endif
 	
-	default_framebuffer.clear();
+	// make next default fb active
+	cur_default_fb = (cur_default_fb + 1) % get_framebuffer_count_from_mode(default_framebuffer_mode);
+	if(state.active_framebuffer == &default_framebuffer[swap_fb_num]) {
+		state.active_framebuffer = &default_framebuffer[cur_default_fb];
+	}
+	
+	// TODO: clear on next draw?
+	default_framebuffer[cur_default_fb].clear();
 }
 
 void pipeline::draw(const PRIMITIVE_TYPE type,
@@ -345,7 +370,7 @@ void pipeline::bind_image(const string& name, const image& img) {
 
 void pipeline::bind_framebuffer(framebuffer* fb) {
 	if(fb == nullptr) {
-		state.active_framebuffer = &default_framebuffer;
+		state.active_framebuffer = &default_framebuffer[cur_default_fb];
 	}
 	else state.active_framebuffer = fb;
 	
@@ -363,12 +388,12 @@ void pipeline::bind_framebuffer(framebuffer* fb) {
 	}
 }
 
-const framebuffer* pipeline::get_default_framebuffer() const {
-	return &default_framebuffer;
+const vector<framebuffer>& pipeline::get_default_framebuffer() const {
+	return default_framebuffer;
 }
 
-framebuffer* pipeline::get_default_framebuffer() {
-	return &default_framebuffer;
+vector<framebuffer>& pipeline::get_default_framebuffer() {
+	return default_framebuffer;
 }
 
 const framebuffer* pipeline::get_bound_framebuffer() const {

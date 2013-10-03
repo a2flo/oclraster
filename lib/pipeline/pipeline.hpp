@@ -122,8 +122,24 @@ public:
 	
 	// any default framebuffer modification happens at your own risk!
 	// attachment count and formats should never be modified
-	const framebuffer* get_default_framebuffer() const;
-	framebuffer* get_default_framebuffer();
+	const vector<framebuffer>& get_default_framebuffer() const;
+	vector<framebuffer>& get_default_framebuffer();
+	
+	enum class DEFAULT_FRAMEBUFFER_MODE : unsigned int {
+		SINGLE_BUFFERING = 1u, // only uses a single framebuffer, swap will be blocking!
+		DOUBLE_BUFFERING = 2u, // uses two framebuffers in ping-pong mode, less chance of swap blocking (default mode)
+		TRIPLE_BUFFERING = 3u, // uses three framebuffers, even less chance of swap blocking
+		TRIPLE_BUFFERING_DISCARD = 4u, // uses three framebuffers, discards the oldest framebuffer if swap would need to block -> no blocking
+	};
+	// TODO: !
+	//void set_default_framebuffer_mode(const DEFAULT_FRAMEBUFFER_MODE mode);
+	//const DEFAULT_FRAMEBUFFER_MODE& get_default_framebuffer_mode() const;
+	static constexpr size_t get_framebuffer_count_from_mode(const DEFAULT_FRAMEBUFFER_MODE mode) {
+		return (mode == DEFAULT_FRAMEBUFFER_MODE::SINGLE_BUFFERING ? 1 :
+				(mode == DEFAULT_FRAMEBUFFER_MODE::DOUBLE_BUFFERING ? 2 :
+				 (mode == DEFAULT_FRAMEBUFFER_MODE::TRIPLE_BUFFERING ||
+				  mode == DEFAULT_FRAMEBUFFER_MODE::TRIPLE_BUFFERING_DISCARD ? 3 : 1)));
+	}
 	
 	const framebuffer* get_bound_framebuffer() const;
 	framebuffer* get_bound_framebuffer();
@@ -205,7 +221,12 @@ protected:
 	//
 	void create_framebuffers(const uint2& size);
 	void destroy_framebuffers();
-	framebuffer default_framebuffer;
+	// array of framebuffer (size is dependent on double/triple/*-buffering)
+	vector<framebuffer> default_framebuffer;
+	DEFAULT_FRAMEBUFFER_MODE default_framebuffer_mode { DEFAULT_FRAMEBUFFER_MODE::DOUBLE_BUFFERING };
+	size_t cur_default_fb { 0 };
+	
+	// fxaa
 	bool fxaa_state { true };
 	
 	// map/copy fbo
