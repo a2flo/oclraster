@@ -159,7 +159,6 @@ solution "oclraster"
 		if(mingw) then
 			defines { "__WINDOWS__", "MINGW" }
 			add_include("/mingw/include")
-			libdirs { "/usr/lib", "/usr/local/lib" }
 			buildoptions { "-Wno-unknown-pragmas" }
 		end
 	end
@@ -173,6 +172,8 @@ solution "oclraster"
 		add_include("/usr/local/include/floor")
 		-- set system includes
 		buildoptions { system_includes }
+
+		libdirs { "/usr/lib", "/usr/local/lib" }
 		
 		if(not pocl) then
 			links { "OpenCL" }
