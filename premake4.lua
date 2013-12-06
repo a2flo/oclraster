@@ -110,19 +110,16 @@ solution "oclraster"
 		add_include("/usr/local/include/libxml2")
 		add_include("/usr/include/freetype2")
 		add_include("/usr/local/include/freetype2")
-		buildoptions { "-std=c++11 -Wall" }
+		buildoptions { "-std=c++1y" }
 		
 		if(clang_libcxx) then
 			buildoptions { "-stdlib=libc++" }
-			buildoptions { "-Weverything" }
-			buildoptions { "-Wno-unknown-warning-option" }
-			buildoptions { "-Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-header-hygiene -Wno-gnu -Wno-float-equal" }
-			buildoptions { "-Wno-documentation -Wno-system-headers -Wno-global-constructors -Wno-padded -Wno-packed" }
-			buildoptions { "-Wno-switch-enum -Wno-sign-conversion -Wno-conversion -Wno-exit-time-destructors -Wno-nested-anon-types" }
+			buildoptions { "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-extensions -Wno-header-hygiene" }
+			buildoptions { "-Wno-gnu -Wno-documentation -Wno-system-headers -Wno-global-constructors -Wno-padded -Wno-packed" }
+			buildoptions { "-Wno-switch-enum -Wno-exit-time-destructors -Wno-unknown-warning-option -Wno-nested-anon-types" }
 			linkoptions { "-fvisibility=default" }
 			if(not win_unixenv) then
-				buildoptions { "-integrated-as" }
-				defines { "OCLRASTER_EXPORT=1" }
+				defines { "FLOOR_EXPORT=1" }
 				linkoptions { "-stdlib=libc++" }
 				if(os.is("linux")) then
 					linkoptions { "-lc++abi" }
@@ -170,6 +167,10 @@ solution "oclraster"
 	if(os.is("linux") or os.is("bsd") or win_unixenv) then
 		add_include("/usr/include/SDL2")
 		add_include("/usr/local/include/SDL2")
+		add_include("/usr/include/boost")
+		add_include("/usr/local/include/boost")
+		add_include("/usr/include/floor")
+		add_include("/usr/local/include/floor")
 		-- set system includes
 		buildoptions { system_includes }
 		
@@ -222,6 +223,12 @@ solution "oclraster"
 
 	configuration { "x32" }
 		defines { "PLATFORM_X86" }
+	
+	configuration "Release"
+		links { "floord" }
+	
+	configuration "Debug"
+		links { "floord" }
 
 -------------------------------------------------------------------------------
 -- oclraster base lib
