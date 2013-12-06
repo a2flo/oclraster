@@ -34,7 +34,7 @@ struct __attribute__((packed, aligned(16))) constant_camera_data {
 };
 
 pipeline::pipeline() :
-event_handler_fnctr(this, &pipeline::event_handler) {
+event_handler_fnctr(bind(&pipeline::event_handler, this, placeholders::_1, placeholders::_2)) {
 	create_framebuffers(size2(floor::get_width(), floor::get_height()));
 	state.camera_buffer = ocl->create_buffer(opencl::BUFFER_FLAG::READ |
 											 opencl::BUFFER_FLAG::BLOCK_ON_WRITE,

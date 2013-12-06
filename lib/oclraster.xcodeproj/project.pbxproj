@@ -491,7 +491,7 @@
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -532,6 +532,10 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "-fparse-all-comments";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-std=c++1y",
+				);
 				OTHER_LDFLAGS = "-lfloord";
 				SDKROOT = macosx;
 				STRINGS_FILE_OUTPUT_ENCODING = "UTF-8";
@@ -580,7 +584,7 @@
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -618,6 +622,10 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				OTHER_CFLAGS = "-fparse-all-comments";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-std=c++1y",
+				);
 				OTHER_LDFLAGS = "-lfloor";
 				SDKROOT = macosx;
 				STRINGS_FILE_OUTPUT_ENCODING = "UTF-8";
@@ -670,6 +678,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
 				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = YES;
@@ -697,12 +706,10 @@
 					/usr/X11/include,
 					"-isystem",
 					/usr/include/libxml2,
+					"-iframework",
+					/Library/Frameworks,
 				);
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-fno-elide-type",
-					"-fdiagnostics-show-template-tree",
-				);
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"-lfloord",
 					"-weak_framework",
@@ -724,6 +731,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks;
 				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
 				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -750,12 +758,10 @@
 					/usr/X11/include,
 					"-isystem",
 					/usr/include/libxml2,
+					"-iframework",
+					/Library/Frameworks,
 				);
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-fno-elide-type",
-					"-fdiagnostics-show-template-tree",
-				);
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"-lfloor",
 					"-weak_framework",
