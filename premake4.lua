@@ -226,7 +226,7 @@ solution "oclraster"
 		defines { "PLATFORM_X86" }
 	
 	configuration "Release"
-		links { "floord" }
+		links { "floor" }
 	
 	configuration "Debug"
 		links { "floord" }
